@@ -32,7 +32,7 @@ public class ErrorManager {
         errorDTO = new ErrorDTO(Severity.ERROR, clientExceptionWithBody.getTitle(),  error.getMessage());
       }
       else {
-        httpStatus=HttpStatus.INTERNAL_SERVER_ERROR;
+        httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
         errorDTO = defaultErrorDTO;
       }
       return ResponseEntity.status(httpStatus)

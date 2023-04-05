@@ -11,11 +11,8 @@ public class QRCodePaymentServiceImpl implements
   @Override
   public TransactionCreated createTransaction(TransactionCreationRequest trxCreationRequest) {
 
-    // Controllo esistenza iniziativa
+    // Controllo esistenza iniziativa su reward_rule
     // Non esiste -> 404
-
-    // Controllo merchant/iniziativa
-    // Non esiste -> 403
 
     // TODO Genero trxCode
 
