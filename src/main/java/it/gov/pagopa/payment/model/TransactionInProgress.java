@@ -1,5 +1,9 @@
 package it.gov.pagopa.payment.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import it.gov.pagopa.payment.enums.OperationType;
+import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.utils.json.BigDecimalScale2Deserializer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -9,6 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Data
 @AllArgsConstructor
@@ -19,26 +24,42 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class TransactionInProgress {
 
   @Id
-  String id;
-  String trxCode;
-  String initiativeId;
-  String userId;
-  String merchantId;
-  String senderCode;
-  String merchantFiscalCode;
-  String vat;
-  String idTrxIssuer;
-  String idTrxAcquirer;
-  LocalDateTime trxDate;
-  BigDecimal amount;
-  String amountCurrency;
-  String mcc;
-  String acquirerCode;
-  String acquirerId;
-  Status status;
+  private String id;
+  private String trxCode;
+  private String idTrxAcquirer;
+  private String acquirerCode;
 
-  private enum Status{
-    CREATED
-  }
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private LocalDateTime trxDate;
 
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private LocalDateTime trxChargeDate;
+
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private LocalDateTime authDate;
+
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private LocalDateTime elaborationDateTime;
+
+  private String hpan;
+  private String operationType;
+  private OperationType operationTypeTranscoded;
+  private String idTrxIssuer;
+  private String correlationId;
+
+  @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
+  private BigDecimal amount;
+
+  private BigDecimal effectiveAmount;
+  private String amountCurrency;
+  private String mcc;
+  private String acquirerId;
+  private String merchantId;
+  private String senderCode;
+  private String merchantFiscalCode;
+  private String vat;
+  private String initiativeId;
+  private String userId;
+  private Status status;
+  private String callbackUrl;
 }
