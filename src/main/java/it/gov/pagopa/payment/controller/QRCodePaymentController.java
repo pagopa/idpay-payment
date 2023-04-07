@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequestMapping("/payment/qr-code")
+@RequestMapping("/idpay/payment/qr-code")
 public interface QRCodePaymentController {
 
   @PostMapping("/")

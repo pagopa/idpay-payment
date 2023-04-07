@@ -14,12 +14,12 @@ import org.springframework.web.server.ServerWebExchange;
 public class ErrorManager {
   private static final ErrorDTO defaultErrorDTO;
   static {
-    defaultErrorDTO =new ErrorDTO(Severity.ERROR, "Error", "Something gone wrong");
+    defaultErrorDTO = new ErrorDTO(Severity.ERROR, "Error", "Something gone wrong");
   }
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, ServerWebExchange exchange) {
+  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error) {
     if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace()){
-      log.error("Something gone wrong handling the request: " + exchange.getRequest().getId(), error);
+      log.error("Something gone wrong handling the request", error);
     }
     if(error instanceof ClientExceptionNoBody clientExceptionNoBody){
       return ResponseEntity.status(clientExceptionNoBody.getHttpStatus()).build();
