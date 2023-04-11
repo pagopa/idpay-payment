@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.Status;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,10 @@ public class TransactionCreationRequest2TransactionInProgressMapper
 
   @Override
   public TransactionInProgress apply(TransactionCreationRequest transactionCreationRequest) {
+    String id = "%s_qr-code_%d".formatted(UUID.randomUUID().toString(), System.currentTimeMillis());
     return TransactionInProgress.builder()
+        .id(id)
+        .correlationId(id)
         .acquirerId(transactionCreationRequest.getAcquirerId())
         .acquirerCode(transactionCreationRequest.getAcquirerCode())
         .amount(transactionCreationRequest.getAmount())
