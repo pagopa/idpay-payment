@@ -7,6 +7,11 @@ spring:
     activate:
       on-profile: default
 
+rest-client:
+  reward:
+    payment: ${IDPAY_REWARD_PAYMENT:idpay-reward-calculator}
+    baseUrl: ${IDPAY_REWARD_PAYMENT:}
+
   data:
     mongodb:
       database: ${MONGODB_DBNAME:}

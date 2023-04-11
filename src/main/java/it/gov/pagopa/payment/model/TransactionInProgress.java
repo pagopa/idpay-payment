@@ -19,7 +19,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@FieldNameConstants
+@FieldNameConstants()
 @Document(collection = "transaction_in_progress")
 public class TransactionInProgress {
 
