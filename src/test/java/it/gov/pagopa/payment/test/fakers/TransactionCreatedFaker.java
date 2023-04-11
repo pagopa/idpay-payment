@@ -1,17 +1,17 @@
 package it.gov.pagopa.payment.test.fakers;
 
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class TransactionCreatedFaker {
 
-  public static TransactionCreated mockInstance(Integer bias) {
+  public static TransactionResponse mockInstance(Integer bias) {
     return mockInstanceBuilder(bias).build();
   }
 
-  public static TransactionCreated.TransactionCreatedBuilder mockInstanceBuilder(Integer bias) {
-    return TransactionCreated.builder()
+  public static TransactionResponse.TransactionResponseBuilder mockInstanceBuilder(Integer bias) {
+    return TransactionResponse.builder()
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .senderCode("SENDERCODE%d".formatted(bias))
         .trxDate(LocalDateTime.now())

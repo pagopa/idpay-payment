@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionCreatedMapper;
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -43,11 +43,11 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   @Override
-  public TransactionCreated createTransaction(TransactionCreationRequest trxCreationRequest) {
+  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
 
     Long startTime = System.currentTimeMillis();
 
-    if (!rewardRuleRepository.checkIfExists(trxCreationRequest.getInitiativeId())) {
+    if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
 
       log.error("Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
 
@@ -57,7 +57,8 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
           "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
     }
 
-    TransactionInProgress trx = transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest);
+    TransactionInProgress trx =
+        transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest);
 
     generateTrxCodeAndSave(trx);
 

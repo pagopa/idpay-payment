@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionCreated {
+public class TransactionResponse {
 
   private String id;
   private String trxCode;

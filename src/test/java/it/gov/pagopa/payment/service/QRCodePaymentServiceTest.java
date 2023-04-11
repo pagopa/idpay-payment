@@ -7,7 +7,7 @@ import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionCreatedMapper;
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.exception.ClientException;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -59,16 +59,16 @@ class QRCodePaymentServiceTest {
   void createTransaction() {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    TransactionCreated trxCreated = TransactionCreatedFaker.mockInstance(1);
+    TransactionResponse trxCreated = TransactionCreatedFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
 
-    when(rewardRuleRepository.checkIfExists("INITIATIVEID1")).thenReturn(true);
+    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(any(TransactionCreationRequest.class))).thenReturn(trx);
     when(transactionInProgress2TransactionCreatedMapper.apply(any(TransactionInProgress.class))).thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenReturn("TRXCODE1");
     when(transactionInProgressRepository.existsByTrxCode("TRXCODE1")).thenReturn(false);
 
-    TransactionCreated result = qrCodePaymentService.createTransaction(trxCreationReq);
+    TransactionResponse result = qrCodePaymentService.createTransaction(trxCreationReq);
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -82,7 +82,7 @@ class QRCodePaymentServiceTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
 
-    when(rewardRuleRepository.checkIfExists("INITIATIVEID1")).thenReturn(false);
+    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(false);
 
     ClientException result = Assertions.assertThrows(ClientException.class, () ->
       qrCodePaymentService.createTransaction(trxCreationReq)

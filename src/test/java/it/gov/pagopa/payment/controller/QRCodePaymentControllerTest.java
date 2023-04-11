@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
@@ -31,7 +31,7 @@ class QRCodePaymentControllerTest {
   @Test
   void createTransactionSuccess() throws Exception {
     when(qrCodePaymentService.createTransaction(any(TransactionCreationRequest.class)))
-        .thenReturn(new TransactionCreated());
+        .thenReturn(new TransactionResponse());
 
     mockMvc
         .perform(

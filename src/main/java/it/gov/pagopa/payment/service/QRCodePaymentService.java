@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 
 public interface QRCodePaymentService {
 
-  TransactionCreated createTransaction(TransactionCreationRequest trxCreationRequest);
+  TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest);
 }

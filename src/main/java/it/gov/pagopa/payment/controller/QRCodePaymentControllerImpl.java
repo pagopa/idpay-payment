@@ -1,10 +1,8 @@
 package it.gov.pagopa.payment.controller;
 
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -18,8 +16,7 @@ public class QRCodePaymentControllerImpl implements
   }
 
   @Override
-  public ResponseEntity<TransactionCreated> createTransaction(TransactionCreationRequest trxCreationRequest) {
-    TransactionCreated response = qrCodePaymentService.createTransaction(trxCreationRequest);
-    return new ResponseEntity<>(response, HttpStatus.CREATED);
+  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
+    return qrCodePaymentService.createTransaction(trxCreationRequest);
   }
 }

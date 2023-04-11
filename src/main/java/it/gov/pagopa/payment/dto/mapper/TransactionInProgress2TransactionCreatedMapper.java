@@ -1,17 +1,17 @@
 package it.gov.pagopa.payment.dto.mapper;
 
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionInProgress2TransactionCreatedMapper
-    implements Function<TransactionInProgress, TransactionCreated> {
+    implements Function<TransactionInProgress, TransactionResponse> {
 
   @Override
-  public TransactionCreated apply(TransactionInProgress transactionInProgress) {
-    return TransactionCreated.builder()
+  public TransactionResponse apply(TransactionInProgress transactionInProgress) {
+    return TransactionResponse.builder()
         .acquirerId(transactionInProgress.getAcquirerId())
         .acquirerCode(transactionInProgress.getAcquirerCode())
         .amount(transactionInProgress.getAmount())
