@@ -5,7 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/idpay/payment/qr-code/merchant")
+@RequestMapping("/idpay/payment/qr-code")
 public interface QRCodePaymentController {
 
   @PostMapping("/merchant")
