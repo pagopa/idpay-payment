@@ -10,12 +10,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionCreationRequest {
+public class TransactionResponse {
 
+  private String id;
+  private String trxCode;
   private String initiativeId;
   private String senderCode;
-  private String merchantFiscalCode;
-  private String vat;
+  private String merchantId;
   private String idTrxIssuer;
   private String idTrxAcquirer;
   private LocalDateTime trxDate;
@@ -24,6 +25,5 @@ public class TransactionCreationRequest {
   private String mcc;
   private String acquirerCode;
   private String acquirerId;
-  private String callbackUrl;
 
 }

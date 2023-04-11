@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller;
 
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
@@ -19,9 +18,9 @@ public class QRCodePaymentControllerImpl implements
   }
 
   @Override
-  public ResponseEntity<TransactionCreated> createTransaction(TransactionCreationRequest trxCreationRequest) {
-    TransactionCreated response = qrCodePaymentService.createTransaction(trxCreationRequest);
-    return new ResponseEntity<>(response, HttpStatus.CREATED);
+  @PerformanceLog("CREATE_TRANSACTION_QR_CODE")
+  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
+    return qrCodePaymentService.createTransaction(trxCreationRequest);
   }
 
   @Override
