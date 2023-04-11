@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.PerformanceLogUtils;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,12 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public TransactionCreated createTransaction(TransactionCreationRequest trxCreationRequest) {
 
+    Long startTime = System.currentTimeMillis();
+
     if (!rewardRuleRepository.checkIfExists(trxCreationRequest.getInitiativeId())) {
+
+      log.error("Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
+
       throw new ClientExceptionWithBody(
           HttpStatus.NOT_FOUND,
           "NOT FOUND",
@@ -54,6 +60,8 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
     TransactionInProgress trx = transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest);
 
     generateTrxCodeAndSave(trx);
+
+    PerformanceLogUtils.performanceLog("CREATE_TRANSACTION_QR_CODE", startTime);
 
     return transactionInProgress2TransactionCreatedMapper.apply(trx);
   }
