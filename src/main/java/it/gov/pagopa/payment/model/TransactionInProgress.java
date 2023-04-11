@@ -55,6 +55,6 @@ public class TransactionInProgress {
   private String vat;
   private String initiativeId;
   private String userId;
-  private SyncTrxStatus syncTrxStatus;
+  private SyncTrxStatus status;
   private String callbackUrl;
 }

@@ -49,7 +49,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
       Assertions.assertEquals(transactionCreationRequest.getVat(), result.getVat());
       Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxDate());
       Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxChargeDate());
-      Assertions.assertEquals(SyncTrxStatus.CREATED, result.getSyncTrxStatus());
+      Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
       Assertions.assertEquals(PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());
       Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
     });

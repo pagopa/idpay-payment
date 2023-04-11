@@ -35,7 +35,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper
         .vat(transactionCreationRequest.getVat())
         .trxDate(transactionCreationRequest.getTrxDate())
         .trxChargeDate(transactionCreationRequest.getTrxDate())
-        .syncTrxStatus(SyncTrxStatus.CREATED)
+        .status(SyncTrxStatus.CREATED)
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .build();
