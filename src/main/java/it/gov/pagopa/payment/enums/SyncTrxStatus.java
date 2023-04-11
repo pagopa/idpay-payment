@@ -1,5 +1,5 @@
 package it.gov.pagopa.payment.enums;
 
-public enum Status {
+public enum SyncTrxStatus {
   CREATED
 }

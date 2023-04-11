@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service;
+package it.gov.pagopa.payment.service.qrcode;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -29,7 +29,7 @@ import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-class QRCodePaymentServiceTest {
+class QRCodeCreationServiceTest {
 
   @Mock
   TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
@@ -44,12 +44,12 @@ class QRCodePaymentServiceTest {
 
   @Mock TrxCodeGenUtil trxCodeGenUtil;
 
-  QRCodePaymentService qrCodePaymentService;
+  QRCodeCreationService qrCodeCreationService;
 
   @BeforeEach
   void setUp() {
-    qrCodePaymentService =
-        new QRCodePaymentServiceImpl(
+    qrCodeCreationService =
+        new QRCodeCreationServiceImpl(
             transactionInProgress2TransactionResponseMapper,
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
@@ -74,7 +74,7 @@ class QRCodePaymentServiceTest {
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    TransactionResponse result = qrCodePaymentService.createTransaction(trxCreationReq);
+    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq);
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -105,7 +105,7 @@ class QRCodePaymentServiceTest {
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
 
-    TransactionResponse result = qrCodePaymentService.createTransaction(trxCreationReq);
+    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq);
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -120,7 +120,7 @@ class QRCodePaymentServiceTest {
 
     ClientException result =
         Assertions.assertThrows(
-            ClientException.class, () -> qrCodePaymentService.createTransaction(trxCreationReq));
+            ClientException.class, () -> qrCodeCreationService.createTransaction(trxCreationReq));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());

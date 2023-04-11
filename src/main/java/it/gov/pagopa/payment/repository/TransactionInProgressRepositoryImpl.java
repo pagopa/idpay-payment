@@ -42,7 +42,7 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
             .setOnInsert(Fields.vat, trx.getVat())
             .setOnInsert(Fields.trxDate, trx.getTrxDate())
             .setOnInsert(Fields.trxChargeDate, trx.getTrxChargeDate())
-            .setOnInsert(Fields.status, trx.getStatus())
+            .setOnInsert(Fields.syncTrxStatus, trx.getSyncTrxStatus())
             .setOnInsert(Fields.operationType, trx.getOperationType())
             .setOnInsert(Fields.operationTypeTranscoded, trx.getOperationTypeTranscoded())
             .setOnInsert(Fields.trxCode, trxCode),

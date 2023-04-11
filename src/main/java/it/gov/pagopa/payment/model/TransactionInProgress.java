@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.model;
 
 import it.gov.pagopa.payment.enums.OperationType;
-import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -55,6 +55,6 @@ public class TransactionInProgress {
   private String vat;
   private String initiativeId;
   private String userId;
-  private Status status;
+  private SyncTrxStatus syncTrxStatus;
   private String callbackUrl;
 }
