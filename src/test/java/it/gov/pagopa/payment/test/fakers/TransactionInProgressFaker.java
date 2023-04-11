@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.test.fakers;
 
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.Status;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.math.BigDecimal;
@@ -11,13 +13,20 @@ public class TransactionInProgressFaker {
   }
 
   public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias) {
+
+    String id = "TRANSACTION%d_qr-code_%d".formatted(bias, System.currentTimeMillis());
+
     return TransactionInProgress.builder()
+        .id(id)
+        .correlationId(id)
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .senderCode("SENDERCODE%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now())
+        .trxChargeDate(LocalDateTime.now())
         .amount(BigDecimal.TEN)
+        .effectiveAmount(BigDecimal.TEN)
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))
         .acquirerCode("ACQUIRERCODE%d".formatted(bias))
@@ -26,6 +35,8 @@ public class TransactionInProgressFaker {
         .callbackUrl("CALLBACKURL%d".formatted(bias))
         .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
         .trxCode("TRXCODE%d".formatted(bias))
+        .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
+        .operationTypeTranscoded(OperationType.CHARGE)
         .status(Status.CREATED);
   }
 }

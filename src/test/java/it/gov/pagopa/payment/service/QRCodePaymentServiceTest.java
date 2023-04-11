@@ -5,6 +5,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionCreatedMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -18,12 +19,16 @@ import it.gov.pagopa.payment.test.fakers.TransactionCreatedFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import org.bson.BsonString;
+import org.bson.BsonValue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,8 +45,7 @@ class QRCodePaymentServiceTest {
 
   @Mock TransactionInProgressRepository transactionInProgressRepository;
 
-  @Mock
-  TrxCodeGenUtil trxCodeGenUtil;
+  @Mock TrxCodeGenUtil trxCodeGenUtil;
 
   QRCodePaymentService qrCodePaymentService;
 
@@ -52,7 +56,8 @@ class QRCodePaymentServiceTest {
             transactionInProgress2TransactionCreatedMapper,
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
-            transactionInProgressRepository, trxCodeGenUtil);
+            transactionInProgressRepository,
+            trxCodeGenUtil);
   }
 
   @Test
@@ -63,18 +68,50 @@ class QRCodePaymentServiceTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
-    when(transactionCreationRequest2TransactionInProgressMapper.apply(any(TransactionCreationRequest.class))).thenReturn(trx);
-    when(transactionInProgress2TransactionCreatedMapper.apply(any(TransactionInProgress.class))).thenReturn(trxCreated);
+    when(transactionCreationRequest2TransactionInProgressMapper.apply(
+            any(TransactionCreationRequest.class)))
+        .thenReturn(trx);
+    when(transactionInProgress2TransactionCreatedMapper.apply(any(TransactionInProgress.class)))
+        .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenReturn("TRXCODE1");
-    when(transactionInProgressRepository.existsByTrxCode("TRXCODE1")).thenReturn(false);
+    when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
+        .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result = qrCodePaymentService.createTransaction(trxCreationReq);
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
+  }
 
-    verify(transactionInProgressRepository, times(1)).save(any());
+  @Test
+  void createTransactionTrxCodeHit() {
 
+    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+    TransactionResponse trxCreated = TransactionCreatedFaker.mockInstance(1);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+
+    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+    when(transactionCreationRequest2TransactionInProgressMapper.apply(
+        any(TransactionCreationRequest.class)))
+        .thenReturn(trx);
+    when(transactionInProgress2TransactionCreatedMapper.apply(any(TransactionInProgress.class)))
+        .thenReturn(trxCreated);
+    when(trxCodeGenUtil.get()).thenAnswer(new Answer<String>() {
+      private int count = 0;
+      public String answer(InvocationOnMock invocation) {
+        return "TRXCODE%d".formatted(++count);
+      }
+    });
+    when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
+        .thenReturn(UpdateResult.acknowledged(1L, 0L, null));
+    when(transactionInProgressRepository.createIfExists(trx, "TRXCODE2"))
+        .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
+
+
+    TransactionResponse result = qrCodePaymentService.createTransaction(trxCreationReq);
+
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(trxCreated, result);
   }
 
   @Test
@@ -84,9 +121,9 @@ class QRCodePaymentServiceTest {
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(false);
 
-    ClientException result = Assertions.assertThrows(ClientException.class, () ->
-      qrCodePaymentService.createTransaction(trxCreationReq)
-    );
+    ClientException result =
+        Assertions.assertThrows(
+            ClientException.class, () -> qrCodePaymentService.createTransaction(trxCreationReq));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());

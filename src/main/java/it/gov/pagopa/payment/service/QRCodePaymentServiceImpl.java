@@ -63,13 +63,9 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   private void generateTrxCodeAndSave(TransactionInProgress trx) {
-    boolean exists = true;
-    String trxCode = null;
-    while (exists) {
-      trxCode = trxCodeGenUtil.get();
-      exists = transactionInProgressRepository.existsByTrxCode(trxCode);
+    long retry = 1;
+    while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId() == null) {
+      log.info("[CREATE_TRANSACTION] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]", retry);
     }
-    trx.setTrxCode(trxCode);
-    transactionInProgressRepository.save(trx);
   }
 }
