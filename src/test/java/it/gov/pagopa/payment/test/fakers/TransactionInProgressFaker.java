@@ -25,7 +25,7 @@ public class TransactionInProgressFaker {
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now())
         .trxChargeDate(LocalDateTime.now())
-        .amount(BigDecimal.TEN)
+        .amountCents(10L)
         .effectiveAmount(BigDecimal.TEN)
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))

@@ -14,7 +14,7 @@ public class TransactionInProgress2TransactionCreatedMapper
     return TransactionResponse.builder()
         .acquirerId(transactionInProgress.getAcquirerId())
         .acquirerCode(transactionInProgress.getAcquirerCode())
-        .amount(transactionInProgress.getAmount())
+        .amountCents(transactionInProgress.getAmountCents())
         .amountCurrency(transactionInProgress.getAmountCurrency())
         .idTrxAcquirer(transactionInProgress.getIdTrxAcquirer())
         .idTrxIssuer(transactionInProgress.getIdTrxIssuer())

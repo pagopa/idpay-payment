@@ -1,9 +1,7 @@
 package it.gov.pagopa.payment.model;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.Status;
-import it.gov.pagopa.payment.utils.json.BigDecimalScale2Deserializer;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -46,10 +44,7 @@ public class TransactionInProgress {
   private OperationType operationTypeTranscoded;
   private String idTrxIssuer;
   private String correlationId;
-
-  @JsonDeserialize(using = BigDecimalScale2Deserializer.class)
-  private BigDecimal amount;
-
+  private Long amountCents;
   private BigDecimal effectiveAmount;
   private String amountCurrency;
   private String mcc;

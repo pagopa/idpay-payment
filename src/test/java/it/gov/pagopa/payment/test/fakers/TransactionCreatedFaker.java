@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class TransactionCreatedFaker {
@@ -15,7 +14,7 @@ public class TransactionCreatedFaker {
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .senderCode("SENDERCODE%d".formatted(bias))
         .trxDate(LocalDateTime.now())
-        .amount(BigDecimal.TEN)
+        .amountCents(10L)
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))
         .acquirerCode("ACQUIRERCODE%d".formatted(bias))

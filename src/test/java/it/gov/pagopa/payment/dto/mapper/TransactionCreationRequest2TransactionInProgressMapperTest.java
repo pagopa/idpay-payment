@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.Status;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import it.gov.pagopa.payment.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,8 +34,8 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
       Assertions.assertEquals(transactionCreationRequest.getInitiativeId(), result.getInitiativeId());
       Assertions.assertEquals(transactionCreationRequest.getAcquirerCode(), result.getAcquirerCode());
       Assertions.assertEquals(transactionCreationRequest.getAcquirerId(), result.getAcquirerId());
-      Assertions.assertEquals(transactionCreationRequest.getAmount(), result.getAmount());
-      Assertions.assertEquals(transactionCreationRequest.getAmount(), result.getEffectiveAmount());
+      Assertions.assertEquals(transactionCreationRequest.getAmountCents(), result.getAmountCents());
+      Assertions.assertEquals(Utils.centsToEuro(transactionCreationRequest.getAmountCents()), result.getEffectiveAmount());
       Assertions.assertEquals(
           transactionCreationRequest.getAmountCurrency(), result.getAmountCurrency());
       Assertions.assertEquals(transactionCreationRequest.getCallbackUrl(), result.getCallbackUrl());

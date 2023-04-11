@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class TransactionCreationRequestFaker {
@@ -19,7 +18,7 @@ public class TransactionCreationRequestFaker {
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now())
-        .amount(BigDecimal.TEN)
+        .amountCents(10L)
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))
         .acquirerCode("ACQUIRERCODE%d".formatted(bias))

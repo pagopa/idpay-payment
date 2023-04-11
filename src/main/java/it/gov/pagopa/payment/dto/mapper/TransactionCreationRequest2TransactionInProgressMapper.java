@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.Status;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.Utils;
 import java.util.UUID;
 import java.util.function.Function;
 import org.springframework.stereotype.Service;
@@ -21,8 +22,8 @@ public class TransactionCreationRequest2TransactionInProgressMapper
         .correlationId(id)
         .acquirerId(transactionCreationRequest.getAcquirerId())
         .acquirerCode(transactionCreationRequest.getAcquirerCode())
-        .amount(transactionCreationRequest.getAmount())
-        .effectiveAmount(transactionCreationRequest.getAmount())
+        .amountCents(transactionCreationRequest.getAmountCents())
+        .effectiveAmount(Utils.centsToEuro(transactionCreationRequest.getAmountCents()))
         .amountCurrency(transactionCreationRequest.getAmountCurrency())
         .merchantFiscalCode(transactionCreationRequest.getMerchantFiscalCode())
         .callbackUrl(transactionCreationRequest.getCallbackUrl())

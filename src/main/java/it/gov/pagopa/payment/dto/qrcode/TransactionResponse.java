@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +20,7 @@ public class TransactionResponse {
   private String idTrxIssuer;
   private String idTrxAcquirer;
   private LocalDateTime trxDate;
-  private BigDecimal amount;
+  private Long amountCents;
   private String amountCurrency;
   private String mcc;
   private String acquirerCode;

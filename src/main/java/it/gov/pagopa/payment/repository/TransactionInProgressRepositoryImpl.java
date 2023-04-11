@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
+import it.gov.pagopa.payment.utils.Utils;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,8 +28,8 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
             .setOnInsert(Fields.correlationId, trx.getCorrelationId())
             .setOnInsert(Fields.acquirerId, trx.getAcquirerId())
             .setOnInsert(Fields.acquirerCode, trx.getAcquirerCode())
-            .setOnInsert(Fields.amount, trx.getAmount())
-            .setOnInsert(Fields.effectiveAmount, trx.getEffectiveAmount())
+            .setOnInsert(Fields.amountCents, trx.getAmountCents())
+            .setOnInsert(Fields.effectiveAmount, Utils.centsToEuro(trx.getAmountCents()))
             .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
             .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
             .setOnInsert(Fields.callbackUrl, trx.getCallbackUrl())
