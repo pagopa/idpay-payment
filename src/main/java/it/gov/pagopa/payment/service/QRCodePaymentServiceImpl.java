@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionCreatedMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -17,8 +17,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
-  private final TransactionInProgress2TransactionCreatedMapper
-      transactionInProgress2TransactionCreatedMapper;
+  private final TransactionInProgress2TransactionResponseMapper
+      transactionInProgress2TransactionResponseMapper;
   private final TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
   private final RewardRuleRepository rewardRuleRepository;
@@ -26,14 +26,14 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final TrxCodeGenUtil trxCodeGenUtil;
 
   public QRCodePaymentServiceImpl(
-      TransactionInProgress2TransactionCreatedMapper transactionInProgress2TransactionCreatedMapper,
+      TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
       TransactionCreationRequest2TransactionInProgressMapper
           transactionCreationRequest2TransactionInProgressMapper,
       RewardRuleRepository rewardRuleRepository,
       TransactionInProgressRepository transactionInProgressRepository,
       TrxCodeGenUtil trxCodeGenUtil) {
-    this.transactionInProgress2TransactionCreatedMapper =
-        transactionInProgress2TransactionCreatedMapper;
+    this.transactionInProgress2TransactionResponseMapper =
+        transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
         transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
@@ -59,7 +59,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
     generateTrxCodeAndSave(trx);
 
-    return transactionInProgress2TransactionCreatedMapper.apply(trx);
+    return transactionInProgress2TransactionResponseMapper.apply(trx);
   }
 
   private void generateTrxCodeAndSave(TransactionInProgress trx) {

@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test;
 
 class TransactionInProgress2TransactionResponseMapperTest {
 
-  private TransactionInProgress2TransactionCreatedMapper mapper;
+  private TransactionInProgress2TransactionResponseMapper mapper;
 
   @BeforeEach
   void setUp() {
-    mapper = new TransactionInProgress2TransactionCreatedMapper();
+    mapper = new TransactionInProgress2TransactionResponseMapper();
   }
 
   @Test

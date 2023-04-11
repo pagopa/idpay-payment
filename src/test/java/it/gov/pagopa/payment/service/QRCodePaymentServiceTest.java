@@ -5,7 +5,7 @@ import static org.mockito.Mockito.when;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionCreatedMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.exception.ClientException;
@@ -32,7 +32,7 @@ import org.springframework.http.HttpStatus;
 class QRCodePaymentServiceTest {
 
   @Mock
-  TransactionInProgress2TransactionCreatedMapper transactionInProgress2TransactionCreatedMapper;
+  TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
   @Mock
   TransactionCreationRequest2TransactionInProgressMapper
@@ -50,7 +50,7 @@ class QRCodePaymentServiceTest {
   void setUp() {
     qrCodePaymentService =
         new QRCodePaymentServiceImpl(
-            transactionInProgress2TransactionCreatedMapper,
+            transactionInProgress2TransactionResponseMapper,
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
             transactionInProgressRepository,
@@ -68,7 +68,7 @@ class QRCodePaymentServiceTest {
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
             any(TransactionCreationRequest.class)))
         .thenReturn(trx);
-    when(transactionInProgress2TransactionCreatedMapper.apply(any(TransactionInProgress.class)))
+    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenReturn("TRXCODE1");
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
@@ -91,7 +91,7 @@ class QRCodePaymentServiceTest {
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
         any(TransactionCreationRequest.class)))
         .thenReturn(trx);
-    when(transactionInProgress2TransactionCreatedMapper.apply(any(TransactionInProgress.class)))
+    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenAnswer(new Answer<String>() {
       private int count = 0;

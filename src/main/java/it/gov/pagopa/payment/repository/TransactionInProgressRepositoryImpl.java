@@ -21,6 +21,7 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
 
   @Override
   public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
+    trx.setTrxCode(trxCode);
     return mongoTemplate.upsert(
         Query.query(Criteria.where(Fields.trxCode).is(trx.getTrxCode())),
         new Update()

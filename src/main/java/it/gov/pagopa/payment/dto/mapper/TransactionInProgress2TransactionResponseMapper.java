@@ -6,7 +6,7 @@ import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
 @Service
-public class TransactionInProgress2TransactionCreatedMapper
+public class TransactionInProgress2TransactionResponseMapper
     implements Function<TransactionInProgress, TransactionResponse> {
 
   @Override
