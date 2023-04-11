@@ -14,12 +14,13 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class PerformanceLoggerAspect {
 
     @Around("@annotation(performanceLog)")
-    public Object performanceLogger(ProceedingJoinPoint pjp, PerformanceLog performanceLog) throws Throwable {
-        long startTime = System.currentTimeMillis();
-        try {
-            return pjp.proceed();
-        } finally {
-            PerformanceLogUtils.performanceLog(performanceLog.value(), startTime);
-        }
+    public Object performanceLogger(ProceedingJoinPoint pjp, PerformanceLog performanceLog) {
+        return PerformanceLogger.execute(performanceLog.value(), () -> {
+            try {
+                return pjp.proceed();
+            } catch (Throwable e) {
+                throw new IllegalStateException("Something gone wrong while executing PerformanceLog annotated method", e);
+            }
+        });
     }
 }
