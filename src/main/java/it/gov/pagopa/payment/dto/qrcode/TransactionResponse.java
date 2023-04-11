@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
 import java.time.LocalDateTime;
+
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,5 +27,6 @@ public class TransactionResponse {
   private String mcc;
   private String acquirerCode;
   private String acquirerId;
+  private SyncTrxStatus status;
 
 }

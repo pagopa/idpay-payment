@@ -21,4 +21,10 @@ public class QRCodePaymentControllerImpl implements
   public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
     return qrCodePaymentService.createTransaction(trxCreationRequest);
   }
+
+  @Override
+  @PerformanceLog("QR_CODE_CONFIRM_PAYMENT")
+  public TransactionResponse confirmPayment(String trxId, String merchantId) {
+    return qrCodePaymentService.confirmPayment(trxId, merchantId);
+  }
 }

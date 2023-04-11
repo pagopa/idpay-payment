@@ -1,8 +1,7 @@
 package it.gov.pagopa.payment.repository;
 
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface TransactionInProgressRepository {
-  UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
+public interface TransactionInProgressRepository  extends MongoRepository<TransactionInProgress, String>, TransactionInProgressRepositoryExt {
 }

@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,9 @@ class TransactionInProgress2TransactionResponseMapperTest {
       Assertions.assertEquals(trx.getSenderCode(), result.getSenderCode());
       Assertions.assertEquals(trx.getTrxDate(), result.getTrxDate());
       Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
+      Assertions.assertEquals(trx.getStatus(), result.getStatus());
     });
+
+    TestUtils.checkNotNullFields(result);
   }
 }

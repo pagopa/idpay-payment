@@ -25,6 +25,7 @@ public class TransactionInProgress2TransactionResponseMapper
         .senderCode(transactionInProgress.getSenderCode())
         .trxDate(transactionInProgress.getTrxDate())
         .trxCode(transactionInProgress.getTrxCode())
+        .status(transactionInProgress.getStatus())
         .build();
   }
 }
