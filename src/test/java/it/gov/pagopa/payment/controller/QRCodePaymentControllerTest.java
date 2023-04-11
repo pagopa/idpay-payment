@@ -35,7 +35,7 @@ class QRCodePaymentControllerTest {
 
     mockMvc
         .perform(
-            post("/idpay/payment/qr-code/")
+            post("/idpay/payment/qr-code/merchant/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(TransactionCreationRequestFaker.mockInstance(1))))
         .andExpect(status().is2xxSuccessful())
@@ -53,7 +53,7 @@ class QRCodePaymentControllerTest {
 
     mockMvc
         .perform(
-            post("/idpay/payment/qr-code/")
+            post("/idpay/payment/qr-code/merchant/")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(TransactionCreationRequestFaker.mockInstance(1))))
         .andExpect(status().is4xxClientError())

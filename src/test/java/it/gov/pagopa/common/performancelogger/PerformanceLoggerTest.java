@@ -48,7 +48,7 @@ class PerformanceLoggerTest {
     private ResultActions callRestApi() throws Exception {
         return mockMvc
                 .perform(
-                        post("/idpay/payment/qr-code/")
+                        post("/idpay/payment/qr-code/merchant/")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"));
     }
