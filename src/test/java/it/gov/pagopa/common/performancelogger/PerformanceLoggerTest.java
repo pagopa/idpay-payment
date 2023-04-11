@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -49,13 +50,14 @@ class PerformanceLoggerTest {
         return mockMvc
                 .perform(
                         post("/idpay/payment/qr-code/merchant/")
+                                .header("x-merchant-id", "MERCHANTID1")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"));
     }
 
     @Test
     void logSuccess() throws Exception {
-        when(qrCodePaymentService.createTransaction(any()))
+        when(qrCodePaymentService.createTransaction(any(), anyString()))
                 .thenReturn(new TransactionResponse());
 
         callRestApi()
@@ -66,7 +68,7 @@ class PerformanceLoggerTest {
 
     @Test
     void logException() throws Exception {
-        when(qrCodePaymentService.createTransaction(any()))
+        when(qrCodePaymentService.createTransaction(any(), anyString()))
                 .thenThrow(new IllegalStateException());
 
         callRestApi()

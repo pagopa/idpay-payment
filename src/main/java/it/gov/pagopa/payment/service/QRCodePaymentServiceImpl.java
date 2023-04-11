@@ -15,8 +15,8 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   @Override
-  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
-    return qrCodeCreationService.createTransaction(trxCreationRequest);
+  public TransactionResponse createTransaction(
+      TransactionCreationRequest trxCreationRequest, String merchantId) {
+    return qrCodeCreationService.createTransaction(trxCreationRequest, merchantId);
   }
-
 }

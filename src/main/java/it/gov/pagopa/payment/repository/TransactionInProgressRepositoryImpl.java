@@ -33,6 +33,7 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
             .setOnInsert(Fields.effectiveAmount, Utils.centsToEuro(trx.getAmountCents()))
             .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
             .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
+            .setOnInsert(Fields.merchantId, trx.getMerchantId())
             .setOnInsert(Fields.callbackUrl, trx.getCallbackUrl())
             .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
             .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())

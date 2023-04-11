@@ -21,6 +21,7 @@ public class TransactionInProgressFaker {
         .correlationId(id)
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .senderCode("SENDERCODE%d".formatted(bias))
+        .merchantId("MERCHANTID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now())
