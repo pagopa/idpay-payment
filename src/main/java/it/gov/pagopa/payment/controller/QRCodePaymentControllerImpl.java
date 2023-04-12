@@ -20,9 +20,10 @@ public class QRCodePaymentControllerImpl implements
   }
 
   @Override
-  @PerformanceLog(value = "QR_CODE_CREATE_TRANSACTION", payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
-    return qrCodePaymentService.createTransaction(trxCreationRequest);
+  @PerformanceLog("QR_CODE_CREATE_TRANSACTION", payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
+  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest, String merchantId) {
+    log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} is creating a transaction", merchantId);
+    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId);
   }
 
   @Override

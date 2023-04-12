@@ -74,7 +74,7 @@ class QRCodeCreationServiceTest {
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq);
+    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -105,7 +105,7 @@ class QRCodeCreationServiceTest {
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
 
-    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq);
+    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" );
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -120,7 +120,7 @@ class QRCodeCreationServiceTest {
 
     ClientException result =
         Assertions.assertThrows(
-            ClientException.class, () -> qrCodeCreationService.createTransaction(trxCreationReq));
+            ClientException.class, () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" ));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());
