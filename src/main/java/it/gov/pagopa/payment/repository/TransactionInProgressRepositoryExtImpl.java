@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.Utils;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
@@ -115,11 +114,11 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             TransactionInProgress.class);
 
     if(trx == null && mongoTemplate.exists(Query.query(criteriaByTrxCode(trxCode)), TransactionInProgress.class)){
-      throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+      throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, "FORBIDDEN", "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
 
     if (trx == null){
-      throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+      throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "NOT FOUND","Cannot find transaction with trxCode [%s]".formatted(trxCode));
     }
 
     return trx;

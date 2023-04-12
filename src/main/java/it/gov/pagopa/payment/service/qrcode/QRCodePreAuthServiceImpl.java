@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapp
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.springframework.http.HttpStatus;
@@ -33,7 +33,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
     AuthPaymentResponseDTO preview = rewardCalculatorConnector.previewTransaction(trx.getInitiativeId(), authPaymentRequestMapper.rewardMap(trx));
     if(preview.getStatus().equals(SyncTrxStatus.REJECTED.name())){
       transactionInProgressRepository.updateTrxRejected(trx.getId(), preview.getRejectionReasons());
-      throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "The user is not onboarded to the initiative");
+      throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
     }
     transactionInProgressRepository.updateTrxIdentified(trx.getId());
     return transactionInProgress2TransactionResponseMapper.apply(trx);

@@ -4,7 +4,6 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import org.springframework.http.HttpStatus;
@@ -12,18 +11,15 @@ import org.springframework.http.HttpStatus;
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
   private final RewardCalculatorRestClient restClient;
-  private final AuthPaymentRequestMapper requestMapper;
 
-  public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-      AuthPaymentRequestMapper requestMapper) {
+  public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient) {
     this.restClient = restClient;
-    this.requestMapper = requestMapper;
   }
 
   @Override
   @PerformanceLog("QR_CODE_AUTHORIZE_TRANSACTION_REWARD_CALCULATOR")
   public AuthPaymentResponseDTO authorizePayment(String initiativeId, AuthPaymentRequestDTO body) {
-    return restClient.authorizePayment(initiativeId,body);
+    return restClient.authorizePayment(initiativeId, body);
   }
 
   @Override
