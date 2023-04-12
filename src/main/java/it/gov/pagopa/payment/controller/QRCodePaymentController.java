@@ -21,13 +21,13 @@ public interface QRCodePaymentController {
       @RequestBody TransactionCreationRequest trxCreationRequest,
       @RequestHeader("x-merchant-id") String merchantId);
 
-  @PutMapping("/{trxCode}/authorize/{userId}")
+  @PutMapping("/{trxCode}/authorize")
   @ResponseStatus(code = HttpStatus.OK)
   AuthPaymentDTO authPayment(@PathVariable("trxCode") String trxCode,
-      @PathVariable("userId") String userId);
+      @RequestHeader("x-user-id") String userId);
 
-  @PutMapping("/{trxCode}/relate-user/{userId}")
+  @PutMapping("/{trxCode}/relate-user")
   @ResponseStatus(code = HttpStatus.OK)
   TransactionResponse relateUser(@PathVariable("trxCode") String trxCode,
-      @PathVariable("userId") String userId);
+      @RequestHeader("x-user-id") String userId);
 }

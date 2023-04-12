@@ -42,6 +42,6 @@ public class QRCodePaymentControllerImpl implements
     log.info(
         "[QR_CODE_RELATE_USER] The user {} is trying to relate to transaction having trxCode {}",
         userId, trxCode);
-    return qrCodePaymentService.relateUser(userId, trxCode);
+    return qrCodePaymentService.relateUser(trxCode, userId);
   }
 }

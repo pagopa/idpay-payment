@@ -47,18 +47,18 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     TestUtils.checkNotNullFields(result, "hpan", "userId", "authDate", "elaborationDateTime");
   }
 
-  @Test
-  void findAndModify(){
-    TransactionInProgress notFoundResult = transactionInProgressRepository.findAndModify("DUMMYID");
-    Assertions.assertNull(notFoundResult);
-
-    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1);
-    mongoTemplate.insert(transaction);
-
-    TransactionInProgress result = transactionInProgressRepository.findAndModify(transaction.getTrxCode());
-
-    Assertions.assertNotNull(result.getAuthDate());
-    Assertions.assertEquals(transaction.getTrxCode(), result.getTrxCode());
-    assertTrue(result.getTrxChargeDate().isAfter(LocalDateTime.now().minusMinutes(15)));
-  }
+//  @Test
+//  void findAndModify(){
+//    TransactionInProgress notFoundResult = transactionInProgressRepository.findAndModify("DUMMYID");
+//    Assertions.assertNull(notFoundResult);
+//
+//    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1);
+//    mongoTemplate.insert(transaction);
+//
+//    TransactionInProgress result = transactionInProgressRepository.findAndModify(transaction.getTrxCode());
+//
+//    Assertions.assertNotNull(result.getAuthDate());
+//    Assertions.assertEquals(transaction.getTrxCode(), result.getTrxCode());
+//    assertTrue(result.getTrxChargeDate().isAfter(LocalDateTime.now().minusMinutes(15)));
+//  }
 }

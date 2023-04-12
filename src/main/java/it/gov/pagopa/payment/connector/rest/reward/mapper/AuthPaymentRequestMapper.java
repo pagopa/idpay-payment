@@ -23,6 +23,7 @@ public class AuthPaymentRequestMapper {
         .acquirerCode(transactionInProgress.getAcquirerCode())
         .acquirerId(transactionInProgress.getAcquirerId())
         .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
+        .operationType(transactionInProgress.getOperationType())
         .build();
   }
 

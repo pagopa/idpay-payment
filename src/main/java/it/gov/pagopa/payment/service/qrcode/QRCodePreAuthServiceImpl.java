@@ -28,7 +28,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
   }
 
   @Override
-  public TransactionResponse relateUser(String userId, String trxCode) {
+  public TransactionResponse relateUser(String trxCode, String userId) {
     TransactionInProgress trx = transactionInProgressRepository.findByTrxCodeAndRelateUser(trxCode, userId);
     AuthPaymentResponseDTO preview = rewardCalculatorConnector.previewTransaction(trx.getInitiativeId(), authPaymentRequestMapper.rewardMap(trx));
     if(preview.getStatus().equals(SyncTrxStatus.REJECTED.name())){

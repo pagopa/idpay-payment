@@ -20,5 +20,6 @@ public class AuthPaymentRequestDTO {
   String acquirerCode;
   String acquirerId;
   String idTrxAcquirer;
+  String operationType;
 
 }

@@ -13,7 +13,7 @@ import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.test.fakers.TransactionCreatedFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
@@ -61,7 +61,7 @@ class QRCodeCreationServiceTest {
   void createTransaction() {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    TransactionResponse trxCreated = TransactionCreatedFaker.mockInstance(1);
+    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
@@ -85,7 +85,7 @@ class QRCodeCreationServiceTest {
   void createTransactionTrxCodeHit() {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    TransactionResponse trxCreated = TransactionCreatedFaker.mockInstance(1);
+    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
