@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.dto.mapper;
+package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;

@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.connector;
+package it.gov.pagopa.payment.connector.rest.reward;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.qrcode.AuthPaymentRequestDTO;

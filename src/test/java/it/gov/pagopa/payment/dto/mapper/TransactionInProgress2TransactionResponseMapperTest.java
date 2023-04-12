@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.payment.connector.rest.reward.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;

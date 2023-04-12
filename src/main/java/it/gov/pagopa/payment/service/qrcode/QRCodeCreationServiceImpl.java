@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.TransactionCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;

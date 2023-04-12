@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.service.qrcode;
 
 import feign.FeignException;
-import it.gov.pagopa.payment.connector.RewardCalculatorConnector;
+import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.TransactionInProgressConstants;
-import it.gov.pagopa.payment.dto.mapper.AuthPaymentRequestMapper;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
 import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.qrcode.AuthPaymentResponseDTO;
