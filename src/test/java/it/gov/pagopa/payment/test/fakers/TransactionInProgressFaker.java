@@ -21,6 +21,7 @@ public class TransactionInProgressFaker {
         .correlationId(id)
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .senderCode("SENDERCODE%d".formatted(bias))
+        .merchantId("MERCHANTID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now())
@@ -37,7 +38,7 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(SyncTrxStatus.CREATED)
+        .status(SyncTrxStatus.CREATED);
         .userId("USERID%d".formatted(bias));
   }
 }

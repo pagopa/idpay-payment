@@ -8,15 +8,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
-    private final QRCodeCreationService qrCodeCreationService;
+  private final QRCodeCreationService qrCodeCreationService;
 
-    public QRCodePaymentServiceImpl(QRCodeCreationService qrCodeCreationService) {
-        this.qrCodeCreationService = qrCodeCreationService;
-    }
+  public QRCodePaymentServiceImpl(QRCodeCreationService qrCodeCreationService) {
+    this.qrCodeCreationService = qrCodeCreationService;
+  }
 
-    @Override
-    public TransactionResponse createTransaction(
-            TransactionCreationRequest trxCreationRequest, String merchantId) {
-        return qrCodeCreationService.createTransaction(trxCreationRequest, merchantId);
-    }
+  @Override
+  public TransactionResponse createTransaction(
+      TransactionCreationRequest trxCreationRequest, String merchantId) {
+    return qrCodeCreationService.createTransaction(trxCreationRequest, merchantId);
+  }
 }
