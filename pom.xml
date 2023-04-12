@@ -67,6 +67,11 @@
             <artifactId>janino</artifactId>
             <version>3.1.8</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
         <!--TEST-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -97,6 +102,18 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.javafaker</groupId>
+            <artifactId>javafaker</artifactId>
+            <version>1.0.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <version>3.5.0</version>
             <scope>test</scope>
         </dependency>
 

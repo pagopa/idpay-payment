@@ -9,8 +9,8 @@ spring:
 
   data:
     mongodb:
-      database: ${MONGODB_DBNAME:}
-      uri: ${MONGODB_URI:}
+      database: ${MONGODB_DBNAME:idpay}
+      uri: ${MONGODB_URI:mongodb://localhost:27017}
       # custom configured properties
       config:
         connectionPool:
