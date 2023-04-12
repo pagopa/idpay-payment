@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
-import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.utils.Utils;
@@ -49,7 +49,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
       Assertions.assertEquals(transactionCreationRequest.getVat(), result.getVat());
       Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxDate());
       Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxChargeDate());
-      Assertions.assertEquals(Status.CREATED, result.getStatus());
+      Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
       Assertions.assertEquals(PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());
       Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
     });

@@ -18,7 +18,7 @@ public class QRCodePaymentControllerImpl implements
 
   @Override
   @PerformanceLog("CREATE_TRANSACTION_QR_CODE")
-  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest) {
-    return qrCodePaymentService.createTransaction(trxCreationRequest);
+  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest, String merchantId) {
+    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId);
   }
 }
