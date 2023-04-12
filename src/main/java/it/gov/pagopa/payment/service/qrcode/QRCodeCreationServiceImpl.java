@@ -43,7 +43,7 @@ public class QRCodeCreationServiceImpl implements
   public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest,
       String merchantId) {
     if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
-      log.error("Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
+      log.error("[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
       throw new ClientExceptionWithBody(
           HttpStatus.NOT_FOUND,
           "NOT FOUND",
@@ -60,7 +60,7 @@ public class QRCodeCreationServiceImpl implements
   private void generateTrxCodeAndSave(TransactionInProgress trx) {
     long retry = 1;
     while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId() == null) {
-      log.info("[CREATE_TRANSACTION] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]", retry);
+      log.info("[QR_CODE_CREATE_TRANSACTION] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]", retry);
     }
   }
 }

@@ -4,8 +4,10 @@ import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class QRCodePaymentControllerImpl implements
     QRCodePaymentController {
@@ -17,8 +19,9 @@ public class QRCodePaymentControllerImpl implements
   }
 
   @Override
-  @PerformanceLog("CREATE_TRANSACTION_QR_CODE")
+  @PerformanceLog("QR_CODE_CREATE_TRANSACTION")
   public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest, String merchantId) {
+    log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} is creating a transaction", merchantId);
     return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId);
   }
 }
