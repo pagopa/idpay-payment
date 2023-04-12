@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.dto.mapper;
 
-import it.gov.pagopa.payment.connector.rest.reward.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;

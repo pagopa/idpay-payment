@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.controller;
 
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import org.springframework.http.HttpStatus;
