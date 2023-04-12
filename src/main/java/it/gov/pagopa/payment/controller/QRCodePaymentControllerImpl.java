@@ -31,8 +31,17 @@ public class QRCodePaymentControllerImpl implements
   @PerformanceLog("QR_CODE_AUTHORIZE_TRANSACTION")
   public AuthPaymentDTO authPayment(String trxCode, String userId) {
     log.info(
-        "[AUTHORIZE_TRANSACTION_QR_CODE] The user {} is authorizing the transaction having trxCode {}",
+        "[QR_CODE_AUTHORIZE_TRANSACTION] The user {} is authorizing the transaction having trxCode {}",
         userId, trxCode);
     return qrCodePaymentService.authPayment(userId, trxCode);
+  }
+
+  @Override
+  @PerformanceLog("QR_CODE_RELATE_USER")
+  public TransactionResponse relateUser(String trxCode, String userId) {
+    log.info(
+        "[QR_CODE_RELATE_USER] The user {} is trying to relate to transaction having trxCode {}",
+        userId, trxCode);
+    return qrCodePaymentService.relateUser(userId, trxCode);
   }
 }

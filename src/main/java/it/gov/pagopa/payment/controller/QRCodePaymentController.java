@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@RequestMapping("/idpay/payment/qr-code/merchant")
+@RequestMapping("/idpay/payment/qr-code")
 public interface QRCodePaymentController {
 
-  @PostMapping("/")
+  @PostMapping("/merchant")
   @ResponseStatus(code = HttpStatus.CREATED)
   TransactionResponse createTransaction(
       @RequestBody TransactionCreationRequest trxCreationRequest,
@@ -24,5 +24,10 @@ public interface QRCodePaymentController {
   @PutMapping("/{trxCode}/authorize/{userId}")
   @ResponseStatus(code = HttpStatus.OK)
   AuthPaymentDTO authPayment(@PathVariable("trxCode") String trxCode,
+      @PathVariable("userId") String userId);
+
+  @PutMapping("/{trxCode}/relate-user/{userId}")
+  @ResponseStatus(code = HttpStatus.OK)
+  TransactionResponse relateUser(@PathVariable("trxCode") String trxCode,
       @PathVariable("userId") String userId);
 }
