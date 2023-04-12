@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.Reward;
-import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.Utils;
@@ -83,8 +83,15 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
   public void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons) {
     mongoTemplate.updateFirst(
         Query.query(Criteria.where(Fields.id).is(id)),
-        new Update().set(Fields.status, Status.AUTHORIZED).set(Fields.reward, reward)
+        new Update().set(Fields.status, SyncTrxStatus.AUTHORIZED).set(Fields.reward, reward)
             .set(Fields.rejectionReasons, rejectionReasons),
+        TransactionInProgress.class
+    );
+  }
+  @Override
+  public TransactionInProgress findByIdAndUserId(String id, String userId){
+    return mongoTemplate.findOne(
+        Query.query(Criteria.where(Fields.id).is(id).and(Fields.userId).is(userId)),
         TransactionInProgress.class
     );
   }
