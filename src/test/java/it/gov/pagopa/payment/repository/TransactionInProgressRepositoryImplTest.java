@@ -1,13 +1,10 @@
 package it.gov.pagopa.payment.repository;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
-import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -17,11 +14,9 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 @Slf4j
 class TransactionInProgressRepositoryImplTest extends BaseIntegrationTest {
 
-  @Autowired
-  protected TransactionInProgressRepositoryImpl transactionInProgressRepository;
+  @Autowired protected TransactionInProgressRepositoryImpl transactionInProgressRepository;
 
-  @Autowired
-  protected MongoTemplate mongoTemplate;
+  @Autowired protected MongoTemplate mongoTemplate;
 
   @Test
   void createIfExists() {
@@ -45,8 +40,7 @@ class TransactionInProgressRepositoryImplTest extends BaseIntegrationTest {
     TransactionInProgress result =
         mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "hpan", "merchantId", "userId", "authDate",
-        "elaborationDateTime");
+    TestUtils.checkNotNullFields(result, "hpan", "userId", "authDate", "elaborationDateTime");
   }
 
   @Test

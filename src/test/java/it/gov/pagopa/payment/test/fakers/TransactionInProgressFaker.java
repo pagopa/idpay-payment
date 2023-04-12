@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.enums.OperationType;
-import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -21,6 +21,7 @@ public class TransactionInProgressFaker {
         .correlationId(id)
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .senderCode("SENDERCODE%d".formatted(bias))
+        .merchantId("MERCHANTID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now())
@@ -37,6 +38,6 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(Status.CREATED);
+        .status(SyncTrxStatus.CREATED);
   }
 }

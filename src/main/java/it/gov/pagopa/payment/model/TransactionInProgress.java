@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.model;
 
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
-import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -59,6 +59,6 @@ public class TransactionInProgress {
   private Reward reward;
   private List<String> rejectionReasons;
   private String userId;
-  private Status status;
+  private SyncTrxStatus status;
   private String callbackUrl;
 }

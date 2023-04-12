@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
-import it.gov.pagopa.payment.enums.Status;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.utils.Utils;
 import java.util.UUID;
@@ -35,7 +35,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper
         .vat(transactionCreationRequest.getVat())
         .trxDate(transactionCreationRequest.getTrxDate())
         .trxChargeDate(transactionCreationRequest.getTrxDate())
-        .status(Status.CREATED)
+        .status(SyncTrxStatus.CREATED)
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .build();
