@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import it.gov.pagopa.payment.connector.RewardCalculatorConnector;
-import it.gov.pagopa.payment.dto.mapper.AuthPaymentRequestMapper;
+import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

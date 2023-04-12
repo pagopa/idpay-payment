@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 public interface RewardCalculatorConnector {
 
-  AuthPaymentResponseDTO authorizePayment(@PathVariable("initiativeId") String initiativeId,
-      @RequestBody AuthPaymentRequestDTO body);
+  AuthPaymentResponseDTO authorizePayment(
+      @PathVariable("initiativeId") String initiativeId, @RequestBody AuthPaymentRequestDTO body);
 
+  AuthPaymentResponseDTO previewTransaction(
+      @PathVariable("initiativeId") String initiativeId, @RequestBody AuthPaymentRequestDTO body);
 }
