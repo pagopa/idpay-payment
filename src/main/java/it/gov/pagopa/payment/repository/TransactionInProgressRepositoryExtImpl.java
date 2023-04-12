@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.Utils;
@@ -15,7 +14,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -104,50 +102,36 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   }
 
   @Override
-  public TransactionInProgress findByTrxCodeAndRelateUser(String trxCode, String userId) {
-    TransactionInProgress trx =
-        mongoTemplate.findAndModify(
-            Query.query(
-                criteriaByTrxCode(trxCode)
-                    .orOperator(criteriaByUserId(userId), criteriaByUserId(null))),
-            new Update().set(Fields.userId, userId),
-            TransactionInProgress.class);
-
-    if(trx == null && mongoTemplate.exists(Query.query(criteriaByTrxCode(trxCode)), TransactionInProgress.class)){
-      throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, "FORBIDDEN", "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
-    }
-
-    if (trx == null){
-      throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "NOT FOUND","Cannot find transaction with trxCode [%s]".formatted(trxCode));
-    }
-
-    return trx;
+  public TransactionInProgress findByTrxCode(String trxCode) {
+    return mongoTemplate.findOne(
+        Query.query(
+            criteriaByTrxCode(trxCode)
+                .andOperator(
+                    Criteria.where(Fields.trxChargeDate)
+                        .gte(LocalDateTime.now().minusMinutes(trxThrottlingMinutes)))),
+        TransactionInProgress.class);
   }
 
   @Override
-  public void updateTrxRejected(String id, List<String> rejectionReasons) {
+  public void updateTrxRejected(String id, String userId, List<String> rejectionReasons) {
     mongoTemplate.updateFirst(
         Query.query(Criteria.where(Fields.id).is(id)),
         new Update()
             .set(Fields.status, SyncTrxStatus.REJECTED)
+            .set(Fields.userId, userId)
             .set(Fields.rejectionReasons, rejectionReasons),
         TransactionInProgress.class);
   }
 
   @Override
-  public void updateTrxIdentified(String id) {
+  public void updateTrxIdentified(String id, String userId) {
     mongoTemplate.updateFirst(
         Query.query(Criteria.where(Fields.id).is(id)),
-        new Update()
-            .set(Fields.status, SyncTrxStatus.IDENTIFIED),
+        new Update().set(Fields.status, SyncTrxStatus.IDENTIFIED).set(Fields.userId, userId),
         TransactionInProgress.class);
   }
 
   private Criteria criteriaByTrxCode(String trxCode) {
     return Criteria.where(Fields.trxCode).is(trxCode);
-  }
-
-  private Criteria criteriaByUserId(String userId) {
-    return Criteria.where(Fields.userId).is(userId);
   }
 }

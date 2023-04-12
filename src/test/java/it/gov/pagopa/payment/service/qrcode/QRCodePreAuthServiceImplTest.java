@@ -19,8 +19,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentRequestDTOFaker;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +61,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentResponseDTO preview = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
-    when(transactionInProgressRepository.findByTrxCodeAndRelateUser("TRXCODE1", "USERID1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
     when(authPaymentRequestMapper.rewardMap(any())).thenReturn(request);
     when(rewardCalculatorConnector.previewTransaction(anyString(), any())).thenReturn(preview);
     when(transactionInProgress2TransactionResponseMapper.apply(any())).thenReturn(response);
@@ -71,8 +71,32 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result, "id", "merchantId");
 
-    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString());
-    verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyList());
+    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
+  }
+
+  @Test
+  void relateUserIdentified() {
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    trx.setStatus(SyncTrxStatus.IDENTIFIED);
+    trx.setUserId("USERID1");
+
+    AuthPaymentRequestDTO request = AuthPaymentRequestDTOFaker.mockInstance(1);
+    AuthPaymentResponseDTO preview = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    TransactionResponse response = TransactionResponseFaker.mockInstance(1);
+
+    when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
+    when(authPaymentRequestMapper.rewardMap(any())).thenReturn(request);
+    when(rewardCalculatorConnector.previewTransaction(anyString(), any())).thenReturn(preview);
+    when(transactionInProgress2TransactionResponseMapper.apply(any())).thenReturn(response);
+
+    TransactionResponse result = qrCodePreAuthService.relateUser("TRXCODE1", "USERID1");
+
+    Assertions.assertNotNull(result);
+    TestUtils.checkNotNullFields(result, "id", "merchantId");
+
+    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
   @Test
@@ -81,7 +105,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentRequestDTO request = AuthPaymentRequestDTOFaker.mockInstance(1);
     AuthPaymentResponseDTO preview = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.REJECTED);
 
-    when(transactionInProgressRepository.findByTrxCodeAndRelateUser("TRXCODE1", "USERID1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
     when(authPaymentRequestMapper.rewardMap(any())).thenReturn(request);
     when(rewardCalculatorConnector.previewTransaction(anyString(), any())).thenReturn(preview);
 
@@ -92,7 +116,41 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
-    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString());
-    verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyList());
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
+  }
+
+  @Test
+  void relateUserNotAuthorized() {
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    trx.setUserId("USERID1");
+
+    when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
+
+    ClientException result = Assertions.assertThrows(ClientException.class, () ->
+        qrCodePreAuthService.relateUser("TRXCODE1", "USERID2")
+    );
+
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
+  }
+
+  @Test
+  void relateUserTrxNotFound() {
+
+    when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(null);
+
+    ClientException result = Assertions.assertThrows(ClientException.class, () ->
+        qrCodePreAuthService.relateUser("TRXCODE1", "USERID1")
+    );
+
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 }

@@ -2,11 +2,11 @@ package it.gov.pagopa.payment.service.qrcode;
 
 import feign.FeignException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.constants.TransactionInProgressConstants;
-import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
+import it.gov.pagopa.payment.constants.TransactionInProgressConstants;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;

@@ -14,28 +14,52 @@ import org.springframework.http.HttpStatus;
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
-  private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
+  private final TransactionInProgress2TransactionResponseMapper
+      transactionInProgress2TransactionResponseMapper;
   private final AuthPaymentRequestMapper authPaymentRequestMapper;
   private final RewardCalculatorConnector rewardCalculatorConnector;
 
-  public QRCodePreAuthServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
-      TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
-      AuthPaymentRequestMapper authPaymentRequestMapper, RewardCalculatorConnector rewardCalculatorConnector) {
+  public QRCodePreAuthServiceImpl(
+      TransactionInProgressRepository transactionInProgressRepository,
+      TransactionInProgress2TransactionResponseMapper
+          transactionInProgress2TransactionResponseMapper,
+      AuthPaymentRequestMapper authPaymentRequestMapper,
+      RewardCalculatorConnector rewardCalculatorConnector) {
     this.transactionInProgressRepository = transactionInProgressRepository;
-    this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
+    this.transactionInProgress2TransactionResponseMapper =
+        transactionInProgress2TransactionResponseMapper;
     this.authPaymentRequestMapper = authPaymentRequestMapper;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
   }
 
   @Override
   public TransactionResponse relateUser(String trxCode, String userId) {
-    TransactionInProgress trx = transactionInProgressRepository.findByTrxCodeAndRelateUser(trxCode, userId);
-    AuthPaymentResponseDTO preview = rewardCalculatorConnector.previewTransaction(trx.getInitiativeId(), authPaymentRequestMapper.rewardMap(trx));
-    if(preview.getStatus().equals(SyncTrxStatus.REJECTED.name())){
-      transactionInProgressRepository.updateTrxRejected(trx.getId(), preview.getRejectionReasons());
-      throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
+    TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode);
+
+    if (trx == null) {
+      throw new ClientExceptionWithBody(
+          HttpStatus.NOT_FOUND,
+          "NOT FOUND",
+          "Cannot find transaction with trxCode [%s]".formatted(trxCode));
     }
-    transactionInProgressRepository.updateTrxIdentified(trx.getId());
+
+    if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
+      throw new ClientExceptionWithBody(
+          HttpStatus.FORBIDDEN,
+          "FORBIDDEN",
+          "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+    }
+
+    AuthPaymentResponseDTO preview =
+        rewardCalculatorConnector.previewTransaction(
+            trx.getInitiativeId(), authPaymentRequestMapper.rewardMap(trx));
+    if (preview.getStatus().equals(SyncTrxStatus.REJECTED.name())) {
+      transactionInProgressRepository.updateTrxRejected(
+          trx.getId(), userId, preview.getRejectionReasons());
+      throw new ClientExceptionWithBody(
+          HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
+    }
+    transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
     return transactionInProgress2TransactionResponseMapper.apply(trx);
   }
 }

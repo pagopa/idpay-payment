@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.dto;
 
-import it.gov.pagopa.payment.dto.Reward;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
