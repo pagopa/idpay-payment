@@ -95,6 +95,7 @@ class QRCodeCreationServiceTest {
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenAnswer(new Answer<String>() {
       private int count = 0;
+
       public String answer(InvocationOnMock invocation) {
         return "TRXCODE%d".formatted(++count);
       }
@@ -104,8 +105,8 @@ class QRCodeCreationServiceTest {
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE2"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-
-    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" );
+    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq,
+        "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -120,7 +121,8 @@ class QRCodeCreationServiceTest {
 
     ClientException result =
         Assertions.assertThrows(
-            ClientException.class, () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" ));
+            ClientException.class,
+            () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());
