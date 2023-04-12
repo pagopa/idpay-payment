@@ -23,6 +23,7 @@ public class TransactionCreationRequestFaker {
         .mcc("MCC%d".formatted(bias))
         .acquirerCode("ACQUIRERCODE%d".formatted(bias))
         .acquirerId("ACQUIRERID%d".formatted(bias))
+        .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
         .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
         .callbackUrl("CALLBACKURL%d".formatted(bias))
         .idTrxIssuer("IDTRXISSUER%d".formatted(bias));

@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/INITIATIVEID/(USERID_KO_[0-9]+)/suspend"
+  },
+  "response": {
+    "status": "500",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
