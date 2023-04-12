@@ -31,6 +31,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     @Override
     public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
+        trx.setTrxCode(trxCode);
         return mongoTemplate.upsert(
                 Query.query(Criteria.where(Fields.trxCode).is(trx.getTrxCode())),
                 new Update()
@@ -42,6 +43,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.effectiveAmount, Utils.centsToEuro(trx.getAmountCents()))
                         .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
                         .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
+                        .setOnInsert(Fields.merchantId, trx.getMerchantId())
                         .setOnInsert(Fields.callbackUrl, trx.getCallbackUrl())
                         .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
                         .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())

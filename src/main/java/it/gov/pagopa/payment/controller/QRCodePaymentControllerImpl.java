@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-public class QRCodePaymentControllerImpl implements
-    QRCodePaymentController {
+public class QRCodePaymentControllerImpl implements QRCodePaymentController {
 
   private final QRCodePaymentService qrCodePaymentService;
 
@@ -20,7 +19,7 @@ public class QRCodePaymentControllerImpl implements
   }
 
   @Override
-  @PerformanceLog("QR_CODE_CREATE_TRANSACTION", payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
+  @PerformanceLog(value = "QR_CODE_CREATE_TRANSACTION", payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
   public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest, String merchantId) {
     log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} is creating a transaction", merchantId);
     return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId);

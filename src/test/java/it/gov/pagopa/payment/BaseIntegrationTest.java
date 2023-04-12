@@ -4,10 +4,17 @@ import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.process.runtime.Executable;
+
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Field;
 import java.net.UnknownHostException;
 import java.util.Objects;
+import java.util.TimeZone;
 import javax.annotation.PostConstruct;
+import javax.management.*;
+
+import it.gov.pagopa.payment.utils.Utils;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +40,22 @@ public abstract class BaseIntegrationTest {
 
     @Value("${spring.data.mongodb.uri}")
     private String mongodbUri;
+
+    @BeforeAll
+    public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
+        TimeZone.setDefault(TimeZone.getTimeZone(Utils.ZONEID));
+
+        unregisterMBean("kafka.*:*");
+        unregisterMBean("org.springframework.*:*");
+    }
+
+    private static void unregisterMBean(String objectName) throws MalformedObjectNameException, InstanceNotFoundException, MBeanRegistrationException {
+        ObjectName mbeanName = new ObjectName(objectName);
+        MBeanServer mBeanServer = ManagementFactory.getPlatformMBeanServer();
+        for (ObjectInstance mBean : mBeanServer.queryMBeans(mbeanName, null)) {
+            mBeanServer.unregisterMBean(mBean.getObjectName());
+        }
+    }
 
     @PostConstruct
     public void logEmbeddedServerConfig() throws NoSuchFieldException, UnknownHostException {
