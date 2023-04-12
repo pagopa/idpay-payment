@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
-
-import java.util.List;
 
 @Slf4j
 class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
@@ -25,11 +25,9 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
   @AfterEach
   void clearTestData(){
-    transactionInProgressRepository.deleteAllById(List.of(
-            "MOCKEDTRANSACTION_qr-code_0",
-            "MOCKEDTRANSACTION_qr-code_1",
-            "MOCKEDTRANSACTION_qr-code_2"
-            ));
+    mongoTemplate.findAllAndRemove(
+            new Query(Criteria.where(TransactionInProgress.Fields.id).regex("^MOCKEDTRANSACTION_qr-code_[0-9]+$")),
+            TransactionInProgress.class);
   }
 
   @Test
