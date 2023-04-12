@@ -1,19 +1,21 @@
 package it.gov.pagopa.payment.exception;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
+@Getter
+@Setter
 public class ClientExceptionNoBody extends ClientException{
-
-  public ClientExceptionNoBody(HttpStatus httpStatus, String message) {
-    super(httpStatus, message);
+  public ClientExceptionNoBody(HttpStatus httpStatus){
+    this(httpStatus, null);
   }
 
-  public ClientExceptionNoBody(HttpStatus httpStatus, String message, Throwable ex) {
-    super(httpStatus, message, ex);
+  public ClientExceptionNoBody(HttpStatus httpStatus, Throwable ex){
+    this(httpStatus, ex, true);
   }
 
-  public ClientExceptionNoBody(HttpStatus httpStatus, String message, boolean printStackTrace,
-      Throwable ex) {
-    super(httpStatus, message, printStackTrace, ex);
+  public ClientExceptionNoBody(HttpStatus httpStatus, Throwable ex, boolean printStackTrace){
+    super(httpStatus, null, printStackTrace, ex);
   }
 }

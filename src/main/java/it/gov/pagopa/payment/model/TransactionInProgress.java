@@ -1,9 +1,11 @@
 package it.gov.pagopa.payment.model;
 
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.Status;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,6 +56,8 @@ public class TransactionInProgress {
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;
+  private Reward reward;
+  private List<String> rejectionReasons;
   private String userId;
   private Status status;
   private String callbackUrl;

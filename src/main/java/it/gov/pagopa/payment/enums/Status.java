@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.enums;
 
 public enum Status {
-  CREATED
+  CREATED,
+  IDENTIFIED,
+  AUTHORIZED
 }

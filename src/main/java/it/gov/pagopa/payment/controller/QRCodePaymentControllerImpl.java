@@ -1,10 +1,11 @@
 package it.gov.pagopa.payment.controller;
 
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreated;
+import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import it.gov.pagopa.payment.service.qrCodeAuth.QRCodeAuthPaymentService;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -12,9 +13,12 @@ public class QRCodePaymentControllerImpl implements
     QRCodePaymentController {
 
   private final QRCodePaymentService qrCodePaymentService;
+  private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
 
-  public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService) {
+  public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService,
+      QRCodeAuthPaymentService qrCodeAuthPaymentService) {
     this.qrCodePaymentService = qrCodePaymentService;
+    this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
   }
 
   @Override
@@ -24,8 +28,8 @@ public class QRCodePaymentControllerImpl implements
   }
 
   @Override
-  public ResponseEntity<AuthPaymentDTO> authPayment(String trxCode, String userId) {
-    AuthPaymentDTO authPaymentDTO = qrCodePaymentService.authPayment(userId, trxCode);
-    return new ResponseEntity<>(authPaymentDTO, HttpStatus.OK);
+  @PerformanceLog("AUTHORIZE_TRANSACTION_QR_CODE")
+  public AuthPaymentDTO authPayment(String trxCode, String userId) {
+    return qrCodeAuthPaymentService.authPayment(userId, trxCode);
   }
 }

@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
-import java.math.BigDecimal;
+import it.gov.pagopa.payment.dto.Reward;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +17,7 @@ public class AuthPaymentDTO {
   String trxCode;
   String initiativeId;
   String status;
-  BigDecimal reward;
+  Reward reward;
   List<String> rejectReasons;
 
 }

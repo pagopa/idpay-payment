@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.Builder;
 
@@ -15,7 +14,7 @@ public class AuthPaymentRequestDTO {
   String vat;
   String idTrxIssuer;
   LocalDateTime trxDate;
-  BigDecimal amount;
+  Long amountCents;
   String amountCurrency;
   String mcc;
   String acquirerCode;
