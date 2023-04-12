@@ -38,7 +38,7 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(SyncTrxStatus.CREATED);
+        .status(SyncTrxStatus.CREATED)
         .userId("USERID%d".formatted(bias));
   }
 }
