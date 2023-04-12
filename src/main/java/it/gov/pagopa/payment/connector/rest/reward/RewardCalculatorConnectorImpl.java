@@ -5,7 +5,6 @@ import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import org.springframework.http.HttpStatus;
@@ -36,7 +35,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
       response = restClient.previewTransaction(initiativeId, body);
     } catch (FeignException e) {
       switch (e.status()) {
-        case 409 -> {
+        case 403, 409 -> {
           return response;
         }
         case 429 ->

@@ -74,7 +74,8 @@ class QRCodeCreationServiceTest {
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1");
+    TransactionResponse result =
+        qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -89,24 +90,26 @@ class QRCodeCreationServiceTest {
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
-        any(TransactionCreationRequest.class)))
+            any(TransactionCreationRequest.class)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
-    when(trxCodeGenUtil.get()).thenAnswer(new Answer<String>() {
-      private int count = 0;
+    when(trxCodeGenUtil.get())
+        .thenAnswer(
+            new Answer<String>() {
+              private int count = 0;
 
-      public String answer(InvocationOnMock invocation) {
-        return "TRXCODE%d".formatted(++count);
-      }
-    });
+              public String answer(InvocationOnMock invocation) {
+                return "TRXCODE%d".formatted(++count);
+              }
+            });
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
         .thenReturn(UpdateResult.acknowledged(1L, 0L, null));
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE2"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq,
-        "MERCHANTID1");
+    TransactionResponse result =
+        qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);

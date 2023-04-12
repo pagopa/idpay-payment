@@ -15,9 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 @Slf4j
-class TransactionInProgressRepositoryImplTest extends BaseIntegrationTest {
+class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
-  @Autowired protected TransactionInProgressRepositoryImpl transactionInProgressRepository;
+  @Autowired protected TransactionInProgressRepositoryExtImpl transactionInProgressRepository;
 
   @Autowired protected MongoTemplate mongoTemplate;
 
