@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.dto.qrcode;
+package it.gov.pagopa.payment.dto;
 
 import it.gov.pagopa.payment.dto.Reward;
 import java.util.List;

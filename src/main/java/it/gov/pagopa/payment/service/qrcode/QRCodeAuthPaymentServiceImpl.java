@@ -4,9 +4,9 @@ import feign.FeignException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.TransactionInProgressConstants;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -36,7 +36,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
 
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
-    TransactionInProgress transactionInProgress = transactionInProgressRepository.findAndModify(
+    TransactionInProgress transactionInProgress = transactionInProgressRepository.findByTrxCodeThrottled(
         trxCode);
     if (transactionInProgress == null) {
       throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "TRANSACTION NOT FOUND",

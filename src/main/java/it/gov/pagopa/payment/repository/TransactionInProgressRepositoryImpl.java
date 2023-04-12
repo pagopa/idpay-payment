@@ -64,7 +64,7 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
   }
 
   @Override
-  public TransactionInProgress findAndModify(String trxCode) {
+  public TransactionInProgress findByTrxCodeThrottled(String trxCode) {
     return mongoTemplate.findAndModify(
         Query.query(Criteria.where(Fields.trxCode).is(trxCode)
             .andOperator(Criteria.where(Fields.authDate).exists(true)

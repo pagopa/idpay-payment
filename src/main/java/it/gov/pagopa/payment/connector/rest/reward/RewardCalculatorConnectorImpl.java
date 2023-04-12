@@ -1,15 +1,19 @@
 package it.gov.pagopa.payment.connector.rest.reward;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentRequestMapper;
 
-public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector{
+public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
   private final RewardCalculatorRestClient restClient;
+  private final AuthPaymentRequestMapper requestMapper;
 
-  public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient) {
+  public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
+      AuthPaymentRequestMapper requestMapper) {
     this.restClient = restClient;
+    this.requestMapper = requestMapper;
   }
 
   @Override

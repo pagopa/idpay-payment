@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.connector.rest.reward.mapper;
+package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;

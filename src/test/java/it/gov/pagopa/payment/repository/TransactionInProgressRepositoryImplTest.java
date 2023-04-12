@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.BaseIntegrationTest;
-import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
@@ -22,8 +21,6 @@ class TransactionInProgressRepositoryImplTest extends BaseIntegrationTest {
 
   @Autowired protected MongoTemplate mongoTemplate;
 
-  @Autowired
-  RewardCalculatorConnector connector;
 
   @Test
   void createIfExists() {

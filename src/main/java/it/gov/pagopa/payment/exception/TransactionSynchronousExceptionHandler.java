@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.exception;
 
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

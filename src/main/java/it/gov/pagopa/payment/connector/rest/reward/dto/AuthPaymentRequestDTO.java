@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.dto.qrcode;
+package it.gov.pagopa.payment.connector.rest.reward.dto;
 
 import java.time.LocalDateTime;
 import lombok.Builder;
