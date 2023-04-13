@@ -35,7 +35,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   @Override
-  public TransactionResponse relateUser(String trxCode, String userId) {
+  public AuthPaymentDTO relateUser(String trxCode, String userId) {
     return qrCodePreAuthService.relateUser(trxCode, userId);
   }
 

@@ -5,15 +5,15 @@
     "bodyPatterns": [
       {
         "equalToJson": {
-          "transactionId":  "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
-          "correlationId": "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
+          "transactionId": "${json-unit.any-string}",
+          "correlationId":  "${json-unit.any-string}",
           "userId": "USERID",
           "merchantId": "MERCHANTID",
           "vat": "TOOMANYREQUESTS",
           "senderCode": "SENDERCODE${json-unit.any-number}",
           "merchantFiscalCode":  "MERCHANTFISCALCODE${json-unit.any-number}",
-          "trxDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T-[0-9]{2}:-[0-9]{2}:-[0-9]{2}(.[0-9]+)?",
-          "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T-[0-9]{2}:-[0-9]{2}:-[0-9]{2}(.[0-9]+)?",
+          "trxDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:-[0-9]{2}:-[0-9]{2}(.[0-9]+)?",
+          "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:-[0-9]{2}:-[0-9]{2}(.[0-9]+)?",
           "amountCents":  "${json-unit.any-number}",
           "amountCurrency": "AMOUNTCURRENCY${json-unit.any-number}",
           "mcc":  "MCC${json-unit.any-number}",
@@ -21,7 +21,7 @@
           "acquirerId":  "ACQUIRERID${json-unit.any-number}",
           "idTrxIssuer":  "IDTRXISSUER${json-unit.any-number}",
           "idTrxAcquirer": "IDTRXACQUIRER${json-unit.any-number}",
-          "hpan":  "HPAN${json-unit.any-number}"
+          "operationType": "CHARGE"
         }
       }
     ]

@@ -1,12 +1,5 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
@@ -22,7 +15,6 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentRequestDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +23,13 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeAuthPaymentServiceTest {
@@ -88,7 +87,7 @@ class QRCodeAuthPaymentServiceTest {
         assertThrows(ClientException.class, () ->
             service.authPayment("USERID1", "TRXCODE1"));
     assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    assertEquals("TRANSACTION NOT FOUND", ((ClientExceptionWithBody) result).getTitle());
+    assertEquals("TRANSACTION NOT FOUND", ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -102,7 +101,7 @@ class QRCodeAuthPaymentServiceTest {
         assertThrows(ClientException.class, () -> service.authPayment(
             "userId", "TRXCODE1"));
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals("TRX USER ASSOCIATION", ((ClientExceptionWithBody) result).getTitle());
+    Assertions.assertEquals("TRX USER ASSOCIATION", ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -130,6 +129,6 @@ class QRCodeAuthPaymentServiceTest {
         assertThrows(ClientException.class, () -> service.authPayment(
             "USERID1", "TRXCODE1"));
     assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("ERROR STATUS", ((ClientExceptionWithBody) result).getTitle());
+    Assertions.assertEquals("ERROR STATUS", ((ClientExceptionWithBody) result).getCode());
   }
 }
