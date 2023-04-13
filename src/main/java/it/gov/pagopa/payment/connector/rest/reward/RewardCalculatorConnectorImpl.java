@@ -7,7 +7,9 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 
+@Service
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
   private final RewardCalculatorRestClient restClient;

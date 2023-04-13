@@ -5,7 +5,9 @@ import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class TransactionInProgressFaker {
   public static TransactionInProgress mockInstance(Integer bias) {
@@ -14,7 +16,7 @@ public class TransactionInProgressFaker {
 
   public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias) {
 
-    String id = "TRANSACTION%d_qr-code_%d".formatted(bias, System.currentTimeMillis());
+    String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
 
     return TransactionInProgress.builder()
         .id(id)
@@ -24,10 +26,10 @@ public class TransactionInProgressFaker {
         .merchantId("MERCHANTID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
-        .trxDate(LocalDateTime.now())
-        .trxChargeDate(LocalDateTime.now())
-        .amountCents(10L)
-        .effectiveAmount(BigDecimal.TEN)
+        .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .trxChargeDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .amountCents(1000L)
+        .effectiveAmount(BigDecimal.TEN.setScale(2, RoundingMode.UNNECESSARY))
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))
         .acquirerCode("ACQUIRERCODE%d".formatted(bias))
