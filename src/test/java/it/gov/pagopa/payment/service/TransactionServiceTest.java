@@ -43,7 +43,6 @@ class TransactionServiceTest {
 
         TransactionInProgress result = transactionService.getTransaction(TRANSACTION_ID, USER_ID);
 
-        Assertions.assertInstanceOf(TransactionInProgress.class, result);
         Assertions.assertEquals(trx, result);
     }
 
