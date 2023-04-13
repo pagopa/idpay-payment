@@ -1,5 +1,11 @@
 package it.gov.pagopa.common.performancelogger;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.MemoryAppender;
 import it.gov.pagopa.payment.controller.QRCodePaymentControllerImpl;
@@ -17,12 +23,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ContextConfiguration(classes = {PerformanceLoggerAspect.class, QRCodePaymentControllerImpl.class, ErrorManager.class})
 @WebMvcTest(QRCodePaymentControllerImpl.class)
@@ -83,7 +83,7 @@ class PerformanceLoggerTest {
         String logMessage = memoryAppender.getLoggedEvents().get(0).getFormattedMessage();
         Assertions.assertTrue(
                 logMessage.matches(
-                        "\\[PERFORMANCE_LOG] \\[CREATE_TRANSACTION_QR_CODE] Time occurred to perform business logic: \\d+ ms"
+                        "\\[PERFORMANCE_LOG] \\[QR_CODE_CREATE_TRANSACTION] Time occurred to perform business logic: \\d+ ms"
                 ),
                 "Unexpected logged message: " + logMessage
         );

@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
@@ -18,7 +19,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
 
   @Test
   void applyTest() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     TransactionResponse result = mapper.apply(trx);
 
     Assertions.assertAll(() -> {
