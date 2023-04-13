@@ -96,7 +96,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   }
 
   @Override
-  public TransactionInProgress findByTrxCode(String trxCode) {
+  public TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpired(String trxCode) {
     return mongoTemplate.findOne(
         Query.query(
             criteriaByTrxCodeAndChargeDate(trxCode, LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes))),

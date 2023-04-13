@@ -36,7 +36,8 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   @Override
   public TransactionResponse relateUser(String trxCode, String userId) {
-    TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode);
+    TransactionInProgress trx =
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired(trxCode);
 
     if (trx == null) {
       throw new ClientExceptionWithBody(
@@ -53,11 +54,14 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
     }
 
     AuthPaymentDTO preview =
-        rewardCalculatorConnector.previewTransaction(
-            trx, authPaymentMapper.rewardMap(trx));
-    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
+        rewardCalculatorConnector.previewTransaction(trx, authPaymentMapper.rewardMap(trx));
+    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)
+        && preview.getRejectionReasons().contains("NO_ACTIVE_INITIATIVES")) {
       transactionInProgressRepository.updateTrxRejected(
           trx.getId(), userId, preview.getRejectionReasons());
+    }
+    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)
+        && preview.getRejectionReasons().contains("NO_ACTIVE_INITIATIVES")) {
       throw new ClientExceptionWithBody(
           HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
     }

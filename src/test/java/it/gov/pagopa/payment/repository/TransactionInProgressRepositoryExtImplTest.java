@@ -126,14 +126,14 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     transactionInProgressRepository.save(transactionInProgress);
 
-    TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCode("TRXCODE1");
+    TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("TRXCODE1");
     Assertions.assertNotNull(resultFirstSave);
     TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
 
     transactionInProgress.setTrxChargeDate(LocalDateTime.now().minusMinutes(30));
     transactionInProgressRepository.save(transactionInProgress);
 
-    TransactionInProgress resultSecondSave = transactionInProgressRepository.findByTrxCode("TRXCODE1");
+    TransactionInProgress resultSecondSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("TRXCODE1");
     Assertions.assertNull(resultSecondSave);
 
   }

@@ -9,7 +9,7 @@ public interface TransactionInProgressRepositoryExt {
   UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
   TransactionInProgress findByTrxCodeThrottled(String trxCode);
   void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons);
-  TransactionInProgress findByTrxCode(String trxCode);
+  TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpired(String trxCode);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons);
   void updateTrxIdentified(String id, String userId);
 }
