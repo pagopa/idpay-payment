@@ -120,8 +120,8 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result, "id", "merchantId");
 
-    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString());
-    verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
   @Test

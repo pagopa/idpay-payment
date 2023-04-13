@@ -55,17 +55,16 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
     AuthPaymentDTO preview =
         rewardCalculatorConnector.previewTransaction(trx, authPaymentMapper.rewardMap(trx));
-    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)
-        && preview.getRejectionReasons().contains("NO_ACTIVE_INITIATIVES")) {
+    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
       transactionInProgressRepository.updateTrxRejected(
           trx.getId(), userId, preview.getRejectionReasons());
+      if (preview.getRejectionReasons().contains("NO_ACTIVE_INITIATIVES")) {
+        throw new ClientExceptionWithBody(
+            HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
+      }
+    } else {
+      transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
     }
-    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)
-        && preview.getRejectionReasons().contains("NO_ACTIVE_INITIATIVES")) {
-      throw new ClientExceptionWithBody(
-          HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
-    }
-    transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
     return transactionInProgress2TransactionResponseMapper.apply(trx);
   }
 }
