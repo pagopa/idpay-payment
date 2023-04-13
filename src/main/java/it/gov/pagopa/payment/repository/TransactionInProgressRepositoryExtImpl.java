@@ -97,10 +97,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
   @Override
   public TransactionInProgress findByTrxCode(String trxCode) {
-  }
     return mongoTemplate.findOne(
         Query.query(
-            criteriaByTrxCodeAndChargeDate(trxCode, LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes)),
+            criteriaByTrxCodeAndChargeDate(trxCode, LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes))),
             TransactionInProgress.class);
   }
 
@@ -133,4 +132,5 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             Criteria.where(Fields.authDate).is(null),
             Criteria.where(Fields.authDate)
                 .lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds)));
+    }
 }

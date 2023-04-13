@@ -46,13 +46,3 @@ app:
 management.endpoints:
   web:
     exposure.include: info, health
-
-rest-client:
-  reward:
-    payment: ${IDPAY_REWARD_PAYMENT:idpay-reward-calculator}
-    baseUrl: ${IDPAY_REWARD_PAYMENT:}
-
-app:
-  qrCode:
-    throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
-    throttlingMinutes: ${QR_CODE_PAYMENT_THROTTLING_MINUTES:${PAYMENT_THROTTLING_MINUTES:15}}

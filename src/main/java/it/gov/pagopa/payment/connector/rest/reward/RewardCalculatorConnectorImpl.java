@@ -54,7 +54,8 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
                 "Too many request on the ms reward");
-        default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR);
+        default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
+            "An error occurred in the microservice reward-calculator");
       }
     }
     return response;
