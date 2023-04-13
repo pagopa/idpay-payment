@@ -15,10 +15,13 @@ import it.gov.pagopa.payment.test.utils.TestUtils;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 
 @Slf4j
@@ -29,6 +32,13 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
   @Autowired
   protected MongoTemplate mongoTemplate;
+
+  @AfterEach
+  void clearTestData(){
+    mongoTemplate.findAllAndRemove(
+        new Query(Criteria.where(TransactionInProgress.Fields.id).regex("^MOCKEDTRANSACTION_qr-code_[0-9]+$")),
+        TransactionInProgress.class);
+  }
 
 
   @Test
@@ -55,7 +65,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     TransactionInProgress result =
         mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
     assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "hpan", "userId", "authDate", "elaborationDateTime");
+    TestUtils.checkNotNullFields(result, "hpan", "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
   }
 
   @Test

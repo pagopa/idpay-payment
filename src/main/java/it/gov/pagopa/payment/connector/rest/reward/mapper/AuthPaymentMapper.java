@@ -12,6 +12,7 @@ public class AuthPaymentMapper {
   public AuthPaymentRequestDTO rewardMap(TransactionInProgress transactionInProgress) {
     return AuthPaymentRequestDTO.builder()
         .transactionId(transactionInProgress.getId())
+        .correlationId(transactionInProgress.getCorrelationId())
         .userId(transactionInProgress.getUserId())
         .merchantId(transactionInProgress.getMerchantId())
         .senderCode(transactionInProgress.getSenderCode())
@@ -25,8 +26,9 @@ public class AuthPaymentMapper {
         .acquirerCode(transactionInProgress.getAcquirerCode())
         .acquirerId(transactionInProgress.getAcquirerId())
         .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
-        .operationTypeTranscoded(transactionInProgress.getOperationTypeTranscoded())
+        .operationType(transactionInProgress.getOperationTypeTranscoded())
         .trxChargeDate(transactionInProgress.getTrxChargeDate())
+        .hpan(transactionInProgress.getHpan())
         .build();
   }
 

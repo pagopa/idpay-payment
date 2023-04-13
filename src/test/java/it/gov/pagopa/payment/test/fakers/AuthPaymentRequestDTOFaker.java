@@ -26,7 +26,7 @@ public class AuthPaymentRequestDTOFaker {
           .acquirerId("ACQUIRERID%d".formatted(bias))
           .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
           .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-          .operationTypeTranscoded(OperationType.CHARGE);
+          .operationType(OperationType.CHARGE);
     }
 
 }

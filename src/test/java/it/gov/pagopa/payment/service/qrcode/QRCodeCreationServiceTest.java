@@ -63,7 +63,7 @@ class QRCodeCreationServiceTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
@@ -87,7 +87,7 @@ class QRCodeCreationServiceTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(

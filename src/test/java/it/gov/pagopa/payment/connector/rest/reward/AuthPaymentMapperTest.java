@@ -48,7 +48,7 @@ import org.junit.jupiter.api.Test;
       assertEquals(transaction.getAcquirerCode(), result.getAcquirerCode());
       assertEquals(transaction.getAcquirerId(), result.getAcquirerId());
       assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
-      assertEquals(transaction.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
+      assertEquals(transaction.getOperationTypeTranscoded(), result.getOperationType());
       assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
     });
   }
