@@ -23,15 +23,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   private final long trxThrottlingSeconds;
   private final long trxInProgressLifetimeMinutes;
 
-
-  public TransactionInProgressRepositoryExtImpl(MongoTemplate mongoTemplate,
+  public TransactionInProgressRepositoryExtImpl(
+      MongoTemplate mongoTemplate,
       @Value("${app.qrCode.throttlingSeconds}") long trxThrottlingSeconds,
       @Value("${app.qrCode.trxInProgressLifetimeMinutes}") long trxInProgressLifetimeMinutes) {
     this.mongoTemplate = mongoTemplate;
     this.trxThrottlingSeconds = trxThrottlingSeconds;
     this.trxInProgressLifetimeMinutes = trxInProgressLifetimeMinutes;
   }
-
 
   @Override
   public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
@@ -69,27 +68,20 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     LocalDateTime trxChargeDate = LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes);
     TransactionInProgress transaction =
         mongoTemplate.findAndModify(
-            Query.query(Criteria.where(Fields.trxCode).is(trxCode)
-                .orOperator(Criteria.where(Fields.authDate).is(null),
-                    Criteria.where(Fields.authDate)
-                        .lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds))
-                ).andOperator(
-                    Criteria.where(Fields.trxChargeDate)
-                        .gte(trxChargeDate)
-                )),
+            Query.query(
+                criteriaByTrxCodeAndChargeDate(trxCode, trxChargeDate)
+                    .andOperator(criteriaByAuthDate())),
             new Update().set(Fields.authDate, LocalDateTime.now()),
-            FindAndModifyOptions.options().returnNew(true), TransactionInProgress.class);
-    if (transaction == null && mongoTemplate.exists(
-        Query.query(criteriaByTrxCodeAndChargeDate(trxCode, trxChargeDate)),
-        TransactionInProgress.class)) {
-      throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS,
-          "Too many requests on trx having trCode: " + trxCode);
+            FindAndModifyOptions.options().returnNew(true),
+            TransactionInProgress.class);
+    if (transaction == null
+        && mongoTemplate.exists(
+            Query.query(criteriaByTrxCodeAndChargeDate(trxCode, trxChargeDate)),
+            TransactionInProgress.class)) {
+      throw new ClientExceptionNoBody(
+          HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having trCode: " + trxCode);
     }
     return transaction;
-  }
-
-  private Criteria criteriaByTrxCodeAndChargeDate(String trxCode, LocalDateTime trxChargeDate) {
-    return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxChargeDate).is(trxChargeDate);
   }
 
   @Override
@@ -100,7 +92,19 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             .set(Fields.status, SyncTrxStatus.AUTHORIZED)
             .set(Fields.reward, reward)
             .set(Fields.rejectionReasons, rejectionReasons),
-        TransactionInProgress.class
-    );
+        TransactionInProgress.class);
+  }
+
+  private Criteria criteriaByTrxCodeAndChargeDate(String trxCode, LocalDateTime trxChargeDate) {
+    return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxChargeDate).gte(trxChargeDate);
+  }
+
+  private Criteria criteriaByAuthDate() {
+
+    return new Criteria()
+        .orOperator(
+            Criteria.where(Fields.authDate).is(null),
+            Criteria.where(Fields.authDate)
+                .lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds)));
   }
 }
