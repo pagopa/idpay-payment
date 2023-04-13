@@ -1,12 +1,12 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.gov.pagopa.payment.exception.Severity;
-import javax.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import javax.validation.constraints.NotBlank;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @AllArgsConstructor
@@ -15,9 +15,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode
 public class ErrorDTO {
   @NotBlank
-  Severity severity;
-  @NotBlank
-  String title;
+  String code;
   @NotBlank
   String message;
 }
