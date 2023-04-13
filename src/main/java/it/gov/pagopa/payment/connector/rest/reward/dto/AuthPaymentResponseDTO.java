@@ -1,20 +1,23 @@
-package it.gov.pagopa.payment.dto.qrcode;
+package it.gov.pagopa.payment.connector.rest.reward.dto;
 
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.util.List;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Data
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class AuthPaymentResponseDTO {
 
   String transactionId;
   String initiativeId;
   String userId;
-  String status;
+  SyncTrxStatus status;
   Reward reward;
   List<String> rejectionReasons;
 

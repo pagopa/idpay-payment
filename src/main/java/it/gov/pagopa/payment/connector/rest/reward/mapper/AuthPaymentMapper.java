@@ -1,11 +1,13 @@
-package it.gov.pagopa.payment.dto.mapper;
+package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.qrcode.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import org.springframework.stereotype.Service;
 
-public class AuthPaymentRequestMapper {
+@Service
+public class AuthPaymentMapper {
 
   public AuthPaymentRequestDTO rewardMap(TransactionInProgress transactionInProgress) {
     return AuthPaymentRequestDTO.builder()
@@ -23,6 +25,9 @@ public class AuthPaymentRequestMapper {
         .acquirerCode(transactionInProgress.getAcquirerCode())
         .acquirerId(transactionInProgress.getAcquirerId())
         .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
+        .operationType(transactionInProgress.getOperationTypeTranscoded())
+        .trxChargeDate(transactionInProgress.getTrxChargeDate())
+        .correlationId(transactionInProgress.getCorrelationId())
         .build();
   }
 
@@ -32,9 +37,20 @@ public class AuthPaymentRequestMapper {
         .id(responseDTO.getTransactionId())
         .reward(responseDTO.getReward())
         .initiativeId(responseDTO.getInitiativeId())
-        .rejectReasons(responseDTO.getRejectionReasons())
+        .rejectionReasons(responseDTO.getRejectionReasons())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
+        .build();
+  }
+
+  public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
+    return AuthPaymentDTO.builder()
+        .id(transaction.getId())
+        .reward(transaction.getReward())
+        .initiativeId(transaction.getInitiativeId())
+        .rejectionReasons(transaction.getRejectionReasons())
+        .status(transaction.getStatus())
+        .trxCode(transaction.getTrxCode())
         .build();
   }
 

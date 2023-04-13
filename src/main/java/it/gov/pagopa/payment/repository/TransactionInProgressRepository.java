@@ -1,13 +1,9 @@
 package it.gov.pagopa.payment.repository;
 
-import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import java.util.List;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface TransactionInProgressRepository {
-  UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
-  TransactionInProgress findAndModify(String trxCode);
-  void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons);
-  TransactionInProgress findByIdAndUserId(String id, String userId);
+public interface TransactionInProgressRepository extends
+    MongoRepository<TransactionInProgress, String>, TransactionInProgressRepositoryExt {
+
 }

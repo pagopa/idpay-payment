@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,7 +58,8 @@ public class TransactionInProgress {
   private String vat;
   private String initiativeId;
   private Reward reward;
-  private List<String> rejectionReasons;
+  @Builder.Default
+  private List<String> rejectionReasons = new ArrayList<>();
   private String userId;
   private SyncTrxStatus status;
   private String callbackUrl;
