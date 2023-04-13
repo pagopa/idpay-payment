@@ -8,10 +8,13 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
+import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.utils.TestUtils;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +33,8 @@ import org.junit.jupiter.api.Test;
 
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID%d".formatted(1));
+    transaction.setHpan("HPAN%d".formatted(1));
     AuthPaymentRequestDTO result = mapper.rewardMap(transaction);
 
     assertAll(() -> {
@@ -50,6 +55,8 @@ import org.junit.jupiter.api.Test;
       assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
       assertEquals(transaction.getOperationTypeTranscoded(), result.getOperationType());
       assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
+      assertEquals(transaction.getCorrelationId(), result.getCorrelationId());
+      TestUtils.checkNotNullFields(result);
     });
   }
 
@@ -67,9 +74,10 @@ import org.junit.jupiter.api.Test;
       assertEquals(responseDTO.getTransactionId(), result.getId());
       assertEquals(responseDTO.getReward(), result.getReward());
       assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
-      assertEquals(responseDTO.getRejectionReasons(), result.getRejectReasons());
+      assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(responseDTO.getStatus(), result.getStatus());
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
+      TestUtils.checkNotNullFields(result);
     });
   }
 
@@ -77,15 +85,18 @@ import org.junit.jupiter.api.Test;
   void trxIdempotence(){
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.AUTHORIZED);
-    AuthPaymentDTO result = mapper.trxIdempotence(transaction);
+    Reward reward = RewardFaker.mockInstance(1);
+    transaction.setReward(reward);
+    AuthPaymentDTO result = mapper.transactionMapper(transaction);
     assertAll(() -> {
       assertNotNull(result);
       assertEquals(transaction.getId(), result.getId());
       assertEquals(transaction.getReward(), result.getReward());
       assertEquals(transaction.getInitiativeId(), result.getInitiativeId());
-      assertEquals(transaction.getRejectionReasons(), result.getRejectReasons());
+      assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(transaction.getStatus(), result.getStatus());
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
+      TestUtils.checkNotNullFields(result);
     });
 
   }

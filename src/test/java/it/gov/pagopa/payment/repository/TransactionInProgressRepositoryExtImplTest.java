@@ -3,13 +3,16 @@ package it.gov.pagopa.payment.repository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.exception.ClientException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
 import java.time.LocalDateTime;
@@ -69,7 +72,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   }
 
   @Test
-  void findAndModify() {
+  void findByTrxCodeThrottled() {
     TransactionInProgress notFoundResult = transactionInProgressRepository.findByTrxCodeThrottled(
         "DUMMYID");
     assertNull(notFoundResult);
@@ -87,12 +90,37 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     TestUtils.checkNotNullFields(result, "userId", "elaborationDateTime", "reward",
         "rejectionReasons");
 
-    try {
-      transactionInProgressRepository.findByTrxCodeThrottled(result.getTrxCode());
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionNoBody e) {
-      assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
-    }
+    ClientException exception =
+        assertThrows(ClientException.class,
+            () -> transactionInProgressRepository.findByTrxCodeThrottled("TRXCODE1"));
+
+      assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
+
+  }
+
+  @Test
+  void updateTrxAuthorized() {
+    Reward reward = RewardFaker.mockInstance(1);
+    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
+        SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID%d".formatted(1));
+    transactionInProgressRepository.save(transaction);
+
+    TransactionInProgress notFoundResult = transactionInProgressRepository.findById(
+        "MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNull(notFoundResult);
+
+    transactionInProgressRepository.updateTrxAuthorized(transaction.getId(), reward, List.of());
+    TransactionInProgress result = transactionInProgressRepository.findById(
+        transaction.getId()).orElse(null);
+
+    Assertions.assertNotNull(result);
+    TestUtils.checkNotNullFields(result, "hpan", "authDate", "elaborationDateTime",
+        "reward", "rejectionReasons");
+    Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+
+    transactionInProgressRepository.updateTrxAuthorized(transaction.getId(), reward, List.of());
+
   }
 
   @Test
