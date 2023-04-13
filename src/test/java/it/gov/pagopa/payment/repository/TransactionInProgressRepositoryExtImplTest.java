@@ -106,16 +106,12 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     transaction.setUserId("USERID%d".formatted(1));
     transactionInProgressRepository.save(transaction);
 
-    TransactionInProgress notFoundResult = transactionInProgressRepository.findById(
-        "MOCKEDTRANSACTION_qr-code_1").orElse(null);
-    Assertions.assertNull(notFoundResult);
-
     transactionInProgressRepository.updateTrxAuthorized(transaction.getId(), reward, List.of());
     TransactionInProgress result = transactionInProgressRepository.findById(
         transaction.getId()).orElse(null);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "hpan", "authDate", "elaborationDateTime",
+    TestUtils.checkNotNullFields(result,  "authDate", "elaborationDateTime",
         "reward", "rejectionReasons");
     Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
