@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
+import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,7 +28,7 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   }
 
   @Override
-  @PerformanceLog("QR_CODE_RELATE_USER")
+  @PerformanceLog(value = "QR_CODE_RELATE_USER", payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
   public TransactionResponse relateUser(String trxCode, String userId) {
     log.info(
             "[QR_CODE_RELATE_USER] The user {} is trying to relate to transaction having trxCode {}",
@@ -36,7 +37,7 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   }
 
   @Override
-  @PerformanceLog("QR_CODE_AUTHORIZE_TRANSACTION")
+  @PerformanceLog(value = "QR_CODE_AUTHORIZE_TRANSACTION", payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
   public AuthPaymentDTO authPayment(String trxCode, String userId) {
     log.info(
         "[QR_CODE_AUTHORIZE_TRANSACTION] The user {} is authorizing the transaction having trxCode {}",
