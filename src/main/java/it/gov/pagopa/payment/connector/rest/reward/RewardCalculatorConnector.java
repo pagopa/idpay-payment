@@ -8,4 +8,5 @@ public interface RewardCalculatorConnector {
 
   AuthPaymentDTO authorizePayment(TransactionInProgress transaction, AuthPaymentRequestDTO body);
 
+  AuthPaymentDTO previewTransaction(TransactionInProgress transaction, AuthPaymentRequestDTO body);
 }

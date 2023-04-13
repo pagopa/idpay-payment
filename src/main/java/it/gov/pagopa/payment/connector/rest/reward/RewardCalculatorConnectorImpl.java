@@ -18,15 +18,14 @@ import org.springframework.stereotype.Service;
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
   private final RewardCalculatorRestClient restClient;
-  private final AuthPaymentMapper requestMapper;
   private final ObjectMapper objectMapper;
-
+  private final AuthPaymentMapper requestMapper;
 
   public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-      AuthPaymentMapper requestMapper, ObjectMapper objectMapper) {
+      ObjectMapper objectMapper, AuthPaymentMapper requestMapper) {
     this.restClient = restClient;
-    this.requestMapper = requestMapper;
     this.objectMapper = objectMapper;
+    this.requestMapper = requestMapper;
   }
 
   @Override
@@ -47,6 +46,32 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
                 "Too many request in the microservice reward-calculator");
+        default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
+            "An error occurred in the microservice reward-calculator");
+      }
+    }
+    return requestMapper.rewardResponseMap(responseDTO, transaction);
+  }
+
+  @Override
+  @PerformanceLog("QR_CODE_PREVIEW_TRANSACTION_REWARD_CALCULATOR")
+  public AuthPaymentDTO previewTransaction(
+      TransactionInProgress transaction, AuthPaymentRequestDTO body) {
+    AuthPaymentResponseDTO responseDTO;
+    try{
+      responseDTO = restClient.previewTransaction(transaction.getInitiativeId(), body);
+    } catch (FeignException e) {
+      switch (e.status()) {
+        case 403, 409 -> {
+          try {
+            responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
+          } catch (JsonProcessingException ex) {
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+          }
+        }
+        case 429 ->
+            throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
+                "Too many request on the ms reward");
         default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
             "An error occurred in the microservice reward-calculator");
       }

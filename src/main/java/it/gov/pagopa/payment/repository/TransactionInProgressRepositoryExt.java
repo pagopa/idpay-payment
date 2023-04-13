@@ -8,7 +8,10 @@ import java.util.List;
 
 public interface TransactionInProgressRepositoryExt {
   UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
-  TransactionInProgress findByTrxCodeThrottled(String trxCode);
-  void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons);
   TransactionInProgress findByIdThrottled(String trxId);
+  TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpired(String trxCode);
+  TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpiredThrottled(String trxCode);
+  void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons);
+  void updateTrxRejected(String id, String userId, List<String> rejectionReasons);
+  void updateTrxIdentified(String id, String userId);
 }

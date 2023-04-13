@@ -21,4 +21,11 @@ public interface RewardCalculatorRestClient {
   AuthPaymentResponseDTO authorizePayment(@PathVariable("initiativeId") String initiativeId,
       @RequestBody AuthPaymentRequestDTO body);
 
+  @PostMapping(
+      value = "idpay/reward/preview/{initiativeId}",
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @ResponseBody
+  AuthPaymentResponseDTO previewTransaction(@PathVariable("initiativeId") String initiativeId,
+      @RequestBody AuthPaymentRequestDTO body);
+
 }

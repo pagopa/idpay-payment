@@ -13,11 +13,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthPaymentDTO {
 
-  String id;
-  String trxCode;
-  String initiativeId;
-  SyncTrxStatus status;
-  Reward reward;
-  List<String> rejectionReasons;
+  private String id;
+  private String trxCode;
+  private String initiativeId;
+  private SyncTrxStatus status;
+  private Reward reward;
+  private List<String> rejectionReasons;
 
 }
