@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.connector.rest.reward;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
@@ -16,11 +18,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   private final RewardCalculatorRestClient restClient;
   private final AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper;
+  private final ObjectMapper objectMapper;
 
   public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-      AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper) {
+      AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper,
+      ObjectMapper objectMapper) {
     this.restClient = restClient;
     this.authPaymentResponseDTO2RewardPreviewMapper = authPaymentResponseDTO2RewardPreviewMapper;
+    this.objectMapper = objectMapper;
   }
 
   @Override
@@ -48,12 +53,17 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
   @PerformanceLog("QR_CODE_PREVIEW_TRANSACTION_REWARD_CALCULATOR")
   public RewardPreview previewTransaction(
       String initiativeId, AuthPaymentRequestDTO body) {
-    AuthPaymentResponseDTO response = new AuthPaymentResponseDTO();
+    AuthPaymentResponseDTO response;
     try{
       response = restClient.previewTransaction(initiativeId, body);
     } catch (FeignException e) {
       switch (e.status()) {
         case 403, 409 -> {
+          try {
+            response = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
+          } catch (JsonProcessingException ex) {
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+          }
           return authPaymentResponseDTO2RewardPreviewMapper.apply(response);
         }
         case 429 ->
