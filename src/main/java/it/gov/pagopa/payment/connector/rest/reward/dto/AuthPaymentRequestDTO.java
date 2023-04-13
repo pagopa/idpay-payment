@@ -26,6 +26,5 @@ public class AuthPaymentRequestDTO {
   String idTrxAcquirer;
   OperationType operationType;
   String correlationId;
-  String hpan;
 
 }

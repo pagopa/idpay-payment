@@ -3,13 +3,14 @@ package it.gov.pagopa.payment.repository;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.exception.ClientException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -79,12 +80,12 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     TestUtils.checkNotNullFields(result, "hpan", "userId", "elaborationDateTime", "reward",
         "rejectionReasons");
 
-    try {
-      transactionInProgressRepository.findByTrxCodeThrottled(result.getTrxCode());
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionNoBody e) {
-      assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
-    }
+    ClientException exception =
+        assertThrows(ClientException.class,
+            () -> transactionInProgressRepository.findByTrxCodeThrottled("TRXCODE1"));
+
+      assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
+
   }
 
   @Test

@@ -56,7 +56,6 @@ import org.junit.jupiter.api.Test;
       assertEquals(transaction.getOperationTypeTranscoded(), result.getOperationType());
       assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
       assertEquals(transaction.getCorrelationId(), result.getCorrelationId());
-      assertEquals(transaction.getHpan(), result.getHpan());
       TestUtils.checkNotNullFields(result);
     });
   }
