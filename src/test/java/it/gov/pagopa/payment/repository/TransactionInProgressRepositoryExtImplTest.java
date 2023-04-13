@@ -51,7 +51,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     Assertions.assertEquals(1L, updatedSecond.getMatchedCount());
 
     TransactionInProgress result =
-        mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
+        transactionInProgressRepository.findById(transactionInProgress.getId()).orElse(null);
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result, "hpan", "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
     Assertions.assertEquals(transactionInProgress, result);
