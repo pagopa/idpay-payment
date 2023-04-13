@@ -49,4 +49,9 @@ public class TransactionInProgressRepositoryImpl implements TransactionInProgres
             .setOnInsert(Fields.trxCode, trxCode),
         TransactionInProgress.class);
   }
+
+  @Override
+  public TransactionInProgress findById(String trxId) {
+    return mongoTemplate.findById(trxId, TransactionInProgress.class);
+  }
 }
