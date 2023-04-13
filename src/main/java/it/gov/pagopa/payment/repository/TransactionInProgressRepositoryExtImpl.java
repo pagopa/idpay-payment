@@ -64,7 +64,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   }
 
   @Override
-  public TransactionInProgress findByTrxCodeThrottled(String trxCode) {
+  public TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpiredThrottled(String trxCode) {
     LocalDateTime trxChargeDate = LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes);
     TransactionInProgress transaction =
         mongoTemplate.findAndModify(

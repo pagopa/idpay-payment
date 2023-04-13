@@ -73,7 +73,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
   @Test
   void findByTrxCodeThrottled() {
-    TransactionInProgress notFoundResult = transactionInProgressRepository.findByTrxCodeThrottled(
+    TransactionInProgress notFoundResult = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
         "DUMMYID");
     assertNull(notFoundResult);
 
@@ -81,7 +81,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         SyncTrxStatus.IDENTIFIED);
     transactionInProgressRepository.save(transaction);
 
-    TransactionInProgress result = transactionInProgressRepository.findByTrxCodeThrottled(
+    TransactionInProgress result = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
         transaction.getTrxCode());
 
     assertNotNull(result);
@@ -92,7 +92,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     ClientException exception =
         assertThrows(ClientException.class,
-            () -> transactionInProgressRepository.findByTrxCodeThrottled("TRXCODE1"));
+            () -> transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("TRXCODE1"));
 
       assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
 
