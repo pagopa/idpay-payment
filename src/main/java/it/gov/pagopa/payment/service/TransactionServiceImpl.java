@@ -9,28 +9,29 @@ import org.springframework.stereotype.Service;
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
-    private final TransactionInProgressRepository transactionInProgressRepository;
+  private final TransactionInProgressRepository transactionInProgressRepository;
 
-    public TransactionServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
-        this.transactionInProgressRepository = transactionInProgressRepository;
+  public TransactionServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
+    this.transactionInProgressRepository = transactionInProgressRepository;
+  }
+
+  @Override
+  public TransactionInProgress getTransaction(String id, String userId) {
+    TransactionInProgress transactionInProgress = transactionInProgressRepository.findById(id)
+        .orElse(null);
+
+    if (transactionInProgress == null) {
+      throw new ClientExceptionNoBody(
+          HttpStatus.NOT_FOUND,
+          "NOT FOUND");
     }
 
-    @Override
-    public TransactionInProgress getTransaction(String id, String userId) {
-        TransactionInProgress transactionInProgress = transactionInProgressRepository.findById(id);
-
-        if (transactionInProgress == null) {
-            throw new ClientExceptionNoBody(
-                    HttpStatus.NOT_FOUND,
-                    "NOT FOUND");
-        }
-
-        if (!transactionInProgress.getUserId().equals(userId)){
-            throw new ClientExceptionNoBody(
-                    HttpStatus.FORBIDDEN,
-                    "FORBIDDEN");
-        }
-
-        return transactionInProgress;
+    if (!transactionInProgress.getUserId().equals(userId)) {
+      throw new ClientExceptionNoBody(
+          HttpStatus.FORBIDDEN,
+          "FORBIDDEN");
     }
+
+    return transactionInProgress;
+  }
 }

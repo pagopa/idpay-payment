@@ -43,7 +43,6 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
           } catch (JsonProcessingException ex) {
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
           }
-          return requestMapper.rewardResponseMap(responseDTO, transaction);
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",

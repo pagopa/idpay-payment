@@ -9,22 +9,22 @@ import lombok.Getter;
 @Getter
 public class AuthPaymentRequestDTO {
 
-  String transactionId;
-  String userId;
-  String merchantId;
-  String senderCode;
-  String merchantFiscalCode;
-  String vat;
-  String idTrxIssuer;
-  LocalDateTime trxDate;
-  LocalDateTime trxChargeDate;
-  Long amountCents;
-  String amountCurrency;
-  String mcc;
-  String acquirerCode;
-  String acquirerId;
-  String idTrxAcquirer;
-  OperationType operationType;
-  String correlationId;
+  private String transactionId;
+  private String userId;
+  private String merchantId;
+  private String senderCode;
+  private String merchantFiscalCode;
+  private String vat;
+  private String idTrxIssuer;
+  private LocalDateTime trxDate;
+  private LocalDateTime trxChargeDate;
+  private Long amountCents;
+  private String amountCurrency;
+  private String mcc;
+  private String acquirerCode;
+  private String acquirerId;
+  private String idTrxAcquirer;
+  private OperationType operationType;
+  private String correlationId;
 
 }
