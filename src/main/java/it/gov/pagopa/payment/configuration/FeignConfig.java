@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.config;
+package it.gov.pagopa.payment.configuration;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorRestClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;

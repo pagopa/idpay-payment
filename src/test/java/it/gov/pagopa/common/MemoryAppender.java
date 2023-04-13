@@ -2,7 +2,6 @@ package it.gov.pagopa.common;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-
 import java.util.Collections;
 import java.util.List;
 
