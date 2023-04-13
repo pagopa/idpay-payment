@@ -1,26 +1,59 @@
 package it.gov.pagopa.common.performancelogger;
 
-import java.util.function.Supplier;
+import it.gov.pagopa.payment.exception.ClientException;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 @Slf4j
 public final class PerformanceLogger {
 
   private PerformanceLogger() {}
 
-  public static <T> T execute(String flow, Supplier<T> logic) {
+  public static <T> T execute(String flow, Supplier<T> logic, Function<T, String> payloadBuilder) {
     long startTime = System.currentTimeMillis();
+    String payload = "";
     try {
-      return logic.get();
-    } finally {
-      log(flow, startTime);
+      T out = logic.get();
+      payload = buildPayload(out, payloadBuilder);
+      return out;
+    } catch (ClientException clientException) {
+      payload = "ClientException with HttpStatus %s: %s".formatted(clientException.getHttpStatus(), clientException.getMessage());
+      throw clientException;
+    } catch (Exception e){
+      payload = "Exception %s: %s".formatted(e.getClass(), e.getMessage());
+      throw e;
+    }
+    finally {
+      log(flow, startTime, payload);
     }
   }
 
-  public static void log(String flow, long startTime){
+  private static <T> String buildPayload(T out, Function<T, String> payloadBuilder) {
+    String payload;
+    if(payloadBuilder!=null) {
+      if (out != null) {
+        try{
+          payload = payloadBuilder.apply(out);
+        } catch (Exception e){
+          log.warn("Something gone wrong while building payload", e);
+          payload = "Payload builder thrown Exception %s: %s".formatted(e.getClass(), e.getMessage());
+        }
+      } else {
+        payload = "Returned null";
+      }
+    } else {
+      payload = "";
+    }
+    return payload;
+  }
+
+  public static void log(String flow, long startTime, String payload){
     log.info(
-        "[PERFORMANCE_LOG] [{}] Time occurred to perform business logic: {} ms",
+        "[PERFORMANCE_LOG] [{}] Time occurred to perform business logic: {} ms. {}",
         flow,
-        System.currentTimeMillis() - startTime);
+        System.currentTimeMillis() - startTime,
+        payload);
   }
 }

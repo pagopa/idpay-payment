@@ -6,10 +6,8 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 
 public interface QRCodePaymentService {
 
-  TransactionResponse createTransaction(
-      TransactionCreationRequest trxCreationRequest, String merchantId);
-
-  AuthPaymentDTO authPayment(String userId, String trxCode);
-
+  TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest, String merchantId);
   TransactionResponse relateUser(String trxCode, String userId);
+  AuthPaymentDTO authPayment(String userId, String trxCode);
+  TransactionResponse confirmPayment(String trxId, String merchantId);
 }
