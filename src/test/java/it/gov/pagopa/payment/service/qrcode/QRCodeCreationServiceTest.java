@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionIn
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientException;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -40,7 +41,8 @@ class QRCodeCreationServiceTest {
 
   @Mock RewardRuleRepository rewardRuleRepository;
 
-  @Mock TransactionInProgressRepository transactionInProgressRepository;
+  @Mock
+  TransactionInProgressRepository transactionInProgressRepository;
 
   @Mock TrxCodeGenUtil trxCodeGenUtil;
 
@@ -62,7 +64,7 @@ class QRCodeCreationServiceTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     TransactionResponse trxCreated = TransactionCreatedFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
@@ -85,7 +87,7 @@ class QRCodeCreationServiceTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     TransactionResponse trxCreated = TransactionCreatedFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
@@ -95,6 +97,7 @@ class QRCodeCreationServiceTest {
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenAnswer(new Answer<String>() {
       private int count = 0;
+
       public String answer(InvocationOnMock invocation) {
         return "TRXCODE%d".formatted(++count);
       }
@@ -104,8 +107,8 @@ class QRCodeCreationServiceTest {
     when(transactionInProgressRepository.createIfExists(trx, "TRXCODE2"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-
-    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" );
+    TransactionResponse result = qrCodeCreationService.createTransaction(trxCreationReq,
+        "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -120,7 +123,8 @@ class QRCodeCreationServiceTest {
 
     ClientException result =
         Assertions.assertThrows(
-            ClientException.class, () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" ));
+            ClientException.class,
+            () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());

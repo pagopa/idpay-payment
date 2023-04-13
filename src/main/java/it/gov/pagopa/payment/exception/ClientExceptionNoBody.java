@@ -17,3 +17,4 @@ public class ClientExceptionNoBody extends ClientException{
     super(httpStatus, message, printStackTrace, ex);
   }
 }
+

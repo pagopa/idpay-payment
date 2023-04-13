@@ -32,6 +32,7 @@ import org.springframework.util.ReflectionUtils;
       "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
       "spring.mongodb.embedded.version=4.0.21",
       // endregion
+      "rest-client.reward.baseUrl=localhost:8080",
     })
 public abstract class BaseIntegrationTest {
 

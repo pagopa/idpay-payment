@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller;
 
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,11 @@ public interface QRCodePaymentController {
   TransactionResponse createTransaction(
       @RequestBody TransactionCreationRequest trxCreationRequest,
       @RequestHeader("x-merchant-id") String merchantId);
+
+  @PutMapping("/{trxCode}/authorize")
+  @ResponseStatus(code = HttpStatus.OK)
+  AuthPaymentDTO authPayment(@PathVariable("trxCode") String trxCode,
+      @RequestHeader("x-userId-id") String userId);
 
   @PutMapping("/merchant/{transactionId}/confirm")
   TransactionResponse confirmPayment(@PathVariable("transactionId") String trxId, @RequestHeader("x-merchant-id") String merchantId);

@@ -9,11 +9,13 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class TransactionInProgressFaker {
-  public static TransactionInProgress mockInstance(Integer bias) {
-    return mockInstanceBuilder(bias).build();
+
+  public static TransactionInProgress mockInstance(Integer bias, SyncTrxStatus status) {
+    return mockInstanceBuilder(bias, status).build();
   }
 
-  public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias) {
+  public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias,
+      SyncTrxStatus status) {
 
     String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
 
@@ -39,6 +41,6 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(SyncTrxStatus.CREATED);
+        .status(status);
   }
 }
