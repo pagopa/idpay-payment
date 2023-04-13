@@ -28,7 +28,6 @@ public class AuthPaymentMapper {
         .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
         .operationType(transactionInProgress.getOperationTypeTranscoded())
         .trxChargeDate(transactionInProgress.getTrxChargeDate())
-        .hpan(transactionInProgress.getHpan())
         .build();
   }
 

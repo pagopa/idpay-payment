@@ -33,5 +33,4 @@ public class AuthPaymentRequestDTO {
   private LocalDateTime trxChargeDate;
 
   private OperationType operationType;
-  private String hpan;
 }

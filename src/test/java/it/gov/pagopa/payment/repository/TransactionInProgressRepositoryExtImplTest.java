@@ -65,7 +65,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     TransactionInProgress result =
         mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
     assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "hpan", "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
+    TestUtils.checkNotNullFields(result, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
   }
 
   @Test
@@ -84,7 +84,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     assertNotNull(result);
     assertEquals(transaction.getTrxCode(), result.getTrxCode());
     assertTrue(result.getTrxChargeDate().isAfter(LocalDateTime.now().minusMinutes(15)));
-    TestUtils.checkNotNullFields(result, "hpan", "userId", "elaborationDateTime", "reward",
+    TestUtils.checkNotNullFields(result, "userId", "elaborationDateTime", "reward",
         "rejectionReasons");
 
     try {
@@ -104,7 +104,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCode("TRXCODE1");
     Assertions.assertNotNull(resultFirstSave);
-    TestUtils.checkNotNullFields(resultFirstSave, "hpan", "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
+    TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
 
     transactionInProgress.setTrxChargeDate(LocalDateTime.now().minusMinutes(30));
     transactionInProgressRepository.save(transactionInProgress);
@@ -122,12 +122,12 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress resultFirstSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
     Assertions.assertNotNull(resultFirstSave);
-    TestUtils.checkNotNullFields(resultFirstSave, "hpan", "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
+    TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
 
     transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1");
     TransactionInProgress resultSecondSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
     Assertions.assertNotNull(resultSecondSave);
-    TestUtils.checkNotNullFields(resultSecondSave, "hpan", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
+    TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rejectionReasons");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
 
@@ -141,13 +141,13 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress resultFirstSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
     Assertions.assertNotNull(resultFirstSave);
-    TestUtils.checkNotNullFields(resultFirstSave, "hpan", "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
+    TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
 
     transactionInProgressRepository.updateTrxRejected(
         "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"));
     TransactionInProgress resultSecondSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
     Assertions.assertNotNull(resultSecondSave);
-    TestUtils.checkNotNullFields(resultSecondSave, "hpan", "authDate", "elaborationDateTime", "reward");
+    TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward");
     Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
 
