@@ -10,7 +10,9 @@ import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
 
+@Service
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
