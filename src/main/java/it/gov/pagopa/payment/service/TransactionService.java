@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.payment.dto.TransactionDTO;
+import it.gov.pagopa.payment.model.TransactionInProgress;
 
 public interface TransactionService {
-    TransactionDTO getTransaction(String id, String userId);
+    TransactionInProgress getTransaction(String id, String userId);
 }
