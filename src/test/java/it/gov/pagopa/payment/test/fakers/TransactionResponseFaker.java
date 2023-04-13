@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import java.time.LocalDateTime;
 
-public class TransactionCreatedFaker {
+public class TransactionResponseFaker {
 
   public static TransactionResponse mockInstance(Integer bias) {
     return mockInstanceBuilder(bias).build();

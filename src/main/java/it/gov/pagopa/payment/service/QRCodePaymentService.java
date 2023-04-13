@@ -10,4 +10,6 @@ public interface QRCodePaymentService {
       TransactionCreationRequest trxCreationRequest, String merchantId);
 
   AuthPaymentDTO authPayment(String userId, String trxCode);
+
+  TransactionResponse relateUser(String trxCode, String userId);
 }

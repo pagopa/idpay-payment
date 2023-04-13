@@ -42,7 +42,6 @@ public class TransactionInProgress {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime elaborationDateTime;
 
-  private String hpan;
   private String operationType;
   private OperationType operationTypeTranscoded;
   private String idTrxIssuer;

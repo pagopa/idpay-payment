@@ -64,7 +64,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   }
 
   @Override
-  public TransactionInProgress findByTrxCodeThrottled(String trxCode) {
+  public TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpiredThrottled(String trxCode) {
     LocalDateTime trxChargeDate = LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes);
     TransactionInProgress transaction =
         mongoTemplate.findAndModify(
@@ -95,16 +95,42 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         TransactionInProgress.class);
   }
 
+  @Override
+  public TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpired(String trxCode) {
+    return mongoTemplate.findOne(
+        Query.query(
+            criteriaByTrxCodeAndChargeDate(trxCode, LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes))),
+            TransactionInProgress.class);
+  }
+
+  @Override
+  public void updateTrxRejected(String id, String userId, List<String> rejectionReasons) {
+    mongoTemplate.updateFirst(
+        Query.query(Criteria.where(Fields.id).is(id)),
+        new Update()
+            .set(Fields.status, SyncTrxStatus.REJECTED)
+            .set(Fields.userId, userId)
+            .set(Fields.rejectionReasons, rejectionReasons),
+        TransactionInProgress.class);
+  }
+
+  @Override
+  public void updateTrxIdentified(String id, String userId) {
+    mongoTemplate.updateFirst(
+        Query.query(Criteria.where(Fields.id).is(id)),
+        new Update().set(Fields.status, SyncTrxStatus.IDENTIFIED).set(Fields.userId, userId),
+        TransactionInProgress.class);
+  }
+
   private Criteria criteriaByTrxCodeAndChargeDate(String trxCode, LocalDateTime trxChargeDate) {
     return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxChargeDate).gte(trxChargeDate);
   }
 
   private Criteria criteriaByAuthDate() {
-
     return new Criteria()
         .orOperator(
             Criteria.where(Fields.authDate).is(null),
             Criteria.where(Fields.authDate)
                 .lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds)));
-  }
+    }
 }

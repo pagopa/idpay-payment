@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID%d".formatted(1));
-    transaction.setHpan("HPAN%d".formatted(1));
     AuthPaymentRequestDTO result = mapper.rewardMap(transaction);
 
     assertAll(() -> {

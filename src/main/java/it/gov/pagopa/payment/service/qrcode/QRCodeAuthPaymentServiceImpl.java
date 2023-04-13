@@ -35,7 +35,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     AuthPaymentDTO authPaymentDTO;
     AuthPaymentRequestDTO body;
     TransactionInProgress transactionInProgress =
-        transactionInProgressRepository.findByTrxCodeThrottled(trxCode);
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(trxCode);
     if (transactionInProgress == null) {
       throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "TRANSACTION NOT FOUND",
           String.format("The transaction's with trxCode %s, doesn't exist", trxCode));
