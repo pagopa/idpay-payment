@@ -4,6 +4,8 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.dto.RewardPreview;
+import it.gov.pagopa.payment.dto.mapper.AuthPaymentResponseDTO2RewardPreviewMapper;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import org.springframework.http.HttpStatus;
@@ -13,9 +15,12 @@ import org.springframework.stereotype.Service;
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
   private final RewardCalculatorRestClient restClient;
+  private final AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper;
 
-  public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient) {
+  public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
+      AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper) {
     this.restClient = restClient;
+    this.authPaymentResponseDTO2RewardPreviewMapper = authPaymentResponseDTO2RewardPreviewMapper;
   }
 
   @Override
@@ -41,7 +46,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   @Override
   @PerformanceLog("QR_CODE_PREVIEW_TRANSACTION_REWARD_CALCULATOR")
-  public AuthPaymentResponseDTO previewTransaction(
+  public RewardPreview previewTransaction(
       String initiativeId, AuthPaymentRequestDTO body) {
     AuthPaymentResponseDTO response = new AuthPaymentResponseDTO();
     try{
@@ -49,7 +54,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
     } catch (FeignException e) {
       switch (e.status()) {
         case 403, 409 -> {
-          return response;
+          return authPaymentResponseDTO2RewardPreviewMapper.apply(response);
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
@@ -58,6 +63,6 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             "An error occurred in the microservice reward-calculator");
       }
     }
-    return response;
+    return authPaymentResponseDTO2RewardPreviewMapper.apply(response);
   }
 }

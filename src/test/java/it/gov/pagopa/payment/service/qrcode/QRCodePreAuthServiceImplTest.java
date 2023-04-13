@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
+import it.gov.pagopa.payment.dto.RewardPreview;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -22,6 +23,7 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +61,7 @@ class QRCodePreAuthServiceImplTest {
   void relateUser() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentRequestDTO request = AuthPaymentRequestDTOFaker.mockInstance(1);
-    AuthPaymentResponseDTO preview = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    RewardPreview preview = new RewardPreview(SyncTrxStatus.CREATED, List.of());
     TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
     when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
@@ -82,7 +84,7 @@ class QRCodePreAuthServiceImplTest {
     trx.setUserId("USERID1");
 
     AuthPaymentRequestDTO request = AuthPaymentRequestDTOFaker.mockInstance(1);
-    AuthPaymentResponseDTO preview = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    RewardPreview preview = new RewardPreview(SyncTrxStatus.IDENTIFIED, List.of());
     TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
     when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
@@ -103,7 +105,7 @@ class QRCodePreAuthServiceImplTest {
   void relateUserNotOnboarded() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentRequestDTO request = AuthPaymentRequestDTOFaker.mockInstance(1);
-    AuthPaymentResponseDTO preview = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+    RewardPreview preview = new RewardPreview(SyncTrxStatus.REJECTED, List.of("NO_ACTIVE_INITIATIVES"));
 
     when(transactionInProgressRepository.findByTrxCode("TRXCODE1")).thenReturn(trx);
     when(authPaymentMapper.rewardMap(any())).thenReturn(request);

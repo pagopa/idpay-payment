@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service.qrcode;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
+import it.gov.pagopa.payment.dto.RewardPreview;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -52,7 +52,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
           "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
 
-    AuthPaymentResponseDTO preview =
+    RewardPreview preview =
         rewardCalculatorConnector.previewTransaction(
             trx.getInitiativeId(), authPaymentMapper.rewardMap(trx));
     if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
