@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.connector.rest.reward.dto;
 
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +17,7 @@ public class AuthPaymentResponseDTO {
   String transactionId;
   String initiativeId;
   String userId;
-  String status;
+  SyncTrxStatus status;
   Reward reward;
   List<String> rejectionReasons;
 

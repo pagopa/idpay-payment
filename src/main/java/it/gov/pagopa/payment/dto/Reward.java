@@ -3,12 +3,14 @@ package it.gov.pagopa.payment.dto;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Reward {
     private String initiativeId;
     private String organizationId;

@@ -21,7 +21,22 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
   @Override
   @PerformanceLog("QR_CODE_AUTHORIZE_TRANSACTION_REWARD_CALCULATOR")
   public AuthPaymentResponseDTO authorizePayment(String initiativeId, AuthPaymentRequestDTO body) {
-    return restClient.authorizePayment(initiativeId, body);
+    AuthPaymentResponseDTO responseDTO = new AuthPaymentResponseDTO();
+    try {
+      responseDTO = restClient.authorizePayment(initiativeId, body);
+    } catch (FeignException e) {
+      switch (e.status()) {
+        case 409 -> {
+          return responseDTO;
+        }
+        case 429 ->
+            throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
+                "Too many request in the microservice reward-calculator");
+        default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
+            "An error occurred in the microservice reward-calculator");
+      }
+    }
+    return responseDTO;
   }
 
   @Override

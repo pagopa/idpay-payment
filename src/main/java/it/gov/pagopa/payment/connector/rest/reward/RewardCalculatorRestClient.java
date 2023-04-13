@@ -6,7 +6,6 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
     url = "${rest-client.reward.baseUrl}")
 public interface RewardCalculatorRestClient {
 
-  @PutMapping(
+  @PostMapping(
       value = "idpay/reward/{initiativeId}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
