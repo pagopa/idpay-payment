@@ -33,10 +33,16 @@ logging:
       gov:
         pagopa: ${LOG_LEVEL_PAGOPA:INFO}
 
-management.endpoints:
-  web:
-    exposure.include: info, health
+rest-client:
+  reward:
+    payment: ${IDPAY_REWARD_PAYMENT:idpay-reward-calculator}
+    baseUrl: ${IDPAY_REWARD_PAYMENT:}
 
 app:
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
+    trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:15}}
+
+management.endpoints:
+  web:
+    exposure.include: info, health

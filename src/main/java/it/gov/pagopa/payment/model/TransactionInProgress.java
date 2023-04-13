@@ -1,9 +1,12 @@
 package it.gov.pagopa.payment.model;
 
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +20,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@FieldNameConstants
+@FieldNameConstants()
 @Document(collection = "transaction_in_progress")
 public class TransactionInProgress {
 
@@ -39,7 +42,6 @@ public class TransactionInProgress {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime elaborationDateTime;
 
-  private String hpan;
   private String operationType;
   private OperationType operationTypeTranscoded;
   private String idTrxIssuer;
@@ -54,6 +56,9 @@ public class TransactionInProgress {
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;
+  private Reward reward;
+  @Builder.Default
+  private List<String> rejectionReasons = new ArrayList<>();
   private String userId;
   private SyncTrxStatus status;
   private String callbackUrl;

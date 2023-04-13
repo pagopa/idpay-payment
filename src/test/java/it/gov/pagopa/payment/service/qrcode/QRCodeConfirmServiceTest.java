@@ -24,7 +24,7 @@ class QRCodeConfirmServiceTest {
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private TransactionNotifierService notifierServiceMock;
 
-    private TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper();
+    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper();
 
     private QRCodeConfirmationServiceImpl service;
 
@@ -45,7 +45,7 @@ class QRCodeConfirmServiceTest {
 
     @Test
     void testMerchantIdNotValid(){
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(TransactionInProgressFaker.mockInstance(0));
+        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED));
 
         try{
             service.confirmPayment("TRXID", "MERCHID");
@@ -57,7 +57,7 @@ class QRCodeConfirmServiceTest {
 
     @Test
     void testStatusNotValid(){
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0);
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
         trx.setMerchantId("MERCHID");
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
@@ -80,9 +80,8 @@ class QRCodeConfirmServiceTest {
     }
 
     private void testSuccessful(boolean notificationOutcome) {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0);
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
-        trx.setStatus(SyncTrxStatus.AUTHORIZED);
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         when(notifierServiceMock.notify(trx)).thenReturn(notificationOutcome);

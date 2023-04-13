@@ -5,15 +5,18 @@ import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class TransactionInProgressFaker {
-  public static TransactionInProgress mockInstance(Integer bias) {
-    return mockInstanceBuilder(bias).build();
+
+  public static TransactionInProgress mockInstance(Integer bias, SyncTrxStatus status) {
+    return mockInstanceBuilder(bias, status).build();
   }
 
-  public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias) {
+  public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias,
+      SyncTrxStatus status) {
 
     String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
 
@@ -27,8 +30,8 @@ public class TransactionInProgressFaker {
         .vat("VAT%d".formatted(bias))
         .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .trxChargeDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-        .amountCents(10L)
-        .effectiveAmount(BigDecimal.TEN)
+        .amountCents(1000L)
+        .effectiveAmount(BigDecimal.TEN.setScale(2, RoundingMode.UNNECESSARY))
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))
         .acquirerCode("ACQUIRERCODE%d".formatted(bias))
@@ -39,6 +42,6 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(SyncTrxStatus.CREATED);
+        .status(status);
   }
 }

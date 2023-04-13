@@ -44,10 +44,7 @@ import java.util.concurrent.TimeUnit;
 
                 //region wiremock
                 "logging.level.WireMock=ERROR",
-                "app.pdv.base-url=http://localhost:${wiremock.server.port}",
-                "app.email-notification.base-url=http://localhost:${wiremock.server.port}",
-                "app.selc.base-url=http://localhost:${wiremock.server.port}",
-                "app.wallet.base-url=http://localhost:${wiremock.server.port}"
+                "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}",
                 //endregion
         })
 @AutoConfigureMockMvc
