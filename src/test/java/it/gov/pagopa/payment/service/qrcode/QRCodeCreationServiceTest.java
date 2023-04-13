@@ -123,6 +123,6 @@ class QRCodeCreationServiceTest {
             ClientException.class, () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1" ));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());
+    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
   }
 }

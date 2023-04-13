@@ -1,12 +1,12 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/preview/INITIATIVEID",
+    "urlPathPattern": "/reward/INITIATIVEID",
     "bodyPatterns": [
       {
         "equalToJson": {
-          "transactionId": "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
-          "correlationId":  "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
+          "transactionId":  "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
+          "correlationId": "ALREADY_AUTHORED",
           "userId": "USERID",
           "merchantId": "MERCHANTID",
           "senderCode": "SENDERCODE${json-unit.any-number}",
@@ -27,17 +27,24 @@
     ]
   },
   "response": {
-    "status": "200",
+    "status": "409",
     "headers": {
       "Content-Type": "application/json"
     },
-    "body": {
-      "transactionId":  "MOCKEDTRANSACTION_XXX",
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
       "initiativeId": "INITIATIVEID",
       "userId": "USERID",
       "status": "REWARDED",
       "reward": {
-
+        "providedReward": 2.00,
+        "accruedReward": 2.00,
+        "capped": false,
+        "dailyCapped": false,
+        "monthlyCapped": false,
+        "yearlyCapped": false,
+        "weeklyCapped": false
       },
       "rejectionReasons": []
     }

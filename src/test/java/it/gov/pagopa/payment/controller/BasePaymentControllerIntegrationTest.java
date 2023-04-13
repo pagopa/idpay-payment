@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
@@ -27,8 +28,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
+@TestPropertySource(
+        properties = {
+                "logging.level.it.gov.pagopa.payment=WARN",
+                "logging.level.it.gov.pagopa.common=WARN",
+                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=INFO"
+        })
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
@@ -111,9 +119,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private void checkTransactionStored(TransactionResponse trxCreated) {
+        TransactionInProgress stored = checkIfStored(trxCreated);
+        Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
+    }
+
+    private TransactionInProgress checkIfStored(TransactionResponse trxCreated) {
         TransactionInProgress stored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
         Assertions.assertNotNull(stored);
-        Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
+        return stored;
     }
 
     {
@@ -155,7 +168,65 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             checkTransactionStored(trxCreated);
         });
 
-        // useCase 2: complete successful flow
+        // useCase 2: trx rejected
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setMcc("NOTALLOWEDMCC");
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            TransactionResponse preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), 200, TransactionResponse.class); // TODO fix return type
+            Assertions.assertEquals(SyncTrxStatus.REWARDED, preAuthResult.getStatus()); // TODO fix expected status
+            checkTransactionStored(preAuthResult);
+
+            // Cannot invoke other APIs if REJECTED
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), 400, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID), 400, null);
+        });
+
+        // useCase 3: trx rejected when authorizing
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            TransactionResponse preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), 200, TransactionResponse.class); // TODO fix return type
+            Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, preAuthResult.getStatus()); // TODO fix expected status
+            checkTransactionStored(preAuthResult);
+
+            // Authorizing transaction, but obtaining rejection
+            updateStoredTransaction(preAuthResult, t -> t.setMcc("NOTALLOWEDMCC"));
+            TransactionResponse authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), 200, TransactionResponse.class); // TODO fix return type
+            Assertions.assertEquals(SyncTrxStatus.REWARDED, authResult.getStatus()); // TODO fix expected status
+            checkTransactionStored(authResult);
+        });
+
+        // useCase 4: TooMany request thrown by reward-calculator
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setVat("TOOMANYREQUESTS");
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            TransactionResponse preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), 200, TransactionResponse.class); // TODO fix return type
+            Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, preAuthResult.getStatus()); // TODO fix expected status
+            checkTransactionStored(preAuthResult);
+
+            // Authorizing transaction but obataining Too Many requests by reward-calculator
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), 429, null);
+            checkTransactionStored(preAuthResult);
+        });
+
+        // useCase 5: complete successful flow
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
@@ -193,6 +264,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), 403, null);
             // Authorizing transaction resubmission after throttling time
             wait(throttlingSeconds, TimeUnit.SECONDS);
+            updateStoredTransaction(authResult, t -> t.setCorrelationId("ALREADY_AUTHORED"));
             TransactionResponse authResultResubmitted = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), 409, TransactionResponse.class); // TODO fix return type
             Assertions.assertEquals(authResult, authResultResubmitted);
             checkTransactionStored(authResult);
@@ -210,6 +282,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         });
 
         useCases.addAll(getExtraUseCases());
+    }
+
+    protected void updateStoredTransaction(TransactionResponse trx, Consumer<TransactionInProgress> updater) {
+        TransactionInProgress stored = checkIfStored(trx);
+        updater.accept(stored);
+        transactionInProgressRepository.save(stored);
     }
 
     protected <T> T extractResponse(MvcResult response, int expectedHttpStatusCode, Class<T> expectedBodyClass) {

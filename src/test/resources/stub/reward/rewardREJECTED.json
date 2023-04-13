@@ -1,0 +1,44 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/reward/(preview/)?INITIATIVEID",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "transactionId": "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
+          "correlationId":  "MOCKEDTRANSACTION_${json-unit.any-string}_${json-unit.any-number}",
+          "userId": "USERID",
+          "merchantId": "MERCHANTID",
+          "senderCode": "SENDERCODE${json-unit.any-number}",
+          "merchantFiscalCode":  "MERCHANTFISCALCODE${json-unit.any-number}",
+          "vat": "VAT${json-unit.any-number}",
+          "trxDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T-[0-9]{2}:-[0-9]{2}:-[0-9]{2}(.[0-9]+)?",
+          "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T-[0-9]{2}:-[0-9]{2}:-[0-9]{2}(.[0-9]+)?",
+          "amountCents":  "${json-unit.any-number}",
+          "amountCurrency": "AMOUNTCURRENCY${json-unit.any-number}",
+          "mcc":  "NOTALLOWEDMCC",
+          "acquirerCode": "ACQUIRERCODE${json-unit.any-number}",
+          "acquirerId":  "ACQUIRERID${json-unit.any-number}",
+          "idTrxIssuer":  "IDTRXISSUER${json-unit.any-number}",
+          "idTrxAcquirer": "IDTRXACQUIRER${json-unit.any-number}",
+          "hpan":  "HPAN${json-unit.any-number}"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
+      "initiativeId": "INITIATIVEID",
+      "userId": "USERID",
+      "status": "REJECTED",
+      "reward": null,
+      "rejectionReasons": ["TRX_RULE_MCCFILTER_FAIL"]
+    }
+  }
+}
