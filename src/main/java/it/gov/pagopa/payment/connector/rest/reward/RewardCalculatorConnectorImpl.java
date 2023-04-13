@@ -8,8 +8,6 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.RewardPreview;
-import it.gov.pagopa.payment.dto.mapper.AuthPaymentResponseDTO2RewardPreviewMapper;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -20,15 +18,12 @@ import org.springframework.stereotype.Service;
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
   private final RewardCalculatorRestClient restClient;
-  private final AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper;
   private final ObjectMapper objectMapper;
   private final AuthPaymentMapper requestMapper;
 
   public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-      AuthPaymentResponseDTO2RewardPreviewMapper authPaymentResponseDTO2RewardPreviewMapper,
       ObjectMapper objectMapper, AuthPaymentMapper requestMapper) {
     this.restClient = restClient;
-    this.authPaymentResponseDTO2RewardPreviewMapper = authPaymentResponseDTO2RewardPreviewMapper;
     this.objectMapper = objectMapper;
     this.requestMapper = requestMapper;
   }
@@ -60,16 +55,16 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   @Override
   @PerformanceLog("QR_CODE_PREVIEW_TRANSACTION_REWARD_CALCULATOR")
-  public RewardPreview previewTransaction(
-      String initiativeId, AuthPaymentRequestDTO body) {
-    AuthPaymentResponseDTO response;
+  public AuthPaymentDTO previewTransaction(
+      TransactionInProgress transaction, AuthPaymentRequestDTO body) {
+    AuthPaymentResponseDTO responseDTO;
     try{
-      response = restClient.previewTransaction(initiativeId, body);
+      responseDTO = restClient.previewTransaction(transaction.getInitiativeId(), body);
     } catch (FeignException e) {
       switch (e.status()) {
         case 403, 409 -> {
           try {
-            response = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
+            responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
           } catch (JsonProcessingException ex) {
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
           }
@@ -81,6 +76,6 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             "An error occurred in the microservice reward-calculator");
       }
     }
-    return authPaymentResponseDTO2RewardPreviewMapper.apply(response);
+    return requestMapper.rewardResponseMap(responseDTO, transaction);
   }
 }
