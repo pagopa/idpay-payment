@@ -64,7 +64,6 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
           } catch (JsonProcessingException ex) {
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
           }
-          return authPaymentResponseDTO2RewardPreviewMapper.apply(response);
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
