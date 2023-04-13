@@ -46,7 +46,3 @@ app:
 management.endpoints:
   web:
     exposure.include: info, health
-
-app:
-  qrCode:
-    throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}

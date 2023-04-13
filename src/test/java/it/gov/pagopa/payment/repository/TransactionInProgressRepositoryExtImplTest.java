@@ -125,7 +125,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress notFoundResult = transactionInProgressRepository.findByIdThrottled("DUMMYID");
         Assertions.assertNull(notFoundResult);
 
-        TransactionInProgress stored = transactionInProgressRepository.save(TransactionInProgressFaker.mockInstance(0));
+        TransactionInProgress stored = transactionInProgressRepository.save(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED));
         String trxId = stored.getId();
 
         TransactionInProgress result = transactionInProgressRepository.findByIdThrottled(trxId);
