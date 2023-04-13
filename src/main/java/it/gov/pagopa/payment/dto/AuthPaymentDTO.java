@@ -18,6 +18,6 @@ public class AuthPaymentDTO {
   String initiativeId;
   SyncTrxStatus status;
   Reward reward;
-  List<String> rejectReasons;
+  List<String> rejectionReasons;
 
 }

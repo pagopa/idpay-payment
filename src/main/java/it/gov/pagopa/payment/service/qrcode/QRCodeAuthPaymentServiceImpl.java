@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.service.qrcode;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
-import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -34,10 +33,9 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     AuthPaymentDTO authPaymentDTO;
-    AuthPaymentResponseDTO responseDTO;
     AuthPaymentRequestDTO body;
-    TransactionInProgress transactionInProgress = transactionInProgressRepository.findByTrxCodeThrottled(
-        trxCode);
+    TransactionInProgress transactionInProgress =
+        transactionInProgressRepository.findByTrxCodeThrottled(trxCode);
     if (transactionInProgress == null) {
       throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "TRANSACTION NOT FOUND",
           String.format("The transaction's with trxCode %s, doesn't exist", trxCode));
@@ -50,16 +48,13 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     if (transactionInProgress.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
       body = requestMapper.rewardMap(transactionInProgress);
 
-      responseDTO = rewardCalculatorConnector.authorizePayment(
-          transactionInProgress.getInitiativeId(), body);
+      authPaymentDTO = rewardCalculatorConnector.authorizePayment(transactionInProgress, body);
 
       transactionInProgressRepository.updateTrxAuthorized(transactionInProgress.getId(),
-          responseDTO.getReward(), responseDTO.getRejectionReasons());
-
-      authPaymentDTO = requestMapper.rewardResponseMap(responseDTO, transactionInProgress);
+          authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
 
     } else if (transactionInProgress.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
-      authPaymentDTO = requestMapper.trxIdempotence(transactionInProgress);
+      authPaymentDTO = requestMapper.transactionMapper(transactionInProgress);
     } else {
       throw new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "ERROR STATUS",
           String.format("The transaction's status is %s", transactionInProgress.getStatus()));

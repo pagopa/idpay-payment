@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
-import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -20,7 +19,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentRequestDTOFaker;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
@@ -59,15 +57,13 @@ class QRCodeAuthPaymentServiceTest {
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
     transaction.setUserId("USERID%d".formatted(1));
     AuthPaymentRequestDTO requestDTO = AuthPaymentRequestDTOFaker.mockInstance(1);
-    AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,
-        SyncTrxStatus.IDENTIFIED);
     Reward reward = RewardFaker.mockInstance(1);
     when(repository.findByTrxCodeThrottled(transaction.getTrxCode())).thenReturn(transaction);
 
     when(requestMapper.rewardMap(transaction)).thenReturn(requestDTO);
 
-    when(rewardCalculatorConnector.authorizePayment(transaction.getInitiativeId(),
-        requestDTO)).thenReturn(responseDTO);
+    when(rewardCalculatorConnector.authorizePayment(transaction,
+        requestDTO)).thenReturn(authPaymentDTO);
 
     Mockito.doAnswer(invocationOnMock -> {
       transaction.setStatus(SyncTrxStatus.AUTHORIZED);
@@ -75,8 +71,6 @@ class QRCodeAuthPaymentServiceTest {
       transaction.setRejectionReasons(List.of());
       return null;
     }).when(repository).updateTrxAuthorized(transaction.getId(),reward, List.of());
-
-    when(requestMapper.rewardResponseMap(responseDTO,transaction)).thenReturn(authPaymentDTO);
 
     AuthPaymentDTO result = service.authPayment("USERID1", "TRXCODE1");
 
@@ -119,7 +113,7 @@ class QRCodeAuthPaymentServiceTest {
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
 
     when(repository.findByTrxCodeThrottled(transaction.getTrxCode())).thenReturn(transaction);
-    when(requestMapper.trxIdempotence(any(TransactionInProgress.class))).thenReturn(authPaymentDTO);
+    when(requestMapper.transactionMapper(any(TransactionInProgress.class))).thenReturn(authPaymentDTO);
     AuthPaymentDTO result = service.authPayment(transaction.getUserId(), transaction.getTrxCode());
     assertNotNull(result);
     TestUtils.checkNotNullFields(result);

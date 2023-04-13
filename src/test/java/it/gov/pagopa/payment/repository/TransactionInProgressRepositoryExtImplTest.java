@@ -61,7 +61,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   }
 
   @Test
-  void findAndModify() {
+  void findByTrxCodeThrottled() {
     TransactionInProgress notFoundResult = transactionInProgressRepository.findByTrxCodeThrottled(
         "DUMMYID");
     assertNull(notFoundResult);

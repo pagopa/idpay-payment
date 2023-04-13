@@ -38,18 +38,18 @@ public class AuthPaymentMapper {
         .id(responseDTO.getTransactionId())
         .reward(responseDTO.getReward())
         .initiativeId(responseDTO.getInitiativeId())
-        .rejectReasons(responseDTO.getRejectionReasons())
+        .rejectionReasons(responseDTO.getRejectionReasons())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
         .build();
   }
 
-  public AuthPaymentDTO trxIdempotence(TransactionInProgress transaction){
+  public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
     return AuthPaymentDTO.builder()
         .id(transaction.getId())
         .reward(transaction.getReward())
         .initiativeId(transaction.getInitiativeId())
-        .rejectReasons(transaction.getRejectionReasons())
+        .rejectionReasons(transaction.getRejectionReasons())
         .status(transaction.getStatus())
         .trxCode(transaction.getTrxCode())
         .build();
