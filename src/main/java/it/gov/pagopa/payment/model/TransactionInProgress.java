@@ -3,10 +3,6 @@ package it.gov.pagopa.payment.model;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,6 +11,12 @@ import lombok.experimental.FieldNameConstants;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -31,10 +33,10 @@ public class TransactionInProgress {
   private String acquirerCode;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private LocalDateTime trxDate;
+  private OffsetDateTime trxDate;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private LocalDateTime trxChargeDate;
+  private OffsetDateTime trxChargeDate;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime authDate;

@@ -1,9 +1,10 @@
 package it.gov.pagopa.payment.connector.rest.reward.dto;
 
 import it.gov.pagopa.payment.enums.OperationType;
-import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.time.OffsetDateTime;
 
 @Builder
 @Getter
@@ -16,8 +17,8 @@ public class AuthPaymentRequestDTO {
   private String merchantFiscalCode;
   private String vat;
   private String idTrxIssuer;
-  private LocalDateTime trxDate;
-  private LocalDateTime trxChargeDate;
+  private OffsetDateTime trxDate;
+  private OffsetDateTime trxChargeDate;
   private Long amountCents;
   private String amountCurrency;
   private String mcc;

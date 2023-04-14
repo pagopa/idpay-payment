@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -161,7 +161,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(createTrx(trxRequest, MERCHANTID), HttpStatus.NOT_FOUND, null);
 
             // Other APIs cannot be invoked because we have not a valid trxId
-            TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("DUMMYTRXCODE").trxDate(LocalDateTime.now()).build();
+            TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("DUMMYTRXCODE").trxDate(OffsetDateTime.now()).build();
             extractResponse(preAuthTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
             extractResponse(authTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
             extractResponse(confirmPayment(dummyTrx, MERCHANTID), HttpStatus.NOT_FOUND, null);

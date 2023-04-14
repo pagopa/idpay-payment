@@ -1,13 +1,20 @@
 package it.gov.pagopa.payment.test.utils;
 
+import it.gov.pagopa.payment.utils.Utils;
+import org.junit.jupiter.api.Assertions;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.Assertions;
+import java.util.TimeZone;
 
 public class TestUtils {
 
   private TestUtils() {}
+
+    static {
+        TimeZone.setDefault(TimeZone.getTimeZone(Utils.ZONEID));
+    }
 
   public static void checkNotNullFields(Object o, String... excludedFields) {
     Set<String> excludedFieldsSet = new HashSet<>(Arrays.asList(excludedFields));

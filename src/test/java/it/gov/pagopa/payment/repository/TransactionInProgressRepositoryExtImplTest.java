@@ -20,7 +20,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -83,7 +83,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
         assertNotNull(result);
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
-        assertTrue(result.getTrxChargeDate().isAfter(LocalDateTime.now().minusMinutes(15)));
+        assertTrue(result.getTrxChargeDate().isAfter(OffsetDateTime.now().minusMinutes(15)));
         TestUtils.checkNotNullFields(result, "userId", "elaborationDateTime", "reward",
                 "rejectionReasons");
 
@@ -127,7 +127,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         Assertions.assertNotNull(resultFirstSave);
         TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
 
-        transactionInProgress.setTrxChargeDate(LocalDateTime.now().minusMinutes(30));
+        transactionInProgress.setTrxChargeDate(OffsetDateTime.now().minusMinutes(30));
         transactionInProgressRepository.save(transactionInProgress);
 
         TransactionInProgress resultSecondSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("TRXCODE1");
