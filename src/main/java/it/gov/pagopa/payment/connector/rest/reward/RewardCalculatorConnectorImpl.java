@@ -42,14 +42,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
           try {
             responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
           } catch (JsonProcessingException ex) {
-            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex);
           }
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
                 "Too many request in the microservice reward-calculator");
         default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
-            "An error occurred in the microservice reward-calculator");
+            "An error occurred in the microservice reward-calculator", e);
       }
     }
     return requestMapper.rewardResponseMap(responseDTO, trx);
@@ -69,14 +69,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
           try {
             responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
           } catch (JsonProcessingException ex) {
-            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex);
           }
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
                 "Too many request on the ms reward");
         default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
-            "An error occurred in the microservice reward-calculator");
+            "An error occurred in the microservice reward-calculator", e);
       }
     }
     return requestMapper.rewardResponseMap(responseDTO, trx);
