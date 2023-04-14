@@ -1,21 +1,19 @@
 package it.gov.pagopa.payment.exception;
 
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.http.HttpStatus;
 
 @Getter
-@Setter
 public class ClientException extends RuntimeException {
   private final HttpStatus httpStatus;
   private final boolean printStackTrace;
 
   public ClientException(HttpStatus httpStatus, String message) {
-    this(httpStatus, message, true, null);
+    this(httpStatus, message, null);
   }
 
   public ClientException(HttpStatus httpStatus, String message, Throwable ex) {
-    this(httpStatus, message, true, ex);
+    this(httpStatus, message, false, ex);
   }
 
   public ClientException(

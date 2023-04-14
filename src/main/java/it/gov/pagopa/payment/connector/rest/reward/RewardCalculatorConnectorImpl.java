@@ -6,7 +6,7 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -19,10 +19,10 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   private final RewardCalculatorRestClient restClient;
   private final ObjectMapper objectMapper;
-  private final AuthPaymentMapper requestMapper;
+  private final RewardCalculatorMapper requestMapper;
 
   public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-      ObjectMapper objectMapper, AuthPaymentMapper requestMapper) {
+      ObjectMapper objectMapper, RewardCalculatorMapper requestMapper) {
     this.restClient = restClient;
     this.objectMapper = objectMapper;
     this.requestMapper = requestMapper;
@@ -30,10 +30,12 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   @Override
   @PerformanceLog("QR_CODE_AUTHORIZE_TRANSACTION_REWARD_CALCULATOR")
-  public AuthPaymentDTO authorizePayment(TransactionInProgress transaction, AuthPaymentRequestDTO body) {
+  public AuthPaymentDTO authorizePayment(TransactionInProgress trx) {
+    AuthPaymentRequestDTO request = requestMapper.rewardMap(trx);
+
     AuthPaymentResponseDTO responseDTO;
     try {
-      responseDTO = restClient.authorizePayment(transaction.getInitiativeId(), body);
+      responseDTO = restClient.authorizePayment(trx.getInitiativeId(), request);
     } catch (FeignException e) {
       switch (e.status()) {
         case 409 -> {
@@ -50,16 +52,17 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             "An error occurred in the microservice reward-calculator");
       }
     }
-    return requestMapper.rewardResponseMap(responseDTO, transaction);
+    return requestMapper.rewardResponseMap(responseDTO, trx);
   }
 
   @Override
   @PerformanceLog("QR_CODE_PREVIEW_TRANSACTION_REWARD_CALCULATOR")
-  public AuthPaymentDTO previewTransaction(
-      TransactionInProgress transaction, AuthPaymentRequestDTO body) {
+  public AuthPaymentDTO previewTransaction(TransactionInProgress trx) {
+    AuthPaymentRequestDTO request = requestMapper.rewardMap(trx);
+
     AuthPaymentResponseDTO responseDTO;
     try{
-      responseDTO = restClient.previewTransaction(transaction.getInitiativeId(), body);
+      responseDTO = restClient.previewTransaction(trx.getInitiativeId(), request);
     } catch (FeignException e) {
       switch (e.status()) {
         case 403, 409 -> {
@@ -76,6 +79,6 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             "An error occurred in the microservice reward-calculator");
       }
     }
-    return requestMapper.rewardResponseMap(responseDTO, transaction);
+    return requestMapper.rewardResponseMap(responseDTO, trx);
   }
 }

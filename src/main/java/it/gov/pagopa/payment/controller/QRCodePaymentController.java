@@ -17,7 +17,7 @@ public interface QRCodePaymentController {
 
   @PutMapping("/{trxCode}/relate-user")
   @ResponseStatus(code = HttpStatus.OK)
-  TransactionResponse relateUser(@PathVariable("trxCode") String trxCode,
+  AuthPaymentDTO relateUser(@PathVariable("trxCode") String trxCode,
                                  @RequestHeader("x-user-id") String userId);
 
   @PutMapping("/{trxCode}/authorize")

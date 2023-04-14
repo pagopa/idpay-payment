@@ -1,14 +1,14 @@
 package it.gov.pagopa.payment.service.qrcode;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.exception.TransactionSynchronousException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -16,26 +16,17 @@ import org.springframework.stereotype.Service;
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
-  private final TransactionInProgress2TransactionResponseMapper
-      transactionInProgress2TransactionResponseMapper;
-  private final AuthPaymentMapper authPaymentMapper;
   private final RewardCalculatorConnector rewardCalculatorConnector;
 
   public QRCodePreAuthServiceImpl(
       TransactionInProgressRepository transactionInProgressRepository,
-      TransactionInProgress2TransactionResponseMapper
-          transactionInProgress2TransactionResponseMapper,
-      AuthPaymentMapper authPaymentMapper,
       RewardCalculatorConnector rewardCalculatorConnector) {
     this.transactionInProgressRepository = transactionInProgressRepository;
-    this.transactionInProgress2TransactionResponseMapper =
-        transactionInProgress2TransactionResponseMapper;
-    this.authPaymentMapper = authPaymentMapper;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
   }
 
   @Override
-  public TransactionResponse relateUser(String trxCode, String userId) {
+  public AuthPaymentDTO relateUser(String trxCode, String userId) {
     TransactionInProgress trx =
         transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired(trxCode);
 
@@ -53,18 +44,24 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
           "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
 
+    if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
+      throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot relate transaction in status " + trx.getStatus());
+    }
+
+    trx.setUserId(userId);
+
     AuthPaymentDTO preview =
-        rewardCalculatorConnector.previewTransaction(trx, authPaymentMapper.rewardMap(trx));
+        rewardCalculatorConnector.previewTransaction(trx);
     if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
       transactionInProgressRepository.updateTrxRejected(
           trx.getId(), userId, preview.getRejectionReasons());
-      if (preview.getRejectionReasons().contains("NO_ACTIVE_INITIATIVES")) {
-        throw new ClientExceptionWithBody(
-            HttpStatus.FORBIDDEN, "FORBIDDEN", "The user is not onboarded to the initiative");
+      if (preview.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)) {
+        throw new TransactionSynchronousException(HttpStatus.FORBIDDEN, preview);
       }
     } else {
+      preview.setStatus(SyncTrxStatus.IDENTIFIED);
       transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
     }
-    return transactionInProgress2TransactionResponseMapper.apply(trx);
+    return preview;
   }
 }

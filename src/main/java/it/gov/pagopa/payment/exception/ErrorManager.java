@@ -8,18 +8,25 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.servlet.http.HttpServletRequest;
+
 @RestControllerAdvice
 @Slf4j
 public class ErrorManager {
   private static final ErrorDTO defaultErrorDTO;
+
   static {
-    defaultErrorDTO = new ErrorDTO(Severity.ERROR, "Error", "Something gone wrong");
+    defaultErrorDTO = new ErrorDTO("Error", "Something gone wrong");
   }
+
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error) {
-    if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace()){
-      log.error("Something gone wrong handling the request", error);
+  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
+    if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){
+      log.error("Something gone wrong handling request {}", getRequestDetails(request), error);
+    } else {
+      log.info("A {} occurred handling request {}: {} at {}", clientException.getClass().getSimpleName(), getRequestDetails(request), error.getMessage(), error.getStackTrace().length > 0 ? error.getStackTrace()[0] : "UNKNOWN");
     }
+
     if(error instanceof ClientExceptionNoBody clientExceptionNoBody){
       return ResponseEntity.status(clientExceptionNoBody.getHttpStatus()).build();
     }
@@ -28,7 +35,7 @@ public class ErrorManager {
       HttpStatus httpStatus;
       if (error instanceof ClientExceptionWithBody clientExceptionWithBody){
         httpStatus = clientExceptionWithBody.getHttpStatus();
-        errorDTO = new ErrorDTO(Severity.ERROR, clientExceptionWithBody.getTitle(),  error.getMessage());
+        errorDTO = new ErrorDTO(clientExceptionWithBody.getCode(),  error.getMessage());
       }
       else {
         httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
@@ -39,4 +46,9 @@ public class ErrorManager {
           .body(errorDTO);
     }
   }
+
+  private String getRequestDetails(HttpServletRequest request) {
+    return "%s %s".formatted(request.getMethod(), request.getRequestURI());
+  }
+
 }
