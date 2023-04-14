@@ -26,7 +26,7 @@ public class TransactionServiceImpl implements TransactionService {
           "NOT FOUND");
     }
 
-    if (!transactionInProgress.getUserId().equals(userId)) {
+    if (!userId.equals(transactionInProgress.getUserId())) {
       throw new ClientExceptionNoBody(
           HttpStatus.FORBIDDEN,
           "FORBIDDEN");
