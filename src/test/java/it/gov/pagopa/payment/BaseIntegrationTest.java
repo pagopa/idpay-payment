@@ -67,6 +67,7 @@ public abstract class BaseIntegrationTest {
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
+        // At the start of the Spring Context, the TimeZone applied is defined in the configuration properties of maven-surefire-plugin inside the pom.xml
         TimeZone.setDefault(TimeZone.getTimeZone(Utils.ZONEID));
 
         unregisterMBean("kafka.*:*");
