@@ -2,29 +2,21 @@ package it.gov.pagopa.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
-import de.flapdoodle.embed.mongo.MongodExecutable;
-import de.flapdoodle.embed.mongo.config.MongodConfig;
-import de.flapdoodle.embed.mongo.config.Net;
-import de.flapdoodle.embed.process.runtime.Executable;
 import it.gov.pagopa.payment.utils.Utils;
+import jakarta.annotation.PostConstruct;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.mongo.MongoProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.ReflectionUtils;
 
-import javax.annotation.PostConstruct;
 import javax.management.*;
 import java.lang.management.ManagementFactory;
-import java.lang.reflect.Field;
-import java.net.UnknownHostException;
-import java.util.Objects;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
@@ -37,8 +29,8 @@ import java.util.concurrent.TimeUnit;
 
                 // region mongodb
                 "logging.level.org.mongodb.driver=WARN",
-                "logging.level.org.springframework.boot.autoconfigure.mongo.embedded=WARN",
-                "spring.mongodb.embedded.version=4.0.21",
+                "logging.level.de.flapdoodle.embed.mongo.spring.autoconfigure=WARN",
+                "de.flapdoodle.mongodb.embedded.version=4.0.21",
                 // endregion
 
 
@@ -56,11 +48,8 @@ public abstract class BaseIntegrationTest {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    @Autowired(required = false)
-    private MongodExecutable embeddedMongoServer;
-
-    @Value("${spring.data.mongodb.uri}")
-    private String mongodbUri;
+    @Autowired
+    private MongoProperties mongoProperties;
 
     @Autowired
     private WireMockServer wireMockServer;
@@ -83,18 +72,8 @@ public abstract class BaseIntegrationTest {
     }
 
     @PostConstruct
-    public void logEmbeddedServerConfig() throws NoSuchFieldException, UnknownHostException {
-        String mongoUrl;
-        if (embeddedMongoServer != null) {
-            Field mongoEmbeddedServerConfigField = Executable.class.getDeclaredField("config");
-            mongoEmbeddedServerConfigField.setAccessible(true);
-            MongodConfig mongodConfig = (MongodConfig) ReflectionUtils.getField(mongoEmbeddedServerConfigField, embeddedMongoServer);
-            Net mongodNet = Objects.requireNonNull(mongodConfig).net();
-
-            mongoUrl = "mongodb://%s:%s".formatted(mongodNet.getServerAddress().getHostAddress(), mongodNet.getPort());
-        } else {
-            mongoUrl = mongodbUri.replaceFirst(":[^:]+(?=:[0-9]+)", "");
-        }
+    public void logEmbeddedServerConfig() {
+        String mongoUrl = mongoProperties.getUri().replaceFirst("(?<=//)[^@]+@", "");
 
         System.out.printf("""
                         ************************
