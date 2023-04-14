@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.util.TimeZone;
+
+import it.gov.pagopa.payment.utils.Utils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,6 +19,8 @@ public class JsonConfig {
 
   @Bean
   public ObjectMapper objectMapper() {
+    TimeZone.setDefault(TimeZone.getTimeZone(Utils.ZONEID)); // TODO fix on UTC envs
+
     ObjectMapper mapper = new ObjectMapper();
     mapper.registerModule(new JavaTimeModule());
     mapper.registerModule(new Jdk8Module());
