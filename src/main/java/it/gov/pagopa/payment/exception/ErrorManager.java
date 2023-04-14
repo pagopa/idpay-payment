@@ -14,9 +14,11 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 public class ErrorManager {
   private static final ErrorDTO defaultErrorDTO;
+
   static {
     defaultErrorDTO = new ErrorDTO("Error", "Something gone wrong");
   }
+
   @ExceptionHandler(RuntimeException.class)
   protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
     if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){

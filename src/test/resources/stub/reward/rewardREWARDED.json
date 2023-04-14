@@ -38,6 +38,8 @@
       "userId": "USERID",
       "status": "REWARDED",
       "reward": {
+        "initiativeId": "INITIATIVEID",
+        "organizationId": "ORGANIZATIONID",
         "providedReward": 2.00,
         "accruedReward": 2.00,
         "capped": false,

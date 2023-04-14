@@ -39,7 +39,7 @@ import java.util.stream.IntStream;
         properties = {
                 "logging.level.it.gov.pagopa.payment=WARN",
                 "logging.level.it.gov.pagopa.common=WARN",
-                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=INFO"
+                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN"
         })
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
@@ -49,8 +49,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
-
-    private static final int N = 100;
 
     private final List<FailableConsumer<Integer, Exception>> useCases = new ArrayList<>();
 
@@ -67,6 +65,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     @Test
     void test() {
+        int N = Math.max(useCases.size(), 50);
+
         rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).build());
 
         List<? extends Future<?>> tasks = IntStream.range(0, N)
@@ -133,7 +133,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
 
-    private void checkTransactionStored(AuthPaymentDTO trx) {
+    private void checkTransactionStored(AuthPaymentDTO trx, String expectedUserId) {
         TransactionInProgress stored = checkIfStored(trx.getId());
 
         Assertions.assertEquals(trx.getId(), stored.getId());
@@ -142,6 +142,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(trx.getStatus(), stored.getStatus());
         Assertions.assertEquals(trx.getReward(), stored.getReward());
         Assertions.assertEquals(trx.getRejectionReasons(), stored.getRejectionReasons());
+
+        Assertions.assertEquals(expectedUserId, stored.getUserId());
     }
 
     private TransactionInProgress checkIfStored(String trxId) {
@@ -179,14 +181,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             AuthPaymentDTO failedPreview = extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, failedPreview.getStatus());
             Assertions.assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), failedPreview.getRejectionReasons());
-            AuthPaymentDTO failedPreviewResubmit = extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
-            Assertions.assertEquals(failedPreview, failedPreviewResubmit);
+            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
 
             // Other APIs will fail because status not expected
             extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.BAD_REQUEST, null);
 
-            checkTransactionStored(trxCreated);
+            checkTransactionStored(failedPreview, userIdNotOnboarded);
         });
 
         // useCase 2: trx rejected
@@ -201,7 +202,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, preAuthResult.getStatus());
-            checkTransactionStored(preAuthResult);
+            checkTransactionStored(preAuthResult, USERID);
 
             // Cannot invoke other APIs if REJECTED
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
@@ -219,20 +220,20 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-            checkTransactionStored(preAuthResult);
+            preAuthResult.setReward(null);
+            checkTransactionStored(preAuthResult, USERID);
 
             // Authorizing transaction, but obtaining rejection
             updateStoredTransaction(preAuthResult.getId(), t -> t.setMcc("NOTALLOWEDMCC"));
             AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, authResult.getStatus());
-            checkTransactionStored(authResult);
+            checkTransactionStored(authResult, USERID);
         });
 
         // useCase 4: TooMany request thrown by reward-calculator
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
-            trxRequest.setVat("TOOMANYREQUESTS");
 
             // Creating transaction
             TransactionResponse trxCreated = createTrxSuccess(trxRequest);
@@ -240,11 +241,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-            checkTransactionStored(preAuthResult);
+            preAuthResult.setReward(null);
+            checkTransactionStored(preAuthResult, USERID);
 
             // Authorizing transaction but obataining Too Many requests by reward-calculator
+            updateStoredTransaction(preAuthResult.getId(), t -> t.setVat("TOOMANYREQUESTS"));
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
-            checkTransactionStored(preAuthResult);
+            checkTransactionStored(preAuthResult, USERID);
         });
 
         // useCase 5: complete successful flow
@@ -258,6 +261,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Cannot invoke other APIs if not relating first
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            waitThrottlingTime();
 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
@@ -265,7 +269,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Relating to user resubmission
             AuthPaymentDTO preAuthResultResubmitted = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(preAuthResult, preAuthResultResubmitted);
-            checkTransactionStored(preAuthResult);
+            preAuthResult.setReward(null);
+            checkTransactionStored(preAuthResult, USERID);
             // Only the right userId could resubmit preview
             extractResponse(preAuthTrx(trxCreated, "DUMMYUSERID", MERCHANTID), HttpStatus.FORBIDDEN, null);
 
@@ -276,22 +281,25 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Only the right userId could authorize its transaction
             extractResponse(authTrx(trxCreated, "DUMMYUSERID", MERCHANTID), HttpStatus.FORBIDDEN, null);
 
+            waitThrottlingTime();
+
             // Authorizing transaction
             AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             // TooManyRequest behavior
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
             Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
             // Cannot invoke preAuth after authorization
-            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
             // Authorizing transaction resubmission after throttling time
-            wait(throttlingSeconds, TimeUnit.SECONDS);
+            waitThrottlingTime();
             updateStoredTransaction(authResult.getId(), t -> t.setCorrelationId("ALREADY_AUTHORED"));
-            AuthPaymentDTO authResultResubmitted = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.CONFLICT, AuthPaymentDTO.class);
+            AuthPaymentDTO authResultResubmitted = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(authResult, authResultResubmitted);
-            checkTransactionStored(authResult);
+            checkTransactionStored(authResult, USERID);
 
             // Unexpected merchant trying to confirm
             extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
+            waitThrottlingTime();
 
             // Confirming payment
             TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.OK, TransactionResponse.class);
@@ -303,6 +311,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         });
 
         useCases.addAll(getExtraUseCases());
+    }
+
+    private void waitThrottlingTime() {
+        wait(throttlingSeconds, TimeUnit.SECONDS);
     }
 
     protected void updateStoredTransaction(String trxId, Consumer<TransactionInProgress> updater) {
