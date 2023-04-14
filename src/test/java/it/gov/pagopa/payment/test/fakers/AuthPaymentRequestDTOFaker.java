@@ -2,7 +2,8 @@ package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.enums.OperationType;
-import java.time.LocalDateTime;
+
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class AuthPaymentRequestDTOFaker {
@@ -18,8 +19,8 @@ public class AuthPaymentRequestDTOFaker {
           .merchantId("MERCHANTID%d".formatted(bias))
           .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
           .vat("VAT%d".formatted(bias))
-          .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-          .trxChargeDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+          .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+          .trxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
           .amountCents(10L)
           .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
           .mcc("MCC%d".formatted(bias))

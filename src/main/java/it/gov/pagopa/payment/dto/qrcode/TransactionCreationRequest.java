@@ -1,10 +1,11 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
-import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
 
 @Data
 @AllArgsConstructor
@@ -18,7 +19,7 @@ public class TransactionCreationRequest {
   private String vat;
   private String idTrxIssuer;
   private String idTrxAcquirer;
-  private LocalDateTime trxDate;
+  private OffsetDateTime trxDate;
   private Long amountCents;
   private String amountCurrency;
   private String mcc;

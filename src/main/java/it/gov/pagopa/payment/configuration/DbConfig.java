@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.configuration;
 
 import com.mongodb.lang.NonNull;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.Utils;
 import lombok.Setter;
 import org.bson.types.Decimal128;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
@@ -15,7 +16,9 @@ import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -56,10 +59,14 @@ public class DbConfig {
     @Bean
     public MongoCustomConversions mongoCustomConversions() {
         return new MongoCustomConversions(Arrays.asList(
+                // BigDecimal support
                 new BigDecimalDecimal128Converter(),
-                new Decimal128BigDecimalConverter()
-        ));
+                new Decimal128BigDecimalConverter(),
 
+                // OffsetDateTime support
+                new OffsetDateTimeWriteConverter(),
+                new OffsetDateTimeReadConverter()
+        ));
     }
 
     @WritingConverter
@@ -79,6 +86,22 @@ public class DbConfig {
             return source.bigDecimalValue();
         }
 
+    }
+
+    @WritingConverter
+    public static class OffsetDateTimeWriteConverter implements Converter<OffsetDateTime, Date> {
+        @Override
+        public Date convert(OffsetDateTime offsetDateTime) {
+            return Date.from(offsetDateTime.toInstant());
+        }
+    }
+
+    @ReadingConverter
+    public static class OffsetDateTimeReadConverter implements Converter<Date, OffsetDateTime> {
+        @Override
+        public OffsetDateTime convert(Date date) {
+            return date.toInstant().atZone(Utils.ZONEID).toOffsetDateTime();
+        }
     }
 }
 
