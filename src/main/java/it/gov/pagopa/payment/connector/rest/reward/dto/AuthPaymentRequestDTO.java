@@ -26,5 +26,6 @@ public class AuthPaymentRequestDTO {
   private String idTrxAcquirer;
   private OperationType operationType;
   private String correlationId;
+  private String channel;
 
 }

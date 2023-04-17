@@ -42,6 +42,7 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(status);
+        .status(status)
+        .channel("CHANNEL%d".formatted(bias));
   }
 }

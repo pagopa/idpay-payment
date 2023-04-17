@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.service.qrcode.QRCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.qrcode.QRCodeConfirmationService;
 import it.gov.pagopa.payment.service.qrcode.QRCodeCreationService;
 import it.gov.pagopa.payment.service.qrcode.QRCodePreAuthService;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +32,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public TransactionResponse createTransaction(
       TransactionCreationRequest trxCreationRequest, String merchantId) {
-    return qrCodeCreationService.createTransaction(trxCreationRequest, merchantId);
+    return qrCodeCreationService.createTransaction(trxCreationRequest, RewardConstants.TRX_CHANNEL_QRCODE, merchantId);
   }
 
   @Override

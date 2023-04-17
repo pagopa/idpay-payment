@@ -25,7 +25,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
 
     TransactionCreationRequest transactionCreationRequest =
         TransactionCreationRequestFaker.mockInstance(1);
-    TransactionInProgress result = mapper.apply(transactionCreationRequest);
+    TransactionInProgress result = mapper.apply(transactionCreationRequest, "CHANNEL");
 
     Assertions.assertAll(() -> {
       Assertions.assertNotNull(result);
@@ -52,6 +52,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
       Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
       Assertions.assertEquals(PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());
       Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
+      Assertions.assertEquals("CHANNEL", result.getChannel());
     });
   }
 }

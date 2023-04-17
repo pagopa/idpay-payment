@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 public class AuthPaymentResponseDTO {
 
   private String transactionId;
+  private String channel;
   private String initiativeId;
   private String userId;
   private SyncTrxStatus status;

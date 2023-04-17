@@ -62,4 +62,5 @@ public class TransactionInProgress {
   private String userId;
   private SyncTrxStatus status;
   private String callbackUrl;
+  private String channel;
 }

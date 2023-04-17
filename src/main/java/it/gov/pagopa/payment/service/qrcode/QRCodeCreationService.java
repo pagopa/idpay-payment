@@ -6,5 +6,6 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 public interface QRCodeCreationService {
 
   TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest,
+      String channel,
       String merchantId);
 }

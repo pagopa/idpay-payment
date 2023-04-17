@@ -93,6 +93,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         }
     }
 
+    /** Controller's channel */
+    protected abstract String getChannel();
+
     /**
      * Invoke create transaction API acting as <i>merchantId</i>
      */
@@ -129,6 +132,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void checkTransactionStored(TransactionResponse trxCreated) {
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
+        Assertions.assertEquals(getChannel(), stored.getChannel());
         Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
 

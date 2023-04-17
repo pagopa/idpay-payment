@@ -30,6 +30,7 @@ public class RewardCalculatorMapper {
         .operationType(transactionInProgress.getOperationTypeTranscoded())
         .trxChargeDate(transactionInProgress.getTrxChargeDate())
         .correlationId(transactionInProgress.getCorrelationId())
+        .channel(transactionInProgress.getChannel())
         .build();
   }
 
