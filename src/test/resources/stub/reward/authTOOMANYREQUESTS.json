@@ -21,7 +21,8 @@
           "acquirerId":  "${json-unit.regex}ACQUIRERID[0-9]+",
           "idTrxIssuer":  "${json-unit.regex}IDTRXISSUER[0-9]+",
           "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
-          "operationType": "CHARGE"
+          "operationType": "CHARGE",
+          "channel": "${json-unit.regex}(QRCODE|CIE)"
         }
       }
     ]
