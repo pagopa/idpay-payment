@@ -15,10 +15,8 @@ public class TransactionSynchronousExceptionHandler {
   @ExceptionHandler(TransactionSynchronousException.class)
   protected ResponseEntity<AuthPaymentDTO> handleException(
       TransactionSynchronousException transactionSynchronousException) {
-    AuthPaymentDTO response;
-    HttpStatus httpStatus;
-    httpStatus = HttpStatus.BAD_REQUEST;
-    response = transactionSynchronousException.getResponse();
+    HttpStatus httpStatus = HttpStatus.BAD_REQUEST;
+    AuthPaymentDTO response = transactionSynchronousException.getResponse();
 
     return ResponseEntity.status(httpStatus)
         .contentType(MediaType.APPLICATION_JSON)

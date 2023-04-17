@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
 import java.time.LocalDateTime;
+import javax.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class TransactionCreationRequest {
 
+  @NotBlank(message = "This field is mandatory")
   private String initiativeId;
   private String senderCode;
   private String merchantFiscalCode;
