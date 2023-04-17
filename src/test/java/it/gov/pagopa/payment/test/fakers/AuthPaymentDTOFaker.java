@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import java.math.BigDecimal;
 import java.util.List;
 
 public class AuthPaymentDTOFaker {
@@ -22,7 +23,7 @@ public class AuthPaymentDTOFaker {
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .status(SyncTrxStatus.IDENTIFIED)
         .rejectionReasons(List.of())
-        .amountCents(1000L)
+        .amount(BigDecimal.TEN)
         .reward(reward)
         .trxCode("TRXCODE%d".formatted(bias));
   }

@@ -22,5 +22,6 @@ public class AuthPaymentResponseDTO {
   private Reward reward;
   private List<String> rejectionReasons;
   private BigDecimal effectiveAmount;
+  private Long amount;
 
 }

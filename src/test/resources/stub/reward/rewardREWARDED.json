@@ -37,6 +37,8 @@
       "initiativeId": "INITIATIVEID",
       "userId": "USERID",
       "status": "REWARDED",
+      "effectiveAmount": "0.10",
+      "amount": "1000",
       "reward": {
         "initiativeId": "INITIATIVEID",
         "organizationId": "ORGANIZATIONID",

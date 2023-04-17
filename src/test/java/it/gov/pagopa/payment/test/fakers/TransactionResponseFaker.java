@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
