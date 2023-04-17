@@ -14,11 +14,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AuthPaymentResponseDTO {
 
-  String transactionId;
-  String initiativeId;
-  String userId;
-  SyncTrxStatus status;
-  Reward reward;
-  List<String> rejectionReasons;
+  private String transactionId;
+  private String channel;
+  private String initiativeId;
+  private String userId;
+  private SyncTrxStatus status;
+  private Reward reward;
+  private List<String> rejectionReasons;
 
 }
