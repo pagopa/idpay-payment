@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
-
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 

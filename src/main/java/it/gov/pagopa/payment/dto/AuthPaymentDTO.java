@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,8 @@ public class AuthPaymentDTO {
   private String trxCode;
   private String initiativeId;
   private SyncTrxStatus status;
-  private Reward reward;
+  private Long reward;
   private List<String> rejectionReasons;
+  private BigDecimal amount;
 
 }

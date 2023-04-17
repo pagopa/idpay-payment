@@ -1,5 +1,9 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -7,10 +11,9 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
+import it.gov.pagopa.payment.utils.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class AuthPaymentMapperTest {
 
@@ -26,7 +29,7 @@ class AuthPaymentMapperTest {
    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
        SyncTrxStatus.AUTHORIZED);
    Reward reward = RewardFaker.mockInstance(1);
-   transaction.setReward(reward);
+   transaction.setReward(Utils.euroToCents(reward.getAccruedReward()));
    AuthPaymentDTO result = mapper.transactionMapper(transaction);
    assertAll(() -> {
      assertNotNull(result);
@@ -36,6 +39,7 @@ class AuthPaymentMapperTest {
      assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
      assertEquals(transaction.getStatus(), result.getStatus());
      assertEquals(transaction.getTrxCode(), result.getTrxCode());
+     assertEquals(transaction.getEffectiveAmount(), result.getAmount());
      TestUtils.checkNotNullFields(result);
    });
 

@@ -15,7 +15,7 @@ public class AuthPaymentMapper {
         .rejectionReasons(transaction.getRejectionReasons())
         .status(transaction.getStatus())
         .trxCode(transaction.getTrxCode())
+        .amount(transaction.getEffectiveAmount())
         .build();
   }
-
 }

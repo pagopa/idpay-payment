@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.Utils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,16 +34,19 @@ public class RewardCalculatorMapper {
         .build();
   }
 
-  public AuthPaymentDTO rewardResponseMap(AuthPaymentResponseDTO responseDTO,
-      TransactionInProgress transactionInProgress) {
+  public AuthPaymentDTO rewardResponseMap(
+      AuthPaymentResponseDTO responseDTO, TransactionInProgress transactionInProgress) {
     return AuthPaymentDTO.builder()
         .id(responseDTO.getTransactionId())
-        .reward(responseDTO.getReward())
+        .reward(
+            responseDTO.getReward() != null
+                ? Utils.euroToCents(responseDTO.getReward().getAccruedReward())
+                : 0L)
         .initiativeId(responseDTO.getInitiativeId())
         .rejectionReasons(responseDTO.getRejectionReasons())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
+        .amount(responseDTO.getEffectiveAmount())
         .build();
   }
-
 }

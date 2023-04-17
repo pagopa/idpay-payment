@@ -39,6 +39,8 @@
       "initiativeId": "INITIATIVEID",
       "userId": "{{jsonPath request.body '$.userId'}}",
       "status": "REJECTED",
+      "effectiveAmount": "0.10",
+      "amount": "1000",
       "reward": null,
       "rejectionReasons": ["NO_ACTIVE_INITIATIVES"]
     }

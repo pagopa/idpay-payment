@@ -39,6 +39,8 @@
       "initiativeId": "INITIATIVEID",
       "userId": "USERID",
       "status": "REJECTED",
+      "effectiveAmount": "0.10",
+      "amount": "1000",
       "reward": null,
       "rejectionReasons": ["TRX_RULE_MCCFILTER_FAIL"]
     }

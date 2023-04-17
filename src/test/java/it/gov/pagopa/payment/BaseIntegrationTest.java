@@ -4,6 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import it.gov.pagopa.payment.utils.Utils;
 import jakarta.annotation.PostConstruct;
+import java.lang.management.ManagementFactory;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
+import javax.management.MBeanServer;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectInstance;
+import javax.management.ObjectName;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.BeforeAll;
@@ -14,11 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-
-import javax.management.*;
-import java.lang.management.ManagementFactory;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 
 @SpringBootTest
 @TestPropertySource(

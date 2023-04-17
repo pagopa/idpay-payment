@@ -1,10 +1,9 @@
 package it.gov.pagopa.payment.connector.rest.reward.dto;
 
 import it.gov.pagopa.payment.enums.OperationType;
+import java.time.OffsetDateTime;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.time.OffsetDateTime;
 
 @Builder
 @Getter
