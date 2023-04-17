@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.qrcode;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.mongodb.client.result.UpdateResult;
@@ -17,6 +18,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
@@ -67,7 +69,7 @@ class QRCodeCreationServiceTest {
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
-            any(TransactionCreationRequest.class)))
+            any(TransactionCreationRequest.class), eq(RewardConstants.TRX_CHANNEL_QRCODE)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
@@ -76,7 +78,7 @@ class QRCodeCreationServiceTest {
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result =
-        qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1");
+        qrCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_QRCODE, "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -91,7 +93,7 @@ class QRCodeCreationServiceTest {
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
-            any(TransactionCreationRequest.class)))
+            any(TransactionCreationRequest.class), eq(RewardConstants.TRX_CHANNEL_QRCODE)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
@@ -110,7 +112,7 @@ class QRCodeCreationServiceTest {
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result =
-        qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1");
+        qrCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_QRCODE, "MERCHANTID1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -126,9 +128,9 @@ class QRCodeCreationServiceTest {
     ClientException result =
         Assertions.assertThrows(
             ClientException.class,
-            () -> qrCodeCreationService.createTransaction(trxCreationReq, "MERCHANTID1"));
+            () -> qrCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_QRCODE, "MERCHANTID1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getTitle());
+    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
   }
 }

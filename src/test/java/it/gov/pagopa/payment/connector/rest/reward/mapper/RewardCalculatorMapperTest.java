@@ -1,31 +1,27 @@
-package it.gov.pagopa.payment.connector.rest.reward;
-
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
-import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
- class AuthPaymentMapperTest {
+import java.util.List;
 
-  private AuthPaymentMapper mapper;
+import static org.junit.jupiter.api.Assertions.*;
+
+ class RewardCalculatorMapperTest {
+
+  private RewardCalculatorMapper mapper;
 
   @BeforeEach
   void setUp() {
-    mapper = new AuthPaymentMapper();
+    mapper = new RewardCalculatorMapper();
   }
 
   @Test
@@ -80,23 +76,4 @@ import org.junit.jupiter.api.Test;
     });
   }
 
-  @Test
-  void trxIdempotence(){
-    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
-        SyncTrxStatus.AUTHORIZED);
-    Reward reward = RewardFaker.mockInstance(1);
-    transaction.setReward(reward);
-    AuthPaymentDTO result = mapper.transactionMapper(transaction);
-    assertAll(() -> {
-      assertNotNull(result);
-      assertEquals(transaction.getId(), result.getId());
-      assertEquals(transaction.getReward(), result.getReward());
-      assertEquals(transaction.getInitiativeId(), result.getInitiativeId());
-      assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
-      assertEquals(transaction.getStatus(), result.getStatus());
-      assertEquals(transaction.getTrxCode(), result.getTrxCode());
-      TestUtils.checkNotNullFields(result);
-    });
-
-  }
 }

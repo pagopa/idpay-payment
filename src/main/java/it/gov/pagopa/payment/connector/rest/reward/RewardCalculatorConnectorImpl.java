@@ -6,7 +6,7 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.mapper.AuthPaymentMapper;
+import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -19,10 +19,10 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   private final RewardCalculatorRestClient restClient;
   private final ObjectMapper objectMapper;
-  private final AuthPaymentMapper requestMapper;
+  private final RewardCalculatorMapper requestMapper;
 
   public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-      ObjectMapper objectMapper, AuthPaymentMapper requestMapper) {
+      ObjectMapper objectMapper, RewardCalculatorMapper requestMapper) {
     this.restClient = restClient;
     this.objectMapper = objectMapper;
     this.requestMapper = requestMapper;
@@ -30,52 +30,55 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
   @Override
   @PerformanceLog("QR_CODE_AUTHORIZE_TRANSACTION_REWARD_CALCULATOR")
-  public AuthPaymentDTO authorizePayment(TransactionInProgress transaction, AuthPaymentRequestDTO body) {
+  public AuthPaymentDTO authorizePayment(TransactionInProgress trx) {
+    AuthPaymentRequestDTO request = requestMapper.rewardMap(trx);
+
     AuthPaymentResponseDTO responseDTO;
     try {
-      responseDTO = restClient.authorizePayment(transaction.getInitiativeId(), body);
+      responseDTO = restClient.authorizePayment(trx.getInitiativeId(), request);
     } catch (FeignException e) {
       switch (e.status()) {
         case 409 -> {
           try {
             responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
           } catch (JsonProcessingException ex) {
-            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex);
           }
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
                 "Too many request in the microservice reward-calculator");
         default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
-            "An error occurred in the microservice reward-calculator");
+            "An error occurred in the microservice reward-calculator", e);
       }
     }
-    return requestMapper.rewardResponseMap(responseDTO, transaction);
+    return requestMapper.rewardResponseMap(responseDTO, trx);
   }
 
   @Override
   @PerformanceLog("QR_CODE_PREVIEW_TRANSACTION_REWARD_CALCULATOR")
-  public AuthPaymentDTO previewTransaction(
-      TransactionInProgress transaction, AuthPaymentRequestDTO body) {
+  public AuthPaymentDTO previewTransaction(TransactionInProgress trx) {
+    AuthPaymentRequestDTO request = requestMapper.rewardMap(trx);
+
     AuthPaymentResponseDTO responseDTO;
     try{
-      responseDTO = restClient.previewTransaction(transaction.getInitiativeId(), body);
+      responseDTO = restClient.previewTransaction(trx.getInitiativeId(), request);
     } catch (FeignException e) {
       switch (e.status()) {
         case 403, 409 -> {
           try {
             responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
           } catch (JsonProcessingException ex) {
-            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex);
           }
         }
         case 429 ->
             throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
                 "Too many request on the ms reward");
         default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
-            "An error occurred in the microservice reward-calculator");
+            "An error occurred in the microservice reward-calculator", e);
       }
     }
-    return requestMapper.rewardResponseMap(responseDTO, transaction);
+    return requestMapper.rewardResponseMap(responseDTO, trx);
   }
 }

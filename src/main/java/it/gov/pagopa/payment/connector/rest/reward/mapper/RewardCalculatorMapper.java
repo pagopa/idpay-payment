@@ -7,7 +7,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthPaymentMapper {
+public class RewardCalculatorMapper {
 
   public AuthPaymentRequestDTO rewardMap(TransactionInProgress transactionInProgress) {
     return AuthPaymentRequestDTO.builder()
@@ -29,6 +29,7 @@ public class AuthPaymentMapper {
         .operationType(transactionInProgress.getOperationTypeTranscoded())
         .trxChargeDate(transactionInProgress.getTrxChargeDate())
         .correlationId(transactionInProgress.getCorrelationId())
+        .channel(transactionInProgress.getChannel())
         .build();
   }
 
@@ -41,17 +42,6 @@ public class AuthPaymentMapper {
         .rejectionReasons(responseDTO.getRejectionReasons())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
-        .build();
-  }
-
-  public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
-    return AuthPaymentDTO.builder()
-        .id(transaction.getId())
-        .reward(transaction.getReward())
-        .initiativeId(transaction.getInitiativeId())
-        .rejectionReasons(transaction.getRejectionReasons())
-        .status(transaction.getStatus())
-        .trxCode(transaction.getTrxCode())
         .build();
   }
 

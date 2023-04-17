@@ -4,9 +4,10 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class TransactionInProgressFaker {
@@ -28,8 +29,8 @@ public class TransactionInProgressFaker {
         .merchantId("MERCHANTID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
-        .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-        .trxChargeDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .trxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .amountCents(1000L)
         .effectiveAmount(BigDecimal.TEN.setScale(2, RoundingMode.UNNECESSARY))
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
@@ -42,6 +43,7 @@ public class TransactionInProgressFaker {
         .trxCode("TRXCODE%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
-        .status(status);
+        .status(status)
+        .channel("CHANNEL%d".formatted(bias));
   }
 }

@@ -41,9 +41,10 @@ public class QRCodeCreationServiceImpl implements
 
   @Override
   public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest,
+      String channel,
       String merchantId) {
     if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
-      log.error("[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
+      log.info("[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
       throw new ClientExceptionWithBody(
           HttpStatus.NOT_FOUND,
           "NOT FOUND",
@@ -51,7 +52,7 @@ public class QRCodeCreationServiceImpl implements
     }
 
     TransactionInProgress trx =
-        transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest);
+        transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest, channel);
     trx.setMerchantId(merchantId);
     generateTrxCodeAndSave(trx);
     return transactionInProgress2TransactionResponseMapper.apply(trx);

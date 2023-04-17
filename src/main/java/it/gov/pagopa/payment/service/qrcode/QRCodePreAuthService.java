@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 
 public interface QRCodePreAuthService {
 
-  TransactionResponse relateUser(String trxCode, String userId);
+  AuthPaymentDTO relateUser(String trxCode, String userId);
 }

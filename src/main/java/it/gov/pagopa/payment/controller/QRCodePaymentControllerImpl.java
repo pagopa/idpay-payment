@@ -28,8 +28,8 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   }
 
   @Override
-  @PerformanceLog(value = "QR_CODE_RELATE_USER", payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse relateUser(String trxCode, String userId) {
+  @PerformanceLog(value = "QR_CODE_RELATE_USER", payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
+  public AuthPaymentDTO relateUser(String trxCode, String userId) {
     log.info(
             "[QR_CODE_RELATE_USER] The user {} is trying to relate to transaction having trxCode {}",
             userId, trxCode);

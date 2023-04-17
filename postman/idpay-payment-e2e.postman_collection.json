@@ -1,0 +1,402 @@
+{
+	"info": {
+		"_postman_id": "b45a3424-dabf-47b0-bc4d-377b7242f58a",
+		"name": "IDPay Payment - e2e",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21721440"
+	},
+	"item": [
+		{
+			"name": "Generate Token IO",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test('Retrieve Token', () => {\r",
+							"    //verify response HTTP status \r",
+							"    pm.response.to.have.status(200);\r",
+							"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Ocp-Apim-Subscription-Key",
+						"value": "",
+						"type": "default"
+					},
+					{
+						"key": "Ocp-Apim-Trace",
+						"value": "{{Ocp-Apim-Trace}}",
+						"type": "default"
+					}
+				],
+				"url": {
+					"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{fiscalCode}}",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"bpd",
+						"pagopa",
+						"api",
+						"v1",
+						"login"
+					],
+					"query": [
+						{
+							"key": "fiscalCode",
+							"value": "{{fiscalCode}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[ACQUIRER] Create Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"[ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+							"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"let moment = require('moment');\r",
+							"let today = String(moment().format('YYYY-MM-DDTHH:mm:ss.SSS'));\r",
+							"\r",
+							"pm.collectionVariables.set(\"trxDate\", today);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "value",
+							"value": "{{apimSubscriptionKeyAcquirer}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "Ocp-Apim-Subscription-Key",
+							"type": "string"
+						},
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Ocp-Apim-Trace",
+						"value": "true",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"senderCode\" : \"SENDERCODE1\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE1\",\r\n    \"vat\" : \"VAT1\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER1\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER1\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"123456\",\r\n    \"amountCurrency\" : \"AMOUNTCURRENCY1\",\r\n    \"mcc\" : \"MCC1\",\r\n    \"acquirerCode\" : \"ACQUIRERCODE1\",\r\n    \"acquirerId\" : \"ACQUIRERID1\",\r\n    \"callbackUrl\" : \"CALLBACKURL1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"idpay",
+						"payment",
+						"qr-code",
+						"merchant",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[IO] Pre-Authorize Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"[IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{tokenIO}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"idpay",
+						"payment",
+						"qr-code",
+						":trxCode",
+						"relate-user"
+					],
+					"variable": [
+						{
+							"key": "trxCode",
+							"value": "{{trxCode}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[TEST] Get Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"[TEST] Retrieve transaction\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{tokenIO}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/idpay/payment/transaction/:transactionId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"idpay",
+						"payment",
+						"transaction",
+						":transactionId"
+					],
+					"variable": [
+						{
+							"key": "transactionId",
+							"value": "{{transactionId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[IO] Authorize Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"[IO] Authorize transaction [QR-CODE]\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{tokenIO}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"idpay",
+						"payment",
+						"qr-code",
+						":trxCode",
+						"authorize"
+					],
+					"variable": [
+						{
+							"key": "trxCode",
+							"value": "{{trxCode}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "[ACQUIRER] Confirm Transaction",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"[ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "apikey",
+					"apikey": [
+						{
+							"key": "value",
+							"value": "{{apimSubscriptionKeyAcquirer}}",
+							"type": "string"
+						},
+						{
+							"key": "key",
+							"value": "Ocp-Apim-Subscription-Key",
+							"type": "string"
+						},
+						{
+							"key": "in",
+							"value": "header",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"idpay",
+						"payment",
+						"qr-code",
+						"merchant",
+						":transactionId",
+						"confirm"
+					],
+					"variable": [
+						{
+							"key": "transactionId",
+							"value": "{{transactionId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "tokenIO",
+			"value": ""
+		},
+		{
+			"key": "trxCode",
+			"value": ""
+		},
+		{
+			"key": "transactionId",
+			"value": ""
+		},
+		{
+			"key": "initiativeId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "trxDate",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

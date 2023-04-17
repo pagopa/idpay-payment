@@ -10,19 +10,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @FeignClient(
-    name = "${rest-client.reward.payment}",
+    name = "reward-calculator",
     url = "${rest-client.reward.baseUrl}")
 public interface RewardCalculatorRestClient {
 
   @PostMapping(
-      value = "idpay/reward/{initiativeId}",
+      value = "reward/{initiativeId}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   AuthPaymentResponseDTO authorizePayment(@PathVariable("initiativeId") String initiativeId,
       @RequestBody AuthPaymentRequestDTO body);
 
   @PostMapping(
-      value = "idpay/reward/preview/{initiativeId}",
+      value = "reward/preview/{initiativeId}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   AuthPaymentResponseDTO previewTransaction(@PathVariable("initiativeId") String initiativeId,
