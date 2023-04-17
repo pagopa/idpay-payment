@@ -19,5 +19,6 @@ public class AuthPaymentDTO {
   private SyncTrxStatus status;
   private Reward reward;
   private List<String> rejectionReasons;
+  private Long amountCents;
 
 }

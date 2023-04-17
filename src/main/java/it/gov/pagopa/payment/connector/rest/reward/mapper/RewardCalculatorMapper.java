@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.Utils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -41,6 +42,7 @@ public class RewardCalculatorMapper {
         .rejectionReasons(responseDTO.getRejectionReasons())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
+        .amountCents(Utils.euroToCents(responseDTO.getEffectiveAmount()))
         .build();
   }
 

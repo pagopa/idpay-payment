@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
+import it.gov.pagopa.payment.utils.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -36,6 +37,7 @@ class AuthPaymentMapperTest {
      assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
      assertEquals(transaction.getStatus(), result.getStatus());
      assertEquals(transaction.getTrxCode(), result.getTrxCode());
+     assertEquals(transaction.getEffectiveAmount(), Utils.centsToEuro(result.getAmountCents()));
      TestUtils.checkNotNullFields(result);
    });
 

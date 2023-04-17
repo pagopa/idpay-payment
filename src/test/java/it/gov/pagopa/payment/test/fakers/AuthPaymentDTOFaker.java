@@ -22,6 +22,7 @@ public class AuthPaymentDTOFaker {
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .status(SyncTrxStatus.IDENTIFIED)
         .rejectionReasons(List.of())
+        .amountCents(1000L)
         .reward(reward)
         .trxCode("TRXCODE%d".formatted(bias));
   }
