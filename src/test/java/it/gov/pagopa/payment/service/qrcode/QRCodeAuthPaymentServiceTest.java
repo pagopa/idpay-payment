@@ -19,6 +19,7 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
+import it.gov.pagopa.payment.utils.Utils;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
@@ -62,10 +63,10 @@ class QRCodeAuthPaymentServiceTest {
 
     Mockito.doAnswer(invocationOnMock -> {
       transaction.setStatus(SyncTrxStatus.AUTHORIZED);
-      transaction.setReward(reward);
+      transaction.setReward(Utils.euroToCents(reward.getAccruedReward()));
       transaction.setRejectionReasons(List.of());
       return transaction;
-    }).when(repository).updateTrxAuthorized(transaction.getId(),reward, List.of());
+    }).when(repository).updateTrxAuthorized(transaction.getId(),Utils.euroToCents(reward.getAccruedReward()), List.of());
 
     AuthPaymentDTO result = service.authPayment("USERID1", "TRXCODE1");
 
@@ -132,7 +133,7 @@ class QRCodeAuthPaymentServiceTest {
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.AUTHORIZED);
     transaction.setUserId("USERID%d".formatted(1));
-    transaction.setReward(RewardFaker.mockInstance(1));
+    transaction.setReward(10L);
     transaction.setRejectionReasons(Collections.emptyList());
 
     when(repository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(transaction.getTrxCode())).thenReturn(transaction);

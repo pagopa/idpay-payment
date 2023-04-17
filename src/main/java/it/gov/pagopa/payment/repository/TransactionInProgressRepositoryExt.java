@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.List;
 
@@ -12,6 +11,6 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpiredThrottled(String trxCode);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons);
   void updateTrxIdentified(String id, String userId);
-  void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons);
+  void updateTrxAuthorized(String id, Long reward, List<String> rejectionReasons);
   void updateTrxRejected(String id, List<String> rejectionReasons);
 }

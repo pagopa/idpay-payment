@@ -12,6 +12,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
+import it.gov.pagopa.payment.utils.Utils;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,12 +64,13 @@ import org.junit.jupiter.api.Test;
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.IDENTIFIED);
     transaction.setRejectionReasons(List.of());
+    transaction.setReward(0L);
 
     AuthPaymentDTO result = mapper.rewardResponseMap(responseDTO, transaction);
     assertAll(() -> {
       assertNotNull(result);
       assertEquals(responseDTO.getTransactionId(), result.getId());
-      assertEquals(responseDTO.getReward(), result.getReward());
+      assertEquals(Utils.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
       assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
       assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(responseDTO.getStatus(), result.getStatus());
@@ -76,5 +78,27 @@ import org.junit.jupiter.api.Test;
       TestUtils.checkNotNullFields(result);
     });
   }
+
+   @Test
+   void rewardResponseMapNullReward() {
+     AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,
+         SyncTrxStatus.REJECTED);
+     responseDTO.setReward(null);
+     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
+         SyncTrxStatus.REJECTED);
+     transaction.setRejectionReasons(List.of());
+
+     AuthPaymentDTO result = mapper.rewardResponseMap(responseDTO, transaction);
+     assertAll(() -> {
+       assertNotNull(result);
+       assertEquals(responseDTO.getTransactionId(), result.getId());
+       assertEquals(0L, result.getReward());
+       assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
+       assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
+       assertEquals(responseDTO.getStatus(), result.getStatus());
+       assertEquals(transaction.getTrxCode(), result.getTrxCode());
+       TestUtils.checkNotNullFields(result);
+     });
+   }
 
 }

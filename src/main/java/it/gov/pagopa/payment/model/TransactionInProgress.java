@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.model;
 
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.math.BigDecimal;
@@ -57,7 +56,7 @@ public class TransactionInProgress {
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;
-  private Reward reward;
+  private Long reward;
   @Builder.Default
   private List<String> rejectionReasons = new ArrayList<>();
   private String userId;

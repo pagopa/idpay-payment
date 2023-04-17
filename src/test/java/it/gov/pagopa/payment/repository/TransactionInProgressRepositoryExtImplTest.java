@@ -8,12 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.BaseIntegrationTest;
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientException;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
 import java.time.OffsetDateTime;
@@ -100,7 +98,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     @Test
     void updateTrxAuthorized() {
-        Reward reward = RewardFaker.mockInstance(1);
+        Long reward = 200L;
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
                 SyncTrxStatus.IDENTIFIED);
         transaction.setUserId("USERID%d".formatted(1));

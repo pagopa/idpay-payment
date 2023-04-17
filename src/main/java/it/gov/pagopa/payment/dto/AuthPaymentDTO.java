@@ -18,7 +18,7 @@ public class AuthPaymentDTO {
   private String trxCode;
   private String initiativeId;
   private SyncTrxStatus status;
-  private Reward reward;
+  private Long reward;
   private List<String> rejectionReasons;
   private BigDecimal amount;
 

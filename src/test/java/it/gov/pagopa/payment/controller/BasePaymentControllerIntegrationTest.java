@@ -178,6 +178,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Cannot relate user because not onboarded
             AuthPaymentDTO failedPreview = extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
+            failedPreview.setReward(null);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, failedPreview.getStatus());
             Assertions.assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), failedPreview.getRejectionReasons());
             extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
@@ -200,6 +201,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            preAuthResult.setReward(null);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, preAuthResult.getStatus());
             checkTransactionStored(preAuthResult, USERID);
 
