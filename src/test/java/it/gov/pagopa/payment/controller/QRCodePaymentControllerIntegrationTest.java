@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -9,6 +10,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
+
+    @Override
+    protected String getChannel() {
+        return RewardConstants.TRX_CHANNEL_QRCODE;
+    }
 
     @Override
     protected MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId) throws Exception {
