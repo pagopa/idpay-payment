@@ -32,20 +32,13 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
       Assertions.assertNotNull(result.getId());
       Assertions.assertNotNull(result.getCorrelationId());
       Assertions.assertEquals(transactionCreationRequest.getInitiativeId(), result.getInitiativeId());
-      Assertions.assertEquals(transactionCreationRequest.getAcquirerCode(), result.getAcquirerCode());
-      Assertions.assertEquals(transactionCreationRequest.getAcquirerId(), result.getAcquirerId());
       Assertions.assertEquals(transactionCreationRequest.getAmountCents(), result.getAmountCents());
       Assertions.assertEquals(Utils.centsToEuro(transactionCreationRequest.getAmountCents()), result.getEffectiveAmount());
-      Assertions.assertEquals(
-          transactionCreationRequest.getAmountCurrency(), result.getAmountCurrency());
       Assertions.assertEquals(transactionCreationRequest.getCallbackUrl(), result.getCallbackUrl());
-      Assertions.assertEquals(
-          transactionCreationRequest.getIdTrxAcquirer(), result.getIdTrxAcquirer());
       Assertions.assertEquals(transactionCreationRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
       Assertions.assertEquals(transactionCreationRequest.getMcc(), result.getMcc());
       Assertions.assertEquals(
           transactionCreationRequest.getMerchantFiscalCode(), result.getMerchantFiscalCode());
-      Assertions.assertEquals(transactionCreationRequest.getSenderCode(), result.getSenderCode());
       Assertions.assertEquals(transactionCreationRequest.getVat(), result.getVat());
       Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxDate());
       Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxChargeDate());

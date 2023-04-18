@@ -28,7 +28,6 @@ public class TransactionInProgress {
   private String id;
   private String trxCode;
   private String idTrxAcquirer;
-  private String acquirerCode;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private OffsetDateTime trxDate;
@@ -52,7 +51,6 @@ public class TransactionInProgress {
   private String mcc;
   private String acquirerId;
   private String merchantId;
-  private String senderCode;
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;

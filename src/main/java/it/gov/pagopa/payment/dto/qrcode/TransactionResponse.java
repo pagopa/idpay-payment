@@ -16,7 +16,6 @@ public class TransactionResponse {
   private String id;
   private String trxCode;
   private String initiativeId;
-  private String senderCode;
   private String merchantId;
   private String idTrxIssuer;
   private String idTrxAcquirer;
@@ -24,7 +23,6 @@ public class TransactionResponse {
   private Long amountCents;
   private String amountCurrency;
   private String mcc;
-  private String acquirerCode;
   private String acquirerId;
   private SyncTrxStatus status;
 

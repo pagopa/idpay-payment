@@ -26,14 +26,12 @@ class TransactionInProgress2TransactionResponseMapperTest {
     Assertions.assertAll(() -> {
       Assertions.assertNotNull(result);
       Assertions.assertEquals(trx.getInitiativeId(), result.getInitiativeId());
-      Assertions.assertEquals(trx.getAcquirerCode(), result.getAcquirerCode());
       Assertions.assertEquals(trx.getAcquirerId(), result.getAcquirerId());
       Assertions.assertEquals(trx.getAmountCents(), result.getAmountCents());
       Assertions.assertEquals(trx.getAmountCurrency(), result.getAmountCurrency());
       Assertions.assertEquals(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
       Assertions.assertEquals(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
       Assertions.assertEquals(trx.getMcc(), result.getMcc());
-      Assertions.assertEquals(trx.getSenderCode(), result.getSenderCode());
       Assertions.assertEquals(trx.getTrxDate(), result.getTrxDate());
       Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
       Assertions.assertEquals(trx.getStatus(), result.getStatus());

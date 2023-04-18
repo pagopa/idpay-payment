@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class QRCodeCreationServiceImpl implements
-    QRCodeCreationService {
+public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
   private final TransactionInProgress2TransactionResponseMapper
       transactionInProgress2TransactionResponseMapper;
@@ -27,24 +26,33 @@ public class QRCodeCreationServiceImpl implements
   private final TrxCodeGenUtil trxCodeGenUtil;
 
   public QRCodeCreationServiceImpl(
-      TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
-      TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
+      TransactionInProgress2TransactionResponseMapper
+          transactionInProgress2TransactionResponseMapper,
+      TransactionCreationRequest2TransactionInProgressMapper
+          transactionCreationRequest2TransactionInProgressMapper,
       RewardRuleRepository rewardRuleRepository,
       TransactionInProgressRepository transactionInProgressRepository,
       TrxCodeGenUtil trxCodeGenUtil) {
-    this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
-    this.transactionCreationRequest2TransactionInProgressMapper = transactionCreationRequest2TransactionInProgressMapper;
+    this.transactionInProgress2TransactionResponseMapper =
+        transactionInProgress2TransactionResponseMapper;
+    this.transactionCreationRequest2TransactionInProgressMapper =
+        transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.trxCodeGenUtil = trxCodeGenUtil;
   }
 
   @Override
-  public TransactionResponse createTransaction(TransactionCreationRequest trxCreationRequest,
+  public TransactionResponse createTransaction(
+      TransactionCreationRequest trxCreationRequest,
       String channel,
-      String merchantId) {
+      String merchantId,
+      String acquirerId,
+      String idTrxAcquirer) {
     if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
-      log.info("[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]", trxCreationRequest.getInitiativeId());
+      log.info(
+          "[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]",
+          trxCreationRequest.getInitiativeId());
       throw new ClientExceptionWithBody(
           HttpStatus.NOT_FOUND,
           "NOT FOUND",
@@ -54,14 +62,19 @@ public class QRCodeCreationServiceImpl implements
     TransactionInProgress trx =
         transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest, channel);
     trx.setMerchantId(merchantId);
+    trx.setAcquirerId(acquirerId);
+    trx.setIdTrxAcquirer(idTrxAcquirer);
     generateTrxCodeAndSave(trx);
     return transactionInProgress2TransactionResponseMapper.apply(trx);
   }
 
   private void generateTrxCodeAndSave(TransactionInProgress trx) {
     long retry = 1;
-    while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId() == null) {
-      log.info("[QR_CODE_CREATE_TRANSACTION] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]", retry);
+    while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId()
+        == null) {
+      log.info(
+          "[QR_CODE_CREATE_TRANSACTION] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
+          retry);
     }
   }
 }
