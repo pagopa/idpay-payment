@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
@@ -50,5 +51,12 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   public TransactionResponse confirmPayment(String trxId, String merchantId) {
     log.info("[QR_CODE_CONFIRM_PAYMENT] The merchant {} is confirming the transaction {}", merchantId, trxId);
     return qrCodePaymentService.confirmPayment(trxId, merchantId);
+  }
+
+  @Override
+  @PerformanceLog("GET_STATUS_TRANSACTION")
+  public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
+    log.info("[GET_STATUS_TRANSACTION] Merchant with {},{} requested to retrieve status of transaction{} ", merchantId, acquirerId, transactionId);
+    return qrCodePaymentService.getStatusTransaction(transactionId, merchantId, acquirerId);
   }
 }
