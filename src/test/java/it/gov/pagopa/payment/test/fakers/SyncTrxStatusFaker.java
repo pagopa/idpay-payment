@@ -1,11 +1,12 @@
 package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.Utils;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -17,7 +18,7 @@ public class SyncTrxStatusFaker {
         return mockInstanceBuilder(bias).build();
     }
     public static SyncTrxStatusDTO.SyncTrxStatusDTOBuilder mockInstanceBuilder(Integer bias){
-        Reward reward = RewardFaker.mockInstance(bias);
+
         return SyncTrxStatusDTO.builder()
                 .id("TRANSACTIONID%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
@@ -31,7 +32,7 @@ public class SyncTrxStatusFaker {
                 .acquirerId("ACQUIRERID%d".formatted(bias))
                 .merchantId("MERCHANTID%d".formatted(bias))
                 .initiativeId("INITIATIVEID%d".formatted(bias))
-                .rewardCents(Utils.euroToCents(reward.getProvidedReward()))
+                .rewardCents(Utils.euroToCents(BigDecimal.valueOf(100L).setScale(2, RoundingMode.UNNECESSARY)))
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .status(it.gov.pagopa.payment.enums.SyncTrxStatus.AUTHORIZED);
     }

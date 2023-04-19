@@ -30,7 +30,9 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
           QRCodeCreationService qrCodeCreationService,
           QRCodePreAuthService qrCodePreAuthService,
           QRCodeAuthPaymentService qrCodeAuthPaymentService,
-          QRCodeConfirmationService qrCodeConfirmationService, TransactionInProgressRepository transactionInProgressRepository, TransactionInProgress2SyncTrxStatus transactionMapper) {
+          QRCodeConfirmationService qrCodeConfirmationService,
+          TransactionInProgressRepository transactionInProgressRepository,
+          TransactionInProgress2SyncTrxStatus transactionMapper) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
