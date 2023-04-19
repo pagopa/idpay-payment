@@ -44,7 +44,7 @@ public class RewardCalculatorMapper {
         .rejectionReasons(responseDTO.getRejectionReasons())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
-        .amount(responseDTO.getEffectiveAmount())
+        .amountCents(responseDTO.getAmountCents())
         .build();
   }
 }
