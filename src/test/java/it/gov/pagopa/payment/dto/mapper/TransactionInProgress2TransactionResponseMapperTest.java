@@ -35,6 +35,8 @@ class TransactionInProgress2TransactionResponseMapperTest {
       Assertions.assertEquals(trx.getTrxDate(), result.getTrxDate());
       Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
       Assertions.assertEquals(trx.getStatus(), result.getStatus());
+      Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
+      Assertions.assertEquals(trx.getVat(), result.getVat());
     });
 
     TestUtils.checkNotNullFields(result);

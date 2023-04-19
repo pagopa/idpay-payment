@@ -25,5 +25,7 @@ public class TransactionResponse {
   private String mcc;
   private String acquirerId;
   private SyncTrxStatus status;
+  private String merchantFiscalCode;
+  private String vat;
 
 }

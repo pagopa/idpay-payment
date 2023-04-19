@@ -24,6 +24,8 @@ public class TransactionInProgress2TransactionResponseMapper
         .trxDate(transactionInProgress.getTrxDate())
         .trxCode(transactionInProgress.getTrxCode())
         .status(transactionInProgress.getStatus())
+        .merchantFiscalCode(transactionInProgress.getMerchantFiscalCode())
+        .vat(transactionInProgress.getVat())
         .build();
   }
 }
