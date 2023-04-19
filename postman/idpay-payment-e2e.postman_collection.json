@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "a698508e-f098-4e2f-92a4-50e2b83fb5e9",
-		"name": "IDPay Payment - e2e Copy",
+		"name": "IDPay Payment - e2e Create Transaction",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "21434036"
 	},
@@ -125,6 +125,11 @@
 								"key": "x-merchant-id",
 								"value": "{{x-merchant-id}}",
 								"type": "text"
+							},
+							{
+								"key": "x-acquirer-id",
+								"value": "{{x-acquirer-id}}",
+								"type": "text"
 							}
 						],
 						"body": {
@@ -221,6 +226,11 @@
 											{
 												"key": "x-merchant-id",
 												"value": "{{x-merchant-id}}",
+												"type": "text"
+											},
+											{
+												"key": "x-acquirer-id",
+												"value": "{{x-acquirer-id}}",
 												"type": "text"
 											}
 										],
