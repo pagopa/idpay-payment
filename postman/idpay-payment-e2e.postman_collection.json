@@ -87,7 +87,11 @@
 									"let moment = require('moment');\r",
 									"let today = String(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
 									"\r",
-									"pm.collectionVariables.set(\"trxDate\", today);"
+									"pm.collectionVariables.set(\"trxDate\", today);\r",
+									"\r",
+									"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+									"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);\r",
+									"pm.collectionVariables.set(\"x-acquirer-id\", `ACQUIRERID{{randomNum}}`);"
 								],
 								"type": "text/javascript"
 							}
@@ -134,7 +138,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE1\",\r\n    \"vat\" : \"VAT1\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER1\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC1\",\r\n    \"callbackUrl\" : \"CALLBACKURL1\"\r\n}",
+							"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -189,7 +193,11 @@
 													"let moment = require('moment');\r",
 													"let today = String(moment().format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
 													"\r",
-													"pm.collectionVariables.set(\"trxDate\", today);"
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);\r",
+													"pm.collectionVariables.set(\"x-acquirer-id\", `ACQUIRERID{{randomNum}}`);"
 												],
 												"type": "text/javascript"
 											}
@@ -236,7 +244,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"DUMMYINITIATIVE\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE1\",\r\n    \"vat\" : \"VAT1\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER1\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC1\",\r\n    \"callbackUrl\" : \"CALLBACKURL1\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"DUMMYINITIATIVE\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -307,6 +315,18 @@
 		},
 		{
 			"key": "tokenIO",
+			"value": ""
+		},
+		{
+			"key": "randomNum",
+			"value": ""
+		},
+		{
+			"key": "x-acquirer-id",
+			"value": ""
+		},
+		{
+			"key": "x-merchant-id",
 			"value": ""
 		}
 	]
