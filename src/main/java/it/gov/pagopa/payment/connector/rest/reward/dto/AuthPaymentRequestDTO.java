@@ -12,7 +12,6 @@ public class AuthPaymentRequestDTO {
   private String transactionId;
   private String userId;
   private String merchantId;
-  private String senderCode;
   private String merchantFiscalCode;
   private String vat;
   private String idTrxIssuer;
@@ -21,7 +20,6 @@ public class AuthPaymentRequestDTO {
   private Long amountCents;
   private String amountCurrency;
   private String mcc;
-  private String acquirerCode;
   private String acquirerId;
   private String idTrxAcquirer;
   private OperationType operationType;

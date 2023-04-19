@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.connector.rest.reward.dto;
 
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +24,7 @@ public class AuthPaymentResponseDTO {
   private Reward reward;
   private List<String> rejectionReasons;
   private BigDecimal effectiveAmount;
-  private Long amount;
-
+  private BigDecimal amount;
+  private Long amountCents;
+  private OperationType operationType;
 }
