@@ -164,7 +164,7 @@
 							"name": "Initiative not found - 404",
 							"item": [
 								{
-									"name": "[ACQUIRER] Create Transaction",
+									"name": "[ACQUIRER] Create Transaction - Initiative not found (404)",
 									"event": [
 										{
 											"listen": "test",
