@@ -19,7 +19,9 @@ public interface QRCodePaymentController {
   @ResponseStatus(code = HttpStatus.CREATED)
   TransactionResponse createTransaction(
       @RequestBody TransactionCreationRequest trxCreationRequest,
-      @RequestHeader("x-merchant-id") String merchantId);
+      @RequestHeader("x-merchant-id") String merchantId,
+      @RequestHeader("x-acquirer-id") String acquirerId,
+      @RequestHeader("x-apim-request-id") String idTrxAcquirer);
 
   @PutMapping("/{trxCode}/relate-user")
   @ResponseStatus(code = HttpStatus.OK)

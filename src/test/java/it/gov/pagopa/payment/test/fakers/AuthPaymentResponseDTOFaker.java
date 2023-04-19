@@ -20,6 +20,7 @@ public class AuthPaymentResponseDTOFaker {
         .effectiveAmount(BigDecimal.TEN)
         .reward(reward)
         .rejectionReasons(List.of())
+        .amountCents(1000L)
         .status(status);
   }
 }
