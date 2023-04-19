@@ -90,8 +90,7 @@
 									"pm.collectionVariables.set(\"trxDate\", today);\r",
 									"\r",
 									"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-									"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);\r",
-									"pm.collectionVariables.set(\"x-acquirer-id\", `ACQUIRERID{{randomNum}}`);"
+									"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
 								],
 								"type": "text/javascript"
 							}
@@ -128,11 +127,6 @@
 							{
 								"key": "x-merchant-id",
 								"value": "{{x-merchant-id}}",
-								"type": "text"
-							},
-							{
-								"key": "x-acquirer-id",
-								"value": "{{x-acquirer-id}}",
 								"type": "text"
 							}
 						],
@@ -196,8 +190,7 @@
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
 													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);\r",
-													"pm.collectionVariables.set(\"x-acquirer-id\", `ACQUIRERID{{randomNum}}`);"
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
 												],
 												"type": "text/javascript"
 											}
@@ -234,11 +227,6 @@
 											{
 												"key": "x-merchant-id",
 												"value": "{{x-merchant-id}}",
-												"type": "text"
-											},
-											{
-												"key": "x-acquirer-id",
-												"value": "{{x-acquirer-id}}",
 												"type": "text"
 											}
 										],
@@ -318,7 +306,23 @@
 			"value": ""
 		},
 		{
+			"key": "merchantId",
+			"value": ""
+		},
+		{
+			"key": "acquirerId",
+			"value": ""
+		},
+		{
+			"key": "merchartId",
+			"value": ""
+		},
+		{
 			"key": "randomNum",
+			"value": ""
+		},
+		{
+			"key": "x-merchart-id",
 			"value": ""
 		},
 		{
