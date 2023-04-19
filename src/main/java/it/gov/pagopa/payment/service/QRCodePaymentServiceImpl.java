@@ -54,7 +54,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   @Override
-  public TransactionResponse confirmPayment(String trxId, String merchantId) {
-    return qrCodeConfirmationService.confirmPayment(trxId, merchantId);
+  public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
+    return qrCodeConfirmationService.confirmPayment(trxId, merchantId, acquirerId);
   }
 }
