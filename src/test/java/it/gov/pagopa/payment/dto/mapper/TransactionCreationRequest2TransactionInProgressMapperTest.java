@@ -25,27 +25,41 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
 
     TransactionCreationRequest transactionCreationRequest =
         TransactionCreationRequestFaker.mockInstance(1);
-    TransactionInProgress result = mapper.apply(transactionCreationRequest, "CHANNEL");
+    TransactionInProgress result =
+        mapper.apply(
+            transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", "IDTRXACQUIRER");
 
-    Assertions.assertAll(() -> {
-      Assertions.assertNotNull(result);
-      Assertions.assertNotNull(result.getId());
-      Assertions.assertNotNull(result.getCorrelationId());
-      Assertions.assertEquals(transactionCreationRequest.getInitiativeId(), result.getInitiativeId());
-      Assertions.assertEquals(transactionCreationRequest.getAmountCents(), result.getAmountCents());
-      Assertions.assertEquals(Utils.centsToEuro(transactionCreationRequest.getAmountCents()), result.getEffectiveAmount());
-      Assertions.assertEquals(transactionCreationRequest.getCallbackUrl(), result.getCallbackUrl());
-      Assertions.assertEquals(transactionCreationRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
-      Assertions.assertEquals(transactionCreationRequest.getMcc(), result.getMcc());
-      Assertions.assertEquals(
-          transactionCreationRequest.getMerchantFiscalCode(), result.getMerchantFiscalCode());
-      Assertions.assertEquals(transactionCreationRequest.getVat(), result.getVat());
-      Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxDate());
-      Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxChargeDate());
-      Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
-      Assertions.assertEquals(PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());
-      Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
-      Assertions.assertEquals("CHANNEL", result.getChannel());
-    });
+    Assertions.assertAll(
+        () -> {
+          Assertions.assertNotNull(result);
+          Assertions.assertNotNull(result.getId());
+          Assertions.assertNotNull(result.getCorrelationId());
+          Assertions.assertEquals(
+              transactionCreationRequest.getInitiativeId(), result.getInitiativeId());
+          Assertions.assertEquals(
+              transactionCreationRequest.getAmountCents(), result.getAmountCents());
+          Assertions.assertEquals(
+              Utils.centsToEuro(transactionCreationRequest.getAmountCents()),
+              result.getEffectiveAmount());
+          Assertions.assertEquals(
+              transactionCreationRequest.getCallbackUrl(), result.getCallbackUrl());
+          Assertions.assertEquals(
+              transactionCreationRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
+          Assertions.assertEquals(transactionCreationRequest.getMcc(), result.getMcc());
+          Assertions.assertEquals(
+              transactionCreationRequest.getMerchantFiscalCode(), result.getMerchantFiscalCode());
+          Assertions.assertEquals(transactionCreationRequest.getVat(), result.getVat());
+          Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxDate());
+          Assertions.assertEquals(
+              transactionCreationRequest.getTrxDate(), result.getTrxChargeDate());
+          Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
+          Assertions.assertEquals(
+              PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());
+          Assertions.assertEquals(OperationType.CHARGE, result.getOperationTypeTranscoded());
+          Assertions.assertEquals("CHANNEL", result.getChannel());
+          Assertions.assertEquals("MERCHANTID", result.getMerchantId());
+          Assertions.assertEquals("ACQUIRERID", result.getAcquirerId());
+          Assertions.assertEquals("IDTRXACQUIRER", result.getIdTrxAcquirer());
+        });
   }
 }

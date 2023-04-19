@@ -60,10 +60,8 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
     }
 
     TransactionInProgress trx =
-        transactionCreationRequest2TransactionInProgressMapper.apply(trxCreationRequest, channel);
-    trx.setMerchantId(merchantId);
-    trx.setAcquirerId(acquirerId);
-    trx.setIdTrxAcquirer(idTrxAcquirer);
+        transactionCreationRequest2TransactionInProgressMapper.apply(
+            trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer);
     generateTrxCodeAndSave(trx);
     return transactionInProgress2TransactionResponseMapper.apply(trx);
   }

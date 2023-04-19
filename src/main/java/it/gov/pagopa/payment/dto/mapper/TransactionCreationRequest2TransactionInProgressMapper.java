@@ -6,18 +6,20 @@ import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.utils.Utils;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-import java.util.function.BiFunction;
-
 @Service
-public class TransactionCreationRequest2TransactionInProgressMapper
-    implements BiFunction<TransactionCreationRequest, String, TransactionInProgress> {
+public class TransactionCreationRequest2TransactionInProgressMapper {
 
-  @Override
-  public TransactionInProgress apply(TransactionCreationRequest transactionCreationRequest, String channel) {
-    String id = "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
+  public TransactionInProgress apply(
+      TransactionCreationRequest transactionCreationRequest,
+      String channel,
+      String merchantId,
+      String acquirerId,
+      String idTrxAcquirer) {
+    String id =
+        "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
     return TransactionInProgress.builder()
         .id(id)
         .correlationId(id)
@@ -36,6 +38,9 @@ public class TransactionCreationRequest2TransactionInProgressMapper
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .channel(channel)
+        .merchantId(merchantId)
+        .acquirerId(acquirerId)
+        .idTrxAcquirer(idTrxAcquirer)
         .build();
   }
 }
