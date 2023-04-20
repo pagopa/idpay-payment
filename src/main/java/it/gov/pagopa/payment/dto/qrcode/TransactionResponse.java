@@ -1,12 +1,11 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import java.time.OffsetDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.OffsetDateTime;
 
 @Data
 @AllArgsConstructor
@@ -17,7 +16,6 @@ public class TransactionResponse {
   private String id;
   private String trxCode;
   private String initiativeId;
-  private String senderCode;
   private String merchantId;
   private String idTrxIssuer;
   private String idTrxAcquirer;
@@ -25,8 +23,9 @@ public class TransactionResponse {
   private Long amountCents;
   private String amountCurrency;
   private String mcc;
-  private String acquirerCode;
   private String acquirerId;
   private SyncTrxStatus status;
+  private String merchantFiscalCode;
+  private String vat;
 
 }

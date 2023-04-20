@@ -1,8 +1,11 @@
 package it.gov.pagopa.common.performancelogger;
 
+import static org.mockito.Mockito.when;
+
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.MemoryAppender;
 import it.gov.pagopa.payment.exception.ClientException;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,10 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.function.Supplier;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {PerformanceLoggerAspect.class, PerformanceLoggerTest.TestService.class, PerformanceLoggerTest.DummyPayloadBuilder.class})

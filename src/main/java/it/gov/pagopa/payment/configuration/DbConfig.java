@@ -3,6 +3,11 @@ package it.gov.pagopa.payment.configuration;
 import com.mongodb.lang.NonNull;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.Utils;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
 import lombok.Setter;
 import org.bson.types.Decimal128;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
@@ -14,12 +19,6 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableMongoRepositories(basePackageClasses = TransactionInProgressRepository.class)

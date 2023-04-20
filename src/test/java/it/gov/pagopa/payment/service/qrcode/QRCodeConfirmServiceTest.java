@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import static org.mockito.Mockito.when;
+
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -15,8 +17,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeConfirmServiceTest {
@@ -36,7 +36,7 @@ class QRCodeConfirmServiceTest {
     @Test
     void testTrxNotFound(){
         try{
-            service.confirmPayment("TRXID", "MERCHID");
+            service.confirmPayment("TRXID", "MERCHID","ACQID");
             Assertions.fail("Expected exception");
         } catch (ClientExceptionNoBody e){
             Assertions.assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
@@ -48,7 +48,21 @@ class QRCodeConfirmServiceTest {
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED));
 
         try{
-            service.confirmPayment("TRXID", "MERCHID");
+            service.confirmPayment("TRXID", "MERCHID","ACQID");
+            Assertions.fail("Expected exception");
+        } catch (ClientExceptionNoBody e){
+            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        }
+    }
+
+    @Test
+    void testAcquirerIdNotValid(){
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        trx.setMerchantId("MERCHID");
+        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+
+        try{
+            service.confirmPayment("TRXID", "MERCHID","ACQID");
             Assertions.fail("Expected exception");
         } catch (ClientExceptionNoBody e){
             Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
@@ -59,10 +73,11 @@ class QRCodeConfirmServiceTest {
     void testStatusNotValid(){
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
         trx.setMerchantId("MERCHID");
+        trx.setAcquirerId("ACQID");
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         try{
-            service.confirmPayment("TRXID", "MERCHID");
+            service.confirmPayment("TRXID", "MERCHID","ACQID");
             Assertions.fail("Expected exception");
         } catch (ClientExceptionNoBody e){
             Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
@@ -82,11 +97,12 @@ class QRCodeConfirmServiceTest {
     private void testSuccessful(boolean notificationOutcome) {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
+        trx.setAcquirerId("ACQID");
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         when(notifierServiceMock.notify(trx)).thenReturn(notificationOutcome);
 
-        TransactionResponse result = service.confirmPayment("TRXID", "MERCHID");
+        TransactionResponse result = service.confirmPayment("TRXID", "MERCHID","ACQID");
 
         Assertions.assertEquals(result, mapper.apply(trx));
         Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());

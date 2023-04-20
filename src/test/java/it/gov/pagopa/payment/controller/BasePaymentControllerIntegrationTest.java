@@ -13,16 +13,6 @@ import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import org.apache.commons.lang3.function.FailableConsumer;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.opentest4j.AssertionFailedError;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MvcResult;
-
 import java.io.UnsupportedEncodingException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -34,6 +24,15 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
+import org.apache.commons.lang3.function.FailableConsumer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.AssertionFailedError;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MvcResult;
 
 @TestPropertySource(
         properties = {
@@ -46,6 +45,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     public static final String INITIATIVEID = "INITIATIVEID";
     public static final String USERID = "USERID";
     public static final String MERCHANTID = "MERCHANTID";
+    public static final String ACQUIRERID = "ACQUIRERID";
+    public static final String IDTRXACQUIRER = "IDTRXACQUIRER";
 
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
@@ -100,7 +101,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     /**
      * Invoke create transaction API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId) throws Exception;
+    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxAcquirer) throws Exception;
 
     /**
      * Invoke pre-authorize transaction API to relate <i>userId</i> to the transaction created by <i>merchantId</i>
@@ -115,7 +116,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     /**
      * Invoke confirm payment API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult confirmPayment(TransactionResponse trx, String merchantId) throws Exception;
+    protected abstract MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
 
     /**
      * Override in order to add specific use cases
@@ -125,7 +126,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private TransactionResponse createTrxSuccess(TransactionCreationRequest trxRequest) throws Exception {
-        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID), HttpStatus.CREATED, TransactionResponse.class);
+        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXACQUIRER), HttpStatus.CREATED, TransactionResponse.class);
         Assertions.assertEquals(SyncTrxStatus.CREATED, trxCreated.getStatus());
         checkTransactionStored(trxCreated);
         return trxCreated;
@@ -162,13 +163,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId("DUMMYINITIATIVEID");
 
-            extractResponse(createTrx(trxRequest, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXACQUIRER), HttpStatus.NOT_FOUND, null);
 
             // Other APIs cannot be invoked because we have not a valid trxId
             TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("DUMMYTRXCODE").trxDate(OffsetDateTime.now()).build();
             extractResponse(preAuthTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
             extractResponse(authTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
-            extractResponse(confirmPayment(dummyTrx, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(confirmPayment(dummyTrx, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
         });
 
         // useCase 1: userId not onboarded
@@ -183,13 +184,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Cannot relate user because not onboarded
             AuthPaymentDTO failedPreview = extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
+            failedPreview.setReward(null);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, failedPreview.getStatus());
             Assertions.assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), failedPreview.getRejectionReasons());
             extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
 
             // Other APIs will fail because status not expected
             extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
-            extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
 
             checkTransactionStored(failedPreview, userIdNotOnboarded);
         });
@@ -205,12 +207,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            preAuthResult.setReward(null);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, preAuthResult.getStatus());
             checkTransactionStored(preAuthResult, USERID);
 
             // Cannot invoke other APIs if REJECTED
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
-            extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 
         // useCase 3: trx rejected when authorizing
@@ -264,7 +267,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Cannot invoke other APIs if not relating first
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
-            extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
             waitThrottlingTime();
 
             // Relating to user
@@ -280,7 +283,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
 
             // Cannot invoke other APIs if not authorizing first
-            extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
 
             // Only the right userId could authorize its transaction
             extractResponse(authTrx(trxCreated, "DUMMYUSERID", MERCHANTID), HttpStatus.FORBIDDEN, null);
@@ -302,14 +305,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             checkTransactionStored(authResult, USERID);
 
             // Unexpected merchant trying to confirm
-            extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
+            extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
             waitThrottlingTime();
 
             // Confirming payment
-            TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.OK, TransactionResponse.class);
+            TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, TransactionResponse.class);
             Assertions.assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
             // Confirming payment resubmission
-            extractResponse(confirmPayment(trxCreated, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
 
             Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
         });
