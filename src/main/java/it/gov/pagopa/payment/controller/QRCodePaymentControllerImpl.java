@@ -29,7 +29,7 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
       String merchantId,
       String acquirerId,
       String idTrxAcquirer) {
-    log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} is creating a transaction", merchantId);
+    log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} through acquirer {} is creating a transaction", merchantId, acquirerId);
     return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId, idTrxAcquirer);
   }
 
@@ -61,11 +61,12 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   @PerformanceLog(
       value = "QR_CODE_CONFIRM_PAYMENT",
       payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse confirmPayment(String trxId, String merchantId) {
+  public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
     log.info(
-        "[QR_CODE_CONFIRM_PAYMENT] The merchant {} is confirming the transaction {}",
+        "[QR_CODE_CONFIRM_PAYMENT] The merchant {} through acquirer {} is confirming the transaction {}",
         merchantId,
+        acquirerId,
         trxId);
-    return qrCodePaymentService.confirmPayment(trxId, merchantId);
+    return qrCodePaymentService.confirmPayment(trxId, merchantId, acquirerId);
   }
 }

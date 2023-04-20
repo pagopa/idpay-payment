@@ -34,5 +34,5 @@ public interface QRCodePaymentController {
       @RequestHeader("x-user-id") String userId);
 
   @PutMapping("/merchant/{transactionId}/confirm")
-  TransactionResponse confirmPayment(@PathVariable("transactionId") String trxId, @RequestHeader("x-merchant-id") String merchantId);
+  TransactionResponse confirmPayment(@PathVariable("transactionId") String trxId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
 }

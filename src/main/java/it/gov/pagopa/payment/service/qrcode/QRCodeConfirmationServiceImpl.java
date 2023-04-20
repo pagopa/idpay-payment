@@ -26,14 +26,14 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
     }
 
     @Override
-    public TransactionResponse confirmPayment(String trxId, String merchantId) {
+    public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
         TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
         if (trx == null) {
             throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "[CONFIRM_PAYMENT] Cannot found transaction having id: " + trxId);
         }
-        if(!trx.getMerchantId().equals(merchantId)){
-            throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "[CONFIRM_PAYMENT] Requesting merchantId (%s) not allowed to operate on transaction having id %s".formatted(merchantId, trxId));
+        if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
+            throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "[CONFIRM_PAYMENT] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
         }
         if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
             throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CONFIRM_PAYMENT] Cannot confirm transaction having id %s: actual status is %s".formatted(trxId, trx.getStatus()));
