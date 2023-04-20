@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatus;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
@@ -24,7 +24,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
   private final QRCodeConfirmationService qrCodeConfirmationService;
   private final TransactionInProgressRepository transactionInProgressRepository;
-  private final TransactionInProgress2SyncTrxStatus transactionMapper;
+  private final TransactionInProgress2SyncTrxStatusMapper transactionMapper;
 
   public QRCodePaymentServiceImpl(
       QRCodeCreationService qrCodeCreationService,
@@ -32,7 +32,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
       QRCodeAuthPaymentService qrCodeAuthPaymentService,
       QRCodeConfirmationService qrCodeConfirmationService,
       TransactionInProgressRepository transactionInProgressRepository,
-      TransactionInProgress2SyncTrxStatus transactionMapper) {
+      TransactionInProgress2SyncTrxStatusMapper transactionMapper) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;

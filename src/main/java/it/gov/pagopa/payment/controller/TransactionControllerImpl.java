@@ -19,6 +19,4 @@ public class TransactionControllerImpl implements TransactionController {
         log.info("[GET_TRANSACTION] User {} requested to retrieve transaction {}", userId, transactionId);
         return transactionService.getTransaction(transactionId, userId);
     }
-
-
 }

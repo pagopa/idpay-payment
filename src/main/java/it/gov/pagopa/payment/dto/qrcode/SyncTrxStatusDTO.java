@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,6 +33,5 @@ public class SyncTrxStatusDTO {
     private Long rewardCents;
     @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
-    private it.gov.pagopa.payment.enums.SyncTrxStatus status;
-
+    private SyncTrxStatus status;
 }

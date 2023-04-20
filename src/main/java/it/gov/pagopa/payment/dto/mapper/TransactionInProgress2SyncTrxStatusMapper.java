@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class TransactionInProgress2SyncTrxStatus {
+public class TransactionInProgress2SyncTrxStatusMapper {
     public SyncTrxStatusDTO transactionInProgressMapper(TransactionInProgress transaction){
         return SyncTrxStatusDTO.builder()
                 .id(transaction.getId())

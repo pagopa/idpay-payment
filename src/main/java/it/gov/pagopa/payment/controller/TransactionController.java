@@ -13,6 +13,4 @@ public interface TransactionController {
     @GetMapping("/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
     TransactionInProgress getTransaction(@PathVariable String transactionId, @RequestHeader("x-user-id") String userId);
-
-
 }

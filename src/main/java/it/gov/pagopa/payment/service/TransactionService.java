@@ -5,5 +5,4 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 
 public interface TransactionService {
     TransactionInProgress getTransaction(String id, String userId);
-
 }

@@ -54,6 +54,4 @@ class TransactionControllerTest {
 
     Assertions.assertEquals(expectedTrx, trx);
   }
-
-
 }

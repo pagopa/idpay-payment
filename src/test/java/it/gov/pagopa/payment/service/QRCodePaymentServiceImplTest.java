@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatus;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
@@ -20,8 +20,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
 import java.util.Optional;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,7 +39,7 @@ class QRCodePaymentServiceImplTest {
     @Mock
     QRCodeConfirmationService qrCodeConfirmationService;
     @Mock
-    TransactionInProgress2SyncTrxStatus transactionMapper;
+    TransactionInProgress2SyncTrxStatusMapper transactionMapper;
     QRCodePaymentServiceImpl qrCodePaymentService;
 
     @BeforeEach
