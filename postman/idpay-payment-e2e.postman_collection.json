@@ -157,7 +157,7 @@
 					"response": []
 				},
 				{
-					"name": "[IO] Pre-Authorize Transaction Copy",
+					"name": "[IO] Pre-Authorize Transaction",
 					"event": [
 						{
 							"listen": "test",
@@ -311,13 +311,13 @@
 					]
 				},
 				{
-					"name": "QRCode Pre-Authorize Transaction Copy",
+					"name": "QRCode Pre-Authorize Transaction",
 					"item": [
 						{
 							"name": "TokenIO not valid - 401",
 							"item": [
 								{
-									"name": "[ACQUIRER] Create Transaction Copy",
+									"name": "[ACQUIRER] Create Transaction - TokenIO not valid (200)",
 									"event": [
 										{
 											"listen": "test",
@@ -515,7 +515,7 @@
 									"response": []
 								},
 								{
-									"name": "[ACQUIRER] Create Transaction - Another user realted(200)",
+									"name": "[ACQUIRER] Create Transaction - Another user related (200)",
 									"event": [
 										{
 											"listen": "test",
@@ -607,7 +607,7 @@
 									"response": []
 								},
 								{
-									"name": "[IO] Pre-Authorize Transaction - Another user realted(403)",
+									"name": "[IO] Pre-Authorize Transaction - Another user related (403)",
 									"event": [
 										{
 											"listen": "test",
@@ -668,7 +668,7 @@
 							"name": "Transaction not found - 404",
 							"item": [
 								{
-									"name": "Generate TokenIO - Transaction not found(200)",
+									"name": "Generate TokenIO - Transaction not found (200)",
 									"event": [
 										{
 											"listen": "test",
@@ -722,7 +722,7 @@
 									"response": []
 								},
 								{
-									"name": "[IO] Pre-Authorize Transaction - Transaction not found(404)",
+									"name": "[IO] Pre-Authorize Transaction - Transaction not found (404)",
 									"event": [
 										{
 											"listen": "test",
