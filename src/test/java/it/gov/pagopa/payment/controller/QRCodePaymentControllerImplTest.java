@@ -63,7 +63,7 @@ private ObjectMapper objectMapper;
         Mockito.when(qrCodePaymentService.getStatusTransaction("TRANSACTIONID","MERCHANTID","ACQUIRERID"))
                 .thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Transaction does not exist"));
 
-        MvcResult result= mockMvc.perform(
+        mockMvc.perform(
                         get("/idpay/payment/qr-code/status/{transactionId}","TRANSACTIONID")
                                 .header("x-merchant-id","MERCHANTID")
                                 .header("x-acquirer-id","ACQUIRERID")
@@ -71,6 +71,7 @@ private ObjectMapper objectMapper;
                 .andExpect(res -> Assertions.assertTrue(res.getResolvedException() instanceof ClientExceptionNoBody))
                 .andReturn();
         Mockito.verify(qrCodePaymentService).getStatusTransaction(anyString(),anyString(),anyString());
+
     }
 
 }

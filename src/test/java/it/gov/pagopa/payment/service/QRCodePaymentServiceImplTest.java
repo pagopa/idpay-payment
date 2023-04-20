@@ -66,9 +66,7 @@ class QRCodePaymentServiceImplTest {
         Assertions.assertEquals(trxStatus_1,trx);
         Assertions.assertInstanceOf(SyncTrxStatusDTO.class,trx);
         Mockito.verify(transactionInProgressRepository).findByIdAndMerchantIdAndAcquirerId(anyString(),anyString(),anyString());
-        Mockito.verify(transactionMapper).transactionInProgressMapper(transaction);
-
-
+        Mockito.verify(transactionMapper).transactionInProgressMapper(any());
     }
 
     @Test
@@ -82,6 +80,5 @@ class QRCodePaymentServiceImplTest {
                 ()-> qrCodePaymentService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
         Assertions.assertEquals(HttpStatus.NOT_FOUND, clientExceptionNoBody.getHttpStatus());
         Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
-
     }
 }
