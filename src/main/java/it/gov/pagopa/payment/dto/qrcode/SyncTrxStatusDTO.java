@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
+import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,7 @@ public class SyncTrxStatusDTO {
     private OffsetDateTime trxDate;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime authDate;
-    private String operationType;
+    private OperationType operationType;
     private Long amountCents;
     private String amountCurrency;
     private String mcc;

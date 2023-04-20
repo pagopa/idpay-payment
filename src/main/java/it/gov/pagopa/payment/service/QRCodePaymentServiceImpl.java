@@ -24,7 +24,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
   private final QRCodeConfirmationService qrCodeConfirmationService;
   private final TransactionInProgressRepository transactionInProgressRepository;
-  private final TransactionInProgress2SyncTrxStatusMapper transactionMapper;
+  private final TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper;
 
   public QRCodePaymentServiceImpl(
       QRCodeCreationService qrCodeCreationService,
@@ -32,13 +32,13 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
       QRCodeAuthPaymentService qrCodeAuthPaymentService,
       QRCodeConfirmationService qrCodeConfirmationService,
       TransactionInProgressRepository transactionInProgressRepository,
-      TransactionInProgress2SyncTrxStatusMapper transactionMapper) {
+      TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
     this.qrCodeConfirmationService = qrCodeConfirmationService;
     this.transactionInProgressRepository = transactionInProgressRepository;
-    this.transactionMapper = transactionMapper;
+    this.transaction2statusMapper = transaction2statusMapper;
   }
 
   @Override
@@ -65,7 +65,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
     return qrCodeAuthPaymentService.authPayment(userId, trxCode);
   }
 
-
   @Override
   public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
     return qrCodeConfirmationService.confirmPayment(trxId, merchantId, acquirerId);
@@ -76,7 +75,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
     TransactionInProgress transactionInProgress= transactionInProgressRepository.findByIdAndMerchantIdAndAcquirerId(transactionId, merchantId, acquirerId)
             .orElseThrow(() -> new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Transaction does not exist"));
 
-    return transactionMapper.transactionInProgressMapper(transactionInProgress);
+    return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);
   }
-
 }

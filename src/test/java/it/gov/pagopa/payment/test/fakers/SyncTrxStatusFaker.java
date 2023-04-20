@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.test.fakers;
 
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
+import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.Utils;
 
@@ -25,7 +25,7 @@ public class SyncTrxStatusFaker {
                 .trxCode("TRXCODE%d".formatted(bias))
                 .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .authDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
+                .operationType(OperationType.CHARGE)
                 .amountCents(10L)
                 .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
                 .mcc("MCC%d".formatted(bias))
