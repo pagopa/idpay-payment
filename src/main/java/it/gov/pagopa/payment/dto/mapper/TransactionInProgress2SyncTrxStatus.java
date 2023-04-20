@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.utils.Utils;
 import org.springframework.stereotype.Service;
 
 
@@ -22,7 +21,7 @@ public class TransactionInProgress2SyncTrxStatus {
                 .acquirerId(transaction.getAcquirerId())
                 .merchantId(transaction.getMerchantId())
                 .initiativeId(transaction.getInitiativeId())
-                .rewardCents(Utils.euroToCents(transaction.getReward().getProvidedReward()))
+                .rewardCents(transaction.getReward())
                 .rejectionReasons(transaction.getRejectionReasons())
                 .status(transaction.getStatus())
                 .build();

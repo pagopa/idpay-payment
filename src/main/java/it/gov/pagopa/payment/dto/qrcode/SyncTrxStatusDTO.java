@@ -30,6 +30,7 @@ public class SyncTrxStatusDTO {
     private String merchantId;
     private String initiativeId;
     private Long rewardCents;
+    @Builder.Default
     private List<String> rejectionReasons = new ArrayList<>();
     private it.gov.pagopa.payment.enums.SyncTrxStatus status;
 
