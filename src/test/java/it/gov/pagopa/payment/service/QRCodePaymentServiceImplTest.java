@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusTest;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
@@ -35,23 +35,23 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class QRCodePaymentServiceImplTest {
     @Mock
-    TransactionInProgressRepository transactionInProgressRepositoryMock;
+    private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock
-    QRCodeCreationService qrCodeCreationServiceMock;
+    private QRCodeCreationService qrCodeCreationServiceMock;
     @Mock
-     QRCodePreAuthService qrCodePreAuthServiceMock;
+    private QRCodePreAuthService qrCodePreAuthServiceMock;
     @Mock
-    QRCodeAuthPaymentService qrCodeAuthPaymentServiceMock;
+    private QRCodeAuthPaymentService qrCodeAuthPaymentServiceMock;
     @Mock
-    QRCodeConfirmationService qrCodeConfirmationServiceMock;
+    private QRCodeConfirmationService qrCodeConfirmationServiceMock;
     @Spy
     private final TransactionInProgress2SyncTrxStatusMapper transactionMapper= new TransactionInProgress2SyncTrxStatusMapper();
 
-    QRCodePaymentServiceImpl qrCodePaymentServiceMock;
+    private QRCodePaymentServiceImpl qrCodePaymentService;
 
     @BeforeEach
     void setUp(){
-        qrCodePaymentServiceMock = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
+        qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
                 qrCodeConfirmationServiceMock,
@@ -60,7 +60,7 @@ class QRCodePaymentServiceImplTest {
     }
 
     @AfterEach
-    void tearDown() {
+    void verifyNoMoreMockInteractions() {
         Mockito.verifyNoMoreInteractions(
                 transactionInProgressRepositoryMock,
                 qrCodeCreationServiceMock,
@@ -80,10 +80,10 @@ class QRCodePaymentServiceImplTest {
 
         doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findByIdAndMerchantIdAndAcquirerId(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
         //when
-        SyncTrxStatusDTO result= qrCodePaymentServiceMock.getStatusTransaction(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
         //then
         Assertions.assertNotNull(result);
-        TransactionInProgress2SyncTrxStatusTest.mapperAssertion(transaction,result);
+        TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
     }
 
     @Test
@@ -94,7 +94,7 @@ class QRCodePaymentServiceImplTest {
         //when
         //then
         ClientExceptionNoBody clientExceptionNoBody= assertThrows(ClientExceptionNoBody.class,
-                ()-> qrCodePaymentServiceMock.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
+                ()-> qrCodePaymentService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
         Assertions.assertEquals(HttpStatus.NOT_FOUND, clientExceptionNoBody.getHttpStatus());
         Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
         Mockito.verify(transactionMapper, never()).transactionInProgressMapper(any());

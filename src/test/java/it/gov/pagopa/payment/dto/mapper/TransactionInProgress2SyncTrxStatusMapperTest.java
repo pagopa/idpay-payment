@@ -16,7 +16,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TransactionInProgress2SyncTrxStatusTest {
+public class TransactionInProgress2SyncTrxStatusMapperTest {
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
     @BeforeEach
     void setUp() {

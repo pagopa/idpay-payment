@@ -6,12 +6,10 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class TransactionServiceImpl implements TransactionService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
-
 
   public TransactionServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
     this.transactionInProgressRepository = transactionInProgressRepository;

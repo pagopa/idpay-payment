@@ -33,5 +33,5 @@ public interface QRCodePaymentController {
 
   @GetMapping("/merchant/status/{transactionId}")
   @ResponseStatus(code = HttpStatus.OK)
-  SyncTrxStatusDTO getStatusTransaction(@PathVariable String transactionId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
+  SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
 }

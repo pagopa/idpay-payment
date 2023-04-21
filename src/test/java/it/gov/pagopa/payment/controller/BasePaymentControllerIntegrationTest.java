@@ -3,7 +3,9 @@ package it.gov.pagopa.payment.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -12,9 +14,12 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import java.io.UnsupportedEncodingException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -117,6 +122,11 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
      * Invoke confirm payment API acting as <i>merchantId</i>
      */
     protected abstract MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
+
+    /**
+     * Invoke getStatusTransaction API acting as <i>merchantId</i>
+     */
+    protected abstract MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception;
 
     /**
      * Override in order to add specific use cases
@@ -315,6 +325,28 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
 
             Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
+        });
+
+        //useCase 6: trx Status given
+        useCases.add(i->{
+            //Transaction
+            TransactionInProgress trx= TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.IDENTIFIED)
+                    .authDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+                    .reward(0L)
+                    .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                    .build();
+
+            //Save transaction
+            transactionInProgressRepository.save(trx);
+
+            //Response oK
+            SyncTrxStatusDTO syncTrxStatusResult =extractResponse(getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),HttpStatus.OK, SyncTrxStatusDTO.class);
+            TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(trx,syncTrxStatusResult);
+
+            //Response Not Found
+            extractResponse(getStatusTransaction("DUMMYTRXID",trx.getMerchantId(), trx.getAcquirerId()),HttpStatus.NOT_FOUND, null);
+            extractResponse(getStatusTransaction(trx.getId(), MERCHANTID, trx.getAcquirerId()),HttpStatus.NOT_FOUND, null);
+            extractResponse(getStatusTransaction(trx.getId(), trx.getMerchantId(), ACQUIRERID),HttpStatus.NOT_FOUND, null);
         });
 
         useCases.addAll(getExtraUseCases());
