@@ -90,7 +90,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
         ClientException exception =
                 assertThrows(ClientException.class,
-                        () -> transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("TRXCODE1"));
+                        () -> transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("trxcode1"));
 
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
 
@@ -124,14 +124,14 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
         transactionInProgressRepository.save(transactionInProgress);
 
-        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("TRXCODE1");
+        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
         Assertions.assertNotNull(resultFirstSave);
         TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
 
         transactionInProgress.setTrxChargeDate(OffsetDateTime.now().minusMinutes(30));
         transactionInProgressRepository.save(transactionInProgress);
 
-        TransactionInProgress resultSecondSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("TRXCODE1");
+        TransactionInProgress resultSecondSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
         Assertions.assertNull(resultSecondSave);
 
     }

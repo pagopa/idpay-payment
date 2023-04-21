@@ -78,8 +78,8 @@ class QRCodeCreationServiceTest {
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
-    when(trxCodeGenUtil.get()).thenReturn("TRXCODE1");
-    when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
+    when(trxCodeGenUtil.get()).thenReturn("trxcode1");
+    when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result =
@@ -117,12 +117,12 @@ class QRCodeCreationServiceTest {
               private int count = 0;
 
               public String answer(InvocationOnMock invocation) {
-                return "TRXCODE%d".formatted(++count);
+                return "trxcode%d".formatted(++count);
               }
             });
-    when(transactionInProgressRepository.createIfExists(trx, "TRXCODE1"))
+    when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
         .thenReturn(UpdateResult.acknowledged(1L, 0L, null));
-    when(transactionInProgressRepository.createIfExists(trx, "TRXCODE2"))
+    when(transactionInProgressRepository.createIfExists(trx, "trxcode2"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result =
