@@ -21,7 +21,7 @@ public class TransactionResponseFaker {
                 .acquirerId("ACQUIRERID%d".formatted(bias))
                 .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-                .trxCode("TRXCODE%d".formatted(bias))
+                .trxCode("trxcode%d".formatted(bias))
                 .status(SyncTrxStatus.CREATED);
     }
 

@@ -68,9 +68,9 @@ class QRCodeAuthPaymentServiceTest {
       return transaction;
     }).when(repository).updateTrxAuthorized(transaction.getId(),Utils.euroToCents(reward.getAccruedReward()), List.of());
 
-    AuthPaymentDTO result = service.authPayment("USERID1", "TRXCODE1");
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
 
-    verify(repository).findByTrxCodeAndTrxChargeDateNotExpiredThrottled("TRXCODE1");
+    verify(repository).findByTrxCodeAndTrxChargeDateNotExpiredThrottled("trxcode1");
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result);
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
@@ -95,9 +95,9 @@ class QRCodeAuthPaymentServiceTest {
       return transaction;
     }).when(repository).updateTrxRejected(transaction.getId(), authPaymentDTO.getRejectionReasons());
 
-    AuthPaymentDTO result = service.authPayment("USERID1", "TRXCODE1");
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
 
-    verify(repository).findByTrxCodeAndTrxChargeDateNotExpiredThrottled("TRXCODE1");
+    verify(repository).findByTrxCodeAndTrxChargeDateNotExpiredThrottled("trxcode1");
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result);
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
@@ -105,11 +105,11 @@ class QRCodeAuthPaymentServiceTest {
 
   @Test
   void authPaymentNotFound() {
-    when(repository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("TRXCODE1")).thenReturn(null);
+    when(repository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("trxcode1")).thenReturn(null);
 
     ClientException result =
         assertThrows(ClientException.class, () ->
-            service.authPayment("USERID1", "TRXCODE1"));
+            service.authPayment("USERID1", "trxcode1"));
     assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     assertEquals("TRANSACTION NOT FOUND", ((ClientExceptionWithBody) result).getCode());
   }
@@ -123,7 +123,7 @@ class QRCodeAuthPaymentServiceTest {
     when(repository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(transaction.getTrxCode())).thenReturn(transaction);
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment(
-            "userId", "TRXCODE1"));
+            "userId", "trxcode1"));
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals("TRX USER ASSOCIATION", ((ClientExceptionWithBody) result).getCode());
   }
@@ -152,7 +152,7 @@ class QRCodeAuthPaymentServiceTest {
     when(repository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(transaction.getTrxCode())).thenReturn(transaction);
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment(
-            "USERID1", "TRXCODE1"));
+            "USERID1", "trxcode1"));
     assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
     Assertions.assertEquals("ERROR STATUS", ((ClientExceptionWithBody) result).getCode());
   }

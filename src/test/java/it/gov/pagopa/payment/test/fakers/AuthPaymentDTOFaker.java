@@ -23,6 +23,6 @@ public class AuthPaymentDTOFaker {
         .rejectionReasons(List.of())
         .amountCents(1000L)
         .reward(1000L)
-        .trxCode("TRXCODE%d".formatted(bias));
+        .trxCode("trxcode%d".formatted(bias));
   }
 }
