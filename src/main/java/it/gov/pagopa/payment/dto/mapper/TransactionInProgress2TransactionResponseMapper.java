@@ -13,7 +13,6 @@ public class TransactionInProgress2TransactionResponseMapper
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
     return TransactionResponse.builder()
         .acquirerId(transactionInProgress.getAcquirerId())
-        .acquirerCode(transactionInProgress.getAcquirerCode())
         .amountCents(transactionInProgress.getAmountCents())
         .amountCurrency(transactionInProgress.getAmountCurrency())
         .idTrxAcquirer(transactionInProgress.getIdTrxAcquirer())
@@ -22,10 +21,11 @@ public class TransactionInProgress2TransactionResponseMapper
         .mcc(transactionInProgress.getMcc())
         .id(transactionInProgress.getId())
         .merchantId(transactionInProgress.getMerchantId())
-        .senderCode(transactionInProgress.getSenderCode())
         .trxDate(transactionInProgress.getTrxDate())
         .trxCode(transactionInProgress.getTrxCode())
         .status(transactionInProgress.getStatus())
+        .merchantFiscalCode(transactionInProgress.getMerchantFiscalCode())
+        .vat(transactionInProgress.getVat())
         .build();
   }
 }

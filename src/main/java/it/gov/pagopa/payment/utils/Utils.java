@@ -13,4 +13,9 @@ public class Utils {
   public static BigDecimal centsToEuro(Long cents) {
     return BigDecimal.valueOf(cents).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_DOWN);
   }
+
+  /** To convert euro into cents */
+  public static Long euroToCents(BigDecimal euro) {
+    return euro != null ? euro.multiply(BigDecimal.valueOf(100)).longValue() : 0L;
+  }
 }

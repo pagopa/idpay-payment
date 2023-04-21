@@ -32,7 +32,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     AuthPaymentDTO authPaymentDTO;
     TransactionInProgress trx =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(trxCode);
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(trxCode.toLowerCase());
 
     if (trx == null) {
       throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "TRANSACTION NOT FOUND",
