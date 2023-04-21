@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,6 +63,9 @@ class QRCodePaymentControllerTest {
         .andReturn();
 
     assertNotNull(result.getResponse().getContentAsString());
-  }
 
+    String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+        + "'x-merchant-id' for method parameter type String is not present\"}";
+    assertEquals(actual, result.getResponse().getContentAsString());
+  }
 }
