@@ -28,7 +28,7 @@ public class PerformanceLoggerAspect {
             } catch (RuntimeException e) {
                 throw e;
             } catch (Throwable e) {
-                throw new IllegalStateException("Something gone wrong while executing PerformanceLog annotated method", e);
+                throw new IllegalStateException("Something went wrong while executing PerformanceLog annotated method", e);
             }
         }, getPayloadBuilder(performanceLog));
     }
