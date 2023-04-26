@@ -63,6 +63,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     @Autowired
     private TransactionInProgress2TransactionResponseMapper transactionResponseMapper;
+    @Autowired
+    private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
@@ -142,10 +144,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void checkTransactionStored(TransactionResponse trxCreated) throws Exception {
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
-        SyncTrxStatusDTO storedMapped = new TransactionInProgress2SyncTrxStatusMapper().transactionInProgressMapper(stored);
         SyncTrxStatusDTO syncTrxStatusResult =extractResponse(getStatusTransaction(trxCreated.getId(), trxCreated.getMerchantId(), trxCreated.getAcquirerId()),HttpStatus.OK, SyncTrxStatusDTO.class);
         extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()),HttpStatus.NOT_FOUND, null);
-        Assertions.assertEquals(storedMapped,syncTrxStatusResult);
+        Assertions.assertEquals(transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(stored),syncTrxStatusResult);
         Assertions.assertEquals(getChannel(), stored.getChannel());
         Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
