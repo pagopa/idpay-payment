@@ -37,7 +37,7 @@ public class TransactionInProgressFaker {
         .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
         .callbackUrl("CALLBACKURL%d".formatted(bias))
         .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-        .trxCode("TRXCODE%d".formatted(bias))
+        .trxCode("trxcode%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .status(status)
