@@ -144,9 +144,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void checkTransactionStored(TransactionResponse trxCreated) throws Exception {
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
+        // Authorized merchant
         SyncTrxStatusDTO syncTrxStatusResult =extractResponse(getStatusTransaction(trxCreated.getId(), trxCreated.getMerchantId(), trxCreated.getAcquirerId()),HttpStatus.OK, SyncTrxStatusDTO.class);
-        extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()),HttpStatus.NOT_FOUND, null);
         Assertions.assertEquals(transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(stored),syncTrxStatusResult);
+        //Unauthorized operator
+        extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()),HttpStatus.NOT_FOUND, null);
+
         Assertions.assertEquals(getChannel(), stored.getChannel());
         Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
