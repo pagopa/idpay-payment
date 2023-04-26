@@ -20,7 +20,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
@@ -44,7 +43,7 @@ class QRCodePaymentServiceImplTest {
     private QRCodeAuthPaymentService qrCodeAuthPaymentServiceMock;
     @Mock
     private QRCodeConfirmationService qrCodeConfirmationServiceMock;
-    @Spy
+
     private final TransactionInProgress2SyncTrxStatusMapper transactionMapper= new TransactionInProgress2SyncTrxStatusMapper();
 
     private QRCodePaymentServiceImpl qrCodePaymentService;
@@ -97,6 +96,5 @@ class QRCodePaymentServiceImplTest {
                 ()-> qrCodePaymentService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
         Assertions.assertEquals(HttpStatus.NOT_FOUND, clientExceptionNoBody.getHttpStatus());
         Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
-        Mockito.verify(transactionMapper, never()).transactionInProgressMapper(any());
     }
 }

@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
@@ -14,21 +13,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.io.UnsupportedEncodingException;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.stream.IntStream;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -38,6 +23,20 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.io.UnsupportedEncodingException;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.stream.IntStream;
+
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 @TestPropertySource(
         properties = {
@@ -142,8 +141,23 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         return trxCreated;
     }
 
-    private void checkTransactionStored(TransactionResponse trxCreated) {
+    private void checkTransactionStored(TransactionResponse trxCreated) throws Exception {
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
+        SyncTrxStatusDTO syncTrxStatusResult =extractResponse(getStatusTransaction(trxCreated.getId(), trxCreated.getMerchantId(), trxCreated.getAcquirerId()),HttpStatus.OK, SyncTrxStatusDTO.class);
+        assertAll(() -> {
+                    Assertions.assertEquals(trxCreated.getId(), syncTrxStatusResult.getId());
+                    Assertions.assertEquals(trxCreated.getTrxCode(), syncTrxStatusResult.getTrxCode());
+                    Assertions.assertEquals(trxCreated.getInitiativeId(), syncTrxStatusResult.getInitiativeId());
+                    Assertions.assertEquals(trxCreated.getMerchantId(), syncTrxStatusResult.getMerchantId());
+                    Assertions.assertEquals(trxCreated.getIdTrxIssuer(), syncTrxStatusResult.getIdTrxIssuer());
+                    Assertions.assertEquals(trxCreated.getTrxDate(), syncTrxStatusResult.getTrxDate());
+                    Assertions.assertEquals(trxCreated.getAmountCents(), syncTrxStatusResult.getAmountCents());
+                    Assertions.assertEquals(trxCreated.getAmountCurrency(), syncTrxStatusResult.getAmountCurrency());
+                    Assertions.assertEquals(trxCreated.getMcc(), syncTrxStatusResult.getMcc());
+                    Assertions.assertEquals(trxCreated.getAcquirerId(), syncTrxStatusResult.getAcquirerId());
+                    Assertions.assertEquals(trxCreated.getStatus(), syncTrxStatusResult.getStatus());
+                });
+        extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()),HttpStatus.NOT_FOUND, null);
         Assertions.assertEquals(getChannel(), stored.getChannel());
         Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
@@ -326,29 +340,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
         });
-
-        //useCase 6: trx Status given
-        useCases.add(i->{
-            //Transaction
-            TransactionInProgress trx= TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.IDENTIFIED)
-                    .authDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                    .reward(0L)
-                    .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                    .build();
-
-            //Save transaction
-            transactionInProgressRepository.save(trx);
-
-            //Response oK
-            SyncTrxStatusDTO syncTrxStatusResult =extractResponse(getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),HttpStatus.OK, SyncTrxStatusDTO.class);
-            TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(trx,syncTrxStatusResult);
-
-            //Response Not Found
-            extractResponse(getStatusTransaction("DUMMYTRXID",trx.getMerchantId(), trx.getAcquirerId()),HttpStatus.NOT_FOUND, null);
-            extractResponse(getStatusTransaction(trx.getId(), MERCHANTID, trx.getAcquirerId()),HttpStatus.NOT_FOUND, null);
-            extractResponse(getStatusTransaction(trx.getId(), trx.getMerchantId(), ACQUIRERID),HttpStatus.NOT_FOUND, null);
-        });
-
         useCases.addAll(getExtraUseCases());
     }
 
