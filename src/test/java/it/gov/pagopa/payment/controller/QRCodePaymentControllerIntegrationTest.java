@@ -1,13 +1,12 @@
 package it.gov.pagopa.payment.controller;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
 
@@ -55,5 +54,15 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
                                 .header("x-merchant-id", merchantId)
                                 .header("x-acquirer-id", acquirerId))
                 .andReturn();
+    }
+
+    @Override
+    protected MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception {
+        return mockMvc
+                .perform(
+                        get("/idpay/payment/qr-code/merchant/status/{transactionId}",transactionId)
+                                .header("x-merchant-id",merchantId)
+                                .header("x-acquirer-id",acquirerId)
+                ).andReturn();
     }
 }
