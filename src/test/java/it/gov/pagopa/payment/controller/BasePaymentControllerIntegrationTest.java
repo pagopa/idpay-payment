@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
@@ -35,8 +36,6 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
-
-import static org.junit.jupiter.api.Assertions.assertAll;
 
 @TestPropertySource(
         properties = {
@@ -143,21 +142,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void checkTransactionStored(TransactionResponse trxCreated) throws Exception {
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
+        SyncTrxStatusDTO storedMapped = new TransactionInProgress2SyncTrxStatusMapper().transactionInProgressMapper(stored);
         SyncTrxStatusDTO syncTrxStatusResult =extractResponse(getStatusTransaction(trxCreated.getId(), trxCreated.getMerchantId(), trxCreated.getAcquirerId()),HttpStatus.OK, SyncTrxStatusDTO.class);
-        assertAll(() -> {
-                    Assertions.assertEquals(trxCreated.getId(), syncTrxStatusResult.getId());
-                    Assertions.assertEquals(trxCreated.getTrxCode(), syncTrxStatusResult.getTrxCode());
-                    Assertions.assertEquals(trxCreated.getInitiativeId(), syncTrxStatusResult.getInitiativeId());
-                    Assertions.assertEquals(trxCreated.getMerchantId(), syncTrxStatusResult.getMerchantId());
-                    Assertions.assertEquals(trxCreated.getIdTrxIssuer(), syncTrxStatusResult.getIdTrxIssuer());
-                    Assertions.assertEquals(trxCreated.getTrxDate(), syncTrxStatusResult.getTrxDate());
-                    Assertions.assertEquals(trxCreated.getAmountCents(), syncTrxStatusResult.getAmountCents());
-                    Assertions.assertEquals(trxCreated.getAmountCurrency(), syncTrxStatusResult.getAmountCurrency());
-                    Assertions.assertEquals(trxCreated.getMcc(), syncTrxStatusResult.getMcc());
-                    Assertions.assertEquals(trxCreated.getAcquirerId(), syncTrxStatusResult.getAcquirerId());
-                    Assertions.assertEquals(trxCreated.getStatus(), syncTrxStatusResult.getStatus());
-                });
         extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()),HttpStatus.NOT_FOUND, null);
+        Assertions.assertEquals(storedMapped,syncTrxStatusResult);
         Assertions.assertEquals(getChannel(), stored.getChannel());
         Assertions.assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }

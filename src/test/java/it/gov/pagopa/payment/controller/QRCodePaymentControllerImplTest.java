@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.payment.configuration.JsonConfig;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
@@ -32,7 +33,7 @@ class QRCodePaymentControllerImplTest {
 
     @Test
     void getStatusTransaction() throws Exception {
-        SyncTrxStatusDTO trx= SyncTrxStatusFaker.mockInstance(2);
+        SyncTrxStatusDTO trx= SyncTrxStatusFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
         Mockito.when(qrCodePaymentService.getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId())).thenReturn(trx);
 
         MvcResult result= mockMvc.perform(
