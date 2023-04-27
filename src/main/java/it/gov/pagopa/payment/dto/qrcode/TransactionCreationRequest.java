@@ -29,6 +29,5 @@ public class TransactionCreationRequest {
   private Long amountCents;
   @NotEmpty
   private String mcc;
-  private String callbackUrl;
 
 }

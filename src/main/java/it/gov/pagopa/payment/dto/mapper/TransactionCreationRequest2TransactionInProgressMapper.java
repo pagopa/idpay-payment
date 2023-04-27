@@ -27,7 +27,6 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .effectiveAmount(Utils.centsToEuro(transactionCreationRequest.getAmountCents()))
         .amountCurrency(PaymentConstants.CURRENCY_EUR)
         .merchantFiscalCode(transactionCreationRequest.getMerchantFiscalCode())
-        .callbackUrl(transactionCreationRequest.getCallbackUrl())
         .idTrxIssuer(transactionCreationRequest.getIdTrxIssuer())
         .initiativeId(transactionCreationRequest.getInitiativeId())
         .mcc(transactionCreationRequest.getMcc())

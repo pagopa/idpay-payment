@@ -45,7 +45,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
                         .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
                         .setOnInsert(Fields.merchantId, trx.getMerchantId())
-                        .setOnInsert(Fields.callbackUrl, trx.getCallbackUrl())
                         .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
                         .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
                         .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
