@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -11,12 +13,15 @@ public class TransactionServiceImpl implements TransactionService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
 
-  public TransactionServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
+  private final TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper;
+
+  public TransactionServiceImpl(TransactionInProgressRepository transactionInProgressRepository, TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper) {
     this.transactionInProgressRepository = transactionInProgressRepository;
+    this.transaction2statusMapper = transaction2statusMapper;
   }
 
   @Override
-  public TransactionInProgress getTransaction(String id, String userId) {
+  public SyncTrxStatusDTO getTransaction(String id, String userId) {
     TransactionInProgress transactionInProgress = transactionInProgressRepository.findById(id)
         .orElse(null);
 
@@ -32,6 +37,6 @@ public class TransactionServiceImpl implements TransactionService {
           "FORBIDDEN");
     }
 
-    return transactionInProgress;
+    return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);
   }
 }
