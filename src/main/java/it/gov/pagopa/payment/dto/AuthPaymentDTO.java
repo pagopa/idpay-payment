@@ -24,7 +24,6 @@ public class AuthPaymentDTO {
   private String initiativeId;
   @NotNull
   private SyncTrxStatus status;
-  @NotNull
   private Long reward;
   @NotNull
   private List<String> rejectionReasons;
