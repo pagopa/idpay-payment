@@ -26,11 +26,13 @@ public class TransactionResponse {
   private String merchantId;
   @NotBlank
   private String idTrxIssuer;
+  @NotBlank
   private String idTrxAcquirer;
   @NotNull
   private OffsetDateTime trxDate;
   @NotNull
   private Long amountCents;
+  @NotBlank
   private String amountCurrency;
   @NotBlank
   private String mcc;
