@@ -1,12 +1,13 @@
 package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.Utils;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -14,9 +15,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
 
@@ -42,7 +40,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.id, trx.getId())
                         .setOnInsert(Fields.correlationId, trx.getCorrelationId())
                         .setOnInsert(Fields.acquirerId, trx.getAcquirerId())
-                        .setOnInsert(Fields.acquirerCode, trx.getAcquirerCode())
                         .setOnInsert(Fields.amountCents, trx.getAmountCents())
                         .setOnInsert(Fields.effectiveAmount, Utils.centsToEuro(trx.getAmountCents()))
                         .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
@@ -53,7 +50,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
                         .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
                         .setOnInsert(Fields.mcc, trx.getMcc())
-                        .setOnInsert(Fields.senderCode, trx.getSenderCode())
                         .setOnInsert(Fields.vat, trx.getVat())
                         .setOnInsert(Fields.trxDate, trx.getTrxDate())
                         .setOnInsert(Fields.trxChargeDate, trx.getTrxChargeDate())
@@ -128,7 +124,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxAuthorized(String id, Reward reward, List<String> rejectionReasons) {
+    public void updateTrxAuthorized(String id, Long reward, List<String> rejectionReasons) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -144,6 +140,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
                         .set(Fields.status, SyncTrxStatus.REJECTED)
+                        .set(Fields.reward, 0L)
                         .set(Fields.rejectionReasons, rejectionReasons),
                 TransactionInProgress.class);
     }

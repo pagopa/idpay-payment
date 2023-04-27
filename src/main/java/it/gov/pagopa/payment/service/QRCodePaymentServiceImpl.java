@@ -19,10 +19,10 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeConfirmationService qrCodeConfirmationService;
 
   public QRCodePaymentServiceImpl(
-          QRCodeCreationService qrCodeCreationService,
-          QRCodePreAuthService qrCodePreAuthService,
-          QRCodeAuthPaymentService qrCodeAuthPaymentService,
-          QRCodeConfirmationService qrCodeConfirmationService) {
+      QRCodeCreationService qrCodeCreationService,
+      QRCodePreAuthService qrCodePreAuthService,
+      QRCodeAuthPaymentService qrCodeAuthPaymentService,
+      QRCodeConfirmationService qrCodeConfirmationService) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
@@ -31,8 +31,16 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
   @Override
   public TransactionResponse createTransaction(
-      TransactionCreationRequest trxCreationRequest, String merchantId) {
-    return qrCodeCreationService.createTransaction(trxCreationRequest, RewardConstants.TRX_CHANNEL_QRCODE, merchantId);
+      TransactionCreationRequest trxCreationRequest,
+      String merchantId,
+      String acquirerId,
+      String idTrxAcquirer) {
+    return qrCodeCreationService.createTransaction(
+        trxCreationRequest,
+        RewardConstants.TRX_CHANNEL_QRCODE,
+        merchantId,
+        acquirerId,
+        idTrxAcquirer);
   }
 
   @Override
@@ -42,13 +50,11 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
-    return qrCodeAuthPaymentService.authPayment(userId,trxCode);
+    return qrCodeAuthPaymentService.authPayment(userId, trxCode);
   }
-
 
   @Override
-  public TransactionResponse confirmPayment(String trxId, String merchantId) {
-    return qrCodeConfirmationService.confirmPayment(trxId, merchantId);
+  public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
+    return qrCodeConfirmationService.confirmPayment(trxId, merchantId, acquirerId);
   }
-
 }

@@ -28,7 +28,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
     TransactionInProgress trx =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired(trxCode);
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired(trxCode.toLowerCase());
 
     if (trx == null) {
       throw new ClientExceptionWithBody(

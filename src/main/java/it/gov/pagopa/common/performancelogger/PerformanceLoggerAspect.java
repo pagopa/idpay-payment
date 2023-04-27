@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.performancelogger;
 
+import java.util.function.Function;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -8,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-
-import java.util.function.Function;
 
 @Configuration
 @EnableAspectJAutoProxy
