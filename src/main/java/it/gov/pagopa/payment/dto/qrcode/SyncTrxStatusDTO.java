@@ -2,13 +2,14 @@ package it.gov.pagopa.payment.dto.qrcode;
 
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -20,11 +21,11 @@ import java.util.List;
 @Builder
 public class SyncTrxStatusDTO {
 
-    @NotEmpty
+    @NotBlank
     private String id;
-    @NotEmpty
+    @NotBlank
     private String idTrxIssuer;
-    @NotEmpty
+    @NotBlank
     private String trxCode;
 
     @NotNull
@@ -38,15 +39,15 @@ public class SyncTrxStatusDTO {
     private OperationType operationType;
     @NotNull
     private Long amountCents;
-    @NotEmpty
+    @NotBlank
     private String amountCurrency;
-    @NotEmpty
+    @NotBlank
     private String mcc;
-    @NotEmpty
+    @NotBlank
     private String acquirerId;
-    @NotEmpty
+    @NotBlank
     private String merchantId;
-    @NotEmpty
+    @NotBlank
     private String initiativeId;
     private Long rewardCents;
 
