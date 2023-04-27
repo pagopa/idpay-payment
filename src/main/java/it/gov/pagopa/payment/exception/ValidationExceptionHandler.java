@@ -31,7 +31,7 @@ public class ValidationExceptionHandler {
           return String.format("[%s]: %s", fieldName, errorMessage);
         }).collect(Collectors.joining("; "));
 
-    log.info("A InvalidRequestException occurred handling request {}: HttpStatus 400 - {}",
+    log.info("A MethodArgumentNotValidException occurred handling request {}: HttpStatus 400 - {}",
         ErrorManager.getRequestDetails(request), message);
     log.debug("Something went wrong while validating http request", ex);
 
@@ -45,7 +45,7 @@ public class ValidationExceptionHandler {
 
     String message = ex.getMessage();
 
-    log.info("A InvalidRequestException occurred handling request {}: HttpStatus 400 - {}",
+    log.info("A MissingRequestHeaderException occurred handling request {}: HttpStatus 400 - {}",
         ErrorManager.getRequestDetails(request), message);
     log.debug("Something went wrong handling request", ex);
 
