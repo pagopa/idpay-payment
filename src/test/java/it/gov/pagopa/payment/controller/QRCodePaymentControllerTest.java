@@ -9,12 +9,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.payment.configuration.JsonConfig;
 import it.gov.pagopa.payment.dto.ErrorDTO;
+import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -60,10 +63,7 @@ class QRCodePaymentControllerTest {
   @Test
   void createTransaction_testMandatoryHeaders() throws Exception {
 
-    Map<String, Object> body = Map.of(
-        "initiativeId", "initiativeId",
-        "trxDate", OffsetDateTime.now(),
-        "amountCents", 123);
+    TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
 
     MvcResult result = mockMvc.perform(
             post("/idpay/payment/qr-code/merchant")
