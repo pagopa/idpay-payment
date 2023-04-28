@@ -1,20 +1,12 @@
 package it.gov.pagopa.payment.controller;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.payment.configuration.JsonConfig;
 import it.gov.pagopa.payment.dto.ErrorDTO;
+import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -23,6 +15,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(QRCodePaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
@@ -60,10 +59,7 @@ class QRCodePaymentControllerTest {
   @Test
   void createTransaction_testMandatoryHeaders() throws Exception {
 
-    Map<String, Object> body = Map.of(
-        "initiativeId", "initiativeId",
-        "trxDate", OffsetDateTime.now(),
-        "amountCents", 123);
+    TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
 
     MvcResult result = mockMvc.perform(
             post("/idpay/payment/qr-code/merchant")

@@ -133,7 +133,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+							"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -400,7 +400,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"DUMMYINITIATIVE\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"DUMMYINITIATIVE\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -499,7 +499,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE1\",\r\n    \"vat\" : \"VAT1\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER1\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC1\",\r\n    \"callbackUrl\" : \"CALLBACKURL1\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE1\",\r\n    \"vat\" : \"VAT1\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER1\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC1\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -700,7 +700,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1085,7 +1085,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1287,7 +1287,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1706,7 +1706,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -1924,7 +1924,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -2314,7 +2314,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\",\r\n    \"callbackUrl\" : \"CALLBARCKURL{{randomNum}}\"\r\n}",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"

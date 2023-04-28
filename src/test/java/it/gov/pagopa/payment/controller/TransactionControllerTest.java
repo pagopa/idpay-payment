@@ -1,16 +1,12 @@
 package it.gov.pagopa.payment.controller;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.payment.configuration.JsonConfig;
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.TransactionService;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +15,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TransactionControllerImpl.class)
 @Import(JsonConfig.class)
@@ -39,8 +40,7 @@ class TransactionControllerTest {
 
   @Test
   void getTransaction() throws Exception {
-    TransactionInProgress expectedTrx = TransactionInProgressFaker.mockInstance(1,
-        SyncTrxStatus.IDENTIFIED);
+    SyncTrxStatusDTO expectedTrx = SyncTrxStatusFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
     when(transactionService.getTransaction(any(String.class), any(String.class)))
         .thenReturn(expectedTrx);
@@ -51,9 +51,9 @@ class TransactionControllerTest {
         .andExpect(status().is2xxSuccessful())
         .andReturn();
 
-    TransactionInProgress trx = objectMapper.readValue(
+    SyncTrxStatusDTO trx = objectMapper.readValue(
         result.getResponse().getContentAsString(),
-        TransactionInProgress.class);
+            SyncTrxStatusDTO.class);
 
     Assertions.assertEquals(expectedTrx, trx);
   }

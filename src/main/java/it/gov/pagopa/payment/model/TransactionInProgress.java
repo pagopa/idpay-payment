@@ -59,6 +59,5 @@ public class TransactionInProgress {
   private List<String> rejectionReasons = new ArrayList<>();
   private String userId;
   private SyncTrxStatus status;
-  private String callbackUrl;
   private String channel;
 }
