@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import java.math.BigDecimal;
+
 import java.util.List;
 
 public class AuthPaymentDTOFaker {
@@ -23,6 +23,8 @@ public class AuthPaymentDTOFaker {
         .rejectionReasons(List.of())
         .amountCents(1000L)
         .reward(1000L)
+        .splitPayment(Boolean.FALSE)
+        .residualAmountCents(0L)
         .trxCode("TRXCODE%d".formatted(bias));
   }
 }
