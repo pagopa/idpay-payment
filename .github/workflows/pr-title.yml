@@ -7,9 +7,9 @@ on:
       - edited
       - synchronize
     branches:
-      - main
-      - release-uat
-      - release-dev
+      - 'main'
+      - 'release-uat'
+      - 'release-dev'
 
 jobs:
   main:
