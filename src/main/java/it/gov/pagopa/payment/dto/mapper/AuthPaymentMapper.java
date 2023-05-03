@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 public class AuthPaymentMapper {
 
   public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
-    return AuthPaymentDTO.builder()
+    AuthPaymentDTO authPaymentDTO= AuthPaymentDTO.builder()
         .id(transaction.getId())
         .reward(transaction.getReward())
         .initiativeId(transaction.getInitiativeId())
@@ -17,5 +17,14 @@ public class AuthPaymentMapper {
         .trxCode(transaction.getTrxCode())
         .amountCents(transaction.getAmountCents())
         .build();
+    residualAmountCentsCalculator(authPaymentDTO);
+    return authPaymentDTO;
+  }
+
+  public static void residualAmountCentsCalculator(AuthPaymentDTO authPaymentDTO){
+      if(authPaymentDTO.getAmountCents() != null && authPaymentDTO.getReward() != null) {
+          authPaymentDTO.setResidualAmountCents(authPaymentDTO.getAmountCents() - authPaymentDTO.getReward());
+          authPaymentDTO.setSplitPayment(authPaymentDTO.getReward().equals(authPaymentDTO.getAmountCents()) ? Boolean.FALSE : Boolean.TRUE);
+      }
   }
 }

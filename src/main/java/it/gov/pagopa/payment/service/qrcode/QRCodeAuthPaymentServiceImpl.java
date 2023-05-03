@@ -47,6 +47,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
 
     if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
       authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
+      AuthPaymentMapper.residualAmountCentsCalculator(authPaymentDTO);
 
       if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);

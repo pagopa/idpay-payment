@@ -20,5 +20,7 @@ public class AuthPaymentDTO {
   private Long reward;
   private List<String> rejectionReasons;
   private Long amountCents;
+  private Boolean splitPayment;
+  private Long residualAmountCents;
 
 }
