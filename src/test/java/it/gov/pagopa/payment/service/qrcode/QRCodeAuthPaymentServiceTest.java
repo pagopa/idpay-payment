@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import it.gov.pagopa.event.producer.NotificationProducer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -36,6 +37,7 @@ class QRCodeAuthPaymentServiceTest {
 
   @Mock private TransactionInProgressRepository repository;
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
+  @Mock private NotificationProducer notificationProducer;
 
   private final AuthPaymentMapper authPaymentMapper = new AuthPaymentMapper();
 
@@ -44,7 +46,7 @@ class QRCodeAuthPaymentServiceTest {
   @BeforeEach
   void setUp() {
     service = new QRCodeAuthPaymentServiceImpl(repository,
-        rewardCalculatorConnector, authPaymentMapper);
+        rewardCalculatorConnector, authPaymentMapper, notificationProducer);
   }
 
   @Test

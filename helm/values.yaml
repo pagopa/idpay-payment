@@ -60,8 +60,13 @@ microservice-chart:
     rest-client:
       IDPAY_REWARD_PAYMENT: idpay-reward-calculator-baseurl
 
+    idpay-eventhub-00:
+      KAFKA_BINDER_BROKER_ENDPOINT_LIST: kafka_broker
+      KAFKA_TOPIC_NOTIFICATION: idpay_notification_request_topic
+
   envSecret:
     MONGODB_URI: mongodb-connection-string
+    KAFKA_NOTIFICATION_SASL_JAAS_CONFIG: evh-idpay-notification-request-idpay-notification-request-producer-jaas-config-idpay-00
 
   # nodeSelector: {}
 

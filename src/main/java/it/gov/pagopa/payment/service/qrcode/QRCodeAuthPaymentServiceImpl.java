@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.event.producer.NotificationProducer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
@@ -18,14 +19,16 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuthPaymentMapper requestMapper;
+  private final NotificationProducer notificationProducer;
 
   public QRCodeAuthPaymentServiceImpl(
-      TransactionInProgressRepository transactionInProgressRepository,
-      RewardCalculatorConnector rewardCalculatorConnector,
-      AuthPaymentMapper requestMapper) {
+          TransactionInProgressRepository transactionInProgressRepository,
+          RewardCalculatorConnector rewardCalculatorConnector,
+          AuthPaymentMapper requestMapper, NotificationProducer notificationProducer) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
+    this.notificationProducer = notificationProducer;
   }
 
   @Override
@@ -52,6 +55,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         transactionInProgressRepository.updateTrxAuthorized(trx.getId(),
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+        sendAuthPaymentNotification("NOTIFYMESSAGE");
       } else {
         transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
       }
@@ -65,4 +69,20 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     return authPaymentDTO;
   }
 
+  private void sendAuthPaymentNotification(String authPaymentDTO) {
+    //TODO create DTO to send
+    String notificationQueueDTO = authPaymentDTO;
+
+    sendNotification(notificationQueueDTO);
+  }
+
+  private void sendNotification(String notificationQueueDTO) {
+    //TODO come gestire errore?
+    try {
+      log.info("[SEND_NOTIFICATION] Sending event to Notification");
+      notificationProducer.sendNotification(notificationQueueDTO);
+    } catch (Exception e) {
+      log.error("[SEND_NOTIFICATION] An error has occurred. Sending message to Error queue");
+    }
+  }
 }
