@@ -29,7 +29,5 @@ public class AuthPaymentDTO {
   private List<String> rejectionReasons;
   @NotNull
   private Long amountCents;
-  private Boolean splitPayment;
-  private Long residualAmountCents;
 
 }

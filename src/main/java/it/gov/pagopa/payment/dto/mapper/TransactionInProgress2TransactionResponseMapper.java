@@ -2,8 +2,9 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import java.util.function.Function;
 import org.springframework.stereotype.Service;
+
+import java.util.function.Function;
 
 @Service
 public class TransactionInProgress2TransactionResponseMapper
@@ -11,7 +12,7 @@ public class TransactionInProgress2TransactionResponseMapper
 
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
-    return TransactionResponse.builder()
+    TransactionResponse transactionResponse= TransactionResponse.builder()
         .acquirerId(transactionInProgress.getAcquirerId())
         .amountCents(transactionInProgress.getAmountCents())
         .amountCurrency(transactionInProgress.getAmountCurrency())
@@ -27,5 +28,14 @@ public class TransactionInProgress2TransactionResponseMapper
         .merchantFiscalCode(transactionInProgress.getMerchantFiscalCode())
         .vat(transactionInProgress.getVat())
         .build();
+    TransactionInProgress2TransactionResponseMapper.setResidual(transactionResponse, transactionInProgress.getReward());
+    return transactionResponse;
+  }
+
+  public static void setResidual(TransactionResponse transactionResponse, Long transactionInProgressReward){
+    if(transactionResponse.getAmountCents() != null && transactionInProgressReward != null) {
+      transactionResponse.setResidualAmountCents(transactionResponse.getAmountCents() - transactionInProgressReward);
+      transactionResponse.setSplitPayment(transactionResponse.getResidualAmountCents()> 0L);
+    }
   }
 }
