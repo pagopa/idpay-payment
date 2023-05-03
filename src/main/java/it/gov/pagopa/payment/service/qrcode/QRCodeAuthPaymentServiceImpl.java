@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.qrcode;
 import it.gov.pagopa.event.producer.NotificationProducer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.NotificationQueueDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -55,7 +56,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         transactionInProgressRepository.updateTrxAuthorized(trx.getId(),
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-        sendAuthPaymentNotification("NOTIFYMESSAGE");
+        sendAuthPaymentNotification(authPaymentDTO.getId());
       } else {
         transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
       }
@@ -69,14 +70,17 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     return authPaymentDTO;
   }
 
-  private void sendAuthPaymentNotification(String authPaymentDTO) {
-    //TODO create DTO to send
-    String notificationQueueDTO = authPaymentDTO;
+  private void sendAuthPaymentNotification(String id) {
+    NotificationQueueDTO notificationQueueDTO =
+            NotificationQueueDTO.builder()
+                    .operationType("TEST")
+                    .test(id)
+                    .build();
 
     sendNotification(notificationQueueDTO);
   }
 
-  private void sendNotification(String notificationQueueDTO) {
+  private void sendNotification(NotificationQueueDTO notificationQueueDTO) {
     //todo mettere if (cercare su reward-calc)
     try {
       log.info("[SEND_NOTIFICATION] Sending event to Notification");
