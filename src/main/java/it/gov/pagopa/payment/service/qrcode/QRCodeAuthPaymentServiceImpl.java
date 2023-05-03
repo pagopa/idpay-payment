@@ -77,12 +77,13 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   }
 
   private void sendNotification(String notificationQueueDTO) {
-    //TODO come gestire errore?
+    //todo mettere if (cercare su reward-calc)
     try {
       log.info("[SEND_NOTIFICATION] Sending event to Notification");
       notificationProducer.sendNotification(notificationQueueDTO);
     } catch (Exception e) {
-      log.error("[SEND_NOTIFICATION] An error has occurred. Sending message to Error queue");
+      //TODO come gestire errore?
+      log.error("[SEND_NOTIFICATION] An error has occurred");
     }
   }
 }
