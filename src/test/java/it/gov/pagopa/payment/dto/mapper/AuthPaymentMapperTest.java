@@ -38,8 +38,6 @@ class AuthPaymentMapperTest {
      assertEquals(transaction.getStatus(), result.getStatus());
      assertEquals(transaction.getTrxCode(), result.getTrxCode());
      assertEquals(transaction.getAmountCents(), result.getAmountCents());
-     assertEquals(transaction.getAmountCents()-transaction.getReward(), result.getResidualAmountCents());
-     assertFalse(result.getSplitPayment());
      TestUtils.checkNotNullFields(result);
    });
 
