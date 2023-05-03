@@ -25,6 +25,6 @@ public class AuthPaymentDTOFaker {
         .reward(1000L)
         .splitPayment(Boolean.FALSE)
         .residualAmountCents(0L)
-        .trxCode("TRXCODE%d".formatted(bias));
+        .trxCode("trxcode%d".formatted(bias));
   }
 }

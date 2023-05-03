@@ -42,8 +42,6 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
               Utils.centsToEuro(transactionCreationRequest.getAmountCents()),
               result.getEffectiveAmount());
           Assertions.assertEquals(
-              transactionCreationRequest.getCallbackUrl(), result.getCallbackUrl());
-          Assertions.assertEquals(
               transactionCreationRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
           Assertions.assertEquals(transactionCreationRequest.getMcc(), result.getMcc());
           Assertions.assertEquals(

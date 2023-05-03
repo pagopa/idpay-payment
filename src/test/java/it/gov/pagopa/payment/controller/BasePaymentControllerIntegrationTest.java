@@ -182,7 +182,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXACQUIRER), HttpStatus.NOT_FOUND, null);
 
             // Other APIs cannot be invoked because we have not a valid trxId
-            TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("DUMMYTRXCODE").trxDate(OffsetDateTime.now()).build();
+            TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("dummytrxcode").trxDate(OffsetDateTime.now()).build();
             extractResponse(preAuthTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
             extractResponse(authTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
             extractResponse(confirmPayment(dummyTrx, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);

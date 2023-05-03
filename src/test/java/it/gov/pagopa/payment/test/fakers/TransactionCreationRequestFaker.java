@@ -20,8 +20,6 @@ public class TransactionCreationRequestFaker {
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .amountCents(10L)
         .mcc("MCC%d".formatted(bias))
-        .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-        .callbackUrl("CALLBACKURL%d".formatted(bias))
         .idTrxIssuer("IDTRXISSUER%d".formatted(bias));
   }
 

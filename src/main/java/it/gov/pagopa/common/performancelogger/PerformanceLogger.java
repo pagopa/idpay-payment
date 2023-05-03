@@ -36,7 +36,7 @@ public final class PerformanceLogger {
         try{
           payload = payloadBuilder.apply(out);
         } catch (Exception e){
-          log.warn("Something gone wrong while building payload", e);
+          log.warn("Something went wrong while building payload", e);
           payload = "Payload builder thrown Exception %s: %s".formatted(e.getClass(), e.getMessage());
         }
       } else {

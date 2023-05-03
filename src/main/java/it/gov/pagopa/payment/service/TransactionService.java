@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 
 public interface TransactionService {
-    TransactionInProgress getTransaction(String id, String userId);
+    SyncTrxStatusDTO getTransaction(String id, String userId);
 }
