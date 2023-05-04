@@ -98,6 +98,7 @@ class QRCodeConfirmServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
+        trx.setReward(1000L);
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         when(notifierServiceMock.notify(trx)).thenReturn(notificationOutcome);

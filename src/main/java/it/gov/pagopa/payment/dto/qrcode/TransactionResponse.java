@@ -42,5 +42,7 @@ public class TransactionResponse {
   private SyncTrxStatus status;
   private String merchantFiscalCode;
   private String vat;
+  private Boolean splitPayment;
+  private Long residualAmountCents;
 
 }
