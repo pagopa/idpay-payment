@@ -1,5 +1,9 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -10,8 +14,6 @@ import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.Utils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class AuthPaymentMapperTest {
 
