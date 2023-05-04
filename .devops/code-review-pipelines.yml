@@ -58,15 +58,15 @@ steps:
 #       options: '-B -s $(settingsxml.secureFilePath) -Dsonar.coverage.jacoco.xmlReportPaths=$(xmlReportPaths)'
 
   - task: Gradle@3
-      inputs:
-        gradleWrapperFile: 'gradlew'
-        tasks: "sonar"
-        options: '-Dsonar.coverage.jacoco.xmlReportPaths=$(xmlReportPaths) -Dorg.gradle.jvmargs=-Xmx4096M'
-        publishJUnitResults: false
-        javaHomeOption: 'JDKVersion'
-        jdkVersionOption: '1.17'
-        sonarQubeRunAnalysis: true
-        sqGradlePluginVersionChoice: 'build'
+    inputs:
+      gradleWrapperFile: 'gradlew'
+      tasks: "sonar"
+      options: '-Dsonar.coverage.jacoco.xmlReportPaths=$(xmlReportPaths) -Dorg.gradle.jvmargs=-Xmx4096M'
+      publishJUnitResults: false
+      javaHomeOption: 'JDKVersion'
+      jdkVersionOption: '1.17'
+      sonarQubeRunAnalysis: true
+      sqGradlePluginVersionChoice: 'build'
 
   - task: SonarCloudPublish@1
     inputs:
