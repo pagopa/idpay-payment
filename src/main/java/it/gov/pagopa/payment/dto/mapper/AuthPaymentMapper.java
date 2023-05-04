@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 public class AuthPaymentMapper {
 
   public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
-
     return AuthPaymentDTO.builder()
         .id(transaction.getId())
         .reward(transaction.getReward())
@@ -19,5 +18,4 @@ public class AuthPaymentMapper {
         .amountCents(transaction.getAmountCents())
         .build();
   }
-
 }
