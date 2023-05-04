@@ -13,8 +13,10 @@ public class TransactionInProgress2TransactionResponseMapper
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
     Long residualAmountCents = null;
+    Boolean splitPayment = null;
     if (transactionInProgress.getAmountCents() != null && transactionInProgress.getReward() != null) {
       residualAmountCents = transactionInProgress.getAmountCents() - transactionInProgress.getReward();
+      splitPayment = residualAmountCents > 0L;
     }
     return TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())
@@ -31,7 +33,7 @@ public class TransactionInProgress2TransactionResponseMapper
             .status(transactionInProgress.getStatus())
             .merchantFiscalCode(transactionInProgress.getMerchantFiscalCode())
             .vat(transactionInProgress.getVat())
-            .splitPayment(residualAmountCents != null ? residualAmountCents > 0L : null)
+            .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
             .build();
   }
