@@ -1,12 +1,12 @@
 #
 # Build
 #
-FROM maven:3.9.1-eclipse-temurin as buildtime
+FROM eclipse-temurin as buildtime
 
 WORKDIR /build
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN ./gradlew bootJar
 
 #
 # Docker RUNTIME

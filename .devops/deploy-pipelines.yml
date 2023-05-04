@@ -3,7 +3,7 @@
 
 parameters:
   - name: 'executeBuild'
-    displayName: 'Launch maven and docker build'
+    displayName: 'Launch gradle and docker build'
     type: boolean
     default: true
 
@@ -15,9 +15,10 @@ trigger:
   paths:
     include:
       - src/*
+      - build.gradle
       - helm/*
-      - pom.xml
       - Dockerfile
+      - settings.gradle
 
 pr: none
 
@@ -71,31 +72,37 @@ variables:
     postmanEnvFile: idpay_dev.postman_environment.json
 
 stages:
-  - stage: 'pom_version'
+  - stage: 'project_version'
     displayName: Release
     condition: eq(variables.canDeploy, true)
     jobs:
-      - job: POM
-        displayName: POM
+      - job: ProjectVersion
+        displayName: Gradle project version
         pool:
           vmImage: $(vmImageNameDefault)
         steps:
+          - task: JavaToolInstaller@0
+            displayName: Install Java
+            inputs:
+              versionSpec: '17'
+              jdkArchitectureOption: 'x64'
+              jdkSourceOption: 'PreInstalled'
           - task: Bash@3
-            displayName: Get POM version
-            name: getpomversion
+            displayName: Get Project version
+            name: getprojectversion
             condition: and(succeeded(), eq(variables.canDeploy, true))
             inputs:
               targetType: 'inline'
               script: |
-                version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
-                echo "##vso[task.setvariable variable=outputpomversion;isOutput=true]$version"
+                version=$(./gradlew properties -q | grep "version:" | awk '{print $2}')
+                echo "##vso[task.setvariable variable=outputProjectVersion;isOutput=true]$version"
               failOnStderr: true
 
   - stage: 'build'
     displayName: 'Build_and_Publish_to_${{ variables.environment }}'
-    dependsOn: 'pom_version'
+    dependsOn: 'project_version'
     variables:
-      pomversion: $[ stageDependencies.Release.POM.outputs['getpomversion.outputpomversion'] ]
+      projectVersion: $[ stageDependencies.project_version.ProjectVersion.outputs['getprojectversion.outputProjectVersion'] ]
     jobs:
       - job: Build
         displayName: Build
@@ -112,14 +119,7 @@ stages:
               tags: |
                 $(Build.BuildId)
                 latest
-                $(pomversion)
-          # - task: PublishPipelineArtifact@1
-          #   displayName: 'Publish Artifact manifests'
-          #   condition: and(succeeded(), eq(variables.canDeploy, true))
-          #   inputs:
-          #     targetPath: '$(Build.Repository.LocalPath)/manifests'
-          #     artifact: 'manifests'
-          #     publishLocation: 'pipeline'
+                $(projectVersion)
 
   - stage: 'publish_artifact_helm'
     displayName: 'Publish_artifact_Helm'
@@ -143,7 +143,7 @@ stages:
     dependsOn: ['publish_artifact_helm']
     condition: and(succeeded(), eq(variables.canDeploy, true))
     variables:
-      pomversion: $[ stageDependencies.Release.POM.outputs['getpomversion.outputpomversion'] ]
+      projectVersion: $[ stageDependencies.project_version.ProjectVersion.outputs['getprojectversion.outputProjectVersion'] ]
     jobs:
       - deployment: 'Deploy_to_${{ variables.environment }}'
         displayName: 'Deploy to ${{ variables.environment }} K8S'
