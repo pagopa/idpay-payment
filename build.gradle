@@ -34,7 +34,7 @@ dependencies {
     implementation 'org.codehaus.janino:janino'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'commons-fileupload:commons-fileupload:1.5'
-    implementation("org.yaml:snakeyaml:2.0")
+    implementation 'org.yaml:snakeyaml:2.0'
 
     testImplementation 'org.springframework.cloud:spring-cloud-stream-test-support'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
