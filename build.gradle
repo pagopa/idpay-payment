@@ -63,8 +63,8 @@ jacocoTestReport {
 }
 
 test {
-    useJUnitPlatform{
-        excludeTags 'integrationTest'
+    useJUnitPlatform {
+        excludeTags 'testIntegrated'
     }
     finalizedBy jacocoTestReport
 }
