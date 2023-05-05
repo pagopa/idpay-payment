@@ -1,7 +1,7 @@
 #
 # Build
 #
-FROM eclipse-temurin as buildtime
+FROM eclipse-temurin:17 as buildtime
 
 WORKDIR /build
 COPY . .
