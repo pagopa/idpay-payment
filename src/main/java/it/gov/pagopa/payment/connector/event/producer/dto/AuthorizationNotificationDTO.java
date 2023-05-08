@@ -1,16 +1,13 @@
 package it.gov.pagopa.payment.connector.event.producer.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-@Getter
+@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -26,4 +23,5 @@ public class AuthorizationNotificationDTO {
     private Long reward;
     private Long amountCents;
     private List<String> rejectionReasons;
+    private LocalDateTime authorizationDateTime;
 }

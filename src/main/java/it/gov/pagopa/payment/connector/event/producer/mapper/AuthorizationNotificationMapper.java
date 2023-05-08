@@ -22,6 +22,7 @@ public class AuthorizationNotificationMapper {
                 .reward(authPaymentDTO.getReward())
                 .amountCents(trx.getAmountCents())
                 .rejectionReasons(authPaymentDTO.getRejectionReasons())
+                .authorizationDateTime(trx.getAuthDate())
                 .build();
     }
 }

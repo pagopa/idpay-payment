@@ -17,7 +17,6 @@ import reactor.core.publisher.Flux;
 
 import java.util.function.Supplier;
 
-//todo rename AuthorizationNotification
 @Component
 public class AuthorizationNotificationProducer {
     @Value("${spring.cloud.stream.bindings.paymentQueue-out-0.binder}")
@@ -45,6 +44,6 @@ public class AuthorizationNotificationProducer {
 
     public static Message<AuthorizationNotificationDTO> buildMessage(AuthorizationNotificationDTO notification){
         return MessageBuilder.withPayload(notification)
-                .setHeader(KafkaHeaders.KEY,notification.getUserId()).build();
+                .setHeader(KafkaHeaders.KEY, notification.getUserId()).build();
     }
 }

@@ -80,13 +80,4 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       log.error("[SEND_NOTIFICATION] An error has occurred", e);
     }
   }
-
-  public void test() {
-    sendAuthPaymentNotification(
-            TransactionInProgress.builder()
-                    .userId("test")
-                    .build(),
-            AuthPaymentDTO.builder().build()
-    );
-  }
 }
