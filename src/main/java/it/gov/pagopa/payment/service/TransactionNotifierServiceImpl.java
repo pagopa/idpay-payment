@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionNotifierServiceImpl implements TransactionNotifierService {
-    @Value("${spring.cloud.stream.bindings.transactionNotifier-out-0.binder}")
+    @Value("${spring.cloud.stream.bindings.notificationOutcome-out-0.binder}")
     private String binder;
     private final StreamBridge streamBridge;
     public TransactionNotifierServiceImpl(StreamBridge streamBridge) {
@@ -15,6 +15,6 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     }
     @Override
     public boolean notify(TransactionInProgress trx) {
-       return streamBridge.send("transactionNotifier-out-0",binder,trx);
+       return streamBridge.send("notificationOutcome-out-0",binder,trx);
     }
 }
