@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import it.gov.pagopa.event.producer.NotificationProducer;
+import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
+import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.NotificationQueueDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
@@ -20,16 +20,16 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuthPaymentMapper requestMapper;
-  private final NotificationProducer notificationProducer;
+  private final AuthorizationNotificationProducer authorizationNotificationProducer;
 
   public QRCodeAuthPaymentServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
-          AuthPaymentMapper requestMapper, NotificationProducer notificationProducer) {
+          AuthPaymentMapper requestMapper, AuthorizationNotificationProducer authorizationNotificationProducer) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
-    this.notificationProducer = notificationProducer;
+    this.authorizationNotificationProducer = authorizationNotificationProducer;
   }
 
   @Override
@@ -56,7 +56,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         transactionInProgressRepository.updateTrxAuthorized(trx.getId(),
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-        sendAuthPaymentNotification(authPaymentDTO.getId());
+        sendAuthPaymentNotification(trx, authPaymentDTO);
       } else {
         transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
       }
@@ -70,24 +70,23 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     return authPaymentDTO;
   }
 
-  private void sendAuthPaymentNotification(String id) {
-    NotificationQueueDTO notificationQueueDTO =
-            NotificationQueueDTO.builder()
-                    .operationType("TEST")
-                    .test(id)
-                    .build();
-
-    sendNotification(notificationQueueDTO);
-  }
-
-  private void sendNotification(NotificationQueueDTO notificationQueueDTO) {
+  private void sendAuthPaymentNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
     //todo mettere if (cercare su reward-calc)
     try {
       log.info("[SEND_NOTIFICATION] Sending event to Notification");
-      notificationProducer.sendNotification(notificationQueueDTO);
+      authorizationNotificationProducer.sendNotification(trx, authPaymentDTO);
     } catch (Exception e) {
-      //TODO come gestire errore?
-      log.error("[SEND_NOTIFICATION] An error has occurred");
+      //TODO come gestire errore? errore dovrebbe essere bloccante?
+      log.error("[SEND_NOTIFICATION] An error has occurred", e);
     }
+  }
+
+  public void test() {
+    sendAuthPaymentNotification(
+            TransactionInProgress.builder()
+                    .userId("test")
+                    .build(),
+            AuthPaymentDTO.builder().build()
+    );
   }
 }

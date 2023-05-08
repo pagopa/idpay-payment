@@ -8,20 +8,17 @@ spring:
       on-profile: default
   cloud:
     stream:
+      function:
+        definition: paymentQueue
       binders:
         kafka-notification:
           type: kafka
           environment:
-            spring:
-              cloud:
-                stream:
-                  kafka:
-                    binder:
-                      brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
-                      configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_NOTIFICATION_SASL_JAAS_CONFIG:}
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
+              configuration:
+                sasl.jaas.config: ${KAFKA_NOTIFICATION_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
       bindings:
         paymentQueue-out-0:
           binder: kafka-notification
