@@ -24,43 +24,39 @@ spring:
   cloud:
     stream:
       binders:
-        notification-outcome:
+        transaction-outcome:
           type: kafka
           environment:
-            spring:
-              cloud:
-                stream:
+            spring.cloud.stream:
                   kafka:
                     binder:
-                      brokers: ${KAFKA_PAYMENT_NOTIFY_BROKER:}
+                      brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:}
                       configuration:
-                        sasl:
-                          jaas:
-                            config: ${KAFKA_PAYMENT_NOTIFY_OUTCOME_SASL_JAAS_CONFIG:}
+                        sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
       bindings:
-        notificationOutcome-out-0:
-          binder: notification-outcome
+        transactionOutcome-out-0:
+          binder: transaction-outcome
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_TRANSACTION:idpay-transaction}
       kafka:
         binder:
           auto-create-topics: false
           configuration:
-            heartbeat.interval.ms: ${KAFKA_PAYMENT_NOTIFY_CONFIG_HEARTBEAT_INTERVAL_MS:3000}
-            session.timeout.ms: ${KAFKA_PAYMENT_NOTIFY_CONFIG_SESSION_TIMEOUT_MS:30000}
-            request.timeout.ms: ${KAFKA_PAYMENT_NOTIFY_CONFIG_REQUEST_TIMEOUT_MS:60000}
-            metadata.max.age.ms: ${KAFKA_PAYMENT_NOTIFY_CONFIG_METADATA_MAX_AGE:180000}
-            sasl.mechanism: ${KAFKA_PAYMENT_NOTIFY_CONFIG_SASL_MECHANISM:PLAIN}
-            security.protocol: ${KAFKA_PAYMENT_NOTIFY_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
-            max.request.size: ${KAFKA_PAYMENT_NOTIFY_CONFIG_MAX_REQUEST_SIZE:1000000}
+            heartbeat.interval.ms: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_HEARTBEAT_INTERVAL_MS:3000}
+            session.timeout.ms: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_SESSION_TIMEOUT_MS:30000}
+            request.timeout.ms: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_REQUEST_TIMEOUT_MS:60000}
+            metadata.max.age.ms: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_METADATA_MAX_AGE:180000}
+            sasl.mechanism: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_SASL_MECHANISM:PLAIN}
+            security.protocol: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
+            max.request.size: ${KAFKA_TRANSACTION_OUTCOME_CONFIG_MAX_REQUEST_SIZE:1000000}
         bindings:
-          notificationOutcome-out-0:
+          transactionOutcome-out-0:
             producer:
               configuration:
-                connections.max.idle.ms: ${KAFKA_PAYMENT_NOTIFY_CONNECTION_MAX_IDLE_TIME:180000}
-                retry.backoff.ms: ${KAFKA_PAYMENT_NOTIFY_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
-                linger.ms: ${KAFKA_PAYMENT_NOTIFY_LINGER_MS:${KAFKA_LINGER_MS:2}}
-                batch.size: ${KAFKA_PAYMENT_NOTIFY_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+                connections.max.idle.ms: ${KAFKA_TRANSACTION_OUTCOME_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_TRANSACTION_OUTCOME_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_TRANSACTION_OUTCOME_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_TRANSACTION_OUTCOME_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
 
 logging:
   level:
