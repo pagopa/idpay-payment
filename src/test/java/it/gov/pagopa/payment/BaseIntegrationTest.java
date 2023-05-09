@@ -115,6 +115,8 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.destination}")
     protected String topicAuthorizationNotification;
 
+    @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}")
+    protected String topicConfirmNotification;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
