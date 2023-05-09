@@ -9,7 +9,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: paymentQueue
+        definition: notificationQueue
       binders:
         kafka-notification:
           type: kafka

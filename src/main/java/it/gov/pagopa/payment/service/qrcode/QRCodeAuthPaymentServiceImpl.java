@@ -25,7 +25,8 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   public QRCodeAuthPaymentServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
-          AuthPaymentMapper requestMapper, AuthorizationNotificationProducer authorizationNotificationProducer) {
+          AuthPaymentMapper requestMapper,
+          AuthorizationNotificationProducer authorizationNotificationProducer) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
@@ -71,10 +72,11 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   }
 
   private void sendAuthPaymentNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
-    //todo mettere if (cercare su reward-calc)
     try {
-      log.info("[SEND_NOTIFICATION] Sending event to Notification");
-      authorizationNotificationProducer.sendNotification(trx, authPaymentDTO);
+      log.info("[SEND_NOTIFICATION] Sending Authorizing Payment event to Notification: trxId {} - userId {}", trx.getId(), trx.getUserId());
+      if (!authorizationNotificationProducer.sendNotification(trx, authPaymentDTO)) {
+        throw new IllegalStateException("[PAYMENT] Something gone wrong while Auth Payment notify");
+      }
     } catch (Exception e) {
       //TODO come gestire errore? errore dovrebbe essere bloccante?
       log.error("[SEND_NOTIFICATION] An error has occurred", e);

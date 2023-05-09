@@ -29,13 +29,13 @@ public class AuthorizationNotificationProducer {
     @Configuration
     static class AuthorizationNotificationProducerConfig {
         @Bean
-        public Supplier<Flux<Message<Object>>> paymentQueue() {
+        public Supplier<Flux<Message<Object>>> notificationQueue() {
             return Flux::empty;
         }
     }
 
-    public void sendNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
-        streamBridge.send("paymentQueue-out-0", binder, buildMessage(mapperAuthNotification(trx, authPaymentDTO)));
+    public boolean sendNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
+        return streamBridge.send("paymentQueue-out-0", binder, buildMessage(mapperAuthNotification(trx, authPaymentDTO)));
     }
 
     public AuthorizationNotificationDTO mapperAuthNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {

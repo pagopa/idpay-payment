@@ -10,6 +10,8 @@ import it.gov.pagopa.payment.test.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,6 +28,7 @@ class AuthorizationNotificationMapperTest {
     void testMapper() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
                 SyncTrxStatus.AUTHORIZED);
+        transaction.setAuthDate(LocalDateTime.now());
         transaction.setUserId("USERID%d".formatted(1));
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         AuthorizationNotificationDTO result = mapper.map(transaction, authPaymentDTO);

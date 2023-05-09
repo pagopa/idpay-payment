@@ -3,8 +3,7 @@ package it.gov.pagopa.payment.service.qrcode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
 import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
@@ -63,6 +62,8 @@ class QRCodeAuthPaymentServiceTest {
 
     when(rewardCalculatorConnector.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
+    when(authorizationNotificationProducer.sendNotification(transaction, authPaymentDTO)).thenReturn(true);
+
     Mockito.doAnswer(invocationOnMock -> {
       transaction.setStatus(SyncTrxStatus.AUTHORIZED);
       transaction.setReward(Utils.euroToCents(reward.getAccruedReward()));
@@ -76,6 +77,8 @@ class QRCodeAuthPaymentServiceTest {
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result);
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
+    verify(authorizationNotificationProducer, times(1))
+            .sendNotification(any(TransactionInProgress.class), any(AuthPaymentDTO.class));
   }
 
   @Test
