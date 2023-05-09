@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
@@ -18,14 +19,17 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuthPaymentMapper requestMapper;
+  private final AuthorizationNotificationProducer authorizationNotificationProducer;
 
   public QRCodeAuthPaymentServiceImpl(
-      TransactionInProgressRepository transactionInProgressRepository,
-      RewardCalculatorConnector rewardCalculatorConnector,
-      AuthPaymentMapper requestMapper) {
+          TransactionInProgressRepository transactionInProgressRepository,
+          RewardCalculatorConnector rewardCalculatorConnector,
+          AuthPaymentMapper requestMapper,
+          AuthorizationNotificationProducer authorizationNotificationProducer) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
+    this.authorizationNotificationProducer = authorizationNotificationProducer;
   }
 
   @Override
@@ -52,6 +56,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         transactionInProgressRepository.updateTrxAuthorized(trx.getId(),
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+        sendAuthPaymentNotification(trx, authPaymentDTO);
       } else {
         transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
       }
@@ -65,4 +70,15 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     return authPaymentDTO;
   }
 
+  private void sendAuthPaymentNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
+    try {
+      log.info("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] Sending Authorizing Payment event to Notification: trxId {} - userId {}", trx.getId(), trx.getUserId());
+      if (!authorizationNotificationProducer.sendNotification(trx, authPaymentDTO)) {
+        throw new IllegalStateException("[QR_CODE_AUTHORIZE_TRANSACTION] Something gone wrong while Auth Payment notify");
+      }
+    } catch (Exception e) {
+      //TODO come gestire errore? errore dovrebbe essere bloccante?
+      log.error("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] An error has occurred: trxId {} - userId {}", trx.getId(), trx.getUserId(), e);
+    }
+  }
 }

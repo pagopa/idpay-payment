@@ -1,5 +1,8 @@
 package it.gov.pagopa.payment.test.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.payment.configuration.JsonConfig;
 import it.gov.pagopa.payment.utils.Utils;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -15,6 +18,11 @@ public class TestUtils {
         TimeZone.setDefault(TimeZone.getTimeZone(Utils.ZONEID));
     }
 
+    /**
+     * applications's objectMapper
+     */
+    public static ObjectMapper objectMapper = new JsonConfig().objectMapper();
+
   public static void checkNotNullFields(Object o, String... excludedFields) {
     Set<String> excludedFieldsSet = new HashSet<>(Arrays.asList(excludedFields));
     org.springframework.util.ReflectionUtils.doWithFields(o.getClass(),
@@ -25,4 +33,26 @@ public class TestUtils {
         f -> !excludedFieldsSet.contains(f.getName()));
 
   }
+
+    /**
+     * To serialize an object as a JSON handling Exception
+     */
+    public static String jsonSerializer(Object value) {
+        try {
+            return objectMapper.writeValueAsString(value);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * To deserialize an object as a JSON handling Exception
+     */
+    public static <T> T jsonDeserializer(String payload, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(payload, clazz);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }
