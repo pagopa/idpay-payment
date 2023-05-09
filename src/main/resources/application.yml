@@ -20,7 +20,7 @@ spring:
                 sasl.jaas.config: ${KAFKA_NOTIFICATION_SASL_JAAS_CONFIG:}
                 key.serializer: org.apache.kafka.common.serialization.StringSerializer
       bindings:
-        paymentQueue-out-0:
+        notificationQueue-out-0:
           binder: kafka-notification
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_NOTIFICATION:idpay-notification-request}
@@ -36,7 +36,7 @@ spring:
             security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
             max.request.size: ${KAFKA_CONFIG_MAX_REQUEST_SIZE:1000000}
         bindings:
-          paymentQueue-out-0:
+          notificationQueue-out-0:
             producer:
               configuration:
                 connections.max.idle.ms: ${KAFKA_NOTIFICATION_CONNECTION_MAX_IDLE_TIME:180000}

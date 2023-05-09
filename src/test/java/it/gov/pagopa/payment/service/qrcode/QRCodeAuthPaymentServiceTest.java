@@ -77,7 +77,7 @@ class QRCodeAuthPaymentServiceTest {
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result);
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
-    verify(authorizationNotificationProducer, times(1))
+    verify(authorizationNotificationProducer)
             .sendNotification(any(TransactionInProgress.class), any(AuthPaymentDTO.class));
   }
 

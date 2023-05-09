@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @EmbeddedKafka(topics = {
-        "${spring.cloud.stream.bindings.paymentQueue-out-0.destination}"
+        "${spring.cloud.stream.bindings.notificationQueue-out-0.destination}"
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -110,7 +110,7 @@ public abstract class BaseIntegrationTest {
     @Value("${spring.cloud.stream.kafka.binder.zkNodes}")
     private String zkNodes;
 
-    @Value("${spring.cloud.stream.bindings.paymentQueue-out-0.destination}")
+    @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.destination}")
     protected String topicAuthorizationNotification;
 
 

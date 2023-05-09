@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 
 @Component
 public class AuthorizationNotificationProducer {
-    @Value("${spring.cloud.stream.bindings.paymentQueue-out-0.binder}")
+    @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.binder}")
     private String binder;
     @Autowired
     private StreamBridge streamBridge;
@@ -35,7 +35,7 @@ public class AuthorizationNotificationProducer {
     }
 
     public boolean sendNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
-        return streamBridge.send("paymentQueue-out-0", binder, buildMessage(mapperAuthNotification(trx, authPaymentDTO)));
+        return streamBridge.send("notificationQueue-out-0", binder, buildMessage(mapperAuthNotification(trx, authPaymentDTO)));
     }
 
     public AuthorizationNotificationDTO mapperAuthNotification(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO) {
