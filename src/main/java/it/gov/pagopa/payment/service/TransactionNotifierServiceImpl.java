@@ -27,7 +27,7 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     @Configuration
     static class TransactionNotifierServiceImplConfig {
         @Bean
-        public Supplier<Flux<Message<Object>>> transactionQueue() {
+        public Supplier<Flux<Message<Object>>> transactionOutcome() {
             return Flux::empty;
         }
     }

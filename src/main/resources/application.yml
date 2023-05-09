@@ -23,6 +23,8 @@ spring:
 
   cloud:
     stream:
+      function:
+        definition: transactionOutcome
       binders:
         transaction-outcome:
           type: kafka
