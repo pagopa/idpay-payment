@@ -1,22 +1,21 @@
 #
 # Build
 #
-FROM maven:3.9.1-eclipse-temurin as buildtime
+FROM eclipse-temurin:17-jdk-alpine as buildtime
 
 WORKDIR /build
 COPY . .
 
-RUN mvn clean package -DskipTests
+RUN ./gradlew bootJar
 
 #
 # Docker RUNTIME
 #
 FROM eclipse-temurin:17-jre-alpine as runtime
 
-VOLUME /tmp
 WORKDIR /app
 
-COPY --from=buildtime /build/target/*.jar /app/app.jar
+COPY --from=buildtime /build/build/libs/*.jar /app/app.jar
 # The agent is enabled at runtime via JAVA_TOOL_OPTIONS.
 ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.4.11/applicationinsights-agent-3.4.11.jar /app/applicationinsights-agent.jar
 
