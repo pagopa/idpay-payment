@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,6 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
        return streamBridge.send("transactionOutcome-out-0",binder,buildMessage(trx));
     }
     public static Message<TransactionInProgress> buildMessage(TransactionInProgress trx){
-        return MessageBuilder.withPayload(trx).build();
+        return MessageBuilder.withPayload(trx).setHeader(KafkaHeaders.KEY,trx.getMerchantId()).build();
     }
 }
