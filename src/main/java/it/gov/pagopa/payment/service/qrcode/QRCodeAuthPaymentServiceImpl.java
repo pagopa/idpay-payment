@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.qrcode;
 
 import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
-import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
