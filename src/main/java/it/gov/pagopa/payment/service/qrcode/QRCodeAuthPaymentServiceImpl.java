@@ -92,7 +92,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
               true,
               e)
       ) {
-        log.error("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] An error has occurred: trxId {} - userId {}", trx.getId(), trx.getUserId(), e);
+        log.error("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - userId {}", trx.getId(), trx.getUserId(), e);
       }
     }
   }
