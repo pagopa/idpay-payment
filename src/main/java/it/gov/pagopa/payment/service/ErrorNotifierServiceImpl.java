@@ -59,12 +59,12 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     }
 
     @Override
-    public void notifyAuthPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
-        notify(notificationMessagingServiceType, notificationServer, notificationTopic, null, message, description, retryable, false, exception);
+    public boolean notifyAuthPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(notificationMessagingServiceType, notificationServer, notificationTopic, null, message, description, retryable, false, exception);
     }
 
     @Override
-    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception) {
+    public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
@@ -89,7 +89,10 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
 
         if (!streamBridge.send("errors-out-0", errorMessage.build())) {
             log.error("[ERROR_NOTIFIER] Something gone wrong while notifying error");
+            return false;
         }
+
+        return true;
     }
 
     private void addExceptionInfo(MessageBuilder<?> errorMessage, String exceptionHeaderPrefix, Throwable rootCause) {
