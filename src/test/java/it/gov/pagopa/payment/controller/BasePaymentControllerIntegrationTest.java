@@ -348,12 +348,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
             waitThrottlingTime();
 
+            //set payload confirm
+            addExpectedConfirmEvent(trxCreated);
+
             // Confirming payment
             TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, TransactionResponse.class);
             Assertions.assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
-
-            //set confirmResult
-            addExpectedConfirmEvent(trxRequest);
 
             // Confirming payment resubmission
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
@@ -369,9 +369,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         expectedAuthorizationNotificationEvents.add(authorizationNotificationMapper.map(checkIfStored(trxCreated.getId()), authResult));
     }
 
-    private void addExpectedConfirmEvent(TransactionCreationRequest trx){
-        expectedConfirmNotificationEvents.add(transactionCreationRequest2TransactionInProgressMapper.apply(trx,"CHANNELTRX",MERCHANTID,ACQUIRERID,IDTRXACQUIRER));
-        //TODO
+    private void addExpectedConfirmEvent(TransactionResponse trx){
+        TransactionInProgress transactionConfirmed= checkIfStored(trx.getId());
+        transactionConfirmed.setStatus(SyncTrxStatus.REWARDED);
+        expectedConfirmNotificationEvents.add(transactionConfirmed);
     }
 
     private void waitThrottlingTime() {
@@ -422,8 +423,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void  checkConfirmNotificationEvents(){
         int expectedNotificationEvents= expectedConfirmNotificationEvents.size();
-        //Map<String, TransactionInProgress> merchantIdConfirmEvent= expectedConfirmNotificationEvents.stream()
-                //.collect(Collectors.toMap(TransactionInProgress::getMerchantId, Function.identity()));
         List<ConsumerRecord<String,String>> consumerRecords= consumeMessages(topicConfirmNotification, expectedNotificationEvents,15000);
         Assertions.assertEquals(expectedNotificationEvents,consumerRecords.size());
 
@@ -464,7 +463,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     @NotNull
     private List<TransactionInProgress> sortConfirmEvents(Set<TransactionInProgress> list) {
         return list.stream()
-                .sorted(Comparator.comparing(TransactionInProgress::getMerchantId))
+                .sorted(Comparator.comparing(TransactionInProgress::getMerchantFiscalCode))
                 .toList();
     }
 
