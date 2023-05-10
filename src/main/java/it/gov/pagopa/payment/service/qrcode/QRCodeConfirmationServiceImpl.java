@@ -44,7 +44,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
         if(!notifierService.notify(trx)){
             log.warn("Cannot notify confirm operation on trx " + trxId);
         }
-
+        //TODO gestire errore
         repository.deleteById(trxId);
 
         return mapper.apply(trx);

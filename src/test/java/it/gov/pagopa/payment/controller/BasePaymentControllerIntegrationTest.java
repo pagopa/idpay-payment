@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.connector.event.producer.dto.AuthorizationNotificationDTO;
 import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
@@ -47,7 +48,8 @@ import java.util.stream.IntStream;
         properties = {
                 "logging.level.it.gov.pagopa.payment=WARN",
                 "logging.level.it.gov.pagopa.common=WARN",
-                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN"
+                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN",
+                "app.qrCode.throttlingSeconds=2"
         })
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
@@ -64,6 +66,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private final Set<AuthorizationNotificationDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
 
+    private final Set<TransactionInProgress> expectedConfirmNotificationEvents= Collections.synchronizedSet(new HashSet<>());
+
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
     @Autowired
@@ -75,6 +79,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
     @Autowired
     private AuthorizationNotificationMapper authorizationNotificationMapper;
+    @Autowired
+    private TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
@@ -111,6 +117,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         // Verifying authorization event notification
         checkAuthorizationNotificationEvents();
+
+        //Verifying confirm event notification
+        checkConfirmNotificationEvents();
     }
 
     /** Controller's channel */
@@ -340,9 +349,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
             waitThrottlingTime();
 
+            //set payload confirm
+            addExpectedConfirmEvent(trxCreated);
+
             // Confirming payment
             TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, TransactionResponse.class);
             Assertions.assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
+
             // Confirming payment resubmission
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
 
@@ -355,6 +368,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void addExpectedAuthorizationEvent(TransactionResponse trxCreated, AuthPaymentDTO authResult) {
         expectedAuthorizationNotificationEvents.add(authorizationNotificationMapper.map(checkIfStored(trxCreated.getId()), authResult));
+    }
+
+    private void addExpectedConfirmEvent(TransactionResponse trx){
+        TransactionInProgress transactionConfirmed= checkIfStored(trx.getId());
+        transactionConfirmed.setStatus(SyncTrxStatus.REWARDED);
+        expectedConfirmNotificationEvents.add(transactionConfirmed);
     }
 
     private void waitThrottlingTime() {
@@ -403,6 +422,26 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         );
     }
 
+    private void  checkConfirmNotificationEvents(){
+        int expectedNotificationEvents= expectedConfirmNotificationEvents.size();
+        List<ConsumerRecord<String,String>> consumerRecords= consumeMessages(topicConfirmNotification, expectedNotificationEvents,15000);
+        Assertions.assertEquals(expectedNotificationEvents,consumerRecords.size());
+
+        Set<TransactionInProgress> eventResult= consumerRecords.stream()
+                .map(r ->{
+                    TransactionInProgress out= TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
+                    Assertions.assertEquals(out.getMerchantId(), r.key());
+
+                    return out;
+                })
+                .collect(Collectors.toSet());
+
+        Assertions.assertEquals(
+                sortConfirmEvents(expectedConfirmNotificationEvents),
+                sortConfirmEvents(eventResult)
+        );
+    }
+
     private void checkAuthorizationDateTime(Map<String, AuthorizationNotificationDTO> trxId2AuthEvent, AuthorizationNotificationDTO out) {
         AuthorizationNotificationDTO expectedEvent = trxId2AuthEvent.get(out.getTrxId());
         Assertions.assertNotNull(expectedEvent);
@@ -419,6 +458,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private List<AuthorizationNotificationDTO> sortAuthorizationEvents(Set<AuthorizationNotificationDTO> list) {
         return list.stream()
                 .sorted(Comparator.comparing(AuthorizationNotificationDTO::getTrxId))
+                .toList();
+    }
+
+    @NotNull
+    private List<TransactionInProgress> sortConfirmEvents(Set<TransactionInProgress> list) {
+        return list.stream()
+                .sorted(Comparator.comparing(TransactionInProgress::getMerchantFiscalCode))
                 .toList();
     }
 

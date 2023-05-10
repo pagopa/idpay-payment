@@ -94,14 +94,14 @@ class QRCodeConfirmServiceTest {
         testSuccessful(false);
     }
 
-    private void testSuccessful(boolean notificationOutcome) {
+    private void testSuccessful(boolean transactionOutcome) {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setReward(1000L);
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
-        when(notifierServiceMock.notify(trx)).thenReturn(notificationOutcome);
+        when(notifierServiceMock.notify(trx)).thenReturn(transactionOutcome);
 
         TransactionResponse result = service.confirmPayment("TRXID", "MERCHID","ACQID");
 
