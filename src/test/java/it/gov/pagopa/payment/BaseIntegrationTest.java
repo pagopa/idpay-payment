@@ -3,6 +3,8 @@ package it.gov.pagopa.payment;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
+import it.gov.pagopa.payment.service.ErrorNotifierServiceImpl;
+import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.Utils;
 import jakarta.annotation.PostConstruct;
 import java.lang.management.ManagementFactory;
@@ -52,6 +54,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.notificationQueue-out-0.destination}",
+        "${spring.cloud.stream.bindings.errors-out-0.destination}",
         "${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}"
 }, controlledShutdown = true)
 @TestPropertySource(
@@ -82,6 +85,7 @@ import org.springframework.test.web.servlet.MockMvc;
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.kafka-notification.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}"
                 //endregion
         })
 @AutoConfigureMockMvc
@@ -114,7 +118,8 @@ public abstract class BaseIntegrationTest {
 
     @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.destination}")
     protected String topicAuthorizationNotification;
-
+    @Value("${spring.cloud.stream.bindings.errors-out-0.destination}")
+    protected String topicErrors;
     @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}")
     protected String topicConfirmNotification;
 
@@ -232,13 +237,13 @@ public abstract class BaseIntegrationTest {
 
     private int totaleMessageSentCounter =0;
     protected void publishIntoEmbeddedKafka(String topic, Iterable<Header> headers, String key, String payload) {
-        final RecordHeader retryHeader = new RecordHeader("RETRY", "1".getBytes(StandardCharsets.UTF_8));
-        final RecordHeader applicationNameHeader = new RecordHeader("applicationName", applicationName.getBytes(StandardCharsets.UTF_8));
+        final RecordHeader retryHeader = new RecordHeader("retry", "1".getBytes(StandardCharsets.UTF_8));
+        final RecordHeader applicationNameHeader = new RecordHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME, applicationName.getBytes(StandardCharsets.UTF_8));
 
         AtomicBoolean containAppNameHeader = new AtomicBoolean(false);
         if(headers!= null){
             headers.forEach(h -> {
-                if(h.key().equals("applicationName")){
+                if(h.key().equals(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME)){
                     containAppNameHeader.set(true);
                 }
             });
@@ -303,6 +308,37 @@ public abstract class BaseIntegrationTest {
         Map<TopicPartition, Long> endOffsets = getEndOffsets(topic);
         Assertions.assertEquals(expectedPublishedMessages, endOffsets.values().stream().mapToLong(x->x).sum());
         return endOffsets;
+    }
+
+    protected void checkErrorMessageHeaders(String srcTopic,String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey) {
+        checkErrorMessageHeaders(srcTopic, group, errorMessage, errorDescription, expectedPayload, expectedKey, true, true);
+    }
+
+    protected void checkErrorMessageHeaders(String srcTopic, String group, ConsumerRecord<String, String> errorMessage, String errorDescription, String expectedPayload, String expectedKey, boolean expectRetryHeader, boolean expectedAppNameHeader) {
+        Assertions.assertEquals(expectedAppNameHeader? applicationName : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_APPLICATION_NAME));
+        Assertions.assertEquals(expectedAppNameHeader? group : null, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_GROUP));
+
+        Assertions.assertEquals("kafka", TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TYPE));
+        Assertions.assertEquals(bootstrapServers, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_SERVER));
+        Assertions.assertEquals(srcTopic, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_SRC_TOPIC));
+        Assertions.assertNotNull(errorMessage.headers().lastHeader(ErrorNotifierServiceImpl.ERROR_MSG_HEADER_STACKTRACE));
+        Assertions.assertEquals(errorDescription, TestUtils.getHeaderValue(errorMessage, ErrorNotifierServiceImpl.ERROR_MSG_HEADER_DESCRIPTION));
+        if(expectRetryHeader){
+            Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "retry")); // to test if headers are correctly propagated
+        }
+        Assertions.assertEquals(normalizePayload(expectedPayload), normalizePayload(errorMessage.value()));
+        if(expectedKey!=null) {
+            Assertions.assertEquals(expectedKey, errorMessage.key());
+        }
+    }
+
+    protected String normalizePayload(String expectedPayload) {
+        String temp = removeDateTimeField(expectedPayload, "elaborationDateTime");
+        return removeDateTimeField(temp,"timestamp");
+    }
+
+    private String removeDateTimeField(String payload, String fieldName){
+        return payload.replaceAll("(\""+fieldName+"\":\"[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}):[0-9]{2}:[0-9]{2}\\.?[0-9]*\"", "$1:--\"");
     }
 
 //endregion

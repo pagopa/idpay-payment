@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
+import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -15,6 +16,7 @@ import it.gov.pagopa.payment.exception.ClientException;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.ErrorNotifierService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -37,14 +39,20 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private TransactionInProgressRepository repository;
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
   @Mock private AuthorizationNotificationProducer authorizationNotificationProducer;
+  @Mock private ErrorNotifierService errorNotifierService;
   private final AuthPaymentMapper authPaymentMapper = new AuthPaymentMapper();
+  private final AuthorizationNotificationMapper authorizationNotificationMapper = new AuthorizationNotificationMapper();
 
   QRCodeAuthPaymentService service;
 
   @BeforeEach
   void setUp() {
     service = new QRCodeAuthPaymentServiceImpl(repository,
-        rewardCalculatorConnector, authPaymentMapper, authorizationNotificationProducer);
+            rewardCalculatorConnector,
+            authPaymentMapper,
+            authorizationNotificationMapper,
+            authorizationNotificationProducer,
+            errorNotifierService);
   }
 
   @Test
