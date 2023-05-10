@@ -52,7 +52,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     }
 
     @Override
-    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
+    public void notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception) {
         log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
         final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
                 .setHeader(ERROR_MSG_HEADER_SRC_TYPE, srcType)
