@@ -48,7 +48,8 @@ import java.util.stream.IntStream;
         properties = {
                 "logging.level.it.gov.pagopa.payment=WARN",
                 "logging.level.it.gov.pagopa.common=WARN",
-                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN"
+                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN",
+                "app.qrCode.throttlingSeconds=2"
         })
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
