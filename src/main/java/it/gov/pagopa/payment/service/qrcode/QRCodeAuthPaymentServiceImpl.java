@@ -89,7 +89,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       log.error("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] An error has occurred: trxId {} - userId {}", trx.getId(), trx.getUserId(), e);
       errorNotifierService.notifyAuthPayment(
               AuthorizationNotificationProducer.buildMessage(authorizationNotificationMapper.map(trx, authPaymentDTO)),
-              "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result",
+              "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(trx.getId(), trx.getUserId()),
               true,
               e);
     }

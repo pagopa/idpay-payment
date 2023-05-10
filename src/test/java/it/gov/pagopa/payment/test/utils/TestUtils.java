@@ -8,6 +8,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TimeZone;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 import org.junit.jupiter.api.Assertions;
 
 public class TestUtils {
@@ -54,5 +57,13 @@ public class TestUtils {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * To read {@link org.apache.kafka.common.header.Header} value
+     */
+    public static String getHeaderValue(ConsumerRecord<String, String> errorMessage, String errorMsgHeaderSrcServer) {
+        Header header = errorMessage.headers().lastHeader(errorMsgHeaderSrcServer);
+        return header!=null? new String(header.value()) : null;
     }
 }
