@@ -19,11 +19,23 @@ spring:
               configuration:
                 sasl.jaas.config: ${KAFKA_NOTIFICATION_SASL_JAAS_CONFIG:}
                 key.serializer: org.apache.kafka.common.serialization.StringSerializer
+        kafka-errors:
+          type: kafka
+          environment:
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
       bindings:
         notificationQueue-out-0:
           binder: kafka-notification
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_NOTIFICATION:idpay-notification-request}
+        errors-out-0:
+          destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: kafka-errors
       kafka:
         binder:
           auto-create-topics: false
@@ -44,6 +56,14 @@ spring:
                 linger.ms: ${KAFKA_NOTIFICATION_LINGER_MS:${KAFKA_LINGER_MS:2}}
                 batch.size: ${KAFKA_NOTIFICATION_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
                 metadata.max.idle.ms: ${KAFKA_NOTIFICATION_METADATA_MAX_IDLE_MS:${KAFKA_METADATA_MAX_IDLE_MS:180000}}
+          errors-out-0:
+            producer:
+              configuration:
+                client.id: notificationQueue-errors
+                connections.max.idle.ms: ${KAFKA_ERRORS_CONNECTION_MAX_IDLE_TIME:180000}
+                retry.backoff.ms: ${KAFKA_ERRORS_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
+                linger.ms: ${KAFKA_ERRORS_LINGER_MS:${KAFKA_LINGER_MS:2}}
+                batch.size: ${KAFKA_ERRORS_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
   data:
     mongodb:
       database: ${MONGODB_DBNAME:idpay}

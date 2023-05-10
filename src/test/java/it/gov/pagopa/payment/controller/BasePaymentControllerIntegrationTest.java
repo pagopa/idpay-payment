@@ -62,7 +62,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private final List<FailableConsumer<Integer, Exception>> useCases = new ArrayList<>();
 
-    private final Set<AuthorizationNotificationDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());//accesso concorrente - cambiare
+    private final Set<AuthorizationNotificationDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
