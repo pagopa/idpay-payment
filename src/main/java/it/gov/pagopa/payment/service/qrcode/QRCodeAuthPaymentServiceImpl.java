@@ -60,17 +60,14 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         transactionInProgressRepository.updateTrxAuthorized(trx.getId(),
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-        trx.setStatus(SyncTrxStatus.AUTHORIZED);
-        trx.setReward(authPaymentDTO.getReward());
-        trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
-        sendAuthPaymentNotification(trx);
       } else {
         transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
-        trx.setStatus(SyncTrxStatus.REJECTED);
-        trx.setReward(0L);
-        trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
-        sendAuthPaymentNotification(trx);
       }
+
+      trx.setStatus(authPaymentDTO.getStatus());
+      trx.setReward(authPaymentDTO.getReward());
+      trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
+      sendAuthPaymentNotification(trx);
 
     } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
       authPaymentDTO = requestMapper.transactionMapper(trx);
@@ -89,7 +86,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       }
     } catch (Exception e) {
       if(!errorNotifierService.notifyAuthPayment(
-              TransactionNotifierServiceImpl.buildMessageByUser(trx),
+              TransactionNotifierServiceImpl.buildMessage(trx, trx.getUserId()),
               "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(trx.getId(), trx.getUserId()),
               true,
               e)

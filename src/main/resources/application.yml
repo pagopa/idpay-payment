@@ -9,7 +9,7 @@ spring:
   cloud:
     stream:
       function:
-        definition: notificationQueue;transactionOutcome
+        definition: notificationQueue;errors;transactionOutcome
       binders:
         kafka-errors:
           type: kafka

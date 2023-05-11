@@ -60,17 +60,11 @@ microservice-chart:
     rest-client:
       IDPAY_REWARD_PAYMENT: idpay-reward-calculator-baseurl
 
-    idpay-eventhub-00:
-      KAFKA_BINDER_BROKER_ENDPOINT_LIST: kafka_broker
-      KAFKA_TOPIC_NOTIFICATION: idpay_notification_request_topic
-
     idpay-eventhub-01:
       KAFKA_BROKER: kafka_broker
       KAFKA_ERRORS_BROKER: kafka_broker
       KAFKA_ERRORS_TOPIC: idpay_error_topic
       KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
-      KAFKA_TRANSACTION_OUTCOME_CONFIG_SASL_MECHANISM: kafka_sasl_mechanism
-      KAFKA_TRANSACTION_OUTCOME_CONFIG_SECURITY_PROTOCOL: kafka_security_protocol
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
 
   envSecret:

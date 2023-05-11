@@ -51,12 +51,28 @@ class ErrorNotifierServiceTest {
         Mockito.when(streamBridgeMock.send(anyString(), any())).thenReturn(false);
 
         errorNotifierService.notifyAuthPayment(
-                TransactionNotifierServiceImpl.buildMessageByUser(transaction),
+                TransactionNotifierServiceImpl.buildMessage(transaction, transaction.getUserId()),
                 "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)
         );
 
         verify(streamBridgeMock).send(anyString(), any());
+    }
+
+    @Test
+    void notifyConfirmPayment(){
+        TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+
+        Mockito.when(streamBridgeMock.send(anyString(),any())).thenReturn(false);
+
+        errorNotifierService.notifyConfirmPayment(
+                TransactionNotifierServiceImpl.buildMessage(trx, trx.getMerchantId()),
+                "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the Confirm Payment result",
+                true,
+                new Throwable(ERROR_MESSAGE)
+        );
+
+        verify(streamBridgeMock).send(anyString(),any());
     }
 }
