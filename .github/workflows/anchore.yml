@@ -55,14 +55,31 @@ jobs:
       - name: Inspect action SARIF report
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Send notification to Slack
-        id: notification
+        id: slack
         #TODO TBV only with schedule events or another event in main
         if: ${{ github.event_name == 'schedule'}}
-        run: |
-          echo "GitHub Action scan result: ${{ job.status }}" > mail.txt
-          curl --ssl-reqd \
-          --url 'smtps://smtp.${{MAIL_PROVIDER}}:${{MAIL_PROVIDER_PORT}}' \
-          --user '${{ secrets.NOTIFICATION_SENDER_EMAIL }}:${{ secrets.NOTIFICATION_SENDER_PASSWORD }}' \
-          --mail-from '${{ secrets.NOTIFICATION_SENDER_EMAIL }}' \
-          --mail-rcpt '${{ secrets.SLACK_CHANEL_MAIL }}' \
-          --upload-file mail.txt
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "text": "GitHub Action scan result: ${{ job.status }}",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "${{ github.workspace }} - Notification Scan Result"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "GitHub Action scan result: ${{ job.status }}"
+                  }
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
