@@ -41,7 +41,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
         trx.setStatus(SyncTrxStatus.REWARDED);
 
-        if(!notifierService.notify(trx)){
+        if(!notifierService.notifyByMerch(trx)){
             log.warn("Cannot notify confirm operation on trx " + trxId);
         }
         //TODO gestire errore

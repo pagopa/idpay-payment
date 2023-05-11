@@ -38,9 +38,9 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
                                     @Value("${spring.application.name}") String applicationName,
 
-                                    @Value("${spring.cloud.stream.binders.kafka-notification.type}") String notificationMessagingServiceType,
-                                    @Value("${spring.cloud.stream.binders.kafka-notification.environment.spring.cloud.stream.kafka.binder.brokers}") String notificationServer,
-                                    @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.destination}") String notificationTopic) {
+                                    @Value("${spring.cloud.stream.binders.transaction-outcome.type}") String notificationMessagingServiceType,
+                                    @Value("${spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String notificationServer,
+                                    @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}") String notificationTopic) {
         this.streamBridge = streamBridge;
         this.applicationName = applicationName;
 

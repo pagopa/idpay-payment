@@ -101,7 +101,7 @@ class QRCodeConfirmServiceTest {
         trx.setReward(1000L);
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
-        when(notifierServiceMock.notify(trx)).thenReturn(transactionOutcome);
+        when(notifierServiceMock.notifyByMerch(trx)).thenReturn(transactionOutcome);
 
         TransactionResponse result = service.confirmPayment("TRXID", "MERCHID","ACQID");
 
