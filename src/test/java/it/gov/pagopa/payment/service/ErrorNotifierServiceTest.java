@@ -39,6 +39,9 @@ class ErrorNotifierServiceTest {
                 APP_NAME,
                 BUILDER_MESSAGING_SERVICE,
                 NOTIFICATIONBUILDER,
+                TOPIC,
+                BUILDER_MESSAGING_SERVICE,
+                NOTIFICATIONBUILDER,
                 TOPIC
         );
     }
@@ -61,5 +64,21 @@ class ErrorNotifierServiceTest {
         );
 
         verify(streamBridgeMock).send(anyString(), any());
+    }
+
+    @Test
+    void notifyConfirmPayment(){
+        TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+
+        Mockito.when(streamBridgeMock.send(anyString(),any())).thenReturn(false);
+
+        errorNotifierService.notifyConfirmPayment(
+                TransactionNotifierServiceImpl.buildMessage(trx),
+                "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the Confirm Payment result",
+                true,
+                new Throwable(ERROR_MESSAGE)
+        );
+
+        verify(streamBridgeMock).send(anyString(),any());
     }
 }
