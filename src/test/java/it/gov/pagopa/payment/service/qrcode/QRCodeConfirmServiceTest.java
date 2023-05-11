@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.ErrorNotifierService;
 import it.gov.pagopa.payment.service.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
@@ -23,6 +24,7 @@ class QRCodeConfirmServiceTest {
 
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private TransactionNotifierService notifierServiceMock;
+    @Mock private ErrorNotifierService errorNotifierServiceMock;
 
     private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper();
 
@@ -30,7 +32,7 @@ class QRCodeConfirmServiceTest {
 
     @BeforeEach
     void init(){
-        service = new QRCodeConfirmationServiceImpl(repositoryMock, mapper, notifierServiceMock);
+        service = new QRCodeConfirmationServiceImpl(repositoryMock, mapper, notifierServiceMock, errorNotifierServiceMock);
     }
 
     @Test
@@ -94,14 +96,14 @@ class QRCodeConfirmServiceTest {
         testSuccessful(false);
     }
 
-    private void testSuccessful(boolean notificationOutcome) {
+    private void testSuccessful(boolean transactionOutcome) {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setReward(1000L);
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
-        when(notifierServiceMock.notify(trx)).thenReturn(notificationOutcome);
+        when(notifierServiceMock.notify(trx)).thenReturn(transactionOutcome);
 
         TransactionResponse result = service.confirmPayment("TRXID", "MERCHID","ACQID");
 

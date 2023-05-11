@@ -2,7 +2,10 @@ package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.connector.event.producer.dto.AuthorizationNotificationDTO;
+import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
@@ -14,8 +17,11 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
@@ -26,22 +32,24 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @TestPropertySource(
         properties = {
                 "logging.level.it.gov.pagopa.payment=WARN",
                 "logging.level.it.gov.pagopa.common=WARN",
-                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN"
+                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN",
+                "app.qrCode.throttlingSeconds=2"
         })
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
@@ -56,6 +64,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private final List<FailableConsumer<Integer, Exception>> useCases = new ArrayList<>();
 
+    private final Set<AuthorizationNotificationDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
+    private final Set<AuthorizationNotificationDTO> expectedAuthorizationNotificationEventsRejected = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedConfirmNotificationEvents= Collections.synchronizedSet(new HashSet<>());
+
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
     @Autowired
@@ -65,6 +77,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private TransactionInProgress2TransactionResponseMapper transactionResponseMapper;
     @Autowired
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
+    @Autowired
+    private AuthorizationNotificationMapper authorizationNotificationMapper;
+    @Autowired
+    private TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
@@ -98,6 +114,15 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 Assertions.fail(e);
             }
         }
+
+        // Verifying authorization event notification
+        checkAuthorizationNotificationEvents();
+
+        //Verifying confirm event notification
+        checkConfirmNotificationEvents();
+
+        //verifying error event notification
+        //checkErrorNotificationEvents(); TODO complete error publisher useCase
     }
 
     /** Controller's channel */
@@ -251,6 +276,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
             Assertions.assertEquals(SyncTrxStatus.REJECTED, authResult.getStatus());
             checkTransactionStored(authResult, USERID);
+
+            //setpayload authResultRejected
+            addExpectedAuthorizationEventRejected(trxCreated, authResult);
         });
 
         // useCase 4: TooMany request thrown by reward-calculator
@@ -320,19 +348,42 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             Assertions.assertEquals(authResult, authResultResubmitted);
             checkTransactionStored(authResult, USERID);
 
+            //setpayload authResult
+            addExpectedAuthorizationEvent(trxCreated, authResult);
+
             // Unexpected merchant trying to confirm
             extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
             waitThrottlingTime();
 
+            //set payload confirm
+            addExpectedConfirmEvent(trxCreated);
+
             // Confirming payment
             TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, TransactionResponse.class);
             Assertions.assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
+
             // Confirming payment resubmission
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
 
             Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
         });
+
+        //andare a verificare il messaggio è presente correttamente
         useCases.addAll(getExtraUseCases());
+    }
+
+    private void addExpectedAuthorizationEvent(TransactionResponse trxCreated, AuthPaymentDTO authResult) {
+        expectedAuthorizationNotificationEvents.add(authorizationNotificationMapper.map(checkIfStored(trxCreated.getId()), authResult));
+    }
+
+    private void addExpectedAuthorizationEventRejected(TransactionResponse trxCreated, AuthPaymentDTO authResult) {
+        expectedAuthorizationNotificationEventsRejected.add(authorizationNotificationMapper.map(checkIfStored(trxCreated.getId()), authResult));
+    }
+
+    private void addExpectedConfirmEvent(TransactionResponse trx){
+        TransactionInProgress transactionConfirmed= checkIfStored(trx.getId());
+        transactionConfirmed.setStatus(SyncTrxStatus.REWARDED);
+        expectedConfirmNotificationEvents.add(transactionConfirmed);
     }
 
     private void waitThrottlingTime() {
@@ -356,6 +407,109 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         } else {
             return null;
         }
+    }
+
+    private void checkAuthorizationNotificationEvents() {
+        Set<AuthorizationNotificationDTO> expectedNotificationEvents = new HashSet<>();
+        expectedNotificationEvents.addAll(expectedAuthorizationNotificationEvents);
+        expectedNotificationEvents.addAll(expectedAuthorizationNotificationEventsRejected);
+        int expectedNumNotificationEvents = expectedNotificationEvents.size();
+
+        Map<String, AuthorizationNotificationDTO> trxId2AuthEvent = expectedNotificationEvents.stream()
+                .collect(Collectors.toMap(AuthorizationNotificationDTO::getTrxId, Function.identity()));
+        List<ConsumerRecord<String, String>> consumerRecords = consumeMessages(topicAuthorizationNotification, expectedNumNotificationEvents, 15000);
+        Assertions.assertEquals(expectedNumNotificationEvents, consumerRecords.size());
+
+        Map<SyncTrxStatus, Set<AuthorizationNotificationDTO>> eventsResult = consumerRecords.stream()
+                .map(r -> {
+                    AuthorizationNotificationDTO out = TestUtils.jsonDeserializer(r.value(), AuthorizationNotificationDTO.class);
+                    Assertions.assertEquals(out.getUserId(), r.key());
+                    checkAuthorizationDateTime(trxId2AuthEvent, out);
+
+                    return out;
+                })
+                .collect(Collectors.groupingBy(AuthorizationNotificationDTO::getStatus, Collectors.toSet()));
+
+        Assertions.assertEquals(
+                sortAuthorizationEvents(expectedAuthorizationNotificationEvents),
+                sortAuthorizationEvents(eventsResult.get(SyncTrxStatus.AUTHORIZED))
+        );
+        Assertions.assertEquals(
+                sortAuthorizationEvents(expectedAuthorizationNotificationEventsRejected),
+                sortAuthorizationEvents(eventsResult.get(SyncTrxStatus.REJECTED))
+        );
+    }
+
+    private void  checkConfirmNotificationEvents(){
+        int expectedNotificationEvents= expectedConfirmNotificationEvents.size();
+        List<ConsumerRecord<String,String>> consumerRecords= consumeMessages(topicConfirmNotification, expectedNotificationEvents,15000);
+        Assertions.assertEquals(expectedNotificationEvents,consumerRecords.size());
+
+        Set<TransactionInProgress> eventResult= consumerRecords.stream()
+                .map(r ->{
+                    TransactionInProgress out= TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
+                    Assertions.assertEquals(out.getMerchantId(), r.key());
+
+                    return out;
+                })
+                .collect(Collectors.toSet());
+
+        Assertions.assertEquals(
+                sortConfirmEvents(expectedConfirmNotificationEvents),
+                sortConfirmEvents(eventResult)
+        );
+    }
+
+    private void checkErrorNotificationEvents() {
+        int expectedNotificationEvents = expectedAuthorizationNotificationEventsRejected.size();
+        Map<String, AuthorizationNotificationDTO> trxId2AuthEvent = expectedAuthorizationNotificationEvents.stream()
+                .collect(Collectors.toMap(AuthorizationNotificationDTO::getTrxId, Function.identity()));
+        List<ConsumerRecord<String,String>> consumerRecords = consumeMessages(topicErrors, expectedNotificationEvents,15000);
+        Assertions.assertEquals(expectedNotificationEvents,consumerRecords.size());
+
+        Set<AuthorizationNotificationDTO> eventsResult = consumerRecords.stream()
+                .map(r -> {
+                    AuthorizationNotificationDTO out = TestUtils.jsonDeserializer(r.value(), AuthorizationNotificationDTO.class);
+                    Assertions.assertEquals(out.getUserId(), r.key());
+                    checkAuthorizationDateTime(trxId2AuthEvent, out);
+                    checkErrorMessageHeaders(topicAuthorizationNotification, null, r, "TODO", "TODO", out.getUserId());
+
+                    return out;
+                })
+                .collect(Collectors.toSet());
+
+        Assertions.assertEquals(
+                sortAuthorizationEvents(expectedAuthorizationNotificationEvents),
+                sortAuthorizationEvents(eventsResult)
+        );
+    }
+
+    private void checkAuthorizationDateTime(Map<String, AuthorizationNotificationDTO> trxId2AuthEvent, AuthorizationNotificationDTO out) {
+        if (!out.getStatus().equals(SyncTrxStatus.REJECTED)) {
+            AuthorizationNotificationDTO expectedEvent = trxId2AuthEvent.get(out.getTrxId());
+            Assertions.assertNotNull(expectedEvent);
+            Duration diffAuthDateTime = Duration.between(out.getAuthorizationDateTime(),
+                    expectedEvent.getAuthorizationDateTime());
+            Assertions.assertTrue(diffAuthDateTime
+                    .compareTo(Duration.ofSeconds(throttlingSeconds)) >= 0);
+            Assertions.assertTrue(diffAuthDateTime
+                    .compareTo(Duration.ofSeconds(10L * throttlingSeconds)) < 0);
+            out.setAuthorizationDateTime(expectedEvent.getAuthorizationDateTime());
+        }
+    }
+
+    @NotNull
+    private List<AuthorizationNotificationDTO> sortAuthorizationEvents(Set<AuthorizationNotificationDTO> list) {
+        return list.stream()
+                .sorted(Comparator.comparing(AuthorizationNotificationDTO::getTrxId))
+                .toList();
+    }
+
+    @NotNull
+    private List<TransactionInProgress> sortConfirmEvents(Set<TransactionInProgress> list) {
+        return list.stream()
+                .sorted(Comparator.comparing(TransactionInProgress::getMerchantFiscalCode))
+                .toList();
     }
 
 }
