@@ -12,13 +12,9 @@
 name: Anchore Container Scan
 
 on:
-  push:
-    #TODO TBV don't check in uat and main?
-    branches: [ "release-dev", "release-uat", "main" ]
   pull_request:
     # The branches below must be a subset of the branches above
-    #TODO TBV don't check in uat and main?
-    branches: [ "release-dev", "release-uat", "main" ]
+    branches: [ "release-dev" ]
   schedule:
     - cron: '00 07 * * *'
 
@@ -56,13 +52,12 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Send notification to Slack
         id: slack
-        #TODO TBV only with schedule events or another event in main
-        if: ${{ github.event_name == 'schedule'}}
+        if: ${{ github.event_name == 'schedule' && steps.scan.conclusion == 'failure'}}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ job.status }}",
+              "text": "GitHub Action scan result: ${{ steps.scan.conclusion == 'failure' }}",
               "blocks": [
                 {
                   "type": "header",
@@ -75,11 +70,11 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan result: ${{ job.status }}"
+                    "text": "GitHub Action scan result: ${{ steps.scan.conclusion == 'failure' }}"
                   }
                 }
               ]
             }
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.CVE_SCAN_SLACK_WEBHOOK }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
