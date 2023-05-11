@@ -57,7 +57,7 @@ jobs:
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ steps.scan.conclusion == 'failure' }}",
+              "text": "GitHub Action scan result: ${{ steps.scan.conclusion }}",
               "blocks": [
                 {
                   "type": "header",
@@ -70,7 +70,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan result: ${{ steps.scan.conclusion == 'failure' }}"
+                    "text": "GitHub Action scan result: ${{ steps.scan.conclusion }}"
                   }
                 }
               ]
