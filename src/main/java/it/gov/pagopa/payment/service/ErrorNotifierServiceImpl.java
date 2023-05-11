@@ -35,8 +35,8 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     private final String notificationTopic;
 
     private final String transactionOutcomeMessagingServiceType;
-    private final String transactionOutcomeNotificationServer;
-    private final String transactionOutcomeNotificationTopic;
+    private final String transactionOutcomeServer;
+    private final String transactionOutcomeTopic;
 
     @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
@@ -47,8 +47,8 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
                                     @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.destination}") String notificationTopic,
 
                                     @Value("${spring.cloud.stream.binders.transaction-outcome.type}") String transactionOutcomeMessagingServiceType,
-                                    @Value("${spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String transactionOutcomeNotificationServer,
-                                    @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}") String transactionOutcomeNotificationTopic) {
+                                    @Value("${spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String transactionOutcomeServer,
+                                    @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}") String transactionOutcomeTopic) {
         this.streamBridge = streamBridge;
         this.applicationName = applicationName;
 
@@ -57,8 +57,8 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
         this.notificationTopic = notificationTopic;
 
         this.transactionOutcomeMessagingServiceType= transactionOutcomeMessagingServiceType;
-        this.transactionOutcomeNotificationServer= transactionOutcomeNotificationServer;
-        this.transactionOutcomeNotificationTopic= transactionOutcomeNotificationTopic;
+        this.transactionOutcomeServer = transactionOutcomeServer;
+        this.transactionOutcomeTopic = transactionOutcomeTopic;
     }
 
     /** Declared just to let know Spring to connect the producer at startup */
@@ -77,7 +77,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
 
     @Override
     public boolean notifyConfirmPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(transactionOutcomeMessagingServiceType,transactionOutcomeNotificationServer,transactionOutcomeNotificationTopic,null,message,description,retryable,false,exception);
+        return notify(transactionOutcomeMessagingServiceType, transactionOutcomeServer, transactionOutcomeTopic,null,message,description,retryable,false,exception);
     }
 
     @Override
