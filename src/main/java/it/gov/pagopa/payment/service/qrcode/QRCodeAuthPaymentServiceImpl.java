@@ -81,7 +81,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private void sendAuthPaymentNotification(TransactionInProgress trx) {
     try {
       log.info("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] Sending Authorization Payment event to Notification: trxId {} - userId {}", trx.getId(), trx.getUserId());
-      if (!notifierService.notifyByUser(trx)) {
+      if (!notifierService.notify(trx, trx.getUserId())) {
         throw new IllegalStateException("[QR_CODE_AUTHORIZE_TRANSACTION] Something gone wrong while Auth Payment notify");
       }
     } catch (Exception e) {

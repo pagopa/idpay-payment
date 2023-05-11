@@ -65,7 +65,7 @@ class QRCodeAuthPaymentServiceTest {
 
     when(rewardCalculatorConnector.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
-    when(notifierService.notifyByUser(transaction)).thenReturn(true);
+    when(notifierService.notify(transaction, transaction.getUserId())).thenReturn(true);
 
     Mockito.doAnswer(invocationOnMock -> {
       transaction.setStatus(SyncTrxStatus.AUTHORIZED);
@@ -81,7 +81,7 @@ class QRCodeAuthPaymentServiceTest {
     TestUtils.checkNotNullFields(result);
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
     verify(notifierService)
-            .notifyByUser(any(TransactionInProgress.class));
+            .notify(any(TransactionInProgress.class), anyString());
   }
 
   @Test

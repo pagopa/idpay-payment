@@ -34,13 +34,8 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     }
 
     @Override
-    public boolean notifyByMerch(TransactionInProgress trx) {
-       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, trx.getMerchantId()));
-    }
-
-    @Override
-    public boolean notifyByUser(TransactionInProgress trx) {
-       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, trx.getUserId()));
+    public boolean notify(TransactionInProgress trx, String headerValue) {
+       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, headerValue));
     }
 
     public static Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String headerValue) {
