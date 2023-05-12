@@ -1,12 +1,5 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-
-import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
-import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -17,13 +10,12 @@ import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
+import it.gov.pagopa.payment.service.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.Utils;
-import java.util.Collections;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,15 +25,20 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class QRCodeAuthPaymentServiceTest {
 
   @Mock private TransactionInProgressRepository repository;
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
-  @Mock private AuthorizationNotificationProducer authorizationNotificationProducer;
+  @Mock private TransactionNotifierService notifierService;
   @Mock private ErrorNotifierService errorNotifierService;
   private final AuthPaymentMapper authPaymentMapper = new AuthPaymentMapper();
-  private final AuthorizationNotificationMapper authorizationNotificationMapper = new AuthorizationNotificationMapper();
 
   QRCodeAuthPaymentService service;
 
@@ -50,8 +47,7 @@ class QRCodeAuthPaymentServiceTest {
     service = new QRCodeAuthPaymentServiceImpl(repository,
             rewardCalculatorConnector,
             authPaymentMapper,
-            authorizationNotificationMapper,
-            authorizationNotificationProducer,
+            notifierService,
             errorNotifierService);
   }
 
@@ -69,7 +65,7 @@ class QRCodeAuthPaymentServiceTest {
 
     when(rewardCalculatorConnector.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
-    when(authorizationNotificationProducer.sendNotification(transaction, authPaymentDTO)).thenReturn(true);
+    when(notifierService.notify(transaction, transaction.getUserId())).thenReturn(true);
 
     Mockito.doAnswer(invocationOnMock -> {
       transaction.setStatus(SyncTrxStatus.AUTHORIZED);
@@ -84,8 +80,8 @@ class QRCodeAuthPaymentServiceTest {
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result);
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
-    verify(authorizationNotificationProducer)
-            .sendNotification(any(TransactionInProgress.class), any(AuthPaymentDTO.class));
+    verify(notifierService)
+            .notify(any(TransactionInProgress.class), anyString());
   }
 
   @Test

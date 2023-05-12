@@ -11,14 +11,6 @@ spring:
       function:
         definition: notificationQueue;errors;transactionOutcome
       binders:
-        kafka-notification:
-          type: kafka
-          environment:
-            spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST:}
-              configuration:
-                sasl.jaas.config: ${KAFKA_NOTIFICATION_SASL_JAAS_CONFIG:}
-                key.serializer: org.apache.kafka.common.serialization.StringSerializer
         kafka-errors:
           type: kafka
           environment:
@@ -38,10 +30,6 @@ spring:
                     sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
                     key.serializer: org.apache.kafka.common.serialization.StringSerializer
       bindings:
-        notificationQueue-out-0:
-          binder: kafka-notification
-          content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          destination: ${KAFKA_TOPIC_NOTIFICATION:idpay-notification-request}
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -62,14 +50,6 @@ spring:
             security.protocol: ${KAFKA_CONFIG_SECURITY_PROTOCOL:SASL_SSL}
             max.request.size: ${KAFKA_CONFIG_MAX_REQUEST_SIZE:1000000}
         bindings:
-          notificationQueue-out-0:
-            producer:
-              configuration:
-                connections.max.idle.ms: ${KAFKA_NOTIFICATION_CONNECTION_MAX_IDLE_TIME:180000}
-                retry.backoff.ms: ${KAFKA_NOTIFICATION_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
-                linger.ms: ${KAFKA_NOTIFICATION_LINGER_MS:${KAFKA_LINGER_MS:2}}
-                batch.size: ${KAFKA_NOTIFICATION_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
-                metadata.max.idle.ms: ${KAFKA_NOTIFICATION_METADATA_MAX_IDLE_MS:${KAFKA_METADATA_MAX_IDLE_MS:180000}}
           errors-out-0:
             producer:
               configuration:
