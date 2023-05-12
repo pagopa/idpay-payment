@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -8,8 +7,8 @@ import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
-import it.gov.pagopa.payment.service.TransactionNotifierService;
-import it.gov.pagopa.payment.service.TransactionNotifierServiceImpl;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -20,16 +19,13 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
     private final TransactionInProgressRepository repository;
     private final TransactionInProgress2TransactionResponseMapper mapper;
-    private final TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
     private final TransactionNotifierService notifierService;
     private final ErrorNotifierService errorNotifierService;
 
     public QRCodeConfirmationServiceImpl(TransactionInProgressRepository repository, TransactionInProgress2TransactionResponseMapper mapper,
-        TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper,
         TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService) {
         this.repository = repository;
         this.mapper = mapper;
-        this.transactionInProgress2TransactionOutcomeDTOMapper = transactionInProgress2TransactionOutcomeDTOMapper;
         this.notifierService = notifierService;
         this.errorNotifierService= errorNotifierService;
     }
@@ -65,7 +61,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
             }
         } catch (Exception e) {
             if(!errorNotifierService.notifyConfirmPayment(
-                    TransactionNotifierServiceImpl.buildMessage(transactionInProgress2TransactionOutcomeDTOMapper.apply(trx), trx.getMerchantId()),
+                    notifierService.buildMessage(trx, trx.getMerchantId()),
                     "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
                     true,
                     e)

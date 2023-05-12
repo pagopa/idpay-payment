@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.service.qrcode;
 
 import static org.mockito.Mockito.when;
 
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -10,7 +10,7 @@ import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
-import it.gov.pagopa.payment.service.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,6 @@ class QRCodeConfirmServiceTest {
         new QRCodeConfirmationServiceImpl(
             repositoryMock,
             mapper,
-            transactionInProgress2TransactionOutcomeDTOMapper,
             notifierServiceMock,
             errorNotifierServiceMock);
   }

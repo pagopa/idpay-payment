@@ -3,14 +3,14 @@ package it.gov.pagopa.payment.service.qrcode;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
-import it.gov.pagopa.payment.service.TransactionNotifierService;
-import it.gov.pagopa.payment.service.TransactionNotifierServiceImpl;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -90,7 +90,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       }
     } catch (Exception e) {
       if(!errorNotifierService.notifyAuthPayment(
-              TransactionNotifierServiceImpl.buildMessage(mapper.apply(trx), trx.getUserId()),
+              notifierService.buildMessage(trx, trx.getUserId()),
               "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(trx.getId(), trx.getUserId()),
               true,
               e)

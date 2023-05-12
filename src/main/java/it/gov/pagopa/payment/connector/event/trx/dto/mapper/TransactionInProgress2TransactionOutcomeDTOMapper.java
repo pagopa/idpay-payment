@@ -1,7 +1,7 @@
-package it.gov.pagopa.payment.dto.mapper;
+package it.gov.pagopa.payment.connector.event.trx.dto.mapper;
 
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.model.TransactionOutcomeDTO;
+import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -52,7 +52,6 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .merchantFiscalCode(trx.getMerchantFiscalCode())
         .vat(trx.getVat())
         .initiativeId(trx.getInitiativeId())
-        .reward(trx.getReward())
         .rewards(trx.getRewards())
         .rejectionReasons(rejectionReasons)
         .initiativeRejectionReasons(initiativeRejectionReasons)

@@ -382,6 +382,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void addExpectedConfirmEvent(TransactionResponse trx){
         TransactionInProgress transactionConfirmed = checkIfStored(trx.getId());
         transactionConfirmed.setStatus(SyncTrxStatus.REWARDED);
+        transactionConfirmed.setReward(null);
         expectedConfirmNotificationEvents.add(transactionConfirmed);
     }
 

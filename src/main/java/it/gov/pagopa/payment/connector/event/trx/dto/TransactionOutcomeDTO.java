@@ -1,5 +1,6 @@
-package it.gov.pagopa.payment.model;
+package it.gov.pagopa.payment.connector.event.trx.dto;
 
+import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;

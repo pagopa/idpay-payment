@@ -1,9 +1,10 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.model.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.RewardConstants;
