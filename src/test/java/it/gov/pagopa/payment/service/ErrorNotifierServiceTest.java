@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -25,6 +26,7 @@ class ErrorNotifierServiceTest {
     public static final String NOTIFICATIONBUILDER = "notificationbuilder";
     public static final String TOPIC = "topic";
     public static final String ERROR_MESSAGE = "test";
+    private final TransactionInProgress2TransactionOutcomeDTOMapper mapper = new TransactionInProgress2TransactionOutcomeDTOMapper();
     @Mock
     private StreamBridge streamBridgeMock;
     private ErrorNotifierService errorNotifierService;
@@ -51,7 +53,7 @@ class ErrorNotifierServiceTest {
         Mockito.when(streamBridgeMock.send(anyString(), any())).thenReturn(false);
 
         errorNotifierService.notifyAuthPayment(
-                TransactionNotifierServiceImpl.buildMessage(transaction, transaction.getUserId()),
+                TransactionNotifierServiceImpl.buildMessage(mapper.apply(transaction), transaction.getUserId()),
                 "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)
@@ -67,7 +69,7 @@ class ErrorNotifierServiceTest {
         Mockito.when(streamBridgeMock.send(anyString(),any())).thenReturn(false);
 
         errorNotifierService.notifyConfirmPayment(
-                TransactionNotifierServiceImpl.buildMessage(trx, trx.getMerchantId()),
+                TransactionNotifierServiceImpl.buildMessage(mapper.apply(trx), trx.getMerchantId()),
                 "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the Confirm Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)

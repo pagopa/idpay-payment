@@ -369,13 +369,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     private void addExpectedAuthorizationEvent(TransactionResponse trx) {
         TransactionInProgress trxAuth = checkIfStored(trx.getId());
-        //trxAuth.setStatus(SyncTrxStatus.AUTHORIZED);
+        trxAuth.setReward(null);
         expectedAuthorizationNotificationEvents.add(trxAuth);
     }
 
     private void addExpectedAuthorizationEventRejected(TransactionResponse trx) {
         TransactionInProgress trxRejected = checkIfStored(trx.getId());
-        //trxRejected.setStatus(SyncTrxStatus.REJECTED);
+        trxRejected.setReward(null);
         expectedAuthorizationNotificationRejectedEvents.add(trxRejected);
     }
 
