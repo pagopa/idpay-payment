@@ -34,13 +34,13 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     }
 
     @Override
-    public boolean notify(TransactionInProgress trx, String headerValue) {
-       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, headerValue));
+    public boolean notify(TransactionInProgress trx, String key) {
+       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, key));
     }
 
-    public static Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String headerValue) {
+    public static Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
         return MessageBuilder.withPayload(trx)
-                .setHeader(KafkaHeaders.KEY, headerValue)
+                .setHeader(KafkaHeaders.KEY, key)
                 .build();
     }
 }
