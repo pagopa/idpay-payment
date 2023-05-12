@@ -1,7 +1,5 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.payment.connector.event.producer.AuthorizationNotificationProducer;
-import it.gov.pagopa.payment.connector.event.producer.mapper.AuthorizationNotificationMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -30,16 +28,12 @@ class ErrorNotifierServiceTest {
     @Mock
     private StreamBridge streamBridgeMock;
     private ErrorNotifierService errorNotifierService;
-    private final AuthorizationNotificationMapper authorizationNotificationMapper = new AuthorizationNotificationMapper();
 
     @BeforeEach
     void setUp() {
         errorNotifierService = new ErrorNotifierServiceImpl(
                 streamBridgeMock,
                 APP_NAME,
-                BUILDER_MESSAGING_SERVICE,
-                NOTIFICATIONBUILDER,
-                TOPIC,
                 BUILDER_MESSAGING_SERVICE,
                 NOTIFICATIONBUILDER,
                 TOPIC
@@ -57,7 +51,7 @@ class ErrorNotifierServiceTest {
         Mockito.when(streamBridgeMock.send(anyString(), any())).thenReturn(false);
 
         errorNotifierService.notifyAuthPayment(
-                AuthorizationNotificationProducer.buildMessage(authorizationNotificationMapper.map(transaction, authPaymentDTO)),
+                TransactionNotifierServiceImpl.buildMessage(transaction, transaction.getUserId()),
                 "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)
@@ -73,7 +67,7 @@ class ErrorNotifierServiceTest {
         Mockito.when(streamBridgeMock.send(anyString(),any())).thenReturn(false);
 
         errorNotifierService.notifyConfirmPayment(
-                TransactionNotifierServiceImpl.buildMessage(trx),
+                TransactionNotifierServiceImpl.buildMessage(trx, trx.getMerchantId()),
                 "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the Confirm Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)

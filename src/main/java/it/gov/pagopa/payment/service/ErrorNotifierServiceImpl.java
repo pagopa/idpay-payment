@@ -30,10 +30,6 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     private final StreamBridge streamBridge;
     private final String applicationName;
 
-    private final String notificationMessagingServiceType;
-    private final String notificationServer;
-    private final String notificationTopic;
-
     private final String transactionOutcomeMessagingServiceType;
     private final String transactionOutcomeServer;
     private final String transactionOutcomeTopic;
@@ -42,19 +38,11 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
     public ErrorNotifierServiceImpl(StreamBridge streamBridge,
                                     @Value("${spring.application.name}") String applicationName,
 
-                                    @Value("${spring.cloud.stream.binders.kafka-notification.type}") String notificationMessagingServiceType,
-                                    @Value("${spring.cloud.stream.binders.kafka-notification.environment.spring.cloud.stream.kafka.binder.brokers}") String notificationServer,
-                                    @Value("${spring.cloud.stream.bindings.notificationQueue-out-0.destination}") String notificationTopic,
-
                                     @Value("${spring.cloud.stream.binders.transaction-outcome.type}") String transactionOutcomeMessagingServiceType,
                                     @Value("${spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String transactionOutcomeServer,
                                     @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}") String transactionOutcomeTopic) {
         this.streamBridge = streamBridge;
         this.applicationName = applicationName;
-
-        this.notificationMessagingServiceType = notificationMessagingServiceType;
-        this.notificationServer = notificationServer;
-        this.notificationTopic = notificationTopic;
 
         this.transactionOutcomeMessagingServiceType= transactionOutcomeMessagingServiceType;
         this.transactionOutcomeServer = transactionOutcomeServer;
@@ -72,7 +60,7 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService{
 
     @Override
     public boolean notifyAuthPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(notificationMessagingServiceType, notificationServer, notificationTopic, null, message, description, retryable, false, exception);
+        return notify(transactionOutcomeMessagingServiceType, transactionOutcomeServer, transactionOutcomeTopic, null, message, description, retryable, false, exception);
     }
 
     @Override

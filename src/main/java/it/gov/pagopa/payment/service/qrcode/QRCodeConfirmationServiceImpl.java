@@ -55,12 +55,12 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {
         try {
             log.info("[QR_CODE_CONFIRM_PAYMENT][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
-            if (!notifierService.notify(trx)) {
+            if (!notifierService.notify(trx, trx.getMerchantId())) {
                 throw new IllegalStateException("[QR_CODE_CONFIRM_PAYMENT] Something gone wrong while Confirm Payment notify");
             }
         } catch (Exception e) {
             if(!errorNotifierService.notifyConfirmPayment(
-                    TransactionNotifierServiceImpl.buildMessage(trx),
+                    TransactionNotifierServiceImpl.buildMessage(trx, trx.getMerchantId()),
                     "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
                     true,
                     e)
