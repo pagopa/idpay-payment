@@ -40,7 +40,7 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
 
     @Override
     public boolean notify(TransactionInProgress trx, String key) {
-       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(mapper.apply(trx), key));
+       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, key));
     }
 
     @Override

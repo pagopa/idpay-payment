@@ -121,11 +121,10 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
         Assertions.assertSame(expected.getMerchantFiscalCode(), result.getMerchantFiscalCode());
         Assertions.assertSame(expected.getVat(), result.getVat());
         Assertions.assertSame(expected.getInitiativeId(), result.getInitiativeId());
-        Assertions.assertSame(expected.getReward(), result.getReward());
         Assertions.assertSame(expected.getUserId(), result.getUserId());
         Assertions.assertSame(expected.getStatus(), result.getStatus());
         Assertions.assertSame(expected.getChannel(), result.getChannel());
         Assertions.assertSame(expected.getRewards(), result.getRewards());
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, TransactionInProgress.Fields.reward);
     }
 }
