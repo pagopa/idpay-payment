@@ -123,13 +123,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxAuthorized(String id, Long reward, List<String> rejectionReasons) {
+    public void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons) {
         mongoTemplate.updateFirst(
-                Query.query(Criteria.where(Fields.id).is(id)),
+                Query.query(Criteria.where(Fields.id).is(trx.getId())),
                 new Update()
                         .set(Fields.status, SyncTrxStatus.AUTHORIZED)
                         .set(Fields.reward, reward)
-                        .set(Fields.rejectionReasons, rejectionReasons),
+                        .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.rewards, trx.getRewards()),
                 TransactionInProgress.class);
     }
 
