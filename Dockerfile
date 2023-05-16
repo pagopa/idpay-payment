@@ -11,7 +11,7 @@ RUN mvn clean package -DskipTests
 #
 # Docker RUNTIME
 #
-FROM amazoncorretto:17 as runtime
+FROM amazoncorretto:17.0.7 as runtime
 
 VOLUME /tmp
 WORKDIR /app
