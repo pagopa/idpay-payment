@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -16,7 +17,6 @@ import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -71,7 +71,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
     private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationRejectedEvents = Collections.synchronizedSet(new HashSet<>());
     private final Set<TransactionOutcomeDTO> expectedConfirmNotificationEvents= Collections.synchronizedSet(new HashSet<>());
-    private final Set<TransactionInProgress> expectedErrors = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionOutcomeDTO> expectedErrors = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
@@ -82,8 +82,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private TransactionInProgress2TransactionResponseMapper transactionResponseMapper;
     @Autowired
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
-    @Autowired
-    private TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
     @Autowired
     private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
 
@@ -433,7 +431,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
 
         TransactionInProgress authStored = checkIfStored(trxCreated.getId());
-        expectedErrors.add(authStored);
+        expectedErrors.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(authStored));
 
         return authStored;
     }
@@ -531,11 +529,11 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         );
     }
 
-    private void checkConfirmNotificationEvents(Set<TransactionOutcomeDTO> authorizationNotificationDTOS) {
-        assertEquals(expectedConfirmNotificationEvents.size(), authorizationNotificationDTOS.size());
+    private void checkConfirmNotificationEvents(Set<TransactionOutcomeDTO> confirmNotificationDTOS) {
+        assertEquals(expectedConfirmNotificationEvents.size(), confirmNotificationDTOS.size());
         assertEquals(
                 sortConfirmEvents(expectedConfirmNotificationEvents),
-                sortConfirmEvents(authorizationNotificationDTOS)
+                sortConfirmEvents(confirmNotificationDTOS)
         );
     }
 
@@ -545,9 +543,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         List<ConsumerRecord<String,String>> consumerRecords = consumeMessages(topicErrors, expectedNotificationEvents,15000);
         assertEquals(expectedNotificationEvents,consumerRecords.size());
 
-        Set<TransactionInProgress> eventsResult = consumerRecords.stream()
+        Set<TransactionOutcomeDTO> eventsResult = consumerRecords.stream()
                 .map(r -> {
-                    TransactionInProgress out = TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
+                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
                     String expectedKey;
                     String expectedErrorDescription;
 
@@ -564,10 +562,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                     return out;
                 })
                 .collect(Collectors.toSet());
-
         assertEquals(
-                sortAuthorizationEvents(expectedErrors),
-                sortAuthorizationEvents(eventsResult)
+                sortAuthorizationEvents(expectedErrors.stream().filter(i -> SyncTrxStatus.AUTHORIZED.equals(i.getStatus()) && !i.getIdTrxIssuer().contains(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE) && !i.getIdTrxIssuer().contains(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION)).collect(Collectors.toSet())),
+                sortAuthorizationEvents(eventsResult.stream().filter(i -> SyncTrxStatus.AUTHORIZED.equals(i.getStatus())).collect(Collectors.toSet()))
         );
     }
 
