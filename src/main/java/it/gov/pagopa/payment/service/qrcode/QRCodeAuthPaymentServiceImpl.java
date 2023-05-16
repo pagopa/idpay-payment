@@ -3,10 +3,14 @@ package it.gov.pagopa.payment.service.qrcode;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.ErrorNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,14 +22,22 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuthPaymentMapper requestMapper;
+  private final TransactionNotifierService notifierService;
+  private final ErrorNotifierService errorNotifierService;
+  private final TransactionInProgress2TransactionOutcomeDTOMapper mapper;
 
   public QRCodeAuthPaymentServiceImpl(
-      TransactionInProgressRepository transactionInProgressRepository,
-      RewardCalculatorConnector rewardCalculatorConnector,
-      AuthPaymentMapper requestMapper) {
+          TransactionInProgressRepository transactionInProgressRepository,
+          RewardCalculatorConnector rewardCalculatorConnector,
+          AuthPaymentMapper requestMapper,
+          TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService,
+      TransactionInProgress2TransactionOutcomeDTOMapper mapper) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
+    this.notifierService = notifierService;
+    this.errorNotifierService = errorNotifierService;
+    this.mapper = mapper;
   }
 
   @Override
@@ -50,11 +62,16 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
 
       if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
-        transactionInProgressRepository.updateTrxAuthorized(trx.getId(),
+        transactionInProgressRepository.updateTrxAuthorized(trx,
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
       } else {
         transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
       }
+
+      trx.setStatus(authPaymentDTO.getStatus());
+      trx.setReward(authPaymentDTO.getReward());
+      trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
+      sendAuthPaymentNotification(trx);
 
     } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
       authPaymentDTO = requestMapper.transactionMapper(trx);
@@ -65,4 +82,21 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     return authPaymentDTO;
   }
 
+  private void sendAuthPaymentNotification(TransactionInProgress trx) {
+    try {
+      log.info("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] Sending Authorization Payment event to Notification: trxId {} - userId {}", trx.getId(), trx.getUserId());
+      if (!notifierService.notify(trx, trx.getUserId())) {
+        throw new IllegalStateException("[QR_CODE_AUTHORIZE_TRANSACTION] Something gone wrong while Auth Payment notify");
+      }
+    } catch (Exception e) {
+      if(!errorNotifierService.notifyAuthPayment(
+              notifierService.buildMessage(trx, trx.getUserId()),
+              "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(trx.getId(), trx.getUserId()),
+              true,
+              e)
+      ) {
+        log.error("[QR_CODE_AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - userId {}", trx.getId(), trx.getUserId(), e);
+      }
+    }
+  }
 }

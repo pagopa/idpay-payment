@@ -20,25 +20,49 @@ class TransactionInProgress2TransactionResponseMapperTest {
 
   @Test
   void applyTest() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
+            .reward(1000L)
+            .build();
     TransactionResponse result = mapper.apply(trx);
 
     Assertions.assertAll(() -> {
-      Assertions.assertNotNull(result);
-      Assertions.assertEquals(trx.getInitiativeId(), result.getInitiativeId());
-      Assertions.assertEquals(trx.getAcquirerId(), result.getAcquirerId());
-      Assertions.assertEquals(trx.getAmountCents(), result.getAmountCents());
-      Assertions.assertEquals(trx.getAmountCurrency(), result.getAmountCurrency());
-      Assertions.assertEquals(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
-      Assertions.assertEquals(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
-      Assertions.assertEquals(trx.getMcc(), result.getMcc());
-      Assertions.assertEquals(trx.getTrxDate(), result.getTrxDate());
-      Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
-      Assertions.assertEquals(trx.getStatus(), result.getStatus());
-      Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
-      Assertions.assertEquals(trx.getVat(), result.getVat());
+      assertionCommons(trx, result);
+      Assertions.assertFalse(result.getSplitPayment());
     });
 
     TestUtils.checkNotNullFields(result);
   }
+
+  @Test
+  void splitPaymentTrueTest() {
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
+            .reward(200L)
+            .build();
+    TransactionResponse result = mapper.apply(trx);
+
+    Assertions.assertAll(() -> {
+      assertionCommons(trx, result);
+      Assertions.assertTrue(result.getSplitPayment());
+    });
+
+    TestUtils.checkNotNullFields(result);
+  }
+
+  private static void assertionCommons(TransactionInProgress trx, TransactionResponse result) {
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(trx.getInitiativeId(), result.getInitiativeId());
+    Assertions.assertEquals(trx.getAcquirerId(), result.getAcquirerId());
+    Assertions.assertEquals(trx.getAmountCents(), result.getAmountCents());
+    Assertions.assertEquals(trx.getAmountCurrency(), result.getAmountCurrency());
+    Assertions.assertEquals(trx.getIdTrxAcquirer(), result.getIdTrxAcquirer());
+    Assertions.assertEquals(trx.getIdTrxIssuer(), result.getIdTrxIssuer());
+    Assertions.assertEquals(trx.getMcc(), result.getMcc());
+    Assertions.assertEquals(trx.getTrxDate(), result.getTrxDate());
+    Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
+    Assertions.assertEquals(trx.getStatus(), result.getStatus());
+    Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
+    Assertions.assertEquals(trx.getVat(), result.getVat());
+    Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
+  }
+
 }
