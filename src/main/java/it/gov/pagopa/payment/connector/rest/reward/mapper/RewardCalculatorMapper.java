@@ -34,6 +34,7 @@ public class RewardCalculatorMapper {
 
   public AuthPaymentDTO rewardResponseMap(
       AuthPaymentResponseDTO responseDTO, TransactionInProgress transactionInProgress) {
+    transactionInProgress.getRewards().put(responseDTO.getInitiativeId(), responseDTO.getReward());
     return AuthPaymentDTO.builder()
         .id(responseDTO.getTransactionId())
         .reward(

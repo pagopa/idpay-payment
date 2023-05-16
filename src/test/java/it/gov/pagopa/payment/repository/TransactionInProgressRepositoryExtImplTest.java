@@ -29,169 +29,214 @@ import org.springframework.http.HttpStatus;
 @Slf4j
 class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
-    @Autowired
-    protected TransactionInProgressRepository transactionInProgressRepository;
+  @Autowired protected TransactionInProgressRepository transactionInProgressRepository;
 
-    @Autowired
-    protected MongoTemplate mongoTemplate;
+  @Autowired protected MongoTemplate mongoTemplate;
 
-    @AfterEach
-    void clearTestData() {
-        mongoTemplate.findAllAndRemove(
-                new Query(Criteria.where(TransactionInProgress.Fields.id).regex("^MOCKEDTRANSACTION_qr-code_[0-9]+$")),
-                TransactionInProgress.class);
+  @AfterEach
+  void clearTestData() {
+    mongoTemplate.findAllAndRemove(
+        new Query(
+            Criteria.where(TransactionInProgress.Fields.id)
+                .regex("^MOCKEDTRANSACTION_qr-code_[0-9]+$")),
+        TransactionInProgress.class);
+  }
+
+  @Test
+  void createIfExists() {
+
+    TransactionInProgress transactionInProgress =
+        TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    TransactionInProgress transactionInProgressSecond =
+        TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+    transactionInProgressSecond.setTrxCode(transactionInProgress.getTrxCode());
+
+    UpdateResult updatedFirst =
+        transactionInProgressRepository.createIfExists(
+            transactionInProgress, transactionInProgress.getTrxCode());
+    assertNotNull(updatedFirst.getUpsertedId());
+    assertEquals(0L, updatedFirst.getMatchedCount());
+
+    UpdateResult updatedSecond =
+        transactionInProgressRepository.createIfExists(
+            transactionInProgressSecond, transactionInProgress.getTrxCode());
+    assertNull(updatedSecond.getUpsertedId());
+    assertEquals(1L, updatedSecond.getMatchedCount());
+
+    TransactionInProgress result =
+        mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
+    assertNotNull(result);
+    TestUtils.checkNotNullFields(
+        result,
+        "userId",
+        "authDate",
+        "elaborationDateTime",
+        "reward",
+        "rejectionReasons",
+        "rewards");
+  }
+
+  @Test
+  void findByTrxCodeThrottled() {
+    TransactionInProgress notFoundResult =
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("DUMMYID");
+    assertNull(notFoundResult);
+
+    TransactionInProgress transaction =
+        TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transactionInProgressRepository.save(transaction);
+
+    TransactionInProgress result =
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
+            transaction.getTrxCode());
+
+    assertNotNull(result);
+    assertEquals(transaction.getTrxCode(), result.getTrxCode());
+    assertTrue(result.getTrxChargeDate().isAfter(OffsetDateTime.now().minusMinutes(15)));
+    TestUtils.checkNotNullFields(
+        result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards");
+
+    ClientException exception =
+        assertThrows(
+            ClientException.class,
+            () ->
+                transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
+                    "trxcode1"));
+
+    assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
+  }
+
+  @Test
+  void updateTrxAuthorized() {
+    Long reward = 200L;
+    TransactionInProgress transaction =
+        TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID%d".formatted(1));
+    transactionInProgressRepository.save(transaction);
+
+    transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+    TransactionInProgress result =
+        transactionInProgressRepository.findById(transaction.getId()).orElse(null);
+
+    Assertions.assertNotNull(result);
+    TestUtils.checkNotNullFields(
+        result,
+        "authDate",
+        "elaborationDateTime",
+        "reward",
+        "rejectionReasons",
+        "rewards");
+    Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+
+    transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+  }
+
+  @Test
+  void findByTrxCode() {
+
+    TransactionInProgress transactionInProgress =
+        TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+    transactionInProgressRepository.save(transactionInProgress);
+
+    TransactionInProgress resultFirstSave =
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
+    Assertions.assertNotNull(resultFirstSave);
+    TestUtils.checkNotNullFields(
+        resultFirstSave,
+        "userId",
+        "authDate",
+        "elaborationDateTime",
+        "reward",
+        "rejectionReasons",
+        "rewards");
+
+    transactionInProgress.setTrxChargeDate(OffsetDateTime.now().minusMinutes(30));
+    transactionInProgressRepository.save(transactionInProgress);
+
+    TransactionInProgress resultSecondSave =
+        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
+    Assertions.assertNull(resultSecondSave);
+  }
+
+  @Test
+  void updateTrxIdentified() {
+
+    TransactionInProgress transactionInProgress =
+        TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    transactionInProgressRepository.save(transactionInProgress);
+
+    TransactionInProgress resultFirstSave =
+        transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNotNull(resultFirstSave);
+    TestUtils.checkNotNullFields(
+        resultFirstSave,
+        "userId",
+        "authDate",
+        "elaborationDateTime",
+        "reward",
+        "rejectionReasons",
+        "rewards");
+
+    transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1");
+    TransactionInProgress resultSecondSave =
+        transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNotNull(resultSecondSave);
+    TestUtils.checkNotNullFields(
+        resultSecondSave, "authDate", "elaborationDateTime", "reward", "rejectionReasons", "rewards");
+    Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
+    Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
+  }
+
+  @Test
+  void updateTrxRejected() {
+
+    TransactionInProgress transactionInProgress =
+        TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    transactionInProgressRepository.save(transactionInProgress);
+
+    TransactionInProgress resultFirstSave =
+        transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNotNull(resultFirstSave);
+    TestUtils.checkNotNullFields(
+        resultFirstSave,
+        "userId",
+        "authDate",
+        "elaborationDateTime",
+        "reward",
+        "rejectionReasons",
+        "rewards");
+
+    transactionInProgressRepository.updateTrxRejected(
+        "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"));
+    TransactionInProgress resultSecondSave =
+        transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNotNull(resultSecondSave);
+    TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards");
+    Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
+    Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
+  }
+
+  @Test
+  void testFindByIdThrottled() {
+    TransactionInProgress notFoundResult =
+        transactionInProgressRepository.findByIdThrottled("DUMMYID");
+    Assertions.assertNull(notFoundResult);
+
+    TransactionInProgress stored =
+        transactionInProgressRepository.save(
+            TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED));
+    String trxId = stored.getId();
+
+    TransactionInProgress result = transactionInProgressRepository.findByIdThrottled(trxId);
+
+    Assertions.assertEquals(stored, result);
+
+    try {
+      transactionInProgressRepository.findByIdThrottled(trxId);
+      Assertions.fail("Expected exception");
+    } catch (ClientExceptionNoBody e) {
+      Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
     }
-
-    @Test
-    void createIfExists() {
-
-        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1,
-                SyncTrxStatus.CREATED);
-        TransactionInProgress transactionInProgressSecond = TransactionInProgressFaker.mockInstance(2,
-                SyncTrxStatus.CREATED);
-        transactionInProgressSecond.setTrxCode(transactionInProgress.getTrxCode());
-
-        UpdateResult updatedFirst =
-                transactionInProgressRepository.createIfExists(
-                        transactionInProgress, transactionInProgress.getTrxCode());
-        assertNotNull(updatedFirst.getUpsertedId());
-        assertEquals(0L, updatedFirst.getMatchedCount());
-
-        UpdateResult updatedSecond =
-                transactionInProgressRepository.createIfExists(
-                        transactionInProgressSecond, transactionInProgress.getTrxCode());
-        assertNull(updatedSecond.getUpsertedId());
-        assertEquals(1L, updatedSecond.getMatchedCount());
-
-        TransactionInProgress result =
-                mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
-        assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
-    }
-
-    @Test
-    void findByTrxCodeThrottled() {
-        TransactionInProgress notFoundResult = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
-                "DUMMYID");
-        assertNull(notFoundResult);
-
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
-                SyncTrxStatus.IDENTIFIED);
-        transactionInProgressRepository.save(transaction);
-
-        TransactionInProgress result = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
-                transaction.getTrxCode());
-
-        assertNotNull(result);
-        assertEquals(transaction.getTrxCode(), result.getTrxCode());
-        assertTrue(result.getTrxChargeDate().isAfter(OffsetDateTime.now().minusMinutes(15)));
-        TestUtils.checkNotNullFields(result, "userId", "elaborationDateTime", "reward",
-                "rejectionReasons");
-
-        ClientException exception =
-                assertThrows(ClientException.class,
-                        () -> transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("trxcode1"));
-
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
-
-    }
-
-    @Test
-    void updateTrxAuthorized() {
-        Long reward = 200L;
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
-                SyncTrxStatus.IDENTIFIED);
-        transaction.setUserId("USERID%d".formatted(1));
-        transactionInProgressRepository.save(transaction);
-
-        transactionInProgressRepository.updateTrxAuthorized(transaction.getId(), reward, List.of());
-        TransactionInProgress result = transactionInProgressRepository.findById(
-                transaction.getId()).orElse(null);
-
-        Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "authDate", "elaborationDateTime",
-                "reward", "rejectionReasons");
-        Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
-
-        transactionInProgressRepository.updateTrxAuthorized(transaction.getId(), reward, List.of());
-
-    }
-
-    @Test
-    void findByTrxCode() {
-
-        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
-        transactionInProgressRepository.save(transactionInProgress);
-
-        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
-        Assertions.assertNotNull(resultFirstSave);
-        TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
-
-        transactionInProgress.setTrxChargeDate(OffsetDateTime.now().minusMinutes(30));
-        transactionInProgressRepository.save(transactionInProgress);
-
-        TransactionInProgress resultSecondSave = transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
-        Assertions.assertNull(resultSecondSave);
-
-    }
-
-    @Test
-    void updateTrxIdentified() {
-
-        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        transactionInProgressRepository.save(transactionInProgress);
-
-        TransactionInProgress resultFirstSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
-        Assertions.assertNotNull(resultFirstSave);
-        TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
-
-        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1");
-        TransactionInProgress resultSecondSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
-        Assertions.assertNotNull(resultSecondSave);
-        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rejectionReasons");
-        Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
-        Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
-
-    }
-
-    @Test
-    void updateTrxRejected() {
-
-        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        transactionInProgressRepository.save(transactionInProgress);
-
-        TransactionInProgress resultFirstSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
-        Assertions.assertNotNull(resultFirstSave);
-        TestUtils.checkNotNullFields(resultFirstSave, "userId", "authDate", "elaborationDateTime", "reward", "rejectionReasons");
-
-        transactionInProgressRepository.updateTrxRejected(
-                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"));
-        TransactionInProgress resultSecondSave = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
-        Assertions.assertNotNull(resultSecondSave);
-        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward");
-        Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
-        Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
-
-    }
-
-    @Test
-    void testFindByIdThrottled() {
-        TransactionInProgress notFoundResult = transactionInProgressRepository.findByIdThrottled("DUMMYID");
-        Assertions.assertNull(notFoundResult);
-
-        TransactionInProgress stored = transactionInProgressRepository.save(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED));
-        String trxId = stored.getId();
-
-        TransactionInProgress result = transactionInProgressRepository.findByIdThrottled(trxId);
-
-        Assertions.assertEquals(stored, result);
-
-        try {
-            transactionInProgressRepository.findByIdThrottled(trxId);
-            Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
-        }
-    }
+  }
 }
