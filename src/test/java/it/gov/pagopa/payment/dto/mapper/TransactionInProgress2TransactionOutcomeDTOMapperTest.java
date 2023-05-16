@@ -107,7 +107,7 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
         Assertions.assertSame(expected.getTrxDate(), result.getTrxDate());
         Assertions.assertSame(expected.getTrxChargeDate(), result.getTrxChargeDate());
         Assertions.assertSame(expected.getAuthDate(), result.getAuthDate());
-        Assertions.assertSame(expected.getElaborationDateTime(), result.getElaborationDateTime());
+        Assertions.assertEquals(expected.getElaborationDateTime(), result.getElaborationDateTime());
         Assertions.assertSame(expected.getOperationType(), result.getOperationType());
         Assertions.assertSame(expected.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
         Assertions.assertSame(expected.getIdTrxIssuer(), result.getIdTrxIssuer());

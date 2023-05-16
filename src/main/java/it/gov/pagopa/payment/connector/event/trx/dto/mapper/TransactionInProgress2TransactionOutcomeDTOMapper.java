@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.connector.event.trx.dto.mapper;
 
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -38,7 +39,7 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .trxDate(trx.getTrxDate())
         .trxChargeDate(trx.getTrxChargeDate())
         .authDate(trx.getAuthDate())
-        .elaborationDateTime(trx.getElaborationDateTime())
+        .elaborationDateTime((trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) ? trx.getAuthDate() : trx.getElaborationDateTime())
         .operationType(trx.getOperationType())
         .operationTypeTranscoded(trx.getOperationTypeTranscoded())
         .idTrxIssuer(trx.getIdTrxIssuer())
