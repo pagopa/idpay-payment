@@ -322,7 +322,9 @@ public abstract class BaseIntegrationTest {
         if(expectRetryHeader){
             Assertions.assertEquals("1", TestUtils.getHeaderValue(errorMessage, "retry")); // to test if headers are correctly propagated
         }
-        Assertions.assertEquals(normalizePayload(expectedPayload), normalizePayload(errorMessage.value()));
+        if(expectedPayload!=null){
+            Assertions.assertEquals(normalizePayload(expectedPayload), normalizePayload(errorMessage.value()));
+        }
         if(expectedKey!=null) {
             Assertions.assertEquals(expectedKey, errorMessage.key());
         }

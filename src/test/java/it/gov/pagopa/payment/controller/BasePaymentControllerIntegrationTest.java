@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -24,9 +25,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.opentest4j.AssertionFailedError;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
@@ -40,7 +43,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -69,6 +71,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
     private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationRejectedEvents = Collections.synchronizedSet(new HashSet<>());
     private final Set<TransactionOutcomeDTO> expectedConfirmNotificationEvents= Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionOutcomeDTO> expectedErrors = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
@@ -80,9 +83,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     @Autowired
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
     @Autowired
-    private TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
-    @Autowired
     private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
+
+    @SpyBean
+    private TransactionNotifierService transactionNotifierServiceSpy;
 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
@@ -92,6 +96,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         int N = Math.max(useCases.size(), 50);
 
         rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).build());
+
+        configureMocks();
 
         List<? extends Future<?>> tasks = IntStream.range(0, N)
                 .mapToObj(i -> executor.submit(() -> {
@@ -120,7 +126,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         checkNotificationEventsOnTransactionQueue();
 
         //verifying error event notification
-        //checkErrorNotificationEvents(); TODO complete error publisher useCase
+        checkErrorNotificationEvents();
     }
 
     /** Controller's channel */
@@ -195,6 +201,35 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertNotNull(stored);
         return stored;
     }
+
+    public static final String IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE = "AUTHNOTNOTIFIEDDUETOFALSE";
+    public static final String IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION = "AUTHNOTNOTIFIEDDUETOEXCEPTION";
+    public static final String IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE = "CONFIRMNOTNOTIFIEDDUETOFALSE";
+    public static final String IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION = "CONFIRMNOTNOTIFIEDDUETOEXCEPTION";
+
+
+    protected void configureMocks(){
+        Mockito.doReturn(false).when(transactionNotifierServiceSpy)
+                .notify(Mockito.argThat(arg->
+                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE) &&
+                                SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
+                        ||
+                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE) &&
+                                SyncTrxStatus.REWARDED.equals(arg.getStatus()))
+                        ),
+                        Mockito.any());
+
+        Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(transactionNotifierServiceSpy)
+                .notify(Mockito.argThat(arg->
+                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION) &&
+                                SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
+                        ||
+                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION) &&
+                                SyncTrxStatus.REWARDED.equals(arg.getStatus()))
+                        ),
+                        Mockito.any());
+    }
+
 
     {
         // useCase 0: initiative not existent
@@ -367,8 +402,50 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
         });
 
-        //andare a verificare il messaggio è presente correttamente
+        // useCase 6: an error occurred when publishing authorized event, returned false
+        useCases.add(i-> configureAuthEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE));
+
+        // useCase 7: an error occurred when publishing authorized event, throwing error
+        useCases.add(i-> configureAuthEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION));
+
+        // useCase 8: an error occurred when publishing confirmed event, returned false
+        useCases.add(i-> configureConfirmEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE));
+
+        // useCase 9: an error occurred when publishing confirmed event, throwing error
+        useCases.add(i-> configureConfirmEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
+
         useCases.addAll(getExtraUseCases());
+    }
+
+    private TransactionInProgress configureAuthEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
+        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+        trxRequest.setInitiativeId(INITIATIVEID);
+        trxRequest.setIdTrxIssuer("%s_%s".formatted(idTrxIssuerPrefix, trxRequest.getIdTrxIssuer()));
+
+        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+        extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+
+        AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+        assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
+
+        TransactionInProgress authStored = checkIfStored(trxCreated.getId());
+        expectedErrors.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(authStored));
+
+        return authStored;
+    }
+
+    private void configureConfirmEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
+        TransactionInProgress trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
+
+        TransactionResponse trxResponse = transactionResponseMapper.apply(trx);
+
+        addExpectedAuthorizationEvent(trxResponse);
+
+        AuthPaymentDTO confirmResult = extractResponse(confirmPayment(trxResponse, MERCHANTID, ACQUIRERID), HttpStatus.OK, AuthPaymentDTO.class);
+        assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
+
+        trx.setStatus(SyncTrxStatus.REWARDED);
     }
 
     private void addExpectedAuthorizationEvent(TransactionResponse trx) {
@@ -451,38 +528,45 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         );
     }
 
-    private void checkConfirmNotificationEvents(Set<TransactionOutcomeDTO> authorizationNotificationDTOS) {
-        assertEquals(expectedConfirmNotificationEvents.size(), authorizationNotificationDTOS.size());
+    private void checkConfirmNotificationEvents(Set<TransactionOutcomeDTO> confirmNotificationDTOS) {
+        assertEquals(expectedConfirmNotificationEvents.size(), confirmNotificationDTOS.size());
         assertEquals(
                 sortConfirmEvents(expectedConfirmNotificationEvents),
-                sortConfirmEvents(authorizationNotificationDTOS)
+                sortConfirmEvents(confirmNotificationDTOS)
         );
     }
-    /*
+
     private void checkErrorNotificationEvents() {
-        int expectedNotificationEvents = expectedAuthorizationNotificationRejectedEvents.size();
-        Map<String, TransactionInProgress> trxId2AuthEvent = expectedAuthorizationNotificationEvents.stream()
-                .collect(Collectors.toMap(TransactionInProgress::getId, Function.identity()));
+        int expectedNotificationEvents = expectedErrors.size();
+
         List<ConsumerRecord<String,String>> consumerRecords = consumeMessages(topicErrors, expectedNotificationEvents,15000);
         assertEquals(expectedNotificationEvents,consumerRecords.size());
 
-        Set<TransactionInProgress> eventsResult = consumerRecords.stream()
+        Set<TransactionOutcomeDTO> eventsResult = consumerRecords.stream()
                 .map(r -> {
-                    TransactionInProgress out = TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
-                    assertEquals(out.getUserId(), r.key());
-                    checkAuthorizationDateTime(trxId2AuthEvent, out);
-                    checkErrorMessageHeaders(topicConfirmNotification, null, r, "TODO", "TODO", out.getUserId());
+                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    String expectedKey;
+                    String expectedErrorDescription;
+
+                    if(SyncTrxStatus.AUTHORIZED.equals(out.getStatus())){
+                        expectedKey=out.getUserId();
+                        expectedErrorDescription = "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(out.getId(), out.getUserId());
+                    } else {
+                        expectedKey= out.getMerchantId();
+                        expectedErrorDescription= "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(out.getId(), out.getMerchantId(), out.getAcquirerId());
+                    }
+
+                    checkErrorMessageHeaders(topicConfirmNotification, null, r, expectedErrorDescription, null, expectedKey, false, false);
 
                     return out;
                 })
                 .collect(Collectors.toSet());
-
         assertEquals(
-                sortAuthorizationEvents(expectedAuthorizationNotificationEvents),
-                sortAuthorizationEvents(eventsResult)
+                sortAuthorizationEvents(expectedErrors.stream().filter(i -> SyncTrxStatus.AUTHORIZED.equals(i.getStatus()) && !i.getIdTrxIssuer().contains(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE) && !i.getIdTrxIssuer().contains(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION)).collect(Collectors.toSet())),
+                sortAuthorizationEvents(eventsResult.stream().filter(i -> SyncTrxStatus.AUTHORIZED.equals(i.getStatus())).collect(Collectors.toSet()))
         );
     }
-*/
+
     private void checkAuthorizationDateTime(Map<String, TransactionInProgress> trxId2AuthEvent, TransactionInProgress out) {
         TransactionInProgress expectedEvent = trxId2AuthEvent.get(out.getId());
         Assertions.assertNotNull(expectedEvent);
