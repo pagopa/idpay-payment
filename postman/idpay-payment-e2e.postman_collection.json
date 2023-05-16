@@ -1,0 +1,2633 @@
+{
+	"info": {
+		"_postman_id": "e796a500-4434-4313-aaa4-2640d84c5a30",
+		"name": "IDPay Payment - e2e",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21434036"
+	},
+	"item": [
+		{
+			"name": "Happy case",
+			"item": [
+				{
+					"name": "Generate Token IO",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Happy case: Retrieve Token', () => {\r",
+									"    //verify response HTTP status \r",
+									"    pm.response.to.have.status(200);\r",
+									"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "",
+								"type": "default"
+							},
+							{
+								"key": "Ocp-Apim-Trace",
+								"value": "{{Ocp-Apim-Trace}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"bpd",
+								"pagopa",
+								"api",
+								"v1",
+								"login"
+							],
+							"query": [
+								{
+									"key": "fiscalCode",
+									"value": "{{CF_1}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[ACQUIRER] Create Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Happy case: [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+									"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);\r",
+									"pm.collectionVariables.set(\"userId\", pm.response.json().userId);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"let moment = require('moment');\r",
+									"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+									"\r",
+									"pm.collectionVariables.set(\"trxDate\", today);\r",
+									"\r",
+									"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+									"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{apimSubscriptionKeyAcquirer}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "Ocp-Apim-Subscription-Key",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Trace",
+								"value": "true",
+								"type": "text"
+							},
+							{
+								"key": "x-merchant-id",
+								"value": "{{x-merchant-id}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"idpay",
+								"payment",
+								"qr-code",
+								"merchant",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[IO] Pre-Authorize Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Happy case: [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tokenIO}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"idpay",
+								"payment",
+								"qr-code",
+								":trxCode",
+								"relate-user"
+							],
+							"variable": [
+								{
+									"key": "trxCode",
+									"value": "{{trxCode}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[IO] Authorize Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{tokenIO}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"idpay",
+								"payment",
+								"qr-code",
+								":trxCode",
+								"authorize"
+							],
+							"variable": [
+								{
+									"key": "trxCode",
+									"value": "{{trxCode}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "[ACQUIRER] Confirm Transaction",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Happy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "apikey",
+							"apikey": [
+								{
+									"key": "value",
+									"value": "{{apimSubscriptionKeyAcquirer}}",
+									"type": "string"
+								},
+								{
+									"key": "key",
+									"value": "Ocp-Apim-Subscription-Key",
+									"type": "string"
+								},
+								{
+									"key": "in",
+									"value": "header",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "x-merchant-id",
+								"value": "{{x-merchant-id}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"idpay",
+								"payment",
+								"qr-code",
+								"merchant",
+								":transactionId",
+								"confirm"
+							],
+							"variable": [
+								{
+									"key": "transactionId",
+									"value": "{{transactionId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Unhappy case",
+			"item": [
+				{
+					"name": "QRCode Create transaction",
+					"item": [
+						{
+							"name": "Initiative not found - 404",
+							"item": [
+								{
+									"name": "[ACQUIRER] Create Transaction - Initiative not found (404)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE]- Response status is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"DUMMYINITIATIVE\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "QRCode Pre-Authorize Transaction",
+					"item": [
+						{
+							"name": "TokenIO not valid - 401",
+							"item": [
+								{
+									"name": "[ACQUIRER] Create Transaction - TokenIO not valid (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [PRE_AUTH_TRX][TOKENIO_NOT_VALID][STEP_1][ACQUIRER] Create transaction [QR-CODE] Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE1\",\r\n    \"vat\" : \"VAT1\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER1\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC1\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - TokenIO not valid (401)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case:[PRE_AUTH_TRX][TOKENIO_NOT_VALID][STEP_2][IO] Pre-Authorize transaction with tokenIO not valid [QR-CODE] - Response status is 401\", function () {\r",
+													"    pm.response.to.have.status(401);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "DUMMYTOKENIO",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Another User Related Transaction - 403",
+							"item": [
+								{
+									"name": "Generate TokenIO - Another user related(200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [PRE_AUTH_TRX][OTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - Another user realted (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [PRE_AUTH_TRX][OTHER_USER_RELATED][STEP_2][ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Generate TokenIO - Another user related second user(200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [PRE_AUTH_TRX][OTHER_USER_RELATED][STEP_3] Retrieve Token for second user- Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_2}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_2}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - Another user realted (403)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [PRE_AUTH_TRX][OTHER_USER_RELATED][STEP_4][IO] Pre-Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
+													"    pm.response.to.have.status(403);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-user-id",
+												"value": "DUMMYUSERID",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Transaction not found - 404",
+							"item": [
+								{
+									"name": "Generate TokenIO - Transaction not found (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [PRE_AUTH_TRX][TRX_NOT_FOUND][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - Transaction not found (404)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [PRE_AUTH_TRX][TRX_NOT_FOUND][STEP_1] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "DUMMYTRXCODE"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "QRCode Authorize Transaction",
+					"item": [
+						{
+							"name": "Status not IDENTIFIED / AUTHORIZED - 400",
+							"item": [
+								{
+									"name": "Generate Token IO - Status not expected (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [AUTH_TRX][STATUS_NOT_EXPECTED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - Status not expected (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [AUTH_TRX][STATUS_NOT_EXPECTED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);\r",
+													"pm.collectionVariables.set(\"userId\", pm.response.json().userId);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction - Status not expected (400)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [AUTH_TRX][STATUS_NOT_EXPECTED][STEP_3][IO] Authorize transaction [QR-CODE] - Response status is 400\", function () {\r",
+													"    pm.response.to.have.status(400);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Another user related - 403",
+							"item": [
+								{
+									"name": "Generate Token IO - Authorize another user related (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [AUTH_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - Authorize another user related (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [AUTH_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);\r",
+													"pm.collectionVariables.set(\"userId\", pm.response.json().userId);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - Authorize another user related (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [AUTH_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Generate Token IO - Authorize another user: token for second user (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [AUTH_TRX][ANOTHER_USER_RELATED][STEP_4] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_2}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_2}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction - Authorize another user related (403)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [AUTH_TRX][ANOTHER_USER_RELATED][STEP_5] [IO] Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
+													"    pm.response.to.have.status(403);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Transaction not found - 404",
+							"item": [
+								{
+									"name": "Generate Token IO - Authorize transaction not found (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [AUTH_TRX][TRX_NOT_FOUND][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction - Authorize transaction not found (404)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [AUTH_TRX][TRX_NOT_FOUND][STEP_2] [IO] Authorize transaction [QR-CODE] - Response status is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "DUMMYTRXCODE"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				},
+				{
+					"name": "QRCode Confirm Transaction",
+					"item": [
+						{
+							"name": "Transaction status not AUTHORIZED - 400",
+							"item": [
+								{
+									"name": "Generate Token IO - Confirm transaction: status not authorized (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [CONFIRM_TRX][TRX_STATUS_NOT_AUTHORIZED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction  - Confirm transaction: status not authorized (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_STATUS_NOT_AUTHORIZED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Confirm Transaction - Confirm transaction: status not authorized (400)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_STATUS_NOT_AUTHORIZED][STEP_3] [ACQUIRER] Confirm transaction [QR-CODE] - Response status is 400\", function () {\r",
+													"    pm.response.to.have.status(400);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												":transactionId",
+												"confirm"
+											],
+											"variable": [
+												{
+													"key": "transactionId",
+													"value": "{{transactionId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Another merchant related transaction - 403",
+							"item": [
+								{
+									"name": "Generate Token IO - Confirm transaction: another user related (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - Confirm transaction: another user related (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - Confirm transaction: another user related (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction - Confirm transaction: another user related (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_4] [IO] Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Confirm Transaction - Confirm transaction for second user: another user related (403)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_5] [ACQUIRER] Confirm transaction [QR-CODE] - Response status is 403\", function () {\r",
+													"    pm.response.to.have.status(403);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-merchant-id",
+												"value": "DUMMYMERCHANTID",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												":transactionId",
+												"confirm"
+											],
+											"variable": [
+												{
+													"key": "transactionId",
+													"value": "{{transactionId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Transaction not found - 404",
+							"item": [
+								{
+									"name": "[ACQUIRER] Confirm Transaction - Confirm transaction: transaction not found (404)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_NOT_FOUND] [ACQUIRER] Confirm transaction [QR-CODE] - Response status is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												":transactionId",
+												"confirm"
+											],
+											"variable": [
+												{
+													"key": "transactionId",
+													"value": "DUMMYTRXID"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Transaction alredy processed - 404",
+							"item": [
+								{
+									"name": "Generate Token IO - Confirm transaction: transaction already processed (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Unhappy case: [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"bpd",
+												"pagopa",
+												"api",
+												"v1",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - Confirm transaction: transaction already processed (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"pm.collectionVariables.set(\"x-merchant-id\",`MERCHANTID{{randomNum}}`);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"merchantFiscalCode\" : \"MERCHANTFISCALCODE{{randomNum}}\",\r\n    \"vat\" : \"VAT{{randomNum}}\",\r\n    \"idTrxIssuer\": \"IDTRXISSUER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"2000\",\r\n    \"mcc\" : \"MCC{{randomNum}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - Confirm transaction: transaction already processed (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction - Confirm transaction: transaction already processed (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_4] [IO] Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Confirm Transaction - Confirm transaction 1: transaction already processed (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_5] [ACQUIRER] Confirm transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												":transactionId",
+												"confirm"
+											],
+											"variable": [
+												{
+													"key": "transactionId",
+													"value": "{{transactionId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Confirm Transaction - Confirm transaction 2: transaction already processed (404)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Unhappy case: [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_6] [ACQUIRER] Confirm transaction [QR-CODE] - Response status is 404\", function () {\r",
+													"    pm.response.to.have.status(404);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "apikey",
+											"apikey": [
+												{
+													"key": "value",
+													"value": "{{apimSubscriptionKeyAcquirer}}",
+													"type": "string"
+												},
+												{
+													"key": "key",
+													"value": "Ocp-Apim-Subscription-Key",
+													"type": "string"
+												},
+												{
+													"key": "in",
+													"value": "header",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "x-merchant-id",
+												"value": "{{x-merchant-id}}",
+												"type": "text"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/merchant/:transactionId/confirm",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												"merchant",
+												":transactionId",
+												"confirm"
+											],
+											"variable": [
+												{
+													"key": "transactionId",
+													"value": "{{transactionId}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "trxCode",
+			"value": ""
+		},
+		{
+			"key": "transactionId",
+			"value": ""
+		},
+		{
+			"key": "initiativeId",
+			"value": "64411c692e831a0b3e1bdb39",
+			"type": "string"
+		},
+		{
+			"key": "trxDate",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "tokenIO",
+			"value": ""
+		},
+		{
+			"key": "randomNum",
+			"value": ""
+		},
+		{
+			"key": "x-merchant-id",
+			"value": ""
+		}
+	]
+}
