@@ -414,7 +414,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         // useCase 9: an error occurred when publishing confirmed event, throwing error
         useCases.add(i-> configureConfirmEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
 
-        //andare a verificare il messaggio è presente correttamente
         useCases.addAll(getExtraUseCases());
     }
 
