@@ -66,6 +66,11 @@ microservice-chart:
       KAFKA_ERRORS_TOPIC: idpay_error_topic
       KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
+  fileConfigExternals:
+    create: true
+    configMaps:
+      - name: applicationinsights
+        key: applicationinsights.json
 
   envSecret:
     MONGODB_URI: mongodb-connection-string
