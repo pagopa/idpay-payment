@@ -12,6 +12,7 @@
             "Current Thread Count",
             "GC Total Time",
             "GC Total Count",
+            "% Of Max Heap Memory Used",
             "HeartbeatState",
             "http.server.response.size",
             "http.server.request.size",
