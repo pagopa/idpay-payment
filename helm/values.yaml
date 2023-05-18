@@ -67,7 +67,7 @@ microservice-chart:
       KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
 
-  externalsConfigMap:
+  externalConfigMap:
     create: true
     configMaps:
       - name: appinsights-config
