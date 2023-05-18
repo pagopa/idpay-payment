@@ -69,7 +69,7 @@ microservice-chart:
   fileConfigExternals:
     create: true
     configMaps:
-      - name: applicationinsights
+      - name: appinsights-config
         key: applicationinsights.json
 
   envSecret:
