@@ -67,12 +67,6 @@ microservice-chart:
       KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
 
-  externalConfigMap:
-    create: true
-    configMaps:
-      - name: appinsights-config
-        key: applicationinsights.json
-
   envSecret:
     MONGODB_URI: mongodb-connection-string
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
@@ -83,3 +77,9 @@ microservice-chart:
   # tolerations: []
 
   # affinity: {}
+
+  externalConfigMap:
+    create: true
+    configMaps:
+      - name: appinsights-config
+        key: applicationinsights.json
