@@ -8,7 +8,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierServiceImpl;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,13 +21,15 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
     private final TransactionInProgress2TransactionResponseMapper mapper;
     private final TransactionNotifierService notifierService;
     private final ErrorNotifierService errorNotifierService;
+    private final AuditUtilities auditUtilities;
 
     public QRCodeConfirmationServiceImpl(TransactionInProgressRepository repository, TransactionInProgress2TransactionResponseMapper mapper,
-        TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService) {
+                                         TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService, AuditUtilities auditUtilities) {
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
         this.errorNotifierService= errorNotifierService;
+        this.auditUtilities = auditUtilities;
     }
 
     @Override
@@ -49,6 +51,8 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
         sendConfirmPaymentNotification(trx);
 
         repository.deleteById(trxId);
+
+        auditUtilities.logConfirmedPayment(trx.getUserId(), trx.getInitiativeId(), trx.getTrxCode(), trx.getReward(), trx.getRejectionReasons());
 
         return mapper.apply(trx);
     }

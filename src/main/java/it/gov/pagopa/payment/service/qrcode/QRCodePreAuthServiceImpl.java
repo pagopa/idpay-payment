@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.exception.TransactionSynchronousException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +18,14 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
+  private final AuditUtilities auditUtilities;
 
   public QRCodePreAuthServiceImpl(
-      TransactionInProgressRepository transactionInProgressRepository,
-      RewardCalculatorConnector rewardCalculatorConnector) {
+          TransactionInProgressRepository transactionInProgressRepository,
+          RewardCalculatorConnector rewardCalculatorConnector, AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
+    this.auditUtilities = auditUtilities;
   }
 
   @Override
@@ -62,6 +65,9 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
       preview.setStatus(SyncTrxStatus.IDENTIFIED);
       transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
     }
+
+    auditUtilities.logRelatedUserToTransaction(userId, trx.getInitiativeId(), trxCode);
+
     return preview;
   }
 }

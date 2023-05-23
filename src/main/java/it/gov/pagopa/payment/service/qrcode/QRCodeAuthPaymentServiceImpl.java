@@ -10,7 +10,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierServiceImpl;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -25,19 +25,21 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionNotifierService notifierService;
   private final ErrorNotifierService errorNotifierService;
   private final TransactionInProgress2TransactionOutcomeDTOMapper mapper;
+  private final AuditUtilities auditUtilities;
 
   public QRCodeAuthPaymentServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuthPaymentMapper requestMapper,
           TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService,
-      TransactionInProgress2TransactionOutcomeDTOMapper mapper) {
+          TransactionInProgress2TransactionOutcomeDTOMapper mapper, AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
     this.notifierService = notifierService;
     this.errorNotifierService = errorNotifierService;
     this.mapper = mapper;
+    this.auditUtilities = auditUtilities;
   }
 
   @Override
@@ -79,6 +81,9 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       throw new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "ERROR STATUS",
           String.format("The transaction's status is %s", trx.getStatus()));
     }
+
+    auditUtilities.logAuthorizedPayment(userId, authPaymentDTO.getInitiativeId(), trxCode, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+
     return authPaymentDTO;
   }
 

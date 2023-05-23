@@ -21,6 +21,7 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,8 @@ class QRCodeCreationServiceTest {
 
   @Mock TrxCodeGenUtil trxCodeGenUtil;
 
+  @Mock AuditUtilities auditUtilities;
+
   QRCodeCreationService qrCodeCreationService;
 
   @BeforeEach
@@ -58,7 +61,8 @@ class QRCodeCreationServiceTest {
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
             transactionInProgressRepository,
-            trxCodeGenUtil);
+            trxCodeGenUtil,
+            auditUtilities);
   }
 
   @Test

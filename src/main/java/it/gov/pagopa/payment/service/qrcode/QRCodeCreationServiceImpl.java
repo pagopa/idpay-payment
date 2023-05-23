@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
   private final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TrxCodeGenUtil trxCodeGenUtil;
+  private final AuditUtilities auditUtilities;
 
   public QRCodeCreationServiceImpl(
       TransactionInProgress2TransactionResponseMapper
@@ -32,7 +34,8 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
           transactionCreationRequest2TransactionInProgressMapper,
       RewardRuleRepository rewardRuleRepository,
       TransactionInProgressRepository transactionInProgressRepository,
-      TrxCodeGenUtil trxCodeGenUtil) {
+      TrxCodeGenUtil trxCodeGenUtil,
+      AuditUtilities auditUtilities) {
     this.transactionInProgress2TransactionResponseMapper =
         transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
@@ -40,6 +43,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
     this.rewardRuleRepository = rewardRuleRepository;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.trxCodeGenUtil = trxCodeGenUtil;
+    this.auditUtilities = auditUtilities;
   }
 
   @Override
@@ -63,6 +67,9 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
         transactionCreationRequest2TransactionInProgressMapper.apply(
             trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer);
     generateTrxCodeAndSave(trx);
+
+    auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getTrxCode());
+
     return transactionInProgress2TransactionResponseMapper.apply(trx);
   }
 
