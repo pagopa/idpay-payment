@@ -68,7 +68,6 @@ import org.springframework.test.web.servlet.MockMvc;
                 "de.flapdoodle.mongodb.embedded.version=4.0.21",
                 // endregion
 
-
                 //region wiremock
                 "logging.level.WireMock=ERROR",
                 "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}",
