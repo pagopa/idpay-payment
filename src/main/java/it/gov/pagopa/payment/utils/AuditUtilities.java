@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 @Slf4j(topic = "AUDIT")
 public class AuditUtilities {
-    private static final String SRCIP;
+    public static final String SRCIP;
 
     static {
         String srcIp;
@@ -44,26 +44,26 @@ public class AuditUtilities {
         );
     }
 
-    public void logRelatedUserToTransaction(String userId, String initiativeId, String trxCode) {
+    public void logRelatedUserToTransaction(String initiativeId, String trxCode, String userId) {
         logAuditString(
                 CEF_PATTERN_USER,
-                "User related to transaction", userId, initiativeId, trxCode
+                "User related to transaction", initiativeId, trxCode, userId
         );
     }
 
     //TODO do i need to log only the reward?
-    public void logAuthorizedPayment(String userId, String initiativeId, String trxCode, Long reward, List<String> rejectionReasons) {
+    public void logAuthorizedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         logAuditString(
                 CEF_PATTERN_REWARD_REJECIONS,
-                "User authorized the transaction", userId, initiativeId, trxCode, reward.toString(), rejectionReasons.toString()
+                "User authorized the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString()
         );
     }
 
     //TODO do i need to log only the reward?
-    public void logConfirmedPayment(String userId, String initiativeId, String trxCode, Long reward, List<String> rejectionReasons) {
+    public void logConfirmedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         logAuditString(
                 CEF_PATTERN_REWARD_REJECIONS,
-                "Merchant confirmed the transaction", userId, initiativeId, trxCode, reward.toString(), rejectionReasons.toString()
+                "Merchant confirmed the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString()
         );
     }
 }

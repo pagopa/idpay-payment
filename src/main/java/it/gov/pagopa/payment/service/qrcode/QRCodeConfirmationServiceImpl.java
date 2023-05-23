@@ -52,7 +52,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
         repository.deleteById(trxId);
 
-        auditUtilities.logConfirmedPayment(trx.getUserId(), trx.getInitiativeId(), trx.getTrxCode(), trx.getReward(), trx.getRejectionReasons());
+        auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons());
 
         return mapper.apply(trx);
     }

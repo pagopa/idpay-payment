@@ -66,7 +66,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
       transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
     }
 
-    auditUtilities.logRelatedUserToTransaction(userId, trx.getInitiativeId(), trxCode);
+    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trxCode, userId);
 
     return preview;
   }

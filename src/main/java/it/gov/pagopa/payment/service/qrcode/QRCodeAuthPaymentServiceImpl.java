@@ -82,7 +82,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
           String.format("The transaction's status is %s", trx.getStatus()));
     }
 
-    auditUtilities.logAuthorizedPayment(userId, authPaymentDTO.getInitiativeId(), trxCode, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+    auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
 
     return authPaymentDTO;
   }
