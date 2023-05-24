@@ -78,7 +78,7 @@ microservice-chart:
 
   # affinity: {}
 
-  externalConfigMap:
+  externalConfigMapFiles:
     create: true
     configMaps:
       - name: appinsights-config
