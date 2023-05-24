@@ -1,0 +1,6 @@
+dependencies:
+- name: microservice-chart
+  repository: https://pagopa.github.io/aks-microservice-chart-blueprint
+  version: 4.0.0
+digest: sha256:8aa3641696a84ae2a4f5e3c7cddd8e2d206756fdcf8af004ee0d203284a73962
+generated: "2023-05-24T15:13:48.348031+02:00"
