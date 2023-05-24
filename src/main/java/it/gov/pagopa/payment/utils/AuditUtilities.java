@@ -26,8 +26,7 @@ public class AuditUtilities {
         SRCIP = srcIp;
     }
 
-    //TODO reformat text field
-    private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Wallet dstip=%s", SRCIP);
+    private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Payment dstip=%s", SRCIP);
     private static final String CEF_BASE_PATTERN = CEF + " msg={}";
     private static final String CEF_PATTERN = CEF_BASE_PATTERN + " cs1Label=initiativeId cs1={} cs2Label=trxCode cs2={}";
     private static final String CEF_PATTERN_USER = CEF_PATTERN + " suser={}";
@@ -51,7 +50,6 @@ public class AuditUtilities {
         );
     }
 
-    //TODO do i need to log only the reward?
     public void logAuthorizedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         logAuditString(
                 CEF_PATTERN_REWARD_REJECIONS,
@@ -59,7 +57,6 @@ public class AuditUtilities {
         );
     }
 
-    //TODO do i need to log only the reward?
     public void logConfirmedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         logAuditString(
                 CEF_PATTERN_REWARD_REJECIONS,
