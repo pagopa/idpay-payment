@@ -87,7 +87,7 @@ logging:
         boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
         data: ${LOG_LEVEL_SPRING_DATA:INFO}
       apache:
-        kafka: ${LOG_LEVEL_KAFKA:warn}
+        kafka: ${LOG_LEVEL_KAFKA:WARN}
     root: ${LOG_LEVEL_ROOT:INFO}
     it:
       gov:
