@@ -53,24 +53,29 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String merchantId,
       String acquirerId,
       String idTrxAcquirer) {
-    if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
-      log.info(
-          "[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]",
-          trxCreationRequest.getInitiativeId());
-      throw new ClientExceptionWithBody(
-          HttpStatus.NOT_FOUND,
-          "NOT FOUND",
-          "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
+    try {
+      if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
+        log.info(
+                "[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]",
+                trxCreationRequest.getInitiativeId());
+        throw new ClientExceptionWithBody(
+                HttpStatus.NOT_FOUND,
+                "NOT FOUND",
+                "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
+      }
+
+      TransactionInProgress trx =
+              transactionCreationRequest2TransactionInProgressMapper.apply(
+                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer);
+      generateTrxCodeAndSave(trx);
+
+      auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getTrxCode(), merchantId);
+
+      return transactionInProgress2TransactionResponseMapper.apply(trx);
+    } catch (RuntimeException e) {
+      auditUtilities.logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
+      throw e;
     }
-
-    TransactionInProgress trx =
-        transactionCreationRequest2TransactionInProgressMapper.apply(
-            trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer);
-    generateTrxCodeAndSave(trx);
-
-    auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getTrxCode(), merchantId);
-
-    return transactionInProgress2TransactionResponseMapper.apply(trx);
   }
 
   private void generateTrxCodeAndSave(TransactionInProgress trx) {

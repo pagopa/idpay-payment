@@ -34,6 +34,9 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_USER = CEF_PATTERN_TRXCODE + " suser={}";
     private static final String CEF_PATTERN_REWARD_REJECIONS = CEF_PATTERN_USER + " cs3Label=reward cs3={} cs4Label=rejectionReasons cs4={}";
     private static final String CEF_PATTERN_REWARD_REJECIONS_MERCHANTID = CEF_PATTERN_USER + " cs3Label=reward cs3={} cs4Label=rejectionReasons cs4={} cs5Label=merchantId cs5={}";
+    private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
+    private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
+    private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
 
     private void logAuditString(String pattern, String... parameters) {
         log.info(pattern, (Object[]) parameters);
@@ -64,6 +67,31 @@ public class AuditUtilities {
         logAuditString(
                 CEF_PATTERN_REWARD_REJECIONS_MERCHANTID,
                 "Merchant confirmed the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
+        );
+    }
+
+    public void logErrorCreatedTransaction(String initiativeId, String merchantId) {
+        logAuditString(
+                CEF_PATTERN_INITIATIVE_MERCHANTID,
+                "Transaction created - KO", initiativeId, merchantId
+        );
+    }
+    public void logErrorRelatedUserToTransaction(String trxCode, String userId) {
+        logAuditString(
+                CEF_PATTERN_TRXCODE_USERID,
+                "User related to transaction - KO", trxCode, userId
+        );
+    }
+    public void logErrorAuthorizedPayment(String trxCode, String userId) {
+        logAuditString(
+                CEF_PATTERN_TRXCODE_USERID,
+                "User authorized the transaction - KO", trxCode, userId
+        );
+    }
+    public void logErrorConfirmedPayment(String trxId, String merchantId) {
+        logAuditString(
+                CEF_PATTERN_TRXID_MERCHANTID,
+                "Merchant confirmed the transaction - KO", trxId, merchantId
         );
     }
 }

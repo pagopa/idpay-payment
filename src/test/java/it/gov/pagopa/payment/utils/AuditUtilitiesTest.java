@@ -18,6 +18,7 @@ class AuditUtilitiesTest {
     private static final String USER_ID = "TEST_USER_ID";
     private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
     public static final long REWARD = 0L;
+    public static final String TRX_ID = "TEST_TRX_ID";
     private final AuditUtilities auditUtilities = new AuditUtilities();
     private MemoryAppender memoryAppender;
 
@@ -77,6 +78,55 @@ class AuditUtilitiesTest {
                 CEF + " msg=Merchant confirmed the transaction"
                         + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s suser=%s cs3Label=reward cs3=%s cs4Label=rejectionReasons cs4=%s cs5Label=merchantId cs5=%s"
                         .formatted(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, "[]", MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorCreateTransaction() {
+        auditUtilities.logErrorCreatedTransaction(INITIATIVE_ID, MERCHANT_ID);
+
+        assertEquals(
+                CEF + " msg=Transaction created - KO"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=merchantId cs2=%s"
+                        .formatted(INITIATIVE_ID, MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorRelatedUserToTransaction() {
+        auditUtilities.logErrorRelatedUserToTransaction(TRX_CODE, USER_ID);
+
+        assertEquals(
+                CEF + " msg=User related to transaction - KO"
+                        + " cs1Label=trxCode cs1=%s suser=%s"
+                        .formatted(TRX_CODE, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorAuthorizedPayment() {
+        auditUtilities.logErrorAuthorizedPayment(TRX_CODE, USER_ID);
+
+        assertEquals(
+                CEF + " msg=User authorized the transaction - KO"
+                        + " cs1Label=trxCode cs1=%s suser=%s"
+                        .formatted(TRX_CODE, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorConfirmedPayment() {
+        auditUtilities.logErrorConfirmedPayment(TRX_ID, MERCHANT_ID);
+
+
+        assertEquals(
+                CEF + " msg=Merchant confirmed the transaction - KO"
+                        + " cs1Label=trxId cs1=%s cs2Label=merchantId cs2=%s"
+                        .formatted(TRX_ID, MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }

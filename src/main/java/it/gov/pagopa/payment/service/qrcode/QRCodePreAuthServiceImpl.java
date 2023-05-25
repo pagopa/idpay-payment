@@ -30,44 +30,49 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
-    TransactionInProgress trx =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired(trxCode.toLowerCase());
+    try {
+      TransactionInProgress trx =
+              transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired(trxCode.toLowerCase());
 
-    if (trx == null) {
-      throw new ClientExceptionWithBody(
-          HttpStatus.NOT_FOUND,
-          "NOT FOUND",
-          "Cannot find transaction with trxCode [%s]".formatted(trxCode));
-    }
-
-    if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
-      throw new ClientExceptionWithBody(
-          HttpStatus.FORBIDDEN,
-          "FORBIDDEN",
-          "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
-    }
-
-    if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-      throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot relate transaction in status " + trx.getStatus());
-    }
-
-    trx.setUserId(userId);
-
-    AuthPaymentDTO preview =
-        rewardCalculatorConnector.previewTransaction(trx);
-    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
-      transactionInProgressRepository.updateTrxRejected(
-          trx.getId(), userId, preview.getRejectionReasons());
-      if (preview.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)) {
-        throw new TransactionSynchronousException(HttpStatus.FORBIDDEN, preview);
+      if (trx == null) {
+        throw new ClientExceptionWithBody(
+                HttpStatus.NOT_FOUND,
+                "NOT FOUND",
+                "Cannot find transaction with trxCode [%s]".formatted(trxCode));
       }
-    } else {
-      preview.setStatus(SyncTrxStatus.IDENTIFIED);
-      transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
+
+      if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
+        throw new ClientExceptionWithBody(
+                HttpStatus.FORBIDDEN,
+                "FORBIDDEN",
+                "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+      }
+
+      if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
+        throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "Cannot relate transaction in status " + trx.getStatus());
+      }
+
+      trx.setUserId(userId);
+
+      AuthPaymentDTO preview =
+              rewardCalculatorConnector.previewTransaction(trx);
+      if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
+        transactionInProgressRepository.updateTrxRejected(
+                trx.getId(), userId, preview.getRejectionReasons());
+        if (preview.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)) {
+          throw new TransactionSynchronousException(HttpStatus.FORBIDDEN, preview);
+        }
+      } else {
+        preview.setStatus(SyncTrxStatus.IDENTIFIED);
+        transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId);
+      }
+
+      auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trxCode, userId);
+
+      return preview;
+    } catch (RuntimeException e) {
+      auditUtilities.logErrorRelatedUserToTransaction(trxCode, userId);
+      throw e;
     }
-
-    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trxCode, userId);
-
-    return preview;
   }
 }
