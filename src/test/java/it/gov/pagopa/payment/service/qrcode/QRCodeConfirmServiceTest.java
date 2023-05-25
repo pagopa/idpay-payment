@@ -12,6 +12,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.ErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ class QRCodeConfirmServiceTest {
   @Mock private TransactionInProgressRepository repositoryMock;
   @Mock private TransactionNotifierService notifierServiceMock;
   @Mock private ErrorNotifierService errorNotifierServiceMock;
+  @Mock private AuditUtilities auditUtilitiesMock;
 
   private final TransactionInProgress2TransactionResponseMapper mapper =
       new TransactionInProgress2TransactionResponseMapper();
@@ -42,7 +44,8 @@ class QRCodeConfirmServiceTest {
             repositoryMock,
             mapper,
             notifierServiceMock,
-            errorNotifierServiceMock);
+            errorNotifierServiceMock,
+                auditUtilitiesMock);
   }
 
   @Test
