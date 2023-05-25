@@ -102,9 +102,10 @@ app:
 
 management.endpoints:
   web:
-    exposure.include: info, health
+    exposure.include: info
+#    , health
 
-azure:
-  application-insights:
-    heart-beat:
-      enabled: false
+#azure:
+#  application-insights:
+#    heart-beat:
+#      enabled: false
