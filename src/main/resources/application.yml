@@ -102,7 +102,9 @@ app:
 
 management.endpoints:
   web:
-    exposure.include: info
+    exposure:
+      include: info
+      exclude: health
 #    , health
 
 #azure:
