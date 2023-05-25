@@ -42,31 +42,11 @@ public class AuditUtilities {
         log.info(pattern, (Object[]) parameters);
     }
 
+    // region createTransaction
     public void logCreatedTransaction(String initiativeId, String trxCode, String merchantId) {
         logAuditString(
                 CEF_PATTERN_TRXCODE_MERCHANTID,
                 "Transaction created", initiativeId, trxCode, merchantId
-        );
-    }
-
-    public void logRelatedUserToTransaction(String initiativeId, String trxCode, String userId) {
-        logAuditString(
-                CEF_PATTERN_USER,
-                "User related to transaction", initiativeId, trxCode, userId
-        );
-    }
-
-    public void logAuthorizedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
-        logAuditString(
-                CEF_PATTERN_REWARD_REJECIONS,
-                "User authorized the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString()
-        );
-    }
-
-    public void logConfirmedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
-        logAuditString(
-                CEF_PATTERN_REWARD_REJECIONS_MERCHANTID,
-                "Merchant confirmed the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
         );
     }
 
@@ -76,22 +56,53 @@ public class AuditUtilities {
                 "Transaction created - KO", initiativeId, merchantId
         );
     }
+    // endregion
+
+    // region relateUser
+    public void logRelatedUserToTransaction(String initiativeId, String trxCode, String userId) {
+        logAuditString(
+                CEF_PATTERN_USER,
+                "User related to transaction", initiativeId, trxCode, userId
+        );
+    }
+
     public void logErrorRelatedUserToTransaction(String trxCode, String userId) {
         logAuditString(
                 CEF_PATTERN_TRXCODE_USERID,
                 "User related to transaction - KO", trxCode, userId
         );
     }
+    // endregion
+
+    // region authPayment
+    public void logAuthorizedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
+        logAuditString(
+                CEF_PATTERN_REWARD_REJECIONS,
+                "User authorized the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString()
+        );
+    }
+
     public void logErrorAuthorizedPayment(String trxCode, String userId) {
         logAuditString(
                 CEF_PATTERN_TRXCODE_USERID,
                 "User authorized the transaction - KO", trxCode, userId
         );
     }
+    // endregion
+
+    // region confirmPayment
+    public void logConfirmedPayment(String initiativeId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
+        logAuditString(
+                CEF_PATTERN_REWARD_REJECIONS_MERCHANTID,
+                "Merchant confirmed the transaction", initiativeId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
+        );
+    }
+
     public void logErrorConfirmedPayment(String trxId, String merchantId) {
         logAuditString(
                 CEF_PATTERN_TRXID_MERCHANTID,
                 "Merchant confirmed the transaction - KO", trxId, merchantId
         );
     }
+    // endregion
 }

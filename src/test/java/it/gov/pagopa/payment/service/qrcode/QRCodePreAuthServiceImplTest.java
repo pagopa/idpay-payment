@@ -33,6 +33,7 @@ class QRCodePreAuthServiceImplTest {
   @Mock private TransactionInProgressRepository transactionInProgressRepository;
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
   @Mock private AuditUtilities auditUtilitiesMock;
+
   private QRCodePreAuthService qrCodePreAuthService;
 
   @BeforeEach

@@ -41,6 +41,7 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private TransactionNotifierService notifierService;
   @Mock private ErrorNotifierService errorNotifierService;
   @Mock private AuditUtilities auditUtilitiesMock;
+
   private final TransactionInProgress2TransactionOutcomeDTOMapper
       transactionInProgress2TransactionOutcomeDTOMapper =
           new TransactionInProgress2TransactionOutcomeDTOMapper();

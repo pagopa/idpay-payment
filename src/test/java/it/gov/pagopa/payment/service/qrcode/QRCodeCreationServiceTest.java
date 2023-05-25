@@ -37,18 +37,14 @@ import org.springframework.http.HttpStatus;
 class QRCodeCreationServiceTest {
 
   @Mock
-  TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
-
+  private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
   @Mock
-  TransactionCreationRequest2TransactionInProgressMapper
+  private TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
 
-  @Mock RewardRuleRepository rewardRuleRepository;
-
-  @Mock TransactionInProgressRepository transactionInProgressRepository;
-
-  @Mock TrxCodeGenUtil trxCodeGenUtil;
-
+  @Mock private RewardRuleRepository rewardRuleRepository;
+  @Mock private TransactionInProgressRepository transactionInProgressRepository;
+  @Mock private TrxCodeGenUtil trxCodeGenUtil;
   @Mock private AuditUtilities auditUtilitiesMock;
 
   QRCodeCreationService qrCodeCreationService;
