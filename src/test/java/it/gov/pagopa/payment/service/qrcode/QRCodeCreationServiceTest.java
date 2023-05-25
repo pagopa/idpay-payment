@@ -49,7 +49,7 @@ class QRCodeCreationServiceTest {
 
   @Mock TrxCodeGenUtil trxCodeGenUtil;
 
-  @Mock AuditUtilities auditUtilities;
+  @Mock private AuditUtilities auditUtilitiesMock;
 
   QRCodeCreationService qrCodeCreationService;
 
@@ -62,7 +62,7 @@ class QRCodeCreationServiceTest {
             rewardRuleRepository,
             transactionInProgressRepository,
             trxCodeGenUtil,
-            auditUtilities);
+                auditUtilitiesMock);
   }
 
   @Test

@@ -27,7 +27,7 @@ class QRCodeConfirmServiceTest {
   @Mock private TransactionInProgressRepository repositoryMock;
   @Mock private TransactionNotifierService notifierServiceMock;
   @Mock private ErrorNotifierService errorNotifierServiceMock;
-  @Mock private AuditUtilities auditUtilities;
+  @Mock private AuditUtilities auditUtilitiesMock;
 
   private final TransactionInProgress2TransactionResponseMapper mapper =
       new TransactionInProgress2TransactionResponseMapper();
@@ -45,7 +45,7 @@ class QRCodeConfirmServiceTest {
             mapper,
             notifierServiceMock,
             errorNotifierServiceMock,
-            auditUtilities);
+                auditUtilitiesMock);
   }
 
   @Test
