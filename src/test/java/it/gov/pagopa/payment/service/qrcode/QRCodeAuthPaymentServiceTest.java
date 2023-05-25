@@ -16,6 +16,7 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.utils.TestUtils;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.Utils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,8 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
   @Mock private TransactionNotifierService notifierService;
   @Mock private ErrorNotifierService errorNotifierService;
+  @Mock private AuditUtilities auditUtilitiesMock;
+
   private final TransactionInProgress2TransactionOutcomeDTOMapper
       transactionInProgress2TransactionOutcomeDTOMapper =
           new TransactionInProgress2TransactionOutcomeDTOMapper();
@@ -55,7 +58,8 @@ class QRCodeAuthPaymentServiceTest {
             authPaymentMapper,
             notifierService,
             errorNotifierService,
-            transactionInProgress2TransactionOutcomeDTOMapper);
+            transactionInProgress2TransactionOutcomeDTOMapper,
+                auditUtilitiesMock);
   }
 
   @Test
