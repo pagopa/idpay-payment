@@ -7,16 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AuditUtilitiesTest {
 
-    private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Wallet dstip=%s", AuditUtilities.SRCIP);
+    private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Payment dstip=%s", AuditUtilities.SRCIP);
     private static final String INITIATIVE_ID = "TEST_INITIATIVE_ID";
     private static final String TRX_CODE = "TEST_TRX_CODE";
     private static final String USER_ID = "TEST_USER_ID";
+    private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
     public static final long REWARD = 0L;
     private final AuditUtilities auditUtilities = new AuditUtilities();
     private MemoryAppender memoryAppender;
@@ -34,12 +34,12 @@ class AuditUtilitiesTest {
 
     @Test
     void logCreateTransaction() {
-        auditUtilities.logCreatedTransaction(INITIATIVE_ID, TRX_CODE);
+        auditUtilities.logCreatedTransaction(INITIATIVE_ID, TRX_CODE, MERCHANT_ID);
 
         assertEquals(
                 CEF + " msg=Transaction created"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s"
-                                .formatted(INITIATIVE_ID, TRX_CODE),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s cs3Label=merchantId cs3=%s"
+                                .formatted(INITIATIVE_ID, TRX_CODE, MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -70,13 +70,13 @@ class AuditUtilitiesTest {
 
     @Test
     void logConfirmedPayment() {
-        auditUtilities.logConfirmedPayment(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList());
+        auditUtilities.logConfirmedPayment(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList(), MERCHANT_ID);
 
 
         assertEquals(
                 CEF + " msg=Merchant confirmed the transaction"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s suser=%s cs3Label=reward cs3=%s cs4Label=rejectionReasons cs4=%s"
-                        .formatted(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, "[]"),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s suser=%s cs3Label=reward cs3=%s cs4Label=rejectionReasons cs4=%s cs5Label=merchantId cs5=%s"
+                        .formatted(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, "[]", MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
