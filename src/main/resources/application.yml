@@ -101,6 +101,8 @@ app:
     trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:15}}
 
 management.endpoints:
+  health:
+    enabled: false
   web:
     exposure:
       include: info
