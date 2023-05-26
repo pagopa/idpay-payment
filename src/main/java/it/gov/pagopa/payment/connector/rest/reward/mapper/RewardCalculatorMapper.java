@@ -7,6 +7,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.utils.Utils;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+
 @Service
 public class RewardCalculatorMapper {
 
@@ -42,7 +44,10 @@ public class RewardCalculatorMapper {
                 ? Utils.euroToCents(responseDTO.getReward().getAccruedReward())
                 : 0L)
         .initiativeId(responseDTO.getInitiativeId())
-        .rejectionReasons(responseDTO.getRejectionReasons())
+        .rejectionReasons(
+                responseDTO.getRejectionReasons() != null
+                ? responseDTO.getRejectionReasons()
+                : Collections.emptyList())
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
         .amountCents(responseDTO.getAmountCents())
