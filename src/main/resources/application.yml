@@ -104,4 +104,4 @@ app:
 
 management.endpoints:
   web:
-    exposure.include: info, health
+    exposure.include: health
