@@ -53,6 +53,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String merchantId,
       String acquirerId,
       String idTrxAcquirer) {
+    //TODO IDP-1102 CALL MERCHANT FOR RETRIEVEFCe VAT info
     try {
       if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
         log.info(
