@@ -21,6 +21,7 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,17 +37,15 @@ import org.springframework.http.HttpStatus;
 class QRCodeCreationServiceTest {
 
   @Mock
-  TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
-
+  private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
   @Mock
-  TransactionCreationRequest2TransactionInProgressMapper
+  private TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
 
-  @Mock RewardRuleRepository rewardRuleRepository;
-
-  @Mock TransactionInProgressRepository transactionInProgressRepository;
-
-  @Mock TrxCodeGenUtil trxCodeGenUtil;
+  @Mock private RewardRuleRepository rewardRuleRepository;
+  @Mock private TransactionInProgressRepository transactionInProgressRepository;
+  @Mock private TrxCodeGenUtil trxCodeGenUtil;
+  @Mock private AuditUtilities auditUtilitiesMock;
 
   QRCodeCreationService qrCodeCreationService;
 
@@ -58,7 +57,8 @@ class QRCodeCreationServiceTest {
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
             transactionInProgressRepository,
-            trxCodeGenUtil);
+            trxCodeGenUtil,
+                auditUtilitiesMock);
   }
 
   @Test

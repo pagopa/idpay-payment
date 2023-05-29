@@ -86,6 +86,8 @@ logging:
         cloud: ${LOG_LEVEL_SPRING_CLOUD:WARN}
         boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
         data: ${LOG_LEVEL_SPRING_DATA:INFO}
+      apache:
+        kafka: ${LOG_LEVEL_KAFKA:WARN}
     root: ${LOG_LEVEL_ROOT:INFO}
     it:
       gov:
@@ -102,4 +104,4 @@ app:
 
 management.endpoints:
   web:
-    exposure.include: info, health
+    exposure.include: health
