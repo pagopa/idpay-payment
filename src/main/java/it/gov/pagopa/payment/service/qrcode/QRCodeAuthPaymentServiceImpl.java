@@ -64,13 +64,13 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
 
         if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
-          log.info("[TRX_STATUS][REWARDED] The transaction's with trxCode {}, has been rewarded", trx.getTrxCode());
+          log.info("[TRX_STATUS][REWARDED] The transaction with trxCode {}, has been rewarded", trx.getTrxCode());
           authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
           transactionInProgressRepository.updateTrxAuthorized(trx,
                   authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
         } else {
           transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
-          log.info("[TRX_STATUS][REJECTED] The transaction's with trxCode {}, has been rejected ",trx.getTrxCode());
+          log.info("[TRX_STATUS][REJECTED] The transaction with trxCode {}, has been rejected ",trx.getTrxCode());
         }
 
         trx.setStatus(authPaymentDTO.getStatus());

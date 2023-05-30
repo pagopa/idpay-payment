@@ -48,7 +48,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
             }
 
             trx.setStatus(SyncTrxStatus.REWARDED);
-            log.info("[TRX_STATUS][REWARDED] The transaction's with trxCode {}, has been rewarded", trx.getTrxCode());
+            log.info("[TRX_STATUS][REWARDED] The transaction with trxCode {}, has been rewarded", trx.getTrxCode());
             sendConfirmPaymentNotification(trx);
 
             repository.deleteById(trxId);

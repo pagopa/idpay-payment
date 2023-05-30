@@ -61,7 +61,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
       if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
         transactionInProgressRepository.updateTrxRejected(
                 trx.getId(), userId, preview.getRejectionReasons());
-        log.info("[TRX_STATUS][REJECTED] The transaction's with trxCode {}, has been rejected ",trx.getTrxCode());
+        log.info("[TRX_STATUS][REJECTED] The transaction with trxCode {}, has been rejected ",trx.getTrxCode());
         if (preview.getRejectionReasons().contains(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE)) {
           throw new TransactionSynchronousException(HttpStatus.FORBIDDEN, preview);
         }
