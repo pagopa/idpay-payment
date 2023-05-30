@@ -6,9 +6,9 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +40,7 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
         Map.of(
             trx.getInitiativeId(),
             new Reward(
-                trx.getInitiativeId(), "ORGANIZATIONID", Utils.centsToEuro(trx.getReward()))));
+                trx.getInitiativeId(), "ORGANIZATIONID", CommonUtilities.centsToEuro(trx.getReward()))));
 
     // When
     TransactionOutcomeDTO result = mapper.apply(trx);

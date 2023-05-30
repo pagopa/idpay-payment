@@ -5,10 +5,10 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.ErrorNotifierService;
+import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuthPaymentMapper requestMapper;
   private final TransactionNotifierService notifierService;
-  private final ErrorNotifierService errorNotifierService;
+  private final PaymentErrorNotifierService paymentErrorNotifierService;
   private final TransactionInProgress2TransactionOutcomeDTOMapper mapper;
   private final AuditUtilities auditUtilities;
 
@@ -31,13 +31,13 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuthPaymentMapper requestMapper,
-          TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService,
+          TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
           TransactionInProgress2TransactionOutcomeDTOMapper mapper, AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
     this.notifierService = notifierService;
-    this.errorNotifierService = errorNotifierService;
+    this.paymentErrorNotifierService = paymentErrorNotifierService;
     this.mapper = mapper;
     this.auditUtilities = auditUtilities;
   }
@@ -101,7 +101,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         throw new IllegalStateException("[QR_CODE_AUTHORIZE_TRANSACTION] Something gone wrong while Auth Payment notify");
       }
     } catch (Exception e) {
-      if(!errorNotifierService.notifyAuthPayment(
+      if(!paymentErrorNotifierService.notifyAuthPayment(
               notifierService.buildMessage(trx, trx.getUserId()),
               "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(trx.getId(), trx.getUserId()),
               true,

@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierServiceImpl;
+import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -14,33 +14,31 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class ErrorNotifierServiceTest {
+class PaymentErrorNotifierServiceTest {
 
     public static final String BUILDER_MESSAGING_SERVICE = "builderMessagingService";
-    public static final String APP_NAME = "appName";
     public static final String NOTIFICATIONBUILDER = "notificationbuilder";
     public static final String TOPIC = "topic";
     public static final String ERROR_MESSAGE = "test";
     private final TransactionInProgress2TransactionOutcomeDTOMapper mapper = new TransactionInProgress2TransactionOutcomeDTOMapper();
     @Mock
-    private StreamBridge streamBridgeMock;
-    private ErrorNotifierService errorNotifierService;
+    private ErrorNotifierService errorNotifierServiceMock;
+
+    private PaymentErrorNotifierService service;
 
     @BeforeEach
     void setUp() {
-        errorNotifierService = new ErrorNotifierServiceImpl(
-                streamBridgeMock,
-                APP_NAME,
+        service = new PaymentErrorNotifierServiceImpl(
+                errorNotifierServiceMock,
                 BUILDER_MESSAGING_SERVICE,
                 NOTIFICATIONBUILDER,
                 TOPIC
@@ -55,31 +53,31 @@ class ErrorNotifierServiceTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
 
-        Mockito.when(streamBridgeMock.send(anyString(), any())).thenReturn(false);
+        Mockito.when(errorNotifierServiceMock.notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any())).thenReturn(false);
 
-        errorNotifierService.notifyAuthPayment(buildMessage(transaction, transaction.getUserId()),
+        service.notifyAuthPayment(buildMessage(transaction, transaction.getUserId()),
                 "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)
         );
 
-        verify(streamBridgeMock).send(anyString(), any());
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
     }
 
     @Test
     void notifyConfirmPayment(){
         TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(streamBridgeMock.send(anyString(),any())).thenReturn(false);
+        Mockito.when(errorNotifierServiceMock.notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any())).thenReturn(false);
 
-        errorNotifierService.notifyConfirmPayment(
+        service.notifyConfirmPayment(
                 buildMessage(trx, trx.getMerchantId()),
                 "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the Confirm Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)
         );
 
-        verify(streamBridgeMock).send(anyString(),any());
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
     }
 
     private Message<TransactionOutcomeDTO> buildMessage(TransactionInProgress trx, String key) {
