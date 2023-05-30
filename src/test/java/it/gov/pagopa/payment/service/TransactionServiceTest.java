@@ -1,19 +1,13 @@
 package it.gov.pagopa.payment.service;
 
-import static org.mockito.Mockito.when;
-
+import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientException;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +16,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
@@ -68,7 +68,7 @@ class TransactionServiceTest {
     );
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionNoBody) result).getMessage());
+    Assertions.assertEquals("NOT FOUND", result.getMessage());
   }
 
   @Test
@@ -84,6 +84,6 @@ class TransactionServiceTest {
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals("FORBIDDEN", ((ClientExceptionNoBody) result).getMessage());
+    Assertions.assertEquals("FORBIDDEN", result.getMessage());
   }
 }

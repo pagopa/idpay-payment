@@ -5,7 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -24,7 +24,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .id(id)
         .correlationId(id)
         .amountCents(transactionCreationRequest.getAmountCents())
-        .effectiveAmount(Utils.centsToEuro(transactionCreationRequest.getAmountCents()))
+        .effectiveAmount(CommonUtilities.centsToEuro(transactionCreationRequest.getAmountCents()))
         .amountCurrency(PaymentConstants.CURRENCY_EUR)
         .merchantFiscalCode(transactionCreationRequest.getMerchantFiscalCode())
         .idTrxIssuer(transactionCreationRequest.getIdTrxIssuer())

@@ -1,13 +1,8 @@
-package it.gov.pagopa.payment.configuration;
+package it.gov.pagopa.common.mongo.config;
 
 import com.mongodb.lang.NonNull;
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.utils.Utils;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.concurrent.TimeUnit;
 import lombok.Setter;
 import org.bson.types.Decimal128;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
@@ -20,13 +15,19 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.concurrent.TimeUnit;
+
 @Configuration
 @EnableMongoRepositories(basePackageClasses = TransactionInProgressRepository.class)
-public class DbConfig {
+public class MongoConfig {
 
     @Configuration
     @ConfigurationProperties(prefix = "spring.data.mongodb.config")
-    static class MongoDbCustomProperties {
+    public static class MongoDbCustomProperties {
         @Setter
         ConnectionPoolSettings connectionPool;
 
@@ -99,7 +100,7 @@ public class DbConfig {
     public static class OffsetDateTimeReadConverter implements Converter<Date, OffsetDateTime> {
         @Override
         public OffsetDateTime convert(Date date) {
-            return date.toInstant().atZone(Utils.ZONEID).toOffsetDateTime();
+            return date.toInstant().atZone(CommonConstants.ZONEID).toOffsetDateTime();
         }
     }
 }

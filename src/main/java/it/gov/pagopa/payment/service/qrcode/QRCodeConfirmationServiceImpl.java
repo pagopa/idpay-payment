@@ -3,10 +3,10 @@ package it.gov.pagopa.payment.service.qrcode;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.ErrorNotifierService;
+import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -20,15 +20,15 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
     private final TransactionInProgressRepository repository;
     private final TransactionInProgress2TransactionResponseMapper mapper;
     private final TransactionNotifierService notifierService;
-    private final ErrorNotifierService errorNotifierService;
+    private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
 
     public QRCodeConfirmationServiceImpl(TransactionInProgressRepository repository, TransactionInProgress2TransactionResponseMapper mapper,
-                                         TransactionNotifierService notifierService, ErrorNotifierService errorNotifierService, AuditUtilities auditUtilities) {
+                                         TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities) {
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
-        this.errorNotifierService= errorNotifierService;
+        this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
     }
 
@@ -69,7 +69,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
                 throw new IllegalStateException("[QR_CODE_CONFIRM_PAYMENT] Something gone wrong while Confirm Payment notify");
             }
         } catch (Exception e) {
-            if(!errorNotifierService.notifyConfirmPayment(
+            if(!paymentErrorNotifierService.notifyConfirmPayment(
                     notifierService.buildMessage(trx, trx.getMerchantId()),
                     "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
                     true,

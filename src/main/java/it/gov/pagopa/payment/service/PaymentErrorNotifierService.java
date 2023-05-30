@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.service;
 
 import org.springframework.messaging.Message;
 
-public interface ErrorNotifierService {
+public interface PaymentErrorNotifierService {
     boolean notifyAuthPayment(Message<?> message, String description, boolean retryable, Throwable exception);
     boolean notifyConfirmPayment(Message<?> message, String description, boolean retryable, Throwable exception);
     @SuppressWarnings("squid:S00107")
