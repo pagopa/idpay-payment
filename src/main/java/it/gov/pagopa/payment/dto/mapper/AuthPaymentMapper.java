@@ -12,9 +12,12 @@ public class AuthPaymentMapper {
         .id(transaction.getId())
         .reward(transaction.getReward())
         .initiativeId(transaction.getInitiativeId())
+        .initiativeName(transaction.getInitiativeName())
+        .businessName(transaction.getBusinessName())
         .rejectionReasons(transaction.getRejectionReasons())
         .status(transaction.getStatus())
         .trxCode(transaction.getTrxCode())
+        .trxDate(transaction.getTrxDate())
         .amountCents(transaction.getAmountCents())
         .build();
   }

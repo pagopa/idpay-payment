@@ -52,6 +52,9 @@ public class RewardCalculatorMapper {
         .status(responseDTO.getStatus())
         .trxCode(transactionInProgress.getTrxCode())
         .amountCents(responseDTO.getAmountCents())
+        .initiativeName(transactionInProgress.getInitiativeName())
+        .businessName(transactionInProgress.getBusinessName())
+        .trxDate(transactionInProgress.getTrxDate())
         .build();
   }
 }

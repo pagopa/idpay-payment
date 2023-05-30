@@ -72,6 +72,7 @@ import org.springframework.test.web.servlet.MockMvc;
                 //region wiremock
                 "logging.level.WireMock=ERROR",
                 "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}",
+                "rest-client.merchant.baseUrl=http://localhost:${wiremock.server.port}",
                 //endregion
 
                 //region kafka brokers

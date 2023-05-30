@@ -96,6 +96,8 @@ logging:
 rest-client:
   reward:
     baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
+  merchant:
+    baseUrl: ${IDPAY_MERCHANT_PAYMENT:http://idpay-merchant}
 
 app:
   qrCode:

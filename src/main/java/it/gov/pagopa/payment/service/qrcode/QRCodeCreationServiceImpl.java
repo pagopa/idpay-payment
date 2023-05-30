@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
@@ -26,16 +28,17 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TrxCodeGenUtil trxCodeGenUtil;
   private final AuditUtilities auditUtilities;
+  private final MerchantConnector merchantConnector;
 
   public QRCodeCreationServiceImpl(
-      TransactionInProgress2TransactionResponseMapper
+          TransactionInProgress2TransactionResponseMapper
           transactionInProgress2TransactionResponseMapper,
-      TransactionCreationRequest2TransactionInProgressMapper
+          TransactionCreationRequest2TransactionInProgressMapper
           transactionCreationRequest2TransactionInProgressMapper,
-      RewardRuleRepository rewardRuleRepository,
-      TransactionInProgressRepository transactionInProgressRepository,
-      TrxCodeGenUtil trxCodeGenUtil,
-      AuditUtilities auditUtilities) {
+          RewardRuleRepository rewardRuleRepository,
+          TransactionInProgressRepository transactionInProgressRepository,
+          TrxCodeGenUtil trxCodeGenUtil,
+          AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
     this.transactionInProgress2TransactionResponseMapper =
         transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
@@ -44,6 +47,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.trxCodeGenUtil = trxCodeGenUtil;
     this.auditUtilities = auditUtilities;
+    this.merchantConnector = merchantConnector;
   }
 
   @Override
@@ -53,7 +57,6 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String merchantId,
       String acquirerId,
       String idTrxAcquirer) {
-    //TODO IDP-1102 CALL MERCHANT FOR RETRIEVEFCe VAT info
     try {
       if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
         log.info(
@@ -65,9 +68,11 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
                 "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
       }
 
+      MerchantDetailDTO merchantDetailDTO = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
+
       TransactionInProgress trx =
               transactionCreationRequest2TransactionInProgressMapper.apply(
-                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer);
+                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer, merchantDetailDTO);
       generateTrxCodeAndSave(trx);
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getTrxCode(), merchantId);

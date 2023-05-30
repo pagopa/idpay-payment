@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
@@ -13,11 +14,12 @@ import org.springframework.stereotype.Service;
 public class TransactionCreationRequest2TransactionInProgressMapper {
 
   public TransactionInProgress apply(
-      TransactionCreationRequest transactionCreationRequest,
-      String channel,
-      String merchantId,
-      String acquirerId,
-      String idTrxAcquirer) {
+          TransactionCreationRequest transactionCreationRequest,
+          String channel,
+          String merchantId,
+          String acquirerId,
+          String idTrxAcquirer,
+          MerchantDetailDTO merchantDetailDTO) {
     String id =
         "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
     return TransactionInProgress.builder()
@@ -26,11 +28,13 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .amountCents(transactionCreationRequest.getAmountCents())
         .effectiveAmount(Utils.centsToEuro(transactionCreationRequest.getAmountCents()))
         .amountCurrency(PaymentConstants.CURRENCY_EUR)
-        .merchantFiscalCode(transactionCreationRequest.getMerchantFiscalCode())
+        .merchantFiscalCode(merchantDetailDTO.getFiscalCode())
         .idTrxIssuer(transactionCreationRequest.getIdTrxIssuer())
         .initiativeId(transactionCreationRequest.getInitiativeId())
+        .initiativeName(merchantDetailDTO.getInitiativeName())
+        .businessName(merchantDetailDTO.getBusinessName())
         .mcc(transactionCreationRequest.getMcc())
-        .vat(transactionCreationRequest.getVat())
+        .vat(merchantDetailDTO.getVatNumber())
         .trxDate(transactionCreationRequest.getTrxDate())
         .trxChargeDate(transactionCreationRequest.getTrxDate())
         .status(SyncTrxStatus.CREATED)

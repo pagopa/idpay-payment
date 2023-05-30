@@ -1,0 +1,19 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/merchant/MERCHANTID/initiative/INITIATIVEID"
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "initiativeName": "INITIATIVENAME",
+      "businessName": "BUSINESSNAME",
+      "fiscalCode": "FISCALCODE",
+      "vatNumber": "VAT"
+    }
+  }
+}
