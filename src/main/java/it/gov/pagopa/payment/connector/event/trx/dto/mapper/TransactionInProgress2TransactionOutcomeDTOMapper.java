@@ -59,6 +59,7 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .userId(trx.getUserId())
         .status(trx.getStatus())
         .channel(trx.getChannel())
+        .updateDate(trx.getUpdateDate())
         .build();
   }
 }

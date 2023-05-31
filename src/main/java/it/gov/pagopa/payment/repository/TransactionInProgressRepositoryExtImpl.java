@@ -6,9 +6,11 @@ import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.Utils;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -56,7 +58,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.operationType, trx.getOperationType())
                         .setOnInsert(Fields.operationTypeTranscoded, trx.getOperationTypeTranscoded())
                         .setOnInsert(Fields.channel, trx.getChannel())
-                        .setOnInsert(Fields.trxCode, trxCode),
+                        .setOnInsert(Fields.trxCode, trxCode)
+                        .setOnInsert(Fields.updateDate, trx.getUpdateDate()),
                 TransactionInProgress.class);
     }
 
@@ -76,7 +79,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         Query.query(
                                 criteriaByTrxCodeAndChargeDateGreaterThan(trxCode, minTrxChargeDate)
                                         .andOperator(criteriaByAuthDateThrottled())),
-                        new Update().set(Fields.authDate, LocalDateTime.now()),
+                        new Update().set(Fields.authDate, LocalDateTime.now()).set(Fields.updateDate, LocalDateTime.now()),
                         FindAndModifyOptions.options().returnNew(true),
                         TransactionInProgress.class);
 
@@ -110,7 +113,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 new Update()
                         .set(Fields.status, SyncTrxStatus.REJECTED)
                         .set(Fields.userId, userId)
-                        .set(Fields.rejectionReasons, rejectionReasons),
+                        .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.updateDate, LocalDateTime.now()),
                 TransactionInProgress.class);
     }
 
@@ -118,7 +122,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     public void updateTrxIdentified(String id, String userId) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
-                new Update().set(Fields.status, SyncTrxStatus.IDENTIFIED).set(Fields.userId, userId),
+                new Update()
+                        .set(Fields.status, SyncTrxStatus.IDENTIFIED)
+                        .set(Fields.userId, userId)
+                        .set(Fields.updateDate, LocalDateTime.now()),
                 TransactionInProgress.class);
     }
 
@@ -130,7 +137,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.status, SyncTrxStatus.AUTHORIZED)
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
-                        .set(Fields.rewards, trx.getRewards()),
+                        .set(Fields.rewards, trx.getRewards())
+                        .set(Fields.updateDate, LocalDateTime.now()),
                 TransactionInProgress.class);
     }
 
@@ -141,7 +149,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 new Update()
                         .set(Fields.status, SyncTrxStatus.REJECTED)
                         .set(Fields.reward, 0L)
-                        .set(Fields.rejectionReasons, rejectionReasons),
+                        .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.updateDate, LocalDateTime.now()),
                 TransactionInProgress.class);
     }
 
@@ -154,7 +163,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                                 Criteria.where(Fields.elaborationDateTime).lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds)))
                 ),
                 new Update()
-                        .set(Fields.elaborationDateTime, LocalDateTime.now()),
+                        .set(Fields.elaborationDateTime, LocalDateTime.now()).set(Fields.updateDate, LocalDateTime.now()),
                 TransactionInProgress.class);
         if (trx == null && mongoTemplate.exists(Query.query(criteriaById(trxId)), TransactionInProgress.class)) {
             throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having id: " + trxId);
@@ -165,5 +174,32 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     private Criteria criteriaById(String trxId) {
         return Criteria.where(Fields.id).is(trxId);
+    }
+
+    @Override
+    public Criteria getCriteria(String merchantId, String initiativeId, String userId, String status) {
+        Criteria criteria = Criteria.where(Fields.merchantId).is(merchantId).and(Fields.initiativeId).is(initiativeId);
+        if (userId != null) {
+            criteria.and(Fields.userId).is(userId);
+        }
+        if (status != null) {
+            if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString(), SyncTrxStatus.REJECTED.toString())
+                    .contains(status)) {criteria.orOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
+                    Criteria.where(Fields.status).is(SyncTrxStatus.IDENTIFIED),
+                    Criteria.where(Fields.status).is(SyncTrxStatus.REJECTED));
+            } else {
+                criteria.and(TransactionInProgress.Fields.status).is(status);
+            }
+        }
+        return criteria;
+    }
+
+    @Override
+    public List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable){
+        return mongoTemplate.find(Query.query(criteria).with(Utils.getPageable(pageable)), TransactionInProgress.class);}
+
+    @Override
+    public long getCount(Criteria criteria) {
+        return mongoTemplate.count(Query.query(criteria), TransactionInProgress.class);
     }
 }

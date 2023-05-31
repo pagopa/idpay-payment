@@ -1,5 +1,9 @@
 package it.gov.pagopa.payment.utils;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.ZoneId;
@@ -17,5 +21,12 @@ public class Utils {
   /** To convert euro into cents */
   public static Long euroToCents(BigDecimal euro) {
     return euro != null ? euro.multiply(BigDecimal.valueOf(100)).longValue() : 0L;
+  }
+
+  public static Pageable getPageable(Pageable pageable) {
+    if (pageable == null) {
+      return PageRequest.of(0, 10, Sort.by("updateDate"));
+    }
+    return pageable;
   }
 }

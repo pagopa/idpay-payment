@@ -66,4 +66,5 @@ public class TransactionInProgress {
   private String channel;
   @Builder.Default
   private Map<String, Reward> rewards = new HashMap<>();
+  private LocalDateTime updateDate;
 }
