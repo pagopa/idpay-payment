@@ -98,6 +98,7 @@ rest-client:
     baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
 
 app:
+  trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:15}}
