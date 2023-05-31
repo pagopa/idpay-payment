@@ -6,7 +6,6 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
@@ -413,6 +412,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         // useCase 9: an error occurred when publishing confirmed event, throwing error
         useCases.add(i-> configureConfirmEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
+
+        // useCase 10: merchant not related to the initiative
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.FORBIDDEN, null);
+        });
 
         useCases.addAll(getExtraUseCases());
     }

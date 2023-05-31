@@ -18,18 +18,19 @@ public class MerchantConnectorImpl implements MerchantConnector{
 
     @Override
     public MerchantDetailDTO merchantDetail(String merchantId, String initiativeId) {
+        MerchantDetailDTO merchantDetailDTO;
         try {
-            restClient.merchantDetail(merchantId, initiativeId);
+            merchantDetailDTO = restClient.merchantDetail(merchantId, initiativeId);
         } catch (FeignException e) {
             if (e.status() == 404) {
-                throw new ClientExceptionWithBody(HttpStatus.UNAUTHORIZED,
+                throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
                         "MERCHANT",
-                        "resrwe");//TODO
+                        String.format("The merchant %s is not related with initiative %s", merchantId, initiativeId));
             }
+
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
                     "An error occurred in the microservice merchant", e);
         }
-
-        return null;
+        return merchantDetailDTO;
     }
 }

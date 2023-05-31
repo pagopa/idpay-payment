@@ -24,7 +24,7 @@ public class TransactionCreationRequest {
   private OffsetDateTime trxDate;
   @NotNull
   private Long amountCents;
-  @NotBlank
+
   private String mcc;
 
 }

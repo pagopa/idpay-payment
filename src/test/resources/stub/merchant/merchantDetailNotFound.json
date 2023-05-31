@@ -4,21 +4,19 @@
     "urlPathPattern": "/idpay/merchant/portal/initiatives/INITIATIVEID",
     "headers": {
         "x-merchant-id": {
-          "equalTo": "MERCHANTID"
+          "equalTo": "DUMMYMERCHANTID"
         }
     }
   },
   "response": {
-    "status": "200",
+    "status": "404",
     "headers": {
       "Content-Type": "application/json"
     },
     "transformers": ["response-template"],
     "jsonBody": {
-      "initiativeName": "INITIATIVENAME",
-      "businessName": "BUSINESSNAME",
-      "fiscalCode": "MERCHANTFISCALCODE0",
-      "vatNumber": "VAT0"
+      "code": "NOT FOUND",
+      "message": "Initiative INITIATIVEID and merchant DUMMYMERCHANTID not found."
     }
   }
 }

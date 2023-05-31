@@ -5,6 +5,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @FeignClient(
@@ -12,9 +13,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
         url = "${rest-client.merchant.baseUrl}")
 public interface MerchantRestClient {
     @GetMapping(
-            value = "merchant/{merchantId}/initiative/{initiativeId}",
+            value = "/idpay/merchant/portal/initiatives/{initiativeId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    MerchantDetailDTO merchantDetail(@PathVariable("merchantId") String merchantId,
-                                      @PathVariable("initiativeId") String initiativeId);
+    MerchantDetailDTO merchantDetail(@RequestHeader("x-merchant-id") String merchantId,
+                                     @PathVariable("initiativeId") String initiativeId);
 }
