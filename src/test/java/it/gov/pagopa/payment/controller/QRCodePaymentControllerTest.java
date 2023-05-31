@@ -1,10 +1,10 @@
 package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.payment.configuration.JsonConfig;
-import it.gov.pagopa.payment.dto.ErrorDTO;
+import it.gov.pagopa.common.config.JsonConfig;
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
-import it.gov.pagopa.payment.exception.ValidationExceptionHandler;
+import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import org.junit.jupiter.api.Test;

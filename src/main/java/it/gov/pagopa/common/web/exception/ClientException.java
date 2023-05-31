@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.exception;
+package it.gov.pagopa.common.web.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;

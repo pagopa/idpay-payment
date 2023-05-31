@@ -1,6 +1,6 @@
 package it.gov.pagopa.common.performancelogger;
 
-import it.gov.pagopa.payment.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientException;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;

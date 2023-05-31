@@ -1,7 +1,8 @@
 package it.gov.pagopa.payment.utils;
 
 import ch.qos.logback.classic.LoggerContext;
-import it.gov.pagopa.common.MemoryAppender;
+import it.gov.pagopa.common.utils.AuditLogger;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AuditUtilitiesTest {
 
-    private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Payment dstip=%s", AuditUtilities.SRCIP);
+    private static final String CEF = String.format("CEF:0|PagoPa|IDPAY|1.0|7|User interaction|2| event=Payment dstip=%s", AuditLogger.SRCIP);
     private static final String INITIATIVE_ID = "TEST_INITIATIVE_ID";
     private static final String TRX_CODE = "TEST_TRX_CODE";
     private static final String USER_ID = "TEST_USER_ID";
