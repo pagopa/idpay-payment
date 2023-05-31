@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/idpay/merchant/portal/initiatives/INITIATIVEID",
+    "headers": {
+        "x-merchant-id": {
+          "equalTo": "DUMMYMERCHANTID"
+        }
+    }
+  },
+  "response": {
+    "status": "404",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "code": "NOT FOUND",
+      "message": "Initiative INITIATIVEID and merchant DUMMYMERCHANTID not found."
+    }
+  }
+}

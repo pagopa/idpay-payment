@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -21,7 +22,13 @@ public class AuthPaymentDTO {
   @NotBlank
   private String trxCode;
   @NotBlank
+  private OffsetDateTime trxDate;
+  @NotBlank
   private String initiativeId;
+  @NotBlank
+  private String initiativeName;
+  @NotBlank
+  private String businessName;
   @NotNull
   private SyncTrxStatus status;
   private Long reward;

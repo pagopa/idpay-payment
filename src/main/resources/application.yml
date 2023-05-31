@@ -96,6 +96,8 @@ logging:
 rest-client:
   reward:
     baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
+  merchant:
+    baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
 
 app:
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
