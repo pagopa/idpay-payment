@@ -422,6 +422,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.FORBIDDEN, null);
         });
 
+        //useCase 11: obtain unexpected http code from ms idpay-merchant
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        });
+
         useCases.addAll(getExtraUseCases());
     }
 

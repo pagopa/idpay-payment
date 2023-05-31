@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/idpay/merchant/portal/initiatives/INITIATIVEID",
+    "headers": {
+        "x-merchant-id": {
+          "equalTo": "ERRORMERCHANTID"
+        }
+    }
+  },
+  "response": {
+    "status": "429",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "code": "Error",
+      "message": "Something gone wrong"
+    }
+  }
+}
