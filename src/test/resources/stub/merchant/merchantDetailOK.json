@@ -15,10 +15,18 @@
     },
     "transformers": ["response-template"],
     "jsonBody": {
+      "initiativeId": "INITIATIVEID",
       "initiativeName": "INITIATIVENAME",
       "businessName": "BUSINESSNAME",
+      "legalOfficeAddress": "LEGALOFFICEADDRESS",
+      "legalOfficeMunicipality": "LEGALOFFICEMUNICIPALITY",
+      "legalOfficeProvince": "LEGALOFFICEPROVICE",
+      "legalOfficeZipCode": "LEGALOFFICEZUPCODE",
+      "certifiedEmail": "CERTIFIEDEMAIL",
       "fiscalCode": "MERCHANTFISCALCODE0",
-      "vatNumber": "VAT0"
+      "vatNumber": "VAT0",
+      "status": "STATUS",
+      "iban": "IBAN"
     }
   }
 }
