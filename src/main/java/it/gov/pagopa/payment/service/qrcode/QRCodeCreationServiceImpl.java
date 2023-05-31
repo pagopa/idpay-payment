@@ -68,11 +68,11 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
                 "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
       }
 
-      MerchantDetailDTO merchantDetailDTO = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
+      MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
 
       TransactionInProgress trx =
               transactionCreationRequest2TransactionInProgressMapper.apply(
-                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer, merchantDetailDTO);
+                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer, merchantDetail);
       generateTrxCodeAndSave(trx);
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getTrxCode(), merchantId);
