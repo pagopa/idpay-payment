@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
@@ -17,7 +18,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -51,7 +51,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         properties = {
                 "logging.level.it.gov.pagopa.payment=WARN",
                 "logging.level.it.gov.pagopa.common=WARN",
-                "logging.level.it.gov.pagopa.payment.exception.ErrorManager=WARN",
+                "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=WARN",
+                "logging.level.AUDIT=OFF",
                 "app.qrCode.throttlingSeconds=2"
         })
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
@@ -499,7 +500,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 expectedAuthorizationNotificationEvents.size() +
                         expectedAuthorizationNotificationRejectedEvents.size() +
                         expectedConfirmNotificationEvents.size();
-        List<ConsumerRecord<String, String>> consumerRecords = consumeMessages(topicConfirmNotification, numExpectedNotification, 15000);
+        List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, numExpectedNotification, 15000);
 
         Map<SyncTrxStatus, Set<TransactionOutcomeDTO>> eventsResult = consumerRecords.stream()
                 .map(r -> {
@@ -546,7 +547,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void checkErrorNotificationEvents() {
         int expectedNotificationEvents = expectedErrors.size();
 
-        List<ConsumerRecord<String,String>> consumerRecords = consumeMessages(topicErrors, expectedNotificationEvents,15000);
+        List<ConsumerRecord<String,String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicErrors, expectedNotificationEvents,15000);
         assertEquals(expectedNotificationEvents,consumerRecords.size());
 
         Set<TransactionOutcomeDTO> eventsResult = consumerRecords.stream()
@@ -563,7 +564,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                         expectedErrorDescription= "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(out.getId(), out.getMerchantId(), out.getAcquirerId());
                     }
 
-                    checkErrorMessageHeaders(topicConfirmNotification, null, r, expectedErrorDescription, null, expectedKey, false, false);
+                    checkErrorMessageHeaders(topicConfirmNotification, null, r, expectedErrorDescription, r.value(), expectedKey, false, false);
 
                     return out;
                 })

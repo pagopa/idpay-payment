@@ -8,7 +8,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +42,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
           Assertions.assertEquals(
               transactionCreationRequest.getAmountCents(), result.getAmountCents());
           Assertions.assertEquals(
-              Utils.centsToEuro(transactionCreationRequest.getAmountCents()),
+              CommonUtilities.centsToEuro(transactionCreationRequest.getAmountCents()),
               result.getEffectiveAmount());
           Assertions.assertEquals(
               transactionCreationRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
