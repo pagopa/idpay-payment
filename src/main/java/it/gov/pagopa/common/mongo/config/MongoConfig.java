@@ -1,8 +1,8 @@
 package it.gov.pagopa.common.mongo.config;
 
 import com.mongodb.lang.NonNull;
+import it.gov.pagopa.common.mongo.repository.MongoRepositoryImpl;
 import it.gov.pagopa.common.utils.CommonConstants;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import lombok.Setter;
 import org.bson.types.Decimal128;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
@@ -22,7 +22,10 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
-@EnableMongoRepositories(basePackageClasses = TransactionInProgressRepository.class)
+@EnableMongoRepositories(
+        basePackages = "it.gov.pagopa",
+        repositoryBaseClass = MongoRepositoryImpl.class
+)
 public class MongoConfig {
 
     @Configuration
