@@ -59,6 +59,7 @@ microservice-chart:
 
     rest-client:
       IDPAY_REWARD_PAYMENT: idpay-reward-calculator-baseurl
+      IDPAY_MERCHANT_PAYMENT: idpay_merchant_host
 
     idpay-eventhub-01:
       KAFKA_BROKER: kafka_broker
