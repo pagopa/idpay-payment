@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public interface RewardCalculatorRestClient {
 
   @PostMapping(
-      value = "reward/{initiativeId}",
+      value = "reward/initiative/{initiativeId}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   AuthPaymentResponseDTO authorizePayment(@PathVariable("initiativeId") String initiativeId,
       @RequestBody AuthPaymentRequestDTO body);
 
   @PostMapping(
-      value = "reward/preview/{initiativeId}",
+      value = "reward/initiative/preview/{initiativeId}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
   AuthPaymentResponseDTO previewTransaction(@PathVariable("initiativeId") String initiativeId,

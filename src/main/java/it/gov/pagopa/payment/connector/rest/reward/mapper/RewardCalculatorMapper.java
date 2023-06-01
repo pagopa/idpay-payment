@@ -1,10 +1,10 @@
 package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.common.utils.CommonUtilities;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +16,6 @@ public class RewardCalculatorMapper {
   public AuthPaymentRequestDTO rewardMap(TransactionInProgress transactionInProgress) {
     return AuthPaymentRequestDTO.builder()
         .transactionId(transactionInProgress.getId())
-        .correlationId(transactionInProgress.getCorrelationId())
         .userId(transactionInProgress.getUserId())
         .merchantId(transactionInProgress.getMerchantId())
         .merchantFiscalCode(transactionInProgress.getMerchantFiscalCode())
@@ -28,9 +27,7 @@ public class RewardCalculatorMapper {
         .mcc(transactionInProgress.getMcc())
         .acquirerId(transactionInProgress.getAcquirerId())
         .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
-        .operationType(transactionInProgress.getOperationTypeTranscoded())
         .trxChargeDate(transactionInProgress.getTrxChargeDate())
-        .correlationId(transactionInProgress.getCorrelationId())
         .channel(transactionInProgress.getChannel())
         .build();
   }
