@@ -414,6 +414,22 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         // useCase 9: an error occurred when publishing confirmed event, throwing error
         useCases.add(i-> configureConfirmEventNotPublishedDueToError(i,IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
 
+        // useCase 10: merchant not related to the initiative
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.FORBIDDEN, null);
+        });
+
+        //useCase 11: obtain unexpected http code from ms idpay-merchant
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        });
+
         useCases.addAll(getExtraUseCases());
     }
 

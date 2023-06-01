@@ -56,7 +56,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.operationType, trx.getOperationType())
                         .setOnInsert(Fields.operationTypeTranscoded, trx.getOperationTypeTranscoded())
                         .setOnInsert(Fields.channel, trx.getChannel())
-                        .setOnInsert(Fields.trxCode, trxCode),
+                        .setOnInsert(Fields.trxCode, trxCode)
+                        .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
+                        .setOnInsert(Fields.businessName, trx.getBusinessName()),
                 TransactionInProgress.class);
     }
 
