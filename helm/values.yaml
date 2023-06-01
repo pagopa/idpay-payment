@@ -57,23 +57,20 @@ microservice-chart:
   externalConfigMapValues:
     create: true
     configMaps:
+      - name: idpay-common
+        key: TZ
+
+      - name: rest-client
+        key: idpay-reward-calculator-baseurl
       - name: rest-client
         key: idpay_merchant_host
 
-  envConfigMapExternals:
-    idpay-common:
-      TZ: TZ
-
-    rest-client:
-      IDPAY_REWARD_PAYMENT: idpay-reward-calculator-baseurl
-      IDPAY_MERCHANT: idpay_merchant_host
-
-    idpay-eventhub-01:
-      KAFKA_BROKER: kafka_broker
-      KAFKA_ERRORS_BROKER: kafka_broker
-      KAFKA_ERRORS_TOPIC: idpay_error_topic
-      KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
-      KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
+      - name: idpay-eventhub-01
+        key: kafka_broker
+      - name: idpay-eventhub-01
+        key: idpay_error_topic
+      - name: idpay-eventhub-01
+        key: idpay_transaction_topic
 
   envSecret:
     MONGODB_URI: mongodb-connection-string

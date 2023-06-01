@@ -15,7 +15,7 @@ spring:
           type: kafka
           environment:
             spring.cloud.stream.kafka.binder:
-              brokers: ${KAFKA_ERRORS_BROKER:${KAFKA_BROKER:}}
+              brokers: ${KAFKA_ERRORS_BROKER:${kafka_broker:}}
               configuration:
                 sasl.jaas.config: ${KAFKA_ERRORS_SASL_JAAS_CONFIG:}
                 key.serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -25,19 +25,19 @@ spring:
             spring.cloud.stream:
               kafka:
                 binder:
-                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:}
+                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:${kafka_broker:}}
                   configuration:
                     sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
                     key.serializer: org.apache.kafka.common.serialization.StringSerializer
       bindings:
         errors-out-0:
-          destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
+          destination: ${idpay_error_topic:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: kafka-errors
         transactionOutcome-out-0:
           binder: transaction-outcome
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          destination: ${KAFKA_TOPIC_TRANSACTION:idpay-transaction}
+          destination: ${idpay_transaction_topic:idpay-transaction}
       kafka:
         binder:
           auto-create-topics: false
@@ -95,9 +95,9 @@ logging:
 
 rest-client:
   reward:
-    baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
+    baseUrl: ${idpay-reward-calculator-baseurl:http://idpay-reward-calculator}
   merchant:
-    baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
+    baseUrl: ${idpay_merchant_host:http://idpay-merchant}
 
 app:
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
