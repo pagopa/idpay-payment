@@ -54,6 +54,12 @@ microservice-chart:
     APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
     ENABLE_AUDIT_APPENDER: "TRUE"
 
+  externalConfigMapValues:
+    create: true
+    configMaps:
+      - name: rest-client
+        key: idpay_merchant_host
+
   envConfigMapExternals:
     idpay-common:
       TZ: TZ
