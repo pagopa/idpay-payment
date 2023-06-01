@@ -233,6 +233,9 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress result = transactionInProgressRepository.findByIdThrottled(trxId);
 
+    Assertions.assertNotNull(result.getElaborationDateTime());
+    result.setElaborationDateTime(null);
+
     Assertions.assertEquals(stored, result);
 
     try {
