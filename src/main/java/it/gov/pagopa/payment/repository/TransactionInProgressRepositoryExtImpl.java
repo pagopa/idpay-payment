@@ -1,13 +1,12 @@
 package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
-import it.gov.pagopa.common.utils.CommonUtilities;
-import java.time.LocalDateTime;
-import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -15,6 +14,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
 
@@ -112,15 +116,22 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 new Update()
                         .set(Fields.status, SyncTrxStatus.REJECTED)
                         .set(Fields.userId, userId)
+                        .set(Fields.reward, 0L)
+                        .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons),
                 TransactionInProgress.class);
     }
 
     @Override
-    public void updateTrxIdentified(String id, String userId) {
+    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
-                new Update().set(Fields.status, SyncTrxStatus.IDENTIFIED).set(Fields.userId, userId),
+                new Update()
+                        .set(Fields.status, SyncTrxStatus.IDENTIFIED)
+                        .set(Fields.userId, userId)
+                        .set(Fields.reward, reward)
+                        .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.rewards, rewards),
                 TransactionInProgress.class);
     }
 
@@ -143,6 +154,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 new Update()
                         .set(Fields.status, SyncTrxStatus.REJECTED)
                         .set(Fields.reward, 0L)
+                        .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons),
                 TransactionInProgress.class);
     }

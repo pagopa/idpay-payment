@@ -26,11 +26,12 @@ class AuthPaymentMapperTest {
 
  @Test
  void transactionMapperTest(){
-   TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
-       SyncTrxStatus.AUTHORIZED);
+   TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
    Reward reward = RewardFaker.mockInstance(1);
    transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
+
    AuthPaymentDTO result = mapper.transactionMapper(transaction);
+
    assertAll(() -> {
      assertNotNull(result);
      assertEquals(transaction.getId(), result.getId());

@@ -37,7 +37,7 @@
       "status": "REJECTED",
       "effectiveAmount": "0.10",
       "amount": "0.10",
-      "amountCents": "1000",
+      "amountCents": "10",
       "reward": null,
       "rejectionReasons": ["TRX_RULE_MCCFILTER_FAIL"]
     }

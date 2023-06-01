@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -56,10 +57,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
   @Test
   void rewardResponseMap() {
-    AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,
-        SyncTrxStatus.IDENTIFIED);
-    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
-        SyncTrxStatus.IDENTIFIED);
+    AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transaction.setRejectionReasons(List.of());
     transaction.setReward(0L);
 
@@ -72,6 +71,8 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(responseDTO.getStatus(), result.getStatus());
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
+      assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
+      assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
       TestUtils.checkNotNullFields(result);
     });
   }
@@ -94,7 +95,9 @@ import static org.junit.jupiter.api.Assertions.*;
        assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
        assertEquals(responseDTO.getStatus(), result.getStatus());
        assertEquals(transaction.getTrxCode(), result.getTrxCode());
-       TestUtils.checkNotNullFields(result);
+       assertNull(result.getCounters());
+       assertEquals(Collections.emptyMap(), result.getRewards());
+       TestUtils.checkNotNullFields(result, "counters");
      });
    }
 
@@ -115,6 +118,8 @@ import static org.junit.jupiter.api.Assertions.*;
              assertEquals(Collections.emptyList(), result.getRejectionReasons());
              assertEquals(responseDTO.getStatus(), result.getStatus());
              assertEquals(transaction.getTrxCode(), result.getTrxCode());
+             assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
+             assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
              TestUtils.checkNotNullFields(result);
          });
      }
