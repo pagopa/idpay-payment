@@ -169,6 +169,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 ),
                 new Update()
                         .set(Fields.elaborationDateTime, LocalDateTime.now()),
+                FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
         if (trx == null && mongoTemplate.exists(Query.query(criteriaById(trxId)), TransactionInProgress.class)) {
             throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having id: " + trxId);

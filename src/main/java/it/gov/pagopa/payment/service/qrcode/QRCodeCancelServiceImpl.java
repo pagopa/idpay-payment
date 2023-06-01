@@ -10,8 +10,11 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 @Service
 @Slf4j
@@ -54,6 +57,7 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
                     trx.setStatus(SyncTrxStatus.CANCELLED);
                     trx.setReward(refund.getReward());
                     trx.setRewards(refund.getRewards());
+                    trx.setElaborationDateTime(LocalDateTime.now());
 
                     sendCancelledTransactionNotification(trx);
                 }
@@ -62,7 +66,7 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
             log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
             repository.deleteById(trxId);
 
-            auditUtilities.logCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), merchantId);
+            auditUtilities.logCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons(), merchantId);
         } catch (RuntimeException e) {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);
             throw e;
@@ -71,14 +75,14 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
 
     private void sendCancelledTransactionNotification(TransactionInProgress trx) {
         try {
-            log.info("[CANCEL_TRANSACTION][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
-            if (!notifierService.notify(trx, trx.getMerchantId())) {
-                throw new IllegalStateException("[CANCEL_TRANSACTION] Something gone wrong while Confirm Payment notify");
+            log.info("[CANCEL_TRANSACTION][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
+            if (!notifierService.notify(trx, trx.getUserId())) {
+                throw new IllegalStateException("[CANCEL_TRANSACTION] Something gone wrong while cancelling Authorized Payment notify");
             }
         } catch (Exception e) {
             if(!paymentErrorNotifierService.notifyCancelPayment(
-                    notifierService.buildMessage(trx, trx.getMerchantId()),
-                    "[CANCEL_TRANSACTION] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
+                    notifierService.buildMessage(trx, trx.getUserId()),
+                    "[CANCEL_TRANSACTION] An error occurred while publishing the cancellation authorized result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
                     true,
                     e)
             ) {
