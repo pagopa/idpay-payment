@@ -6,17 +6,18 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientException;
-import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.ErrorNotifierService;
+import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,9 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private TransactionInProgressRepository repository;
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
   @Mock private TransactionNotifierService notifierService;
-  @Mock private ErrorNotifierService errorNotifierService;
+  @Mock private PaymentErrorNotifierService paymentErrorNotifierService;
+  @Mock private AuditUtilities auditUtilitiesMock;
+  
   private final TransactionInProgress2TransactionOutcomeDTOMapper
       transactionInProgress2TransactionOutcomeDTOMapper =
           new TransactionInProgress2TransactionOutcomeDTOMapper();
@@ -54,8 +57,10 @@ class QRCodeAuthPaymentServiceTest {
             rewardCalculatorConnector,
             authPaymentMapper,
             notifierService,
-            errorNotifierService,
-            transactionInProgress2TransactionOutcomeDTOMapper);
+                paymentErrorNotifierService,
+            transactionInProgress2TransactionOutcomeDTOMapper,
+            auditUtilitiesMock);
+
   }
 
   @Test
@@ -79,12 +84,12 @@ class QRCodeAuthPaymentServiceTest {
     Mockito.doAnswer(
             invocationOnMock -> {
               transaction.setStatus(SyncTrxStatus.AUTHORIZED);
-              transaction.setReward(Utils.euroToCents(reward.getAccruedReward()));
+              transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
               transaction.setRejectionReasons(List.of());
               return transaction;
             })
         .when(repository)
-        .updateTrxAuthorized(transaction, Utils.euroToCents(reward.getAccruedReward()), List.of());
+        .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
 
     AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
 

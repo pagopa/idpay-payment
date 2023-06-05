@@ -10,7 +10,7 @@
     </parent>
     <groupId>it.gov.pagopa.payment</groupId>
     <artifactId>idpay-payment</artifactId>
-    <version>0.1.0</version>
+    <version>1.0.0</version>
     <name>idpay-payment</name>
     <description>IDPay Payment Microservice</description>
     <properties>

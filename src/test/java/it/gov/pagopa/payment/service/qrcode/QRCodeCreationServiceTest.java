@@ -6,21 +6,25 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientException;
-import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,17 +40,16 @@ import org.springframework.http.HttpStatus;
 class QRCodeCreationServiceTest {
 
   @Mock
-  TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
-
+  private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
   @Mock
-  TransactionCreationRequest2TransactionInProgressMapper
+  private TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
 
-  @Mock RewardRuleRepository rewardRuleRepository;
-
-  @Mock TransactionInProgressRepository transactionInProgressRepository;
-
-  @Mock TrxCodeGenUtil trxCodeGenUtil;
+  @Mock private RewardRuleRepository rewardRuleRepository;
+  @Mock private TransactionInProgressRepository transactionInProgressRepository;
+  @Mock private TrxCodeGenUtil trxCodeGenUtil;
+  @Mock private AuditUtilities auditUtilitiesMock;
+  @Mock private MerchantConnector merchantConnectorMock;
 
   QRCodeCreationService qrCodeCreationService;
 
@@ -58,23 +61,27 @@ class QRCodeCreationServiceTest {
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
             transactionInProgressRepository,
-            trxCodeGenUtil);
+            trxCodeGenUtil,
+                auditUtilitiesMock, merchantConnectorMock);
   }
 
   @Test
   void createTransaction() {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+    MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+    when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
             any(TransactionCreationRequest.class),
             eq(RewardConstants.TRX_CHANNEL_QRCODE),
             anyString(),
             anyString(),
-            anyString()))
+            anyString(),
+            any(MerchantDetailDTO.class)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
@@ -98,16 +105,19 @@ class QRCodeCreationServiceTest {
   void createTransactionTrxCodeHit() {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+    MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+    when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
             any(TransactionCreationRequest.class),
             eq(RewardConstants.TRX_CHANNEL_QRCODE),
             anyString(),
             anyString(),
-            anyString()))
+            anyString(),
+            any(MerchantDetailDTO.class)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);

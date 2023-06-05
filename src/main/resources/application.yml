@@ -86,6 +86,8 @@ logging:
         cloud: ${LOG_LEVEL_SPRING_CLOUD:WARN}
         boot: ${LOG_LEVEL_SPRING_BOOT:INFO}
         data: ${LOG_LEVEL_SPRING_DATA:INFO}
+      apache:
+        kafka: ${LOG_LEVEL_KAFKA:WARN}
     root: ${LOG_LEVEL_ROOT:INFO}
     it:
       gov:
@@ -94,12 +96,15 @@ logging:
 rest-client:
   reward:
     baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
+  merchant:
+    baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
 
 app:
+  trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:15}}
 
 management.endpoints:
   web:
-    exposure.include: info, health
+    exposure.include: health

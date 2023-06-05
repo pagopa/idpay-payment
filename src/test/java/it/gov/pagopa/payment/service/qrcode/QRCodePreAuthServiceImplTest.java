@@ -9,14 +9,14 @@ import static org.mockito.Mockito.when;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.payment.exception.TransactionSynchronousException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
-import java.util.List;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,11 +25,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.List;
+
 @ExtendWith(MockitoExtension.class)
 class QRCodePreAuthServiceImplTest {
 
   @Mock private TransactionInProgressRepository transactionInProgressRepository;
   @Mock private RewardCalculatorConnector rewardCalculatorConnector;
+  @Mock private AuditUtilities auditUtilitiesMock;
 
   private QRCodePreAuthService qrCodePreAuthService;
 
@@ -38,7 +41,8 @@ class QRCodePreAuthServiceImplTest {
     qrCodePreAuthService =
         new QRCodePreAuthServiceImpl(
             transactionInProgressRepository,
-            rewardCalculatorConnector);
+            rewardCalculatorConnector,
+                auditUtilitiesMock);
   }
 
   @Test
