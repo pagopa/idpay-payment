@@ -19,16 +19,12 @@ public class TransactionCreationRequest {
   @NotBlank
   private String initiativeId;
   @NotBlank
-  private String merchantFiscalCode;
-  @NotBlank
-  private String vat;
-  @NotBlank
   private String idTrxIssuer;
   @NotNull
   private OffsetDateTime trxDate;
   @NotNull
   private Long amountCents;
-  @NotBlank
+
   private String mcc;
 
 }

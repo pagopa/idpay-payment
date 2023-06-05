@@ -11,8 +11,8 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.utils.CommonUtilities;
 
 import java.util.Collections;
 import java.util.List;
@@ -70,7 +70,7 @@ import org.junit.jupiter.api.Test;
     assertAll(() -> {
       assertNotNull(result);
       assertEquals(responseDTO.getTransactionId(), result.getId());
-      assertEquals(Utils.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
+      assertEquals(CommonUtilities.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
       assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
       assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(responseDTO.getStatus(), result.getStatus());
@@ -113,7 +113,7 @@ import org.junit.jupiter.api.Test;
          assertAll(() -> {
              assertNotNull(result);
              assertEquals(responseDTO.getTransactionId(), result.getId());
-             assertEquals(Utils.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
+             assertEquals(CommonUtilities.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
              assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
              assertEquals(Collections.emptyList(), result.getRejectionReasons());
              assertEquals(responseDTO.getStatus(), result.getStatus());

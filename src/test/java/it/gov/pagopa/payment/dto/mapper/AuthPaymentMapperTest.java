@@ -10,8 +10,8 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -29,7 +29,7 @@ class AuthPaymentMapperTest {
    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
        SyncTrxStatus.AUTHORIZED);
    Reward reward = RewardFaker.mockInstance(1);
-   transaction.setReward(Utils.euroToCents(reward.getAccruedReward()));
+   transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
    AuthPaymentDTO result = mapper.transactionMapper(transaction);
    assertAll(() -> {
      assertNotNull(result);

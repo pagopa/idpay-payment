@@ -2,10 +2,10 @@ package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
-import it.gov.pagopa.payment.utils.Utils;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,8 +24,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     public TransactionInProgressRepositoryExtImpl(
             MongoTemplate mongoTemplate,
-            @Value("${app.qrCode.throttlingSeconds}") long trxThrottlingSeconds,
-            @Value("${app.qrCode.trxInProgressLifetimeMinutes}") long trxInProgressLifetimeMinutes) {
+            @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
+            @Value("${app.qrCode.trxInProgressLifetimeMinutes:15}") long trxInProgressLifetimeMinutes) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
         this.trxInProgressLifetimeMinutes = trxInProgressLifetimeMinutes;
@@ -41,7 +41,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.correlationId, trx.getCorrelationId())
                         .setOnInsert(Fields.acquirerId, trx.getAcquirerId())
                         .setOnInsert(Fields.amountCents, trx.getAmountCents())
-                        .setOnInsert(Fields.effectiveAmount, Utils.centsToEuro(trx.getAmountCents()))
+                        .setOnInsert(Fields.effectiveAmount, CommonUtilities.centsToEuro(trx.getAmountCents()))
                         .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
                         .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
                         .setOnInsert(Fields.merchantId, trx.getMerchantId())
@@ -56,7 +56,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.operationType, trx.getOperationType())
                         .setOnInsert(Fields.operationTypeTranscoded, trx.getOperationTypeTranscoded())
                         .setOnInsert(Fields.channel, trx.getChannel())
-                        .setOnInsert(Fields.trxCode, trxCode),
+                        .setOnInsert(Fields.trxCode, trxCode)
+                        .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
+                        .setOnInsert(Fields.businessName, trx.getBusinessName()),
                 TransactionInProgress.class);
     }
 

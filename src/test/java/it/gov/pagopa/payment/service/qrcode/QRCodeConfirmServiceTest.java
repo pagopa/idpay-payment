@@ -6,10 +6,10 @@ import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgres
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.ErrorNotifierService;
+import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -26,7 +26,7 @@ class QRCodeConfirmServiceTest {
 
   @Mock private TransactionInProgressRepository repositoryMock;
   @Mock private TransactionNotifierService notifierServiceMock;
-  @Mock private ErrorNotifierService errorNotifierServiceMock;
+  @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
   @Mock private AuditUtilities auditUtilitiesMock;
 
   private final TransactionInProgress2TransactionResponseMapper mapper =
@@ -44,7 +44,7 @@ class QRCodeConfirmServiceTest {
             repositoryMock,
             mapper,
             notifierServiceMock,
-            errorNotifierServiceMock,
+                paymentErrorNotifierServiceMock,
                 auditUtilitiesMock);
   }
 
