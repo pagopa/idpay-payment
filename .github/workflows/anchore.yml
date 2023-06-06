@@ -52,13 +52,10 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
-      - name: Print the input name to STDOUT #TODO test
-        if: always()
-        run: echo outcome ${{ steps.scan.outcome }}
       - name: Send notification to Slack
         id: slack
 #        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
-        if: steps.scan.outcome == 'failure' #TODO cancel after test
+        if: ${{ steps.scan.outcome == 'failure'}}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
