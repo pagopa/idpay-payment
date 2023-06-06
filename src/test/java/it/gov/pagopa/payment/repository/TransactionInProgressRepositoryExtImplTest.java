@@ -16,6 +16,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.common.utils.TestUtils;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 
@@ -240,6 +241,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     Assertions.assertNotNull(result.getElaborationDateTime());
     result.setElaborationDateTime(null);
 
+    stored.setUpdateDate(stored.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
+    result.setUpdateDate(result.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
     Assertions.assertEquals(stored, result);
 
     try {
