@@ -30,7 +30,6 @@ microservice-chart:
   ingress:
     create: true
     path: /idpaypayment/(.*)
-    rewriteTarget: /$1
 
   serviceAccount:
     create: false
