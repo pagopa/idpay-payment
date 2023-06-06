@@ -40,6 +40,11 @@ public class PaymentErrorNotifierServiceImpl implements PaymentErrorNotifierServ
     }
 
     @Override
+    public boolean notifyCancelPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(transactionOutcomeMessagingServiceType, transactionOutcomeServer, transactionOutcomeTopic, null, message, description, retryable, false, exception);
+    }
+
+    @Override
     public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
         return errorNotifierService.notify(srcType, srcServer, srcTopic, group, message, description, retryable,resendApplication, exception);
     }

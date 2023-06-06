@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
@@ -15,7 +16,10 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.common.utils.TestUtils;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -182,12 +186,12 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         "rejectionReasons",
         "rewards");
 
-    transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1");
+    transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L,  List.of("REASON"), Map.of("ID", new Reward()));
     TransactionInProgress resultSecondSave =
         transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(
-        resultSecondSave, "authDate", "elaborationDateTime", "reward", "rejectionReasons", "rewards");
+        resultSecondSave, "authDate", "elaborationDateTime");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -234,6 +238,11 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress result = transactionInProgressRepository.findByIdThrottled(trxId);
 
+    Assertions.assertNotNull(result.getElaborationDateTime());
+    result.setElaborationDateTime(null);
+
+    stored.setUpdateDate(stored.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
+    result.setUpdateDate(result.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
     Assertions.assertEquals(stored, result);
 
     try {

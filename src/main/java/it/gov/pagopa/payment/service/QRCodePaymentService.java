@@ -13,4 +13,5 @@ public interface QRCodePaymentService {
   AuthPaymentDTO authPayment(String userId, String trxCode);
   TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId);
   SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId);
+    void cancelPayment(String trxId, String merchantId, String acquirerId);
 }
