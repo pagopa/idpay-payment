@@ -53,12 +53,13 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Send notification to Slack
         id: slack
-        if: ${{ github.event_name == 'schedule' && steps.scan.conclusion == 'failure'}}
+#        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
+        if: ${{ steps.scan.outcome == 'failure' }} #TODO cancel after test
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ steps.scan.conclusion }}",
+              "text": "GitHub Action scan result: ${{ steps.scan.outcome }}",
               "blocks": [
                 {
                   "type": "header",
@@ -71,7 +72,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan result: ${{ steps.scan.conclusion }}"
+                    "text": "GitHub Action scan result: ${{ steps.scan.outcome }}"
                   }
                 }
               ]
