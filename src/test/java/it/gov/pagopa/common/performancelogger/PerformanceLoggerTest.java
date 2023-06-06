@@ -3,8 +3,8 @@ package it.gov.pagopa.common.performancelogger;
 import static org.mockito.Mockito.when;
 
 import ch.qos.logback.classic.LoggerContext;
-import it.gov.pagopa.common.MemoryAppender;
-import it.gov.pagopa.payment.exception.ClientException;
+import it.gov.pagopa.common.utils.MemoryAppender;
+import it.gov.pagopa.common.web.exception.ClientException;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

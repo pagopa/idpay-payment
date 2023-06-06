@@ -58,6 +58,8 @@ public class TransactionInProgress {
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;
+  private String initiativeName;
+  private String businessName;
   private Long reward;
   @Builder.Default
   private List<String> rejectionReasons = new ArrayList<>();

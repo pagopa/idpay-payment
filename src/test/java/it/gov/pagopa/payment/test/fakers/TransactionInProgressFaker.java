@@ -25,6 +25,8 @@ public class TransactionInProgressFaker {
         .id(id)
         .correlationId(id)
         .initiativeId("INITIATIVEID%d".formatted(bias))
+        .initiativeName("INITIATIVENAME%d".formatted(bias))
+        .businessName("BUSINESSNAME%d".formatted(bias))
         .merchantId("MERCHANTID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))

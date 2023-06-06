@@ -59,6 +59,7 @@ microservice-chart:
 
     rest-client:
       IDPAY_REWARD_PAYMENT: idpay-reward-calculator-baseurl
+      IDPAY_MERCHANT: idpay_merchant_host
       PDV_ENCRYPT_BASE_URL: pdv_decrypt_base_url
       PDV_DECRYPT_BASE_URL: pdv_decrypt_base_url
 

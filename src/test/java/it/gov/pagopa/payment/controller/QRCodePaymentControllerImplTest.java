@@ -1,10 +1,10 @@
 package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.payment.configuration.JsonConfig;
+import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import static org.mockito.ArgumentMatchers.anyString;

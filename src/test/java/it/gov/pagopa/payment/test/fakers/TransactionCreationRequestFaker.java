@@ -15,8 +15,6 @@ public class TransactionCreationRequestFaker {
   public static TransactionCreationRequest.TransactionCreationRequestBuilder mockInstanceBuilder(Integer bias) {
     return TransactionCreationRequest.builder()
         .initiativeId("INITIATIVEID%d".formatted(bias))
-        .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
-        .vat("VAT%d".formatted(bias))
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .amountCents(10L)
         .mcc("MCC%d".formatted(bias))
