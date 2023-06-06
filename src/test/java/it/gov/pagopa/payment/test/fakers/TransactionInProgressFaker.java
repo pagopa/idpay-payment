@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -42,6 +43,7 @@ public class TransactionInProgressFaker {
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .status(status)
-        .channel("CHANNEL%d".formatted(bias));
+        .channel("CHANNEL%d".formatted(bias))
+        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

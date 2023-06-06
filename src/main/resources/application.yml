@@ -98,12 +98,21 @@ rest-client:
     baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
   merchant:
     baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
+  encryptpdv:
+    baseUrl: ${PDV_ENCRYPT_BASE_URL:}
+    cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
+  decryptpdv:
+    baseUrl: ${PDV_DECRYPT_BASE_URL:}
+    cf: ${PDV_DECRYPT_SERVICE_CODE:pdv-ms-tokenizer}
+
+api.key.encrypt: ${PDV_ENCRYPT_API_KEY:}
+api.key.decrypt: ${PDV_DECRYPT_API_KEY:}
 
 app:
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
-    trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:15}}
+    trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:4320}}
 
 management.endpoints:
   web:
