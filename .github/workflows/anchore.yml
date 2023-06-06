@@ -51,6 +51,8 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
+      - name: Print the input name to STDOUT #TODO test
+        run: echo outcome ${{ steps.scan.outcome }}
       - name: Send notification to Slack
         id: slack
 #        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
