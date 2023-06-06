@@ -54,7 +54,7 @@ microservice-chart:
     APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
     ENABLE_AUDIT_APPENDER: "TRUE"
 
-  envConfigMapExternals:
+  externalConfigMapValues:
     idpay-common:
       TZ: TZ
 
