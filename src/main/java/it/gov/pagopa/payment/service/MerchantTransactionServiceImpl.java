@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.Utils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,7 +35,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     @Override
     public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable){
         String userId = null;
-        if(!fiscalCode.isBlank()){
+        if(StringUtils.isNotBlank(fiscalCode)){
             userId = encryptCF(fiscalCode);
         }
         Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, initiativeId, userId, status);

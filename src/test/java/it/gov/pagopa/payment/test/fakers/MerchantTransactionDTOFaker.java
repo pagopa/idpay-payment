@@ -23,7 +23,7 @@ public class MerchantTransactionDTOFaker {
         String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
 
         return MerchantTransactionDTO.builder()
-                .correlationId(id)
+                .trxId(id)
                 .fiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
                 .effectiveAmount(BigDecimal.TEN.setScale(2, RoundingMode.UNNECESSARY))
                 .trxCode("trxcode%d".formatted(bias))

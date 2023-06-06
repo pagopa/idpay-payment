@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerchantTransactionDTO {
     String trxCode;
-    String correlationId;
+    String trxId;
     String fiscalCode;
     BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
