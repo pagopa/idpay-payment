@@ -18,6 +18,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -94,6 +95,48 @@ class MerchantTransactionServiceTest {
             assertEquals("INTERNAL SERVER ERROR", e.getCode());
             assertEquals("Error during decryption, userId: [USERID1]", e.getMessage());
         }
+    }
+
+    @Test
+    void getMerchantTransactionList_NoFiscalCode() {
+        TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
+
+        MerchantTransactionDTO merchantTransaction = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
+        merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction.setFiscalCode(null);
+
+        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+                .content(List.of(merchantTransaction))
+                .pageSize(10).totalElements(1).totalPages(1).build();
+
+        MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", null, null, null);
+
+        assertEquals(1, result.getContent().size());
+        assertEquals(merchantTransactionsListDTO_expected, result);
+        TestUtils.checkNotNullFields(result);
+    }
+
+    @Test
+    void getMerchantTransactionList_EmptyTransactionInProgressList() {
+
+        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(Collections.emptyList());
+
+        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+                .content(Collections.emptyList())
+                .pageSize(10).totalElements(0).totalPages(0).build();
+
+        EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
+
+        Mockito.when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
+
+        MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
+
+        assertEquals(0, result.getContent().size());
+        assertEquals(merchantTransactionsListDTO_expected, result);
+        TestUtils.checkNotNullFields(result);
     }
 
 }
