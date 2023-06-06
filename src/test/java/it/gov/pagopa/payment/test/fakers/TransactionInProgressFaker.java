@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -62,6 +63,8 @@ public class TransactionInProgressFaker {
         .status(status)
         .channel("CHANNEL%d".formatted(bias))
         .reward(reward)
-        .rewards(rewards);
+        .rewards(rewards)
+        .channel("CHANNEL%d".formatted(bias))
+        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }
