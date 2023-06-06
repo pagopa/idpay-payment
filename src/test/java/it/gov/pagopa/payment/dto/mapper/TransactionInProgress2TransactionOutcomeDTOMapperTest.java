@@ -144,6 +144,6 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
     Assertions.assertSame(expected.getStatus(), result.getStatus());
     Assertions.assertSame(expected.getChannel(), result.getChannel());
     Assertions.assertSame(expected.getRewards(), result.getRewards());
-    TestUtils.checkNotNullFields(result, TransactionInProgress.Fields.reward);
+    TestUtils.checkNotNullFields(result, TransactionInProgress.Fields.reward, TransactionInProgress.Fields.updateDate);
   }
 }

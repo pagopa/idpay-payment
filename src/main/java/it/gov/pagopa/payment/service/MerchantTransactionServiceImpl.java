@@ -7,7 +7,7 @@ import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.Utils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -20,22 +20,21 @@ import java.util.List;
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService{
 
-    @Autowired
-    DecryptRestConnector decryptRestConnector;
-    @Autowired
-    EncryptRestConnector encryptRestConnector;
-
-
+    private final DecryptRestConnector decryptRestConnector;
+    private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
+    @Value("${app.qrCode.trxInProgressLifetimeMinutes}") int trxInProgressLifetimeMinutes;
 
-    public MerchantTransactionServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
+    public MerchantTransactionServiceImpl(DecryptRestConnector decryptRestConnector, EncryptRestConnector encryptRestConnector, TransactionInProgressRepository transactionInProgressRepository) {
+        this.decryptRestConnector = decryptRestConnector;
+        this.encryptRestConnector = encryptRestConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
     }
 
     @Override
     public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable){
         String userId = null;
-        if(fiscalCode != null){
+        if(!fiscalCode.isBlank()){
             userId = encryptCF(fiscalCode);
         }
         Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, initiativeId, userId, status);
@@ -49,6 +48,8 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                             transaction.getCorrelationId(),
                                             transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                                             transaction.getEffectiveAmount(),
+                                            transaction.getTrxDate().toLocalDateTime(),
+                                            trxInProgressLifetimeMinutes,
                                             transaction.getUpdateDate(),
                                             transaction.getStatus().toString()
                                     )));
