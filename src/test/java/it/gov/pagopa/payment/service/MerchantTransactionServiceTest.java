@@ -1,15 +1,15 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.MerchantTransactionDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.utils.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

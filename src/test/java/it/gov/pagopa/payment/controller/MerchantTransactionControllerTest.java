@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.gov.pagopa.payment.configuration.JsonConfig;
+import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.MerchantTransactionService;

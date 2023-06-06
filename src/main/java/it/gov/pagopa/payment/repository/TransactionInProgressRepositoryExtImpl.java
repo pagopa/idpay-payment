@@ -6,7 +6,6 @@ import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.payment.utils.Utils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -199,7 +198,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     @Override
     public List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable){
-        return mongoTemplate.find(Query.query(criteria).with(Utils.getPageable(pageable)), TransactionInProgress.class);}
+        return mongoTemplate.find(Query.query(criteria).with(CommonUtilities.getPageable(pageable)), TransactionInProgress.class);}
 
     @Override
     public long getCount(Criteria criteria) {

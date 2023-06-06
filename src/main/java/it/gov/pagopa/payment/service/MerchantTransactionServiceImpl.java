@@ -1,12 +1,12 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
-import it.gov.pagopa.payment.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.utils.Utils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -57,7 +57,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
-                Utils.getPageable(pageable), () -> count);
+                CommonUtilities.getPageable(pageable), () -> count);
         return new MerchantTransactionsListDTO(merchantTransactions, result.getNumber(), result.getSize(),
                 (int) result.getTotalElements(), result.getTotalPages());
     }
