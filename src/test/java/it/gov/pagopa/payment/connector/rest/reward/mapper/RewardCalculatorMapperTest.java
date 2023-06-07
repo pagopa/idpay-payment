@@ -1,9 +1,7 @@
 package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
+import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -11,13 +9,14 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.utils.CommonUtilities;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
  class RewardCalculatorMapperTest {
 
@@ -50,19 +49,16 @@ import org.junit.jupiter.api.Test;
       assertEquals(transaction.getMcc(), result.getMcc());
       assertEquals(transaction.getAcquirerId(), result.getAcquirerId());
       assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
-      assertEquals(transaction.getOperationTypeTranscoded(), result.getOperationType());
       assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
-      assertEquals(transaction.getCorrelationId(), result.getCorrelationId());
+      assertEquals(transaction.getCorrelationId(), result.getTransactionId());
       TestUtils.checkNotNullFields(result);
     });
   }
 
   @Test
   void rewardResponseMap() {
-    AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,
-        SyncTrxStatus.IDENTIFIED);
-    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
-        SyncTrxStatus.IDENTIFIED);
+    AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transaction.setRejectionReasons(List.of());
     transaction.setReward(0L);
 
@@ -75,6 +71,8 @@ import org.junit.jupiter.api.Test;
       assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(responseDTO.getStatus(), result.getStatus());
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
+      assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
+      assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
       TestUtils.checkNotNullFields(result);
     });
   }
@@ -97,7 +95,9 @@ import org.junit.jupiter.api.Test;
        assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
        assertEquals(responseDTO.getStatus(), result.getStatus());
        assertEquals(transaction.getTrxCode(), result.getTrxCode());
-       TestUtils.checkNotNullFields(result);
+       assertNull(result.getCounters());
+       assertEquals(Collections.emptyMap(), result.getRewards());
+       TestUtils.checkNotNullFields(result, "counters");
      });
    }
 
@@ -118,6 +118,8 @@ import org.junit.jupiter.api.Test;
              assertEquals(Collections.emptyList(), result.getRejectionReasons());
              assertEquals(responseDTO.getStatus(), result.getStatus());
              assertEquals(transaction.getTrxCode(), result.getTrxCode());
+             assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
+             assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
              TestUtils.checkNotNullFields(result);
          });
      }

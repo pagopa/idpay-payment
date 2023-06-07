@@ -7,10 +7,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.qrcode.QRCodeAuthPaymentService;
-import it.gov.pagopa.payment.service.qrcode.QRCodeConfirmationService;
-import it.gov.pagopa.payment.service.qrcode.QRCodeCreationService;
-import it.gov.pagopa.payment.service.qrcode.QRCodePreAuthService;
+import it.gov.pagopa.payment.service.qrcode.*;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.AfterEach;
@@ -43,6 +40,8 @@ class QRCodePaymentServiceImplTest {
     private QRCodeAuthPaymentService qrCodeAuthPaymentServiceMock;
     @Mock
     private QRCodeConfirmationService qrCodeConfirmationServiceMock;
+    @Mock
+    private QRCodeCancelService qrCodeCancelServiceMock;
 
     private final TransactionInProgress2SyncTrxStatusMapper transactionMapper= new TransactionInProgress2SyncTrxStatusMapper();
 
@@ -54,7 +53,7 @@ class QRCodePaymentServiceImplTest {
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
                 qrCodeConfirmationServiceMock,
-                transactionInProgressRepositoryMock,
+                qrCodeCancelServiceMock, transactionInProgressRepositoryMock,
                 transactionMapper);
     }
 

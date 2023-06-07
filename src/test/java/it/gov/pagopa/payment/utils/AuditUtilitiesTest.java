@@ -36,12 +36,12 @@ class AuditUtilitiesTest {
 
     @Test
     void logCreateTransaction() {
-        auditUtilities.logCreatedTransaction(INITIATIVE_ID, TRX_CODE, MERCHANT_ID);
+        auditUtilities.logCreatedTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID);
 
         assertEquals(
                 CEF + " msg=Transaction created"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s cs3Label=merchantId cs3=%s"
-                                .formatted(INITIATIVE_ID, TRX_CODE, MERCHANT_ID),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s cs4Label=merchantId cs4=%s"
+                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -60,12 +60,12 @@ class AuditUtilitiesTest {
 
     @Test
     void logRelatedUserToTransaction() {
-        auditUtilities.logRelatedUserToTransaction(INITIATIVE_ID, TRX_CODE, USER_ID);
+        auditUtilities.logRelatedUserToTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID);
 
         assertEquals(
                 CEF + " msg=User related to transaction"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s suser=%s"
-                                .formatted(INITIATIVE_ID, TRX_CODE, USER_ID),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s"
+                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -84,12 +84,12 @@ class AuditUtilitiesTest {
 
     @Test
     void logAuthorizedPayment() {
-        auditUtilities.logAuthorizedPayment(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList());
+        auditUtilities.logAuthorizedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList());
 
         assertEquals(
                 CEF + " msg=User authorized the transaction"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s suser=%s cs3Label=reward cs3=%s cs4Label=rejectionReasons cs4=%s"
-                                .formatted(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, "[]"),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s"
+                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, "[]"),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -108,13 +108,13 @@ class AuditUtilitiesTest {
 
     @Test
     void logConfirmedPayment() {
-        auditUtilities.logConfirmedPayment(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList(), MERCHANT_ID);
+        auditUtilities.logConfirmedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList(), MERCHANT_ID);
 
 
         assertEquals(
                 CEF + " msg=Merchant confirmed the transaction"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxCode cs2=%s suser=%s cs3Label=reward cs3=%s cs4Label=rejectionReasons cs4=%s cs5Label=merchantId cs5=%s"
-                        .formatted(INITIATIVE_ID, TRX_CODE, USER_ID, REWARD, "[]", MERCHANT_ID),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s cs6Label=merchantId cs6=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, "[]", MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -126,6 +126,32 @@ class AuditUtilitiesTest {
 
         assertEquals(
                 CEF + " msg=Merchant confirmed the transaction - KO"
+                        + " cs1Label=trxId cs1=%s cs2Label=merchantId cs2=%s"
+                        .formatted(TRX_ID, MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logCancelTransaction() {
+        auditUtilities.logCancelTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList(), MERCHANT_ID);
+
+
+        assertEquals(
+                CEF + " msg=Merchant cancelled the transaction"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s cs6Label=merchantId cs6=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, "[]", MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorCancelTransaction() {
+        auditUtilities.logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+
+
+        assertEquals(
+                CEF + " msg=Merchant cancelled the transaction - KO"
                         + " cs1Label=trxId cs1=%s cs2Label=merchantId cs2=%s"
                         .formatted(TRX_ID, MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
