@@ -55,8 +55,7 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Send notification to Slack
         id: slack
-#        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
-        if: always() #TODO cancel after test
+        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
