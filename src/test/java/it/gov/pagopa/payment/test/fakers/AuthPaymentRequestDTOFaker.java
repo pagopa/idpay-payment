@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
-import it.gov.pagopa.payment.enums.OperationType;
+
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -24,8 +24,7 @@ public class AuthPaymentRequestDTOFaker {
           .mcc("MCC%d".formatted(bias))
           .acquirerId("ACQUIRERID%d".formatted(bias))
           .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
-          .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
-          .operationType(OperationType.CHARGE);
+          .idTrxIssuer("IDTRXISSUER%d".formatted(bias));
     }
 
 }

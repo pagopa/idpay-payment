@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,7 +57,7 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result);
 
-    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -77,7 +76,7 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result);
 
-    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -97,7 +96,7 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result);
 
-    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -118,7 +117,7 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
-    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -136,7 +135,7 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
-    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -152,7 +151,7 @@ class QRCodePreAuthServiceImplTest {
     Assertions.assertNotNull(result);
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
 
-    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString());
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 }
