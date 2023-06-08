@@ -11,7 +11,7 @@ import java.util.function.Function;
 public class TransactionInProgress2TransactionResponseMapper
     implements Function<TransactionInProgress, TransactionResponse> {
 
-  @Value("${app.qrCode.trxInProgressLifetimeMinutes}") int trxInProgressLifetimeMinutes;
+  @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes;
 
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
@@ -38,7 +38,7 @@ public class TransactionInProgress2TransactionResponseMapper
             .vat(transactionInProgress.getVat())
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
-            .trxExpirationMinutes(trxInProgressLifetimeMinutes)
+            .trxExpirationMinutes(authorizationExpirationMinutes)
             .build();
   }
 }

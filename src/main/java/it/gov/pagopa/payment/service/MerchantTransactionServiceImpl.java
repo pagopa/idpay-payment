@@ -25,7 +25,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final DecryptRestConnector decryptRestConnector;
     private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
-    @Value("${app.qrCode.trxInProgressLifetimeMinutes}") int trxInProgressLifetimeMinutes;
+    @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes;
 
     public MerchantTransactionServiceImpl(DecryptRestConnector decryptRestConnector, EncryptRestConnector encryptRestConnector, TransactionInProgressRepository transactionInProgressRepository) {
         this.decryptRestConnector = decryptRestConnector;
@@ -51,7 +51,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                             transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                                             transaction.getReward() != null ? CommonUtilities.centsToEuro(transaction.getReward()) : BigDecimal.valueOf(0),
                                             transaction.getTrxDate().toLocalDateTime(),
-                                            trxInProgressLifetimeMinutes,
+                                            authorizationExpirationMinutes,
                                             transaction.getUpdateDate(),
                                             transaction.getStatus().toString()
                                     )));

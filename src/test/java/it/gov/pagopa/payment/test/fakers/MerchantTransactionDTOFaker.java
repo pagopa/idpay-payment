@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,9 +12,6 @@ public class MerchantTransactionDTOFaker {
     public static MerchantTransactionDTO mockInstance(Integer bias, SyncTrxStatus status) {
         return mockInstanceBuilder(bias, status).build();
     }
-
-    @Value("${app.qrCode.trxInProgressLifetimeMinutes}")
-    static int trxInProgressLifetimeMinutes;
 
     public static MerchantTransactionDTO.MerchantTransactionDTOBuilder mockInstanceBuilder(Integer bias,
                                                                                          SyncTrxStatus status) {
@@ -33,7 +29,7 @@ public class MerchantTransactionDTOFaker {
                 .effectiveAmount(reward != null ? CommonUtilities.centsToEuro(reward) : BigDecimal.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))
                 .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                .trxExpirationMinutes(trxInProgressLifetimeMinutes)
+                .trxExpirationMinutes(4320)
                 .status(status.toString())
                 .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
     }
