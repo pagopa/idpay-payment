@@ -112,7 +112,9 @@ app:
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
-    trxInProgressLifetimeMinutes: ${QR_CODE_PAYMENT_TRX_TO_CONFIRM:${PAYMENT_TRX_TO_CONFIRM:4320}}
+    expirations:
+      authorizationMinutes: ${QR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:4320}}
+      cancelMinutes: ${QR_CODE_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
 
 management:
   endpoint:

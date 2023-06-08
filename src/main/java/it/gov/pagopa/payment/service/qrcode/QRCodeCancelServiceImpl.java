@@ -11,14 +11,19 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Service
 @Slf4j
 public class QRCodeCancelServiceImpl implements QRCodeCancelService {
+
+    private final Duration cancelExpiration;
 
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
@@ -26,13 +31,21 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
 
-    public QRCodeCancelServiceImpl(TransactionInProgressRepository repository,
-                                   RewardCalculatorConnector rewardCalculatorConnector, TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities) {
+    public QRCodeCancelServiceImpl(
+            @Value("${app.qrCode.expirations.cancelMinutes}") long cancelExpirationMinutes,
+
+            TransactionInProgressRepository repository,
+            RewardCalculatorConnector rewardCalculatorConnector,
+            TransactionNotifierService notifierService,
+            PaymentErrorNotifierService paymentErrorNotifierService,
+            AuditUtilities auditUtilities) {
         this.repository = repository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
+
+        this.cancelExpiration = Duration.ofMinutes(cancelExpirationMinutes);
     }
 
     @Override
@@ -49,6 +62,9 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
 
             if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
                 throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
+            }
+            if(cancelExpiration.compareTo(Duration.between(trx.getTrxChargeDate(), OffsetDateTime.now())) < 0){
+                throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
             }
 
             if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){
