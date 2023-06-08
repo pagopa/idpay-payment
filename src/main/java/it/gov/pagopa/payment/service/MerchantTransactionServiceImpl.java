@@ -19,24 +19,32 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+
 @Service
-public class MerchantTransactionServiceImpl implements MerchantTransactionService{
+public class MerchantTransactionServiceImpl implements MerchantTransactionService {
+
+    private final int authorizationExpirationMinutes;
 
     private final DecryptRestConnector decryptRestConnector;
     private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
-    @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes;
 
-    public MerchantTransactionServiceImpl(DecryptRestConnector decryptRestConnector, EncryptRestConnector encryptRestConnector, TransactionInProgressRepository transactionInProgressRepository) {
+    public MerchantTransactionServiceImpl(
+            @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+
+            DecryptRestConnector decryptRestConnector,
+            EncryptRestConnector encryptRestConnector,
+            TransactionInProgressRepository transactionInProgressRepository) {
+        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.decryptRestConnector = decryptRestConnector;
         this.encryptRestConnector = encryptRestConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
     }
 
     @Override
-    public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable){
+    public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable) {
         String userId = null;
-        if(StringUtils.isNotBlank(fiscalCode)){
+        if (StringUtils.isNotBlank(fiscalCode)) {
             userId = encryptCF(fiscalCode);
         }
         Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, initiativeId, userId, status);
@@ -45,16 +53,16 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
                     transaction -> merchantTransactions.add(
-                                    new MerchantTransactionDTO(
-                                            transaction.getTrxCode(),
-                                            transaction.getCorrelationId(),
-                                            transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
-                                            transaction.getReward() != null ? CommonUtilities.centsToEuro(transaction.getReward()) : BigDecimal.valueOf(0),
-                                            transaction.getTrxDate().toLocalDateTime(),
-                                            authorizationExpirationMinutes,
-                                            transaction.getUpdateDate(),
-                                            transaction.getStatus().toString()
-                                    )));
+                            new MerchantTransactionDTO(
+                                    transaction.getTrxCode(),
+                                    transaction.getCorrelationId(),
+                                    transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
+                                    transaction.getReward() != null ? CommonUtilities.centsToEuro(transaction.getReward()) : BigDecimal.valueOf(0),
+                                    transaction.getTrxDate().toLocalDateTime(),
+                                    authorizationExpirationMinutes,
+                                    transaction.getUpdateDate(),
+                                    transaction.getStatus().toString()
+                            )));
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,

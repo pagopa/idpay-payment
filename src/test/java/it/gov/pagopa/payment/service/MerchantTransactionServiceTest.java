@@ -25,17 +25,16 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MerchantTransactionServiceTest {
-    @Mock
-    private EncryptRestConnector encryptRestConnector;
-    @Mock
-    private DecryptRestConnector decryptRestConnector;
+
+    @Mock private EncryptRestConnector encryptRestConnector;
+    @Mock private DecryptRestConnector decryptRestConnector;
     @Mock private TransactionInProgressRepository repositoryMock;
 
-    MerchantTransactionService service;
+    private MerchantTransactionService service;
 
     @BeforeEach
     void setUp() {
-        service = new MerchantTransactionServiceImpl(decryptRestConnector, encryptRestConnector, repositoryMock);
+        service = new MerchantTransactionServiceImpl(4320, decryptRestConnector, encryptRestConnector, repositoryMock);
     }
 
     @Test

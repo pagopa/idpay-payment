@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
 public class MerchantTransactionDTOFaker {
+
     public static MerchantTransactionDTO mockInstance(Integer bias, SyncTrxStatus status) {
         return mockInstanceBuilder(bias, status).build();
     }
