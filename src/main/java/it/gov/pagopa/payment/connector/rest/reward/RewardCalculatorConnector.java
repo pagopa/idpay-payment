@@ -5,7 +5,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 
 public interface RewardCalculatorConnector {
 
-  AuthPaymentDTO authorizePayment(TransactionInProgress transaction);
-
   AuthPaymentDTO previewTransaction(TransactionInProgress transaction);
+  AuthPaymentDTO authorizePayment(TransactionInProgress transaction);
+  AuthPaymentDTO cancelTransaction(TransactionInProgress transaction);
 }

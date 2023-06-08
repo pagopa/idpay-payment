@@ -1,12 +1,16 @@
 package it.gov.pagopa.payment.test.fakers;
 
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 
 public class AuthPaymentDTOFaker {
 
@@ -16,18 +20,21 @@ public class AuthPaymentDTOFaker {
     return mockInstanceBuilder(bias,transaction).build();
   }
 
-  public static AuthPaymentDTO.AuthPaymentDTOBuilder mockInstanceBuilder(Integer bias,
-      TransactionInProgress transaction) {
+  public static AuthPaymentDTO.AuthPaymentDTOBuilder mockInstanceBuilder(Integer bias, TransactionInProgress transaction) {
+    Reward reward = new Reward(transaction.getInitiativeId(), "ORGID", TestUtils.bigDecimalValue(10));
+    reward.setCounters(new RewardCounters());
     return AuthPaymentDTO.builder()
         .id(transaction.getId())
-        .initiativeId("INITIATIVEID%d".formatted(bias))
+        .initiativeId(transaction.getInitiativeId())
         .initiativeName("INITIATIVENAME%d".formatted(bias))
         .businessName("BUSINESSNAME%d".formatted(bias))
         .status(SyncTrxStatus.IDENTIFIED)
         .rejectionReasons(List.of())
-        .amountCents(1000L)
-        .reward(1000L)
+        .amountCents(10_00L)
+        .reward(10_00L)
         .trxCode("trxcode%d".formatted(bias))
-        .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .rewards(Map.of(transaction.getInitiativeId(), reward))
+        .counters(reward.getCounters());
   }
 }

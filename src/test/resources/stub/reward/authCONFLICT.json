@@ -1,12 +1,11 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/INITIATIVEID",
+    "urlPathPattern": "/reward/initiative/INITIATIVEID",
     "bodyPatterns": [
       {
         "equalToJson": {
           "transactionId": "${json-unit.any-string}",
-          "correlationId": "ALREADY_AUTHORED",
           "userId": "USERID",
           "merchantId": "MERCHANTID",
           "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
@@ -19,7 +18,6 @@
           "acquirerId":  "ACQUIRERID",
           "idTrxIssuer":  "${json-unit.regex}IDTRXISSUER[0-9]+",
           "idTrxAcquirer": "IDTRXACQUIRER",
-          "operationType": "CHARGE",
           "channel": "${json-unit.regex}(QRCODE|CIE)"
         }
       }
