@@ -23,13 +23,13 @@ public class TransactionInProgressFaker {
     return mockInstanceBuilder(bias, status).build();
   }
 
-  public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias, SyncTrxStatus status) {
+  public static TransactionInProgress.TransactionInProgressBuilder<?,?> mockInstanceBuilder(Integer bias, SyncTrxStatus status) {
 
     String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
     String initiativeId = "INITIATIVEID%d".formatted(bias);
 
     Long reward=null;
-    Map<String, Reward> rewards=null;
+    Map<String, Reward> rewards;
     if(!status.equals(SyncTrxStatus.CREATED)){
       reward=1_00L;
       Reward rewardObj = new Reward(initiativeId, "ORGID", TestUtils.bigDecimalValue(1));

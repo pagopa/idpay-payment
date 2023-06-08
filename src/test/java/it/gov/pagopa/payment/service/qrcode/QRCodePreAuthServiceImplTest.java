@@ -49,7 +49,7 @@ class QRCodePreAuthServiceImplTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-    when(transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
     when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
@@ -68,7 +68,7 @@ class QRCodePreAuthServiceImplTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-    when(transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
     when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
@@ -88,7 +88,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
 
-    when(transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
     when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
@@ -107,7 +107,7 @@ class QRCodePreAuthServiceImplTest {
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
     authPaymentDTO.setRejectionReasons(List.of("NO_ACTIVE_INITIATIVES"));
 
-    when(transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
     when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     TransactionSynchronousException result = Assertions.assertThrows(TransactionSynchronousException.class, () ->
@@ -126,7 +126,7 @@ class QRCodePreAuthServiceImplTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     trx.setUserId("USERID1");
 
-    when(transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1")).thenReturn(trx);
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
 
     ClientException result = Assertions.assertThrows(ClientException.class, () ->
         qrCodePreAuthService.relateUser("trxcode1", "USERID2")
@@ -142,7 +142,7 @@ class QRCodePreAuthServiceImplTest {
   @Test
   void relateUserTrxNotFound() {
 
-    when(transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1")).thenReturn(null);
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 
     ClientException result = Assertions.assertThrows(ClientException.class, () ->
         qrCodePreAuthService.relateUser("trxcode1", "USERID1")

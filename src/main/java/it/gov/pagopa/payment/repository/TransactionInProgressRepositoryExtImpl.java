@@ -25,15 +25,15 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     private final MongoTemplate mongoTemplate;
     private final long trxThrottlingSeconds;
-    private final long trxInProgressLifetimeMinutes;
+    private final long authorizationExpirationMinutes;
 
     public TransactionInProgressRepositoryExtImpl(
             MongoTemplate mongoTemplate,
             @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
-            @Value("${app.qrCode.trxInProgressLifetimeMinutes:15}") long trxInProgressLifetimeMinutes) {
+            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
-        this.trxInProgressLifetimeMinutes = trxInProgressLifetimeMinutes;
+        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     }
 
     @Override
@@ -69,16 +69,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpired(String trxCode) {
+    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
         return mongoTemplate.findOne(
                 Query.query(
-                        criteriaByTrxCodeAndChargeDateGreaterThan(trxCode, LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes))),
+                        criteriaByTrxCodeAndChargeDateGreaterThan(trxCode, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
                 TransactionInProgress.class);
     }
 
     @Override
-    public TransactionInProgress findByTrxCodeAndTrxChargeDateNotExpiredThrottled(String trxCode) {
-        LocalDateTime minTrxChargeDate = LocalDateTime.now().minusMinutes(trxInProgressLifetimeMinutes);
+    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
+        LocalDateTime minTrxChargeDate = LocalDateTime.now().minusMinutes(authorizationExpirationMinutes);
         TransactionInProgress transaction =
                 mongoTemplate.findAndModify(
                         Query.query(

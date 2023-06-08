@@ -87,7 +87,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   @Test
   void findByTrxCodeThrottled() {
     TransactionInProgress notFoundResult =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled("DUMMYID");
+        transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled("DUMMYID");
     assertNull(notFoundResult);
 
     TransactionInProgress transaction =
@@ -95,7 +95,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     transactionInProgressRepository.save(transaction);
 
     TransactionInProgress result =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
+        transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(
             transaction.getTrxCode());
 
     assertNotNull(result);
@@ -108,7 +108,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         assertThrows(
             ClientException.class,
             () ->
-                transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpiredThrottled(
+                transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(
                     "trxcode1"));
 
     assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
@@ -148,7 +148,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     transactionInProgressRepository.save(transactionInProgress);
 
     TransactionInProgress resultFirstSave =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
+        transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     Assertions.assertNotNull(resultFirstSave);
     TestUtils.checkNotNullFields(
         resultFirstSave,
@@ -163,7 +163,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     transactionInProgressRepository.save(transactionInProgress);
 
     TransactionInProgress resultSecondSave =
-        transactionInProgressRepository.findByTrxCodeAndTrxChargeDateNotExpired("trxcode1");
+        transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     Assertions.assertNull(resultSecondSave);
   }
 
