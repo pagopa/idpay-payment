@@ -16,6 +16,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 @Service
@@ -48,7 +49,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                             transaction.getTrxCode(),
                                             transaction.getCorrelationId(),
                                             transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
-                                            transaction.getEffectiveAmount(),
+                                            transaction.getReward() != null ? CommonUtilities.centsToEuro(transaction.getReward()) : BigDecimal.valueOf(0),
                                             transaction.getTrxDate().toLocalDateTime(),
                                             trxInProgressLifetimeMinutes,
                                             transaction.getUpdateDate(),

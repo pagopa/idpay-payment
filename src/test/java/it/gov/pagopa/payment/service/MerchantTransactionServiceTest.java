@@ -42,16 +42,22 @@ class MerchantTransactionServiceTest {
     void getMerchantTransactionList() {
         TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         transaction1.setUserId("USERID1");
+        TransactionInProgress transaction2 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
-        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
+        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1, transaction2));
 
-        MerchantTransactionDTO merchantTransaction = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
-        merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
+        merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+
+        MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
+        merchantTransaction2.setTrxDate(transaction2.getTrxDate().toLocalDateTime());
+        merchantTransaction2.setFiscalCode(null);
 
         MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
-                .content(List.of(merchantTransaction))
-                .pageSize(10).totalElements(1).totalPages(1).build();
+                .content(List.of(merchantTransaction1, merchantTransaction2))
+                .pageSize(10).totalElements(2).totalPages(1).build();
 
         DecryptCfDTO decryptCfDTO = new DecryptCfDTO("MERCHANTFISCALCODE1");
         EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
@@ -61,7 +67,7 @@ class MerchantTransactionServiceTest {
 
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
 
-        assertEquals(1, result.getContent().size());
+        assertEquals(2, result.getContent().size());
         assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
     }
