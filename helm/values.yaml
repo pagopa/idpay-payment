@@ -83,8 +83,8 @@ microservice-chart:
 
   # affinity: {}
 
-#  externalConfigMapFiles:
-#    create: true
-#    configMaps:
-#      - name: appinsights-config
-#        key: applicationinsights.json
+  externalConfigMapFiles:
+    create: true
+    configMaps:
+      - name: appinsights-config
+        key: applicationinsights.json
