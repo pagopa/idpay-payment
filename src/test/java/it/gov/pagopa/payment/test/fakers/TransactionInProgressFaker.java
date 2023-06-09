@@ -1,13 +1,21 @@
 package it.gov.pagopa.payment.test.fakers;
 
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.model.counters.RewardCounters;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TransactionInProgressFaker {
 
@@ -15,15 +23,26 @@ public class TransactionInProgressFaker {
     return mockInstanceBuilder(bias, status).build();
   }
 
-  public static TransactionInProgress.TransactionInProgressBuilder mockInstanceBuilder(Integer bias,
-      SyncTrxStatus status) {
+  public static TransactionInProgress.TransactionInProgressBuilder<?,?> mockInstanceBuilder(Integer bias, SyncTrxStatus status) {
 
     String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
+    String initiativeId = "INITIATIVEID%d".formatted(bias);
+
+    Long reward=null;
+    Map<String, Reward> rewards;
+    if(!status.equals(SyncTrxStatus.CREATED)){
+      reward=1_00L;
+      Reward rewardObj = new Reward(initiativeId, "ORGID", TestUtils.bigDecimalValue(1));
+      rewardObj.setCounters(new RewardCounters());
+      rewards=new HashMap<>(Map.of(initiativeId, rewardObj));
+    } else {
+      rewards = Collections.emptyMap();
+    }
 
     return TransactionInProgress.builder()
         .id(id)
         .correlationId(id)
-        .initiativeId("INITIATIVEID%d".formatted(bias))
+        .initiativeId(initiativeId)
         .initiativeName("INITIATIVENAME%d".formatted(bias))
         .businessName("BUSINESSNAME%d".formatted(bias))
         .merchantId("MERCHANTID%d".formatted(bias))
@@ -42,6 +61,10 @@ public class TransactionInProgressFaker {
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .status(status)
-        .channel("CHANNEL%d".formatted(bias));
+        .channel("CHANNEL%d".formatted(bias))
+        .reward(reward)
+        .rewards(rewards)
+        .channel("CHANNEL%d".formatted(bias))
+        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

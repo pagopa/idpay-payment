@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.model.counters.RewardCounters;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -10,6 +12,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -32,9 +35,13 @@ public class AuthPaymentDTO {
   @NotNull
   private SyncTrxStatus status;
   private Long reward;
+  private RewardCounters counters;
   @NotNull
   private List<String> rejectionReasons;
   @NotNull
   private Long amountCents;
+
+  @JsonIgnore
+  private Map<String, Reward> rewards;
 
 }

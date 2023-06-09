@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.connector.rest.reward.dto;
 
-import it.gov.pagopa.payment.enums.OperationType;
-import java.time.OffsetDateTime;
 import lombok.Builder;
 import lombok.Getter;
+
+import java.time.OffsetDateTime;
 
 @Builder
 @Getter
@@ -22,8 +22,6 @@ public class AuthPaymentRequestDTO {
   private String mcc;
   private String acquirerId;
   private String idTrxAcquirer;
-  private OperationType operationType;
-  private String correlationId;
   private String channel;
 
 }

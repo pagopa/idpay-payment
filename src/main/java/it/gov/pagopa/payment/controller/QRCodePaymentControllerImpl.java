@@ -72,6 +72,19 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   }
 
   @Override
+  @PerformanceLog(
+          value = "QR_CODE_CANCEL_TRANSACTION",
+          payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
+  public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
+    log.info(
+            "[QR_CODE_CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {}",
+            merchantId,
+            acquirerId,
+            trxId);
+    qrCodePaymentService.cancelPayment(trxId, merchantId, acquirerId);
+  }
+
+  @Override
   @PerformanceLog("GET_STATUS_TRANSACTION")
   public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
     log.info("[GET_STATUS_TRANSACTION] Merchant with {},{} requested to retrieve status of transaction{} ", merchantId, acquirerId, transactionId);

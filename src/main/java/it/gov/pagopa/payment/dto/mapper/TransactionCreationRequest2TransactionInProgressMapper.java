@@ -7,6 +7,8 @@ import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.common.utils.CommonUtilities;
+
+import java.time.LocalDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -44,6 +46,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .merchantId(merchantId)
         .acquirerId(acquirerId)
         .idTrxAcquirer(idTrxAcquirer)
+        .updateDate(LocalDateTime.now())
         .build();
   }
 }

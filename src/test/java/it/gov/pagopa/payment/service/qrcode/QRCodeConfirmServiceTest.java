@@ -1,16 +1,13 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import static org.mockito.Mockito.when;
-
-import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -21,109 +18,108 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class QRCodeConfirmServiceTest {
 
-  @Mock private TransactionInProgressRepository repositoryMock;
-  @Mock private TransactionNotifierService notifierServiceMock;
-  @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
-  @Mock private AuditUtilities auditUtilitiesMock;
+    @Mock private TransactionInProgressRepository repositoryMock;
+    @Mock private TransactionNotifierService notifierServiceMock;
+    @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
+    @Mock private AuditUtilities auditUtilitiesMock;
 
-  private final TransactionInProgress2TransactionResponseMapper mapper =
-      new TransactionInProgress2TransactionResponseMapper();
-  private final TransactionInProgress2TransactionOutcomeDTOMapper
-      transactionInProgress2TransactionOutcomeDTOMapper =
-          new TransactionInProgress2TransactionOutcomeDTOMapper();
+    private final TransactionInProgress2TransactionResponseMapper mapper =
+            new TransactionInProgress2TransactionResponseMapper();
 
-  private QRCodeConfirmationServiceImpl service;
+    private QRCodeConfirmationService service;
 
-  @BeforeEach
-  void init() {
-    service =
-        new QRCodeConfirmationServiceImpl(
-            repositoryMock,
-            mapper,
-            notifierServiceMock,
-                paymentErrorNotifierServiceMock,
-                auditUtilitiesMock);
-  }
-
-  @Test
-  void testTrxNotFound() {
-    try {
-      service.confirmPayment("TRXID", "MERCHID", "ACQID");
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionNoBody e) {
-      Assertions.assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
+    @BeforeEach
+    void init() {
+        service =
+                new QRCodeConfirmationServiceImpl(
+                        repositoryMock,
+                        mapper,
+                        notifierServiceMock,
+                        paymentErrorNotifierServiceMock,
+                        auditUtilitiesMock);
     }
-  }
 
-  @Test
-  void testMerchantIdNotValid() {
-    when(repositoryMock.findByIdThrottled("TRXID"))
-        .thenReturn(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED));
-
-    try {
-      service.confirmPayment("TRXID", "MERCHID", "ACQID");
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionNoBody e) {
-      Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+    @Test
+    void testTrxNotFound() {
+        try {
+            service.confirmPayment("TRXID", "MERCHID", "ACQID");
+            Assertions.fail("Expected exception");
+        } catch (ClientExceptionNoBody e) {
+            Assertions.assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
+        }
     }
-  }
 
-  @Test
-  void testAcquirerIdNotValid() {
-    TransactionInProgress trx =
-        TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
-    trx.setMerchantId("MERCHID");
-    when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+    @Test
+    void testMerchantIdNotValid() {
+        when(repositoryMock.findByIdThrottled("TRXID"))
+                .thenReturn(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED));
 
-    try {
-      service.confirmPayment("TRXID", "MERCHID", "ACQID");
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionNoBody e) {
-      Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        try {
+            service.confirmPayment("TRXID", "MERCHID", "ACQID");
+            Assertions.fail("Expected exception");
+        } catch (ClientExceptionNoBody e) {
+            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        }
     }
-  }
 
-  @Test
-  void testStatusNotValid() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
-    trx.setMerchantId("MERCHID");
-    trx.setAcquirerId("ACQID");
-    when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+    @Test
+    void testAcquirerIdNotValid() {
+        TransactionInProgress trx =
+                TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        trx.setMerchantId("MERCHID");
+        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
-    try {
-      service.confirmPayment("TRXID", "MERCHID", "ACQID");
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionNoBody e) {
-      Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
+        try {
+            service.confirmPayment("TRXID", "MERCHID", "ACQID");
+            Assertions.fail("Expected exception");
+        } catch (ClientExceptionNoBody e) {
+            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        }
     }
-  }
 
-  @Test
-  void testSuccess() {
-    testSuccessful(true);
-  }
+    @Test
+    void testStatusNotValid() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+        trx.setMerchantId("MERCHID");
+        trx.setAcquirerId("ACQID");
+        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
-  @Test
-  void testSuccessNotNotified() {
-    testSuccessful(false);
-  }
+        try {
+            service.confirmPayment("TRXID", "MERCHID", "ACQID");
+            Assertions.fail("Expected exception");
+        } catch (ClientExceptionNoBody e) {
+            Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
+        }
+    }
 
-  private void testSuccessful(boolean transactionOutcome) {
-    TransactionInProgress trx =
-        TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
-    trx.setMerchantId("MERCHID");
-    trx.setAcquirerId("ACQID");
-    trx.setReward(1000L);
-    when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+    @Test
+    void testSuccess() {
+        testSuccessful(true);
+    }
 
-    when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);
+    @Test
+    void testSuccessNotNotified() {
+        testSuccessful(false);
+    }
 
-    TransactionResponse result = service.confirmPayment("TRXID", "MERCHID", "ACQID");
+    private void testSuccessful(boolean transactionOutcome) {
+        TransactionInProgress trx =
+                TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        trx.setMerchantId("MERCHID");
+        trx.setAcquirerId("ACQID");
+        trx.setReward(1000L);
+        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
-    Assertions.assertEquals(result, mapper.apply(trx));
-    Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());
-  }
+        when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);
+
+        TransactionResponse result = service.confirmPayment("TRXID", "MERCHID", "ACQID");
+
+        Assertions.assertEquals(result, mapper.apply(trx));
+        Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());
+    }
 }

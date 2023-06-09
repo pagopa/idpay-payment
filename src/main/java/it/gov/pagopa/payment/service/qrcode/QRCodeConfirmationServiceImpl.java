@@ -1,13 +1,13 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -48,12 +48,12 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
             }
 
             trx.setStatus(SyncTrxStatus.REWARDED);
-            log.info("[TRX_STATUS][REWARDED] The transaction with trxCode {}, has been rewarded", trx.getTrxCode());
+            log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
             sendConfirmPaymentNotification(trx);
 
             repository.deleteById(trxId);
 
-            auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), merchantId);
+            auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), merchantId);
 
             return mapper.apply(trx);
         } catch (RuntimeException e) {
@@ -64,18 +64,18 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {
         try {
-            log.info("[QR_CODE_CONFIRM_PAYMENT][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
+            log.info("[CONFIRM_PAYMENT][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
             if (!notifierService.notify(trx, trx.getMerchantId())) {
-                throw new IllegalStateException("[QR_CODE_CONFIRM_PAYMENT] Something gone wrong while Confirm Payment notify");
+                throw new IllegalStateException("[CONFIRM_PAYMENT] Something gone wrong while Confirm Payment notify");
             }
         } catch (Exception e) {
             if(!paymentErrorNotifierService.notifyConfirmPayment(
                     notifierService.buildMessage(trx, trx.getMerchantId()),
-                    "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
+                    "[CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
                     true,
                     e)
             ) {
-                log.error("[QR_CODE_CONFIRM_PAYMENT][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getUserId(), trx.getAcquirerId(), e);
+                log.error("[CONFIRM_PAYMENT][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getUserId(), trx.getAcquirerId(), e);
             }
         }
     }

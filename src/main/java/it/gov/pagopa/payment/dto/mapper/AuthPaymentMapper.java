@@ -1,8 +1,12 @@
 package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
+import java.util.Optional;
 
 @Service
 public class AuthPaymentMapper {
@@ -19,6 +23,8 @@ public class AuthPaymentMapper {
         .trxCode(transaction.getTrxCode())
         .trxDate(transaction.getTrxDate())
         .amountCents(transaction.getAmountCents())
+        .counters(Optional.ofNullable(transaction.getRewards()).flatMap(r->r.values().stream().map(Reward::getCounters).filter(Objects::nonNull).findFirst()).orElse(null))
+        .rewards(transaction.getRewards())
         .build();
   }
 }

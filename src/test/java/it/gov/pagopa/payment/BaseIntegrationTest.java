@@ -46,6 +46,8 @@ import java.util.concurrent.TimeUnit;
                 "logging.level.WireMock=ERROR",
                 "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}",
                 "rest-client.merchant.baseUrl=http://localhost:${wiremock.server.port}",
+                "rest-client.decryptpdv.baseUrl=http://localhost:${wiremock.server.port}",
+                "rest-client.encryptpdv.baseUrl=http://localhost:${wiremock.server.port}",
                 //endregion
 
                 //region kafka brokers

@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.function.Function;
@@ -9,6 +10,8 @@ import java.util.function.Function;
 @Service
 public class TransactionInProgress2TransactionResponseMapper
     implements Function<TransactionInProgress, TransactionResponse> {
+
+  @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes;
 
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
@@ -35,6 +38,7 @@ public class TransactionInProgress2TransactionResponseMapper
             .vat(transactionInProgress.getVat())
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
+            .trxExpirationMinutes(authorizationExpirationMinutes)
             .build();
   }
 }
