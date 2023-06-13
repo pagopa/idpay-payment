@@ -47,11 +47,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
                 throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CONFIRM_PAYMENT] Cannot confirm transaction having id %s: actual status is %s".formatted(trxId, trx.getStatus()));
             }
 
-            trx.setStatus(SyncTrxStatus.REWARDED);
-            log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
-            sendConfirmPaymentNotification(trx);
-
-            repository.deleteById(trxId);
+            confirmAuthorizedPayment(trx);
 
             auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), merchantId);
 
@@ -60,6 +56,15 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
             auditUtilities.logErrorConfirmedPayment(trxId, merchantId);
             throw e;
         }
+    }
+
+    @Override
+    public void confirmAuthorizedPayment(TransactionInProgress trx) {
+        trx.setStatus(SyncTrxStatus.REWARDED);
+        log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
+        sendConfirmPaymentNotification(trx);
+
+        repository.deleteById(trx.getId());
     }
 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {
