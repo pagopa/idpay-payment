@@ -32,7 +32,10 @@ public class QRCodeAuthorizationExpiredServiceImpl extends QRCodeExpirationBase 
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ClientException e) {
                 if(e.getHttpStatus() != HttpStatus.NOT_FOUND){
-                    log.info("Something gone wrong in idpay-reward-calculator"); //TODO TBV
+                    log.info("{} {} An error occurred in the microservice reward-calculator while handling transaction with id {}",
+                            EXPIRED_QR_CODE,
+                            getFlow(),
+                            trx.getId());
                 }
             }
         }
@@ -40,7 +43,7 @@ public class QRCodeAuthorizationExpiredServiceImpl extends QRCodeExpirationBase 
     }
 
     @Override
-    protected String infoLog(TransactionInProgress trx) {
-        return "[EXPIRED_QR_CODE][TRANSACTION_AUTHORIZATION_EXPIRED] Processing expired transaction with trxId %s, status: %s and";
+    protected String getFlow() {
+        return "[TRANSACTION_AUTHORIZATION_EXPIRED]";
     }
 }

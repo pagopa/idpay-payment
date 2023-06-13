@@ -28,7 +28,7 @@ public class QRCodeCancelExpiredServiceImpl extends QRCodeExpirationBase impleme
     }
 
     @Override
-    protected String infoLog(TransactionInProgress trx) {
-        return null; //TODO
+    protected String getFlow() {
+        return "[TRANSACTION_CANCEL_EXPIRED]";
     }
 }
