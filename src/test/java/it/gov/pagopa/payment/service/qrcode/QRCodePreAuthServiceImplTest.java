@@ -55,7 +55,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result);
+    TestUtils.checkNotNullFields(result, "residualBudget");
 
     verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());

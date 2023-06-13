@@ -92,7 +92,7 @@ class QRCodeAuthPaymentServiceTest {
 
     verify(repository).findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1");
     assertEquals(authPaymentDTO, result);
-    TestUtils.checkNotNullFields(result);
+    TestUtils.checkNotNullFields(result, "residualBudget");
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
     verify(notifierService).notify(any(TransactionInProgress.class), anyString());
   }
@@ -124,7 +124,7 @@ class QRCodeAuthPaymentServiceTest {
 
     verify(repository).findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1");
     assertEquals(authPaymentDTO, result);
-    TestUtils.checkNotNullFields(result, "counters");
+    TestUtils.checkNotNullFields(result, "counters","residualBudget");
     assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
   }
 
@@ -165,7 +165,7 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO result = service.authPayment(transaction.getUserId(), transaction.getTrxCode());
     assertNotNull(result);
-    TestUtils.checkNotNullFields(result);
+    TestUtils.checkNotNullFields(result, "residualBudget");
   }
 
   @Test
