@@ -118,6 +118,8 @@ api.key.encrypt: ${PDV_ENCRYPT_API_KEY:}
 api.key.decrypt: ${PDV_DECRYPT_API_KEY:}
 
 app:
+  threads:
+    schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
