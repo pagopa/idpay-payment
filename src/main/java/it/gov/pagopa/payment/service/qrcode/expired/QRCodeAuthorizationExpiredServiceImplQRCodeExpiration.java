@@ -5,17 +5,18 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodeAuthorizationExpiredServiceImpl extends QRCodeExpirationBase implements QRCodeAuthorizationExpiredService {
+public class QRCodeAuthorizationExpiredServiceImplQRCodeExpiration extends BaseQRCodeExpiration implements QRCodeAuthorizationExpiredService {
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
 
-    public QRCodeAuthorizationExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector) {
+    public QRCodeAuthorizationExpiredServiceImplQRCodeExpiration(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
     }
@@ -32,10 +33,11 @@ public class QRCodeAuthorizationExpiredServiceImpl extends QRCodeExpirationBase 
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ClientException e) {
                 if(e.getHttpStatus() != HttpStatus.NOT_FOUND){
-                    log.info("{} {} An error occurred in the microservice reward-calculator while handling transaction with id {}",
+                    log.error("[{}] [{}] An error occurred in the microservice reward-calculator while handling transaction with id {}",
                             EXPIRED_QR_CODE,
-                            getFlow(),
+                            getFlowName(),
                             trx.getId());
+                    throw new IllegalStateException();
                 }
             }
         }
@@ -43,7 +45,7 @@ public class QRCodeAuthorizationExpiredServiceImpl extends QRCodeExpirationBase 
     }
 
     @Override
-    protected String getFlow() {
-        return "[TRANSACTION_AUTHORIZATION_EXPIRED]";
+    protected String getFlowName() {
+        return "TRANSACTION_AUTHORIZATION_EXPIRED";
     }
 }
