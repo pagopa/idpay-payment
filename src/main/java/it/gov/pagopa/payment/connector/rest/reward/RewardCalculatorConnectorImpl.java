@@ -9,6 +9,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.http.HttpStatus;
@@ -74,7 +75,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                         throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex);
                     }
                 }
-                case 429 -> throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, "REWARD CALCULATOR",
+                case 429 -> throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS,
                         "Too many request on the ms reward");
                 case 404 -> throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND,
                         "Resource not found on reward-calculator", e);
