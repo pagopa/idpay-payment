@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.service.qrcode.expired;
 
-import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.qrcode.QRCodeConfirmationService;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +13,8 @@ public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration impleme
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final QRCodeConfirmationService qrCodeConfirmationService;
 
-    public QRCodeCancelExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, QRCodeConfirmationService qrCodeConfirmationService) {
+    public QRCodeCancelExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, QRCodeConfirmationService qrCodeConfirmationService, AuditUtilities auditUtilities) {
+        super(auditUtilities);
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.qrCodeConfirmationService = qrCodeConfirmationService;
     }
@@ -24,10 +25,8 @@ public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration impleme
     }
 
     @Override
-    @PerformanceLog(EXPIRED_QR_CODE)
     protected void handleExpiredTransaction(TransactionInProgress trx) {
         qrCodeConfirmationService.confirmAuthorizedPayment(trx);
-        auditUtilities.logExpiredTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), getFlowName());
     }
 
     @Override

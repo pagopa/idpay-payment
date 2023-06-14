@@ -1,11 +1,11 @@
 package it.gov.pagopa.payment.service.qrcode.expired;
 
-import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -16,7 +16,8 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
 
-    public QRCodeAuthorizationExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector) {
+    public QRCodeAuthorizationExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector, AuditUtilities auditUtilities) {
+        super(auditUtilities);
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
     }
@@ -27,7 +28,6 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
     }
 
     @Override
-    @PerformanceLog(EXPIRED_QR_CODE)
     protected void handleExpiredTransaction(TransactionInProgress trx) {
         if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)){
             try{
