@@ -5,18 +5,17 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodeAuthorizationExpiredServiceImplQRCodeExpiration extends BaseQRCodeExpiration implements QRCodeAuthorizationExpiredService {
+public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration implements QRCodeAuthorizationExpiredService {
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
 
-    public QRCodeAuthorizationExpiredServiceImplQRCodeExpiration(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector) {
+    public QRCodeAuthorizationExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
     }
@@ -37,7 +36,7 @@ public class QRCodeAuthorizationExpiredServiceImplQRCodeExpiration extends BaseQ
                             EXPIRED_QR_CODE,
                             getFlowName(),
                             trx.getId());
-                    throw new IllegalStateException();
+                    return;
                 }
             }
         }
