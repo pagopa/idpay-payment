@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
@@ -96,7 +97,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       }
 
       auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-
+      authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
       return authPaymentDTO;
     } catch (RuntimeException e) {
       auditUtilities.logErrorAuthorizedPayment(trxCode, userId);
