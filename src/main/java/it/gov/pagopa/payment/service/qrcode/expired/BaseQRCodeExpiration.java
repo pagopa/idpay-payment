@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.qrcode.expired;
 
-import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +36,6 @@ public abstract class BaseQRCodeExpiration {
      protected abstract TransactionInProgress findExpiredTransaction();
 
      /** The invoked function to manage lapsed transactions */
-     @PerformanceLog(EXPIRED_QR_CODE)
      protected abstract void handleExpiredTransaction(TransactionInProgress trx);
 
      protected abstract String getFlowName();

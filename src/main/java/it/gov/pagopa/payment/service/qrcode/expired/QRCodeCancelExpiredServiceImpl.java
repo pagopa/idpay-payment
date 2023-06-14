@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.qrcode.expired;
 
+import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.qrcode.QRCodeConfirmationService;
@@ -23,6 +24,7 @@ public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration impleme
     }
 
     @Override
+    @PerformanceLog(EXPIRED_QR_CODE)
     protected void handleExpiredTransaction(TransactionInProgress trx) {
         qrCodeConfirmationService.confirmAuthorizedPayment(trx);
         auditUtilities.logExpiredTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), getFlowName());
