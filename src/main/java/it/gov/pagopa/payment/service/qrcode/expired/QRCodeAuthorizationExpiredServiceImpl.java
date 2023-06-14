@@ -40,7 +40,7 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
                 }
             }
         }
-        transactionInProgressRepository.delete(trx);
+        transactionInProgressRepository.deleteById(trx.getId());
     }
 
     @Override

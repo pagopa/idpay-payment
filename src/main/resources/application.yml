@@ -125,7 +125,7 @@ app:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     expirations:
       authorizationMinutes: ${QR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:4320}}
-      cancelMinutes: ${QR_CODE_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
+      cancelMinutes: ${QR_CODE_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:2}}
       schedule:
         authorizationExpired: ${QR_CODE_AUTH_EXPIRED_SCHEDULE:0 0 2/6 * * ?} # every day at 2AM and every 6 hours
         cancelExpired: ${QR_CODE_CANCEL_EXPIRED_SCHEDULE:0 0 3 * * ?} # every day at 3AM

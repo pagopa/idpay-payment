@@ -25,7 +25,7 @@ public class QRCodeExpirationServiceImpl {
 
     @Scheduled(cron = "${app.qrCode.expirations.schedule.cancelExpired}")
     void scheduleCancelExpired() {
-        log.info("[EXPIRED_QR_CODE][TRANSACTION_CANCEL_EXPIRED] Starting schedule to handle transactions with authorization expired");
+        log.info("[EXPIRED_QR_CODE][TRANSACTION_CANCEL_EXPIRED] Starting schedule to handle transactions with cancel expired");
         cancelExpiredService.execute();
     }
 
