@@ -15,6 +15,9 @@ import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.common.utils.TestUtils;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -288,6 +291,68 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   void getCriteria() {
     Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
     assertEquals(4, criteria.getCriteriaObject().size());
+  }
+
+  @Test
+  void findAuthorizationExpiredTransactionThrottled(){
+    LocalDateTime now = LocalDateTime.now();
+    // Not expired transaction
+    TransactionInProgress transaction =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transactionInProgressRepository.save(transaction);
+
+    TransactionInProgress notExpiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+    Assertions.assertNull(notExpiredTrxResult);
+
+    // expired transaction
+    TransactionInProgress transactionExpired =
+            TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+    transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(10L));
+    transactionInProgressRepository.save(transactionExpired);
+
+    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+    Assertions.assertNotNull(expiredTrxResult);
+    assertElaborationsDateTime(now, expiredTrxResult);
+    Assertions.assertEquals(transactionExpired, expiredTrxResult);
+
+    // throttled test
+    TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+    Assertions.assertNull(expiredTrxThrottledResult);
+
+  }
+
+  @Test
+  void findCancelExpiredTransactionThrottled(){
+    LocalDateTime now = LocalDateTime.now();
+    // Not expired transaction
+    TransactionInProgress transaction =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+    transactionInProgressRepository.save(transaction);
+
+    TransactionInProgress notExpiredTrxResult = transactionInProgressRepository.findCancelExpiredTransactionThrottled();
+    Assertions.assertNull(notExpiredTrxResult);
+
+    // expired transaction
+    TransactionInProgress transactionExpired =
+            TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
+    transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(20L));
+    transactionInProgressRepository.save(transactionExpired);
+
+    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransactionThrottled();
+    Assertions.assertNotNull(expiredTrxResult);
+    assertElaborationsDateTime(now, expiredTrxResult);
+    Assertions.assertEquals(transactionExpired, expiredTrxResult);
+
+    // throttled test
+    TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findCancelExpiredTransactionThrottled();
+    Assertions.assertNull(expiredTrxThrottledResult);
+
+  }
+
+  private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
+    long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
+    Assertions.assertTrue(minutes <= 1);
+    trx.setElaborationDateTime(null);
   }
 
 }
