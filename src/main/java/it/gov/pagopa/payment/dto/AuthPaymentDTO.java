@@ -10,6 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,8 @@ public class AuthPaymentDTO {
   private List<String> rejectionReasons;
   @NotNull
   private Long amountCents;
+
+  private BigDecimal residualBudget;
 
   @JsonIgnore
   private Map<String, Reward> rewards;
