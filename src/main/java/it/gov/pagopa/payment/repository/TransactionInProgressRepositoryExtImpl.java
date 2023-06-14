@@ -222,16 +222,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public TransactionInProgress findCancelExpiredTransaction() {
-        return findExpiredTransaction(cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
+    public TransactionInProgress findCancelExpiredTransactionThrottled() {
+        return findExpiredTransactionThrottled(cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
     }
 
     @Override
-    public TransactionInProgress findAuthorizationExpiredTransaction() {
-        return findExpiredTransaction(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED));
+    public TransactionInProgress findAuthorizationExpiredTransactionThrottled() {
+        return findExpiredTransactionThrottled(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED));
     }
 
-    private TransactionInProgress findExpiredTransaction(long expirationMinutes, List<SyncTrxStatus> statusList) {
+    private TransactionInProgress findExpiredTransactionThrottled(long expirationMinutes, List<SyncTrxStatus> statusList) {
         LocalDateTime now = LocalDateTime.now();
 
         Query query = Query.query(
@@ -247,7 +247,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         return mongoTemplate.findAndModify(query,
                 new Update()
                         .currentDate(Fields.elaborationDateTime),
-                        // TODO update other fields?
                 FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
     }

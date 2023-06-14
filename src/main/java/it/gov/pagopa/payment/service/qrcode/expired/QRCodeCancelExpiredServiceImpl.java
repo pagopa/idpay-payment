@@ -19,7 +19,7 @@ public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration impleme
 
     @Override
     protected TransactionInProgress findExpiredTransaction() {
-        return transactionInProgressRepository.findCancelExpiredTransaction();
+        return transactionInProgressRepository.findCancelExpiredTransactionThrottled();
     }
 
     @Override
