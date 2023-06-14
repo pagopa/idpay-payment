@@ -33,7 +33,7 @@ public class TransactionInProgressFaker {
     if(!status.equals(SyncTrxStatus.CREATED)){
       reward=1_00L;
       Reward rewardObj = new Reward(initiativeId, "ORGID", TestUtils.bigDecimalValue(1));
-      rewardObj.setCounters(RewardCounters.builder().exhaustedBudget(false).initiativeBudget(BigDecimal.valueOf(100)).totalReward(BigDecimal.valueOf(50)).build());
+      rewardObj.setCounters(RewardCounters.builder().exhaustedBudget(false).initiativeBudget(TestUtils.bigDecimalValue(100)).totalReward(TestUtils.bigDecimalValue(50)).build());
       rewards=new HashMap<>(Map.of(initiativeId, rewardObj));
     } else {
       rewards = Collections.emptyMap();

@@ -1,18 +1,16 @@
 package it.gov.pagopa.payment.service.qrcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.Reward;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.TransactionSynchronousException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -77,12 +75,8 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
       auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trxCode, userId);
 
-      BigDecimal residualBudget = null;
-      Reward reward = trx.getRewards().values().stream().findFirst().orElse(null);
-      RewardCounters rewardCounters = reward != null ? reward.getCounters() : null;
-      if (reward != null && rewardCounters != null) {
-        residualBudget = rewardCounters.getInitiativeBudget().subtract(rewardCounters.getTotalReward()).add(CommonUtilities.centsToEuro(trx.getReward()));
-      }
+      BigDecimal residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+              CommonUtilities.calculateResidualBudget(preview.getRewards()).add(CommonUtilities.centsToEuro(preview.getReward())) : null;
       preview.setResidualBudget(residualBudget);
 
       return preview;

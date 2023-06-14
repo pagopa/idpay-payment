@@ -73,7 +73,7 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
       assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
       assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
-        TestUtils.checkNotNullFields(result, "residualBudget");
+        TestUtils.checkNotNullFields(result,"residualBudget");
     });
   }
 
