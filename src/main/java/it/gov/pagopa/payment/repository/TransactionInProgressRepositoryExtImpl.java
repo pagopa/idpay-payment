@@ -222,16 +222,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public TransactionInProgress findCancelExpiredTransactionThrottled() {
-        return findExpiredTransactionThrottled(cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
+    public TransactionInProgress findCancelExpiredTransaction() {
+        return findExpiredTransaction(cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
     }
 
     @Override
-    public TransactionInProgress findAuthorizationExpiredTransactionThrottled() {
-        return findExpiredTransactionThrottled(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED));
+    public TransactionInProgress findAuthorizationExpiredTransaction() {
+        return findExpiredTransaction(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED));
     }
 
-    private TransactionInProgress findExpiredTransactionThrottled(long expirationMinutes, List<SyncTrxStatus> statusList) {
+    private TransactionInProgress findExpiredTransaction(long expirationMinutes, List<SyncTrxStatus> statusList) {
         LocalDateTime now = LocalDateTime.now();
 
         Query query = Query.query(

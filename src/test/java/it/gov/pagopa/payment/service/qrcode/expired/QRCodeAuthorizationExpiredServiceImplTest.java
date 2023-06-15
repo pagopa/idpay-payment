@@ -37,7 +37,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
         TransactionInProgress trxIdentifiedException404 = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.IDENTIFIED);
         TransactionInProgress trxIdentifiedException500 = TransactionInProgressFaker.mockInstance(4, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransactionThrottled())
+        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction())
                 .thenReturn(trxCreate)
                 .thenReturn(trxIdentified)
                 .thenReturn(trxIdentifiedException404)
@@ -61,7 +61,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
     void handleExpiredTransactionException() {
         TransactionInProgress trxIdentified = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransactionThrottled())
+        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction())
                 .thenReturn(trxIdentified)
                 .thenReturn(null);
 

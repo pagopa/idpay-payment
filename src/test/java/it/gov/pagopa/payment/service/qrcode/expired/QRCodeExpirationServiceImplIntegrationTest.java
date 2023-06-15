@@ -25,10 +25,12 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(properties = {
         "app.qrCode.expirations.schedule.authorizationExpired=0 */1 * * * ?",
@@ -64,20 +66,20 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
 
     private QRCodeExpirationServiceImpl service;
 
-    private List<TransactionInProgress> trxs = new ArrayList<>(N);
+    private final List<TransactionInProgress> trxs = new ArrayList<>(N);
     private final Map<SyncTrxStatus, List<TransactionInProgress>> expiredTrxs = new HashMap<>();
     private final Map<SyncTrxStatus, List<TransactionInProgress>> validTrxs = new HashMap<>();;
 
     private void storeData() {
-        trxs = repository.saveAll(
+        trxs.addAll(repository.saveAll(
                 IntStream.range(0, N).mapToObj(i -> buildValidTransactionInProgress(i, i < (N / 2))).toList()
-        );
+        ));
     }
 
     private TransactionInProgress buildValidTransactionInProgress(int bias, boolean expired) {
         SyncTrxStatus status = getStatus(bias);
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(bias, status)
-                .elaborationDateTime(LocalDateTime.now().minusMinutes(50))
+                .elaborationDateTime(LocalDateTime.now().minusSeconds(1))
                 .trxChargeDate(expired ? getExpiredChargeDate(bias) : OFFSET_NOW)
                 .build();
 
@@ -134,9 +136,7 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
                 1000);
 
         // valid trxs still on db
-        List<TransactionInProgress> expected = validTrxs.values().stream().flatMap(List::stream).toList();
-        List<TransactionInProgress> result2 = repository.findAllById(extractIdsFromTrxsMap(validTrxs));
-        Assertions.assertEquals(sortAndCleanDates(expected), sortAndCleanDates(result2));
+        checkNotExpiredTrxs();
 
         // verify call to rewardCalculator cancel for IDENTIFIED expired trxs
         expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach(t -> Mockito.verify(rewardCalculatorRestClientSpy).cancelTransaction(t.getId()));
@@ -145,35 +145,43 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         checkConfirmEvents();
     }
 
+    private void checkNotExpiredTrxs() {
+        List<TransactionInProgress> expected = validTrxs.values().stream().flatMap(List::stream).toList();
+        List<TransactionInProgress> result = repository.findAllById(extractIdsFromTrxsMap(validTrxs));
+        Assertions.assertEquals(sortAndCleanDates(expected), sortAndCleanDates(result));
+    }
+
     private List<String> extractIdsFromTrxsMap(Map<SyncTrxStatus, List<TransactionInProgress>> trxsMap) {
         return trxsMap.values().stream().flatMap(List::stream).map(TransactionInProgress::getId).toList();
     }
 
     private List<TransactionInProgress> sortAndCleanDates(Collection<TransactionInProgress> trxs) {
-        trxs.forEach(t -> t.setElaborationDateTime(null));
+        trxs.forEach(t -> {
+            Assertions.assertNotNull(t.getElaborationDateTime());
+            t.setElaborationDateTime(null);
+        });
         return trxs.stream().sorted(Comparator.comparing(TransactionInProgress::getId)).toList();
     }
 
     private void checkConfirmEvents() {
-        Set<TransactionInProgress> expectedEvents = Set.copyOf(expiredTrxs.get(SyncTrxStatus.AUTHORIZED).stream().map(this::trxInProgress2TrxOutcome).toList());
+        Map<String, TransactionInProgress> expectedEvents = expiredTrxs.get(SyncTrxStatus.AUTHORIZED).stream().map(this::trxInProgress2TrxOutcome).collect(Collectors.toMap(TransactionInProgress::getId, Function.identity()));
 
         List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, expectedEvents.size(), 15000);
 
         Set<TransactionInProgress> eventsResult = consumerRecords.stream()
                 .map(r -> {
                     TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
-                    if (out.getStatus().equals(SyncTrxStatus.REWARDED)) {
-                        assertEquals(out.getMerchantId(), r.key());
-                    } else {
-                        assertEquals(out.getUserId(), r.key());
-                    }
+                    assertEquals(SyncTrxStatus.REWARDED, out.getStatus());
+                    assertEquals(out.getMerchantId(), r.key());
+
+                    assertTrue(out.getElaborationDateTime().isAfter(expectedEvents.get(out.getId()).getElaborationDateTime()));
 
                     return out;
                 })
                 .collect(Collectors.toSet());
 
         Assertions.assertEquals(
-                sortAndCleanDates(expectedEvents),
+                sortAndCleanDates(expectedEvents.values()),
                 sortAndCleanDates(eventsResult)
         );
     }

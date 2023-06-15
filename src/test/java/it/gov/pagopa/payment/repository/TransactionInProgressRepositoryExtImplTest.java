@@ -301,7 +301,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
             TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgressRepository.save(transaction);
 
-    TransactionInProgress notExpiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+    TransactionInProgress notExpiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction();
     Assertions.assertNull(notExpiredTrxResult);
 
     // expired transaction
@@ -310,13 +310,13 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(10L));
     transactionInProgressRepository.save(transactionExpired);
 
-    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction();
     Assertions.assertNotNull(expiredTrxResult);
     assertElaborationsDateTime(now, expiredTrxResult);
     Assertions.assertEquals(transactionExpired, expiredTrxResult);
 
     // throttled test
-    TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+    TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findAuthorizationExpiredTransaction();
     Assertions.assertNull(expiredTrxThrottledResult);
 
   }
@@ -329,7 +329,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
             TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
     transactionInProgressRepository.save(transaction);
 
-    TransactionInProgress notExpiredTrxResult = transactionInProgressRepository.findCancelExpiredTransactionThrottled();
+    TransactionInProgress notExpiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction();
     Assertions.assertNull(notExpiredTrxResult);
 
     // expired transaction
@@ -338,13 +338,13 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(20L));
     transactionInProgressRepository.save(transactionExpired);
 
-    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransactionThrottled();
+    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction();
     Assertions.assertNotNull(expiredTrxResult);
     assertElaborationsDateTime(now, expiredTrxResult);
     Assertions.assertEquals(transactionExpired, expiredTrxResult);
 
     // throttled test
-    TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findCancelExpiredTransactionThrottled();
+    TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findCancelExpiredTransaction();
     Assertions.assertNull(expiredTrxThrottledResult);
 
   }

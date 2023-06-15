@@ -24,7 +24,7 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
 
     @Override
     protected TransactionInProgress findExpiredTransaction() {
-        return transactionInProgressRepository.findAuthorizationExpiredTransactionThrottled();
+        return transactionInProgressRepository.findAuthorizationExpiredTransaction();
     }
 
     @Override
