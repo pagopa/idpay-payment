@@ -22,12 +22,12 @@ class QRCodeAuthorizationExpiredServiceImplTest {
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-    @Mock private AuditUtilities auditUtilitiesMock;
+    private final AuditUtilities auditUtilities = new AuditUtilities();
     private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService;
 
     @BeforeEach
     void setUp() {
-        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilitiesMock);
+        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
     }
 
     @Test
