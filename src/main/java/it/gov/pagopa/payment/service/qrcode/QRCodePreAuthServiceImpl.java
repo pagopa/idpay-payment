@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-
 @Service
 @Slf4j
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
@@ -85,8 +83,8 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
       auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trxCode, userId);
 
-      BigDecimal residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
-              CommonUtilities.calculateResidualBudget(preview.getRewards()).add(CommonUtilities.centsToEuro(preview.getReward())) : null;
+      Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+              Long.sum(CommonUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
       preview.setResidualBudget(residualBudget);
 
       return preview;
