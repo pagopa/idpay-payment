@@ -124,11 +124,11 @@ app:
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     expirations:
-      authorizationMinutes: ${QR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:3}}
+      authorizationMinutes: ${QR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:1}}
       cancelMinutes: ${QR_CODE_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:2}}
       schedule:
-        authorizationExpired: ${QR_CODE_AUTH_EXPIRED_SCHEDULE:0 */3 * * * ?} # every day at 2AM and every 6 hours
-        cancelExpired: ${QR_CODE_CANCEL_EXPIRED_SCHEDULE:0 */2 * * * ?} # every day at 3AM
+        authorizationExpired: ${QR_CODE_AUTH_EXPIRED_SCHEDULE:0 */2 * * * ?} # every day at 2AM and every 6 hours (for testing purposes: every 2 mins)
+        cancelExpired: ${QR_CODE_CANCEL_EXPIRED_SCHEDULE:0 */3 * * * ?} # every day at 3AM (for testing purposes: every 3 mins)
 
 
 management:
