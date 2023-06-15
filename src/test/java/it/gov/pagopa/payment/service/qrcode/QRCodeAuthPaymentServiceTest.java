@@ -6,6 +6,7 @@ import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
@@ -120,12 +121,13 @@ class QRCodeAuthPaymentServiceTest {
         .when(repository)
         .updateTrxRejected(transaction.getId(), authPaymentDTO.getRejectionReasons());
 
-    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
+    ClientException result =
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(repository).findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1");
-    assertEquals(authPaymentDTO, result);
-    TestUtils.checkNotNullFields(result, "counters");
-    assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
+
+    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -135,7 +137,7 @@ class QRCodeAuthPaymentServiceTest {
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
     assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    assertEquals("TRANSACTION NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -149,7 +151,7 @@ class QRCodeAuthPaymentServiceTest {
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1"));
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals("TRX USER ASSOCIATION", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -179,6 +181,24 @@ class QRCodeAuthPaymentServiceTest {
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
     assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("ERROR STATUS", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
+  }
+
+  @Test
+  void authPaymentOtherException() {
+    TransactionInProgress transaction =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    transaction.setUserId("USERID%d".formatted(1));
+
+    when(repository.findByTrxCodeAndAuthorizationNotExpiredThrottled(transaction.getTrxCode()))
+            .thenThrow(new RuntimeException());
+
+    try {
+      service.authPayment("USERID1", "trxcode1");
+      Assertions.fail("Expected exception");
+    } catch (ClientExceptionWithBody e) {
+      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
+      Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, e.getCode());
+    }
   }
 }
