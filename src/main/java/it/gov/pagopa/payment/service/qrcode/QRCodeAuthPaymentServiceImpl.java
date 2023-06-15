@@ -61,7 +61,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
                 PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
                 "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
       }
-      AuthPaymentDTO authPaymentDTO = authPayment(userId, trxCode, trx);
+      AuthPaymentDTO authPaymentDTO = checkRejectedPayment(userId, trxCode, trx);
 
       auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
       authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
@@ -80,7 +80,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     }
   }
 
-  private AuthPaymentDTO authPayment(String userId, String trxCode, TransactionInProgress trx){
+  private AuthPaymentDTO checkRejectedPayment(String userId, String trxCode, TransactionInProgress trx){
     AuthPaymentDTO authPaymentDTO;
     if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
       authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
