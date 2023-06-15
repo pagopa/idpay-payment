@@ -4,6 +4,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -48,14 +49,17 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
               transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode.toLowerCase());
 
       if (trx == null) {
-        throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND, "TRANSACTION NOT FOUND",
-                String.format("The transaction's with trxCode %s, doesn't exist", trxCode));
+        throw new ClientExceptionWithBody(
+                HttpStatus.NOT_FOUND,
+                PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                "Cannot find transaction with trxCode [%s]".formatted(trxCode));
       }
 
       if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
-        throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, "TRX USER ASSOCIATION",
-                String.format("UserId %s not associated with transaction %s", userId,
-                        trx.getId()));
+        throw new ClientExceptionWithBody(
+                HttpStatus.FORBIDDEN,
+                PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
+                "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
       }
 
       if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
@@ -73,6 +77,10 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         } else {
           transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
           log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
+          throw new ClientExceptionWithBody(
+                  HttpStatus.FORBIDDEN,
+                  PaymentConstants.ExceptionCode.REJECTED,
+                  "Transaction with trxCode [%s] is rejected".formatted(trxCode));
         }
 
         trx.setStatus(authPaymentDTO.getStatus());
@@ -82,8 +90,10 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
         authPaymentDTO = requestMapper.transactionMapper(trx);
       } else {
-        throw new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "ERROR STATUS",
-                String.format("The transaction's status is %s", trx.getStatus()));
+        throw new ClientExceptionWithBody(
+                HttpStatus.BAD_REQUEST,
+                PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
+                "Cannot relate transaction in status " + trx.getStatus());
       }
 
       auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
@@ -91,7 +101,14 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       return authPaymentDTO;
     } catch (RuntimeException e) {
       auditUtilities.logErrorAuthorizedPayment(trxCode, userId);
-      throw e;
+      if (e.toString().contains("ClientException")){
+        throw e;
+      } else {
+        throw new ClientExceptionWithBody(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                PaymentConstants.ExceptionCode.GENERIC_ERROR,
+                "A generic error occurred for trxCode: [%s]".formatted(trxCode));
+      }
     }
   }
 
