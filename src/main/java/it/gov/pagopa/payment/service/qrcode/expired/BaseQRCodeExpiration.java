@@ -37,8 +37,6 @@ public abstract class BaseQRCodeExpiration {
          }
      }
 
-
-
      /**The invoked function to retrieve lapsed transactions*/
      protected abstract TransactionInProgress findExpiredTransaction();
 
