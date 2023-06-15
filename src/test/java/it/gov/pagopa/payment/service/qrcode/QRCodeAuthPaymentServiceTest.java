@@ -19,6 +19,7 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -128,6 +129,38 @@ class QRCodeAuthPaymentServiceTest {
 
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, ((ClientExceptionWithBody) result).getCode());
+  }
+
+  @Test
+  void authPaymentWhenRejectedNoBudget() {
+    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID1");
+
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+    authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+    authPaymentDTO.setRejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
+
+    when(repository.findByTrxCodeAndAuthorizationNotExpiredThrottled(transaction.getTrxCode()))
+            .thenReturn(transaction);
+
+    when(rewardCalculatorConnector.authorizePayment(transaction)).thenReturn(authPaymentDTO);
+
+    Mockito.doAnswer(
+                    invocationOnMock -> {
+                      transaction.setStatus(authPaymentDTO.getStatus());
+                      transaction.setRejectionReasons(authPaymentDTO.getRejectionReasons());
+                      return transaction;
+                    })
+            .when(repository)
+            .updateTrxRejected(transaction.getId(), authPaymentDTO.getRejectionReasons());
+
+    ClientException result =
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+
+    verify(repository).findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1");
+
+    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
