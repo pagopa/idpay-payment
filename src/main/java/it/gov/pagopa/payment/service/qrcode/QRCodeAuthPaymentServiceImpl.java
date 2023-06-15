@@ -95,9 +95,9 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
                 PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
                 "Cannot relate transaction in status " + trx.getStatus());
       }
-
       auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
       authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
+      authPaymentDTO.setRejectionReasons(null);
       return authPaymentDTO;
     } catch (RuntimeException e) {
       auditUtilities.logErrorAuthorizedPayment(trxCode, userId);

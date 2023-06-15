@@ -50,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestPropertySource(
         properties = {
@@ -204,7 +205,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(trx.getInitiativeId(), stored.getInitiativeId());
         assertEquals(trx.getStatus(), stored.getStatus());
         assertEquals(trx.getReward(), stored.getReward());
-        assertEquals(trx.getRejectionReasons(), stored.getRejectionReasons());
+        assertNull(trx.getRejectionReasons());
 
         assertEquals(expectedUserId, stored.getUserId());
     }
