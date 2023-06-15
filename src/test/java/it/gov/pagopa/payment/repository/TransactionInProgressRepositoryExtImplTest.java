@@ -294,7 +294,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   }
 
   @Test
-  void findAuthorizationExpiredTransactionThrottled(){
+  void findAuthorizationExpiredTransaction(){
     LocalDateTime now = LocalDateTime.now();
     // Not expired transaction
     TransactionInProgress transaction =
@@ -322,7 +322,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   }
 
   @Test
-  void findCancelExpiredTransactionThrottled(){
+  void findCancelExpiredTransaction(){
     LocalDateTime now = LocalDateTime.now();
     // Not expired transaction
     TransactionInProgress transaction =

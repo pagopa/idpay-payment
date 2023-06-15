@@ -25,8 +25,9 @@ public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration impleme
     }
 
     @Override
-    protected void handleExpiredTransaction(TransactionInProgress trx) {
+    protected TransactionInProgress handleExpiredTransaction(TransactionInProgress trx) {
         qrCodeConfirmationService.confirmAuthorizedPayment(trx);
+        return trx;
     }
 
     @Override

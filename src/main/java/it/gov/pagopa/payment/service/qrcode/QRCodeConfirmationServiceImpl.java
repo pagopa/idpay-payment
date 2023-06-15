@@ -49,6 +49,8 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
             confirmAuthorizedPayment(trx);
 
+            auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), trx.getMerchantId());
+
             return mapper.apply(trx);
         } catch (RuntimeException e) {
             auditUtilities.logErrorConfirmedPayment(trxId, merchantId);
@@ -63,9 +65,6 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
         sendConfirmPaymentNotification(trx);
 
         repository.deleteById(trx.getId());
-
-        auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), trx.getMerchantId());
-
     }
 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {

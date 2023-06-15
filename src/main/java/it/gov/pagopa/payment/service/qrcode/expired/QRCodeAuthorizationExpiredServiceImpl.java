@@ -28,21 +28,18 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
     }
 
     @Override
-    protected void handleExpiredTransaction(TransactionInProgress trx) {
+    protected TransactionInProgress handleExpiredTransaction(TransactionInProgress trx) {
         if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)){
             try{
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ClientException e) {
                 if(e.getHttpStatus() != HttpStatus.NOT_FOUND){
-                    log.error("[{}] [{}] An error occurred in the microservice reward-calculator while handling transaction with id {}",
-                            EXPIRED_QR_CODE,
-                            getFlowName(),
-                            trx.getId());
-                    return;
+                    throw new IllegalStateException("An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()));
                 }
             }
         }
         transactionInProgressRepository.deleteById(trx.getId());
+        return trx;
     }
 
     @Override
