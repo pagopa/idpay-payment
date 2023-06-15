@@ -3,11 +3,14 @@ package it.gov.pagopa.payment.service.qrcode.expired;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorRestClient;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,7 +25,10 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestPropertySource(properties = {
         "app.qrCode.expirations.schedule.authorizationExpired=0 */1 * * * ?",
@@ -50,6 +56,8 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     private QRCodeAuthorizationExpiredService authorizationExpiredService;
     @Autowired
     private QRCodeCancelExpiredService cancelExpiredService;
+    @Autowired
+    private TransactionInProgress2TransactionOutcomeDTOMapper transactionOutcomeDTOMapper;
 
     @Autowired
     private TransactionInProgressRepository repository;
@@ -126,24 +134,53 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
                 1000);
 
         // valid trxs still on db
-        List<TransactionInProgress> result2 = repository.findAllById(extractIdsFromTrxsMap(validTrxs));
         List<TransactionInProgress> expected = validTrxs.values().stream().flatMap(List::stream).toList();
+        List<TransactionInProgress> result2 = repository.findAllById(extractIdsFromTrxsMap(validTrxs));
         Assertions.assertEquals(sortAndCleanDates(expected), sortAndCleanDates(result2));
 
-//        // verify call to rewardCalculator cancel for IDENTIFIED expired trxs
-//        expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach(t -> Mockito.verify(rewardCalculatorRestClientSpy).cancelTransaction(t.getId()));
-//
-//        // verify AUTHORIZED expired trxs to be notified in idpay-transaction queue
-//        expiredTrxs.get(SyncTrxStatus.AUTHORIZED).forEach(t -> Mockito.verify(notifierServiceSpy).notify());
+        // verify call to rewardCalculator cancel for IDENTIFIED expired trxs
+        expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach(t -> Mockito.verify(rewardCalculatorRestClientSpy).cancelTransaction(t.getId()));
+
+        // verify AUTHORIZED expired trxs to be notified in idpay-transaction queue
+        checkConfirmEvents();
     }
 
     private List<String> extractIdsFromTrxsMap(Map<SyncTrxStatus, List<TransactionInProgress>> trxsMap) {
         return trxsMap.values().stream().flatMap(List::stream).map(TransactionInProgress::getId).toList();
     }
 
-    private List<TransactionInProgress> sortAndCleanDates(List<TransactionInProgress> trxsList) {
-        trxsList.forEach(t -> t.setElaborationDateTime(null));
-        return trxsList.stream().sorted(Comparator.comparing(TransactionInProgress::getId)).toList();
+    private List<TransactionInProgress> sortAndCleanDates(Collection<TransactionInProgress> trxs) {
+        trxs.forEach(t -> t.setElaborationDateTime(null));
+        return trxs.stream().sorted(Comparator.comparing(TransactionInProgress::getId)).toList();
+    }
+
+    private void checkConfirmEvents() {
+        Set<TransactionInProgress> expectedEvents = Set.copyOf(expiredTrxs.get(SyncTrxStatus.AUTHORIZED).stream().map(this::trxInProgress2TrxOutcome).toList());
+
+        List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, expectedEvents.size(), 15000);
+
+        Set<TransactionInProgress> eventsResult = consumerRecords.stream()
+                .map(r -> {
+                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    if (out.getStatus().equals(SyncTrxStatus.REWARDED)) {
+                        assertEquals(out.getMerchantId(), r.key());
+                    } else {
+                        assertEquals(out.getUserId(), r.key());
+                    }
+
+                    return out;
+                })
+                .collect(Collectors.toSet());
+
+        Assertions.assertEquals(
+                sortAndCleanDates(expectedEvents),
+                sortAndCleanDates(eventsResult)
+        );
+    }
+
+    private TransactionOutcomeDTO trxInProgress2TrxOutcome(TransactionInProgress t) {
+        t.setStatus(SyncTrxStatus.REWARDED);
+        return transactionOutcomeDTOMapper.apply(t);
     }
 
 }
