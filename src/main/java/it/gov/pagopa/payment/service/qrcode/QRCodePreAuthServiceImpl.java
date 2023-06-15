@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-
 @Service
 @Slf4j
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
@@ -78,14 +76,15 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
                 PaymentConstants.ExceptionCode.REJECTED,
                 "Transaction with trxCode [%s] is rejected".formatted(trxCode));
       } else {
+        preview.setRejectionReasons(null);
         preview.setStatus(SyncTrxStatus.IDENTIFIED);
         transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId, preview.getReward(), preview.getRejectionReasons(), preview.getRewards());
       }
 
       auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trxCode, userId);
 
-      BigDecimal residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
-              CommonUtilities.calculateResidualBudget(preview.getRewards()).add(CommonUtilities.centsToEuro(preview.getReward())) : null;
+      Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+              Long.sum(CommonUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
       preview.setResidualBudget(residualBudget);
 
       return preview;

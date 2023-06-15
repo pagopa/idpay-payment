@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +11,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +19,7 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthPaymentDTO {
 
   @NotBlank
@@ -42,7 +43,7 @@ public class AuthPaymentDTO {
   @NotNull
   private Long amountCents;
 
-  private BigDecimal residualBudget;
+  private Long residualBudget;
 
   @JsonIgnore
   private Map<String, Reward> rewards;

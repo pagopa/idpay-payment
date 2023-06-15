@@ -31,12 +31,12 @@ public class CommonUtilities {
     return pageable;
   }
 
-  public static BigDecimal calculateResidualBudget(Map<String, Reward> rewards) {
-    BigDecimal residualBudget = null;
+  public static Long calculateResidualBudget(Map<String, Reward> rewards) {
+    Long residualBudget = null;
     Reward reward = rewards.values().stream().findFirst().orElse(null);
     RewardCounters rewardCounters = reward != null ? reward.getCounters() : null;
     if (reward != null && rewardCounters != null) {
-      residualBudget = rewardCounters.getInitiativeBudget().subtract(rewardCounters.getTotalReward());
+      residualBudget = euroToCents(rewardCounters.getInitiativeBudget().subtract(rewardCounters.getTotalReward()));
     }
     return residualBudget;
   }
