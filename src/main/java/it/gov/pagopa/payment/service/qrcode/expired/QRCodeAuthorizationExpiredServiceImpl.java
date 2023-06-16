@@ -34,7 +34,7 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ClientException e) {
                 if(e.getHttpStatus() != HttpStatus.NOT_FOUND){
-                    throw new IllegalStateException("An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()));
+                    throw new IllegalStateException("An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()),e);
                 }
             }
         }
