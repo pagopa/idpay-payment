@@ -544,7 +544,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         TransactionInProgress stored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
         Assertions.assertNotNull(stored);
         transactionInProgressRepository.delete(stored);
-        stored.setId("CANCELLEDAFTERAUTHORIZIONTRX" + stored.getId());
+        stored.setId("CANCELLEDAFTERAUTHORIZATIONTRX" + stored.getId());
         stored.setCorrelationId(stored.getId());
         transactionInProgressRepository.save(stored);
         trxCreated.setId(stored.getId());
