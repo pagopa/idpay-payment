@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import jakarta.validation.constraints.NotBlank;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AuthPaymentDTO {
 
   @NotBlank
@@ -40,6 +42,8 @@ public class AuthPaymentDTO {
   private List<String> rejectionReasons;
   @NotNull
   private Long amountCents;
+
+  private Long residualBudget;
 
   @JsonIgnore
   private Map<String, Reward> rewards;

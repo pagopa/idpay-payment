@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "DELETE",
-    "urlPathPattern": "/reward/CANCELLEDAFTERAUTHORIZATIONTRX.*"
+    "urlPathPattern": "/reward/MOCKEDTRANSACTION_qr-code_[0-9]+"
   },
   "response": {
     "status": "200",

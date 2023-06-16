@@ -1,11 +1,14 @@
 package it.gov.pagopa.common.utils;
 
+import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.model.counters.RewardCounters;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Map;
 
 public class CommonUtilities {
   private CommonUtilities() {}
@@ -26,5 +29,15 @@ public class CommonUtilities {
       return PageRequest.of(0, 10, Sort.by("updateDate").descending());
     }
     return pageable;
+  }
+
+  public static Long calculateResidualBudget(Map<String, Reward> rewards) {
+    Long residualBudget = null;
+    Reward reward = rewards.values().stream().findFirst().orElse(null);
+    RewardCounters rewardCounters = reward != null ? reward.getCounters() : null;
+    if (reward != null && rewardCounters != null) {
+      residualBudget = euroToCents(rewardCounters.getInitiativeBudget().subtract(rewardCounters.getTotalReward()));
+    }
+    return residualBudget;
   }
 }

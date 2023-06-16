@@ -21,4 +21,6 @@ public interface TransactionInProgressRepositoryExt {
   Criteria getCriteria(String merchantId, String initiativeId, String userId, String status);
   List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable);
   long getCount(Criteria criteria);
+  TransactionInProgress findCancelExpiredTransaction();
+  TransactionInProgress findAuthorizationExpiredTransaction();
 }

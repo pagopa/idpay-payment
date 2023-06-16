@@ -1,26 +1,30 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.payment.exception.TransactionSynchronousException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
@@ -55,7 +59,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result);
+    TestUtils.checkNotNullFields(result, "rejectionReasons");
 
     verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
@@ -74,7 +78,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result);
+    TestUtils.checkNotNullFields(result, "rejectionReasons");
 
     verify(transactionInProgressRepository, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
@@ -91,10 +95,34 @@ class QRCodePreAuthServiceImplTest {
     when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
     when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
-    AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", "USERID1");
+    ClientException result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+            qrCodePreAuthService.relateUser("trxcode1", "USERID1")
+    );
 
-    Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result);
+    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+
+    verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
+    verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
+  }
+
+  @Test
+  void relateUserIdentifiedRejectedNoBudget() {
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    trx.setUserId("USERID1");
+
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
+    authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+    authPaymentDTO.setRejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
+
+    when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
+    when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
+
+    ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+            qrCodePreAuthService.relateUser("trxcode1", "USERID1")
+    );
+
+    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
     verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
@@ -110,11 +138,10 @@ class QRCodePreAuthServiceImplTest {
     when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(trx);
     when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
-    TransactionSynchronousException result = Assertions.assertThrows(TransactionSynchronousException.class, () ->
+    ClientException result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
       qrCodePreAuthService.relateUser("trxcode1", "USERID1")
     );
 
-    Assertions.assertNotNull(result);
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
     verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
@@ -153,5 +180,20 @@ class QRCodePreAuthServiceImplTest {
 
     verify(transactionInProgressRepository, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
     verify(transactionInProgressRepository, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
+  }
+
+  @Test
+  void relateUserOtherException() {
+
+    Mockito.when(transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1"))
+            .thenThrow(new RuntimeException());
+
+    try {
+      qrCodePreAuthService.relateUser("trxcode1", "USERID1");
+      Assertions.fail("Expected exception");
+    } catch (ClientExceptionWithBody e) {
+      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
+      Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, e.getCode());
+    }
   }
 }

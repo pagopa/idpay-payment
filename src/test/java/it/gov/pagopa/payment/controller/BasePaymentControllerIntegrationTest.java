@@ -21,7 +21,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -51,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @TestPropertySource(
         properties = {
@@ -205,7 +205,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(trx.getInitiativeId(), stored.getInitiativeId());
         assertEquals(trx.getStatus(), stored.getStatus());
         assertEquals(trx.getReward(), stored.getReward());
-        assertEquals(trx.getRejectionReasons(), stored.getRejectionReasons());
+        assertNull(trx.getRejectionReasons());
 
         assertEquals(expectedUserId, stored.getUserId());
     }
@@ -279,16 +279,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionResponse trxCreated = createTrxSuccess(trxRequest);
 
             // Cannot relate user because not onboarded
-            AuthPaymentDTO failedPreview = extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
-            assertEquals(SyncTrxStatus.REJECTED, failedPreview.getStatus());
-            assertEquals(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE), failedPreview.getRejectionReasons());
+            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
             extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
 
             // Other APIs will fail because status not expected
             extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
-
-            checkTransactionStored(failedPreview, userIdNotOnboarded);
         });
 
         // useCase 2: trx rejected
@@ -301,10 +297,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionResponse trxCreated = createTrxSuccess(trxRequest);
 
             // Relating to user
-            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-            assertEquals(SyncTrxStatus.REJECTED, preAuthResult.getStatus());
-            assertPreAuthData(preAuthResult, false);
-            checkTransactionStored(preAuthResult, USERID);
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
 
             // Cannot invoke other APIs if REJECTED
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
@@ -326,10 +319,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Authorizing transaction, but obtaining rejection
             updateStoredTransaction(preAuthResult.getId(), t -> t.setMcc("NOTALLOWEDMCC"));
-            AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-            assertEquals(SyncTrxStatus.REJECTED, authResult.getStatus());
-            assertAuthData(authResult, false);
-            checkTransactionStored(authResult, USERID);
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
 
             //setpayload authResultRejected
             addExpectedAuthorizationEventRejected(trxCreated);
@@ -529,6 +519,22 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE));
         // useCase 16: an error occurred when publishing confirmed event, throwing error
         useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION));
+        // useCase 17: trx rejected budget exhausted
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId("INITIATIVEID");
+            trxRequest.setMcc("NOTALLOWEDMCC1");
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
+
+            // Cannot invoke other APIs if REJECTED
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+        });
 
         useCases.addAll(getExtraUseCases());
     }
@@ -538,7 +544,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         TransactionInProgress stored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
         Assertions.assertNotNull(stored);
         transactionInProgressRepository.delete(stored);
-        stored.setId("CANCELLEDAFTERAUTHORIZIONTRX" + stored.getId());
+        stored.setId("CANCELLEDAFTERAUTHORIZATIONTRX" + stored.getId());
         stored.setCorrelationId(stored.getId());
         transactionInProgressRepository.save(stored);
         trxCreated.setId(stored.getId());
@@ -657,7 +663,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void checkNotificationEventsOnTransactionQueue() {
         int numExpectedNotification =
                 expectedAuthorizationNotificationEvents.size() +
-                        expectedAuthorizationNotificationRejectedEvents.size() +
                         expectedConfirmNotificationEvents.size() +
                         expectedCancelledNotificationEvents.size();
         List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, numExpectedNotification, 15000);
@@ -676,7 +681,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 .collect(Collectors.groupingBy(TransactionOutcomeDTO::getStatus, Collectors.toSet()));
 
         checkAuthorizationNotificationEvents(eventsResult.get(SyncTrxStatus.AUTHORIZED));
-        checkAuthorizationNotificationRejectedEvents(eventsResult.get(SyncTrxStatus.REJECTED));
         checkConfirmNotificationEvents(eventsResult.get(SyncTrxStatus.REWARDED));
         checkCancelledNotificationEvents(eventsResult.get(SyncTrxStatus.CANCELLED));
     }
