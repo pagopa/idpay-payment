@@ -21,6 +21,7 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
     private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
+    private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}" ;
 
     // region createTransaction
     public void logCreatedTransaction(String initiativeId, String trxId, String trxCode, String merchantId) {
@@ -99,6 +100,18 @@ public class AuditUtilities {
                 CEF_PATTERN_TRXID_MERCHANTID,
                 "Merchant cancelled the transaction - KO", trxId, merchantId
         );
+    }
+    // endregion
+
+    // region expired transaction
+    public void logExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause){
+        AuditLogger.logAuditString(CEF_PATTERN_EXPIRED_TRX,
+                "Expire transaction processed", initiativeId, trxId, trxCode, userId, flowCause);
+    }
+
+    public void logErrorExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause){
+        AuditLogger.logAuditString(CEF_PATTERN_EXPIRED_TRX,
+                "Expire transaction processed - KO", initiativeId, trxId, trxCode, userId, flowCause);
     }
     // endregion
 }

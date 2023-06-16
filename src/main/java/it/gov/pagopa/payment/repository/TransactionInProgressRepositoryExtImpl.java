@@ -26,14 +26,17 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     private final MongoTemplate mongoTemplate;
     private final long trxThrottlingSeconds;
     private final long authorizationExpirationMinutes;
+    private final long cancelExpirationMinutes;
 
     public TransactionInProgressRepositoryExtImpl(
             MongoTemplate mongoTemplate,
             @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
-            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes) {
+            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
+            @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
+        this.cancelExpirationMinutes = cancelExpirationMinutes;
     }
 
     @Override
@@ -216,5 +219,35 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     @Override
     public long getCount(Criteria criteria) {
         return mongoTemplate.count(Query.query(criteria), TransactionInProgress.class);
+    }
+
+    @Override
+    public TransactionInProgress findCancelExpiredTransaction() {
+        return findExpiredTransaction(cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
+    }
+
+    @Override
+    public TransactionInProgress findAuthorizationExpiredTransaction() {
+        return findExpiredTransaction(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED));
+    }
+
+    private TransactionInProgress findExpiredTransaction(long expirationMinutes, List<SyncTrxStatus> statusList) {
+        LocalDateTime now = LocalDateTime.now();
+
+        Query query = Query.query(
+                Criteria.where(Fields.trxChargeDate).lt(now.minusMinutes(expirationMinutes)).andOperator(
+                        Criteria.where(Fields.status).in(statusList)
+                                .orOperator(
+                                        Criteria.where(Fields.elaborationDateTime).is(null),
+                                        Criteria.where(Fields.elaborationDateTime).lt(now.minusSeconds(trxThrottlingSeconds))
+                                )
+                )
+        );
+
+        return mongoTemplate.findAndModify(query,
+                new Update()
+                        .currentDate(Fields.elaborationDateTime),
+                FindAndModifyOptions.options().returnNew(true),
+                TransactionInProgress.class);
     }
 }
