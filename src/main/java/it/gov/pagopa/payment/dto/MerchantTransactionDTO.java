@@ -16,14 +16,16 @@ import java.time.LocalDateTime;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerchantTransactionDTO {
-    String trxCode;
-    String trxId;
-    String fiscalCode;
-    BigDecimal effectiveAmount;
+    private String trxCode;
+    private String trxId;
+    private String fiscalCode;
+    private BigDecimal effectiveAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime trxDate;
-    Integer trxExpirationMinutes;
+    private LocalDateTime trxDate;
+    private Integer trxExpirationMinutes;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime updateDate;
-    String status;
+    private LocalDateTime updateDate;
+    private String status;
+    private String qrcodePngUrl;
+    private String qrcodeTxtUrl;
 }

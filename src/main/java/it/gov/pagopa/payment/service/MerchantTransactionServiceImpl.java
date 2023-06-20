@@ -61,7 +61,9 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                     transaction.getTrxDate().toLocalDateTime(),
                                     authorizationExpirationMinutes,
                                     transaction.getUpdateDate(),
-                                    transaction.getStatus().toString()
+                                    transaction.getStatus().toString(),
+                                    transaction.getQrcodePngUrl(),
+                                    transaction.getQrcodeTxtUrl()
                             )));
         }
         long count = transactionInProgressRepository.getCount(criteria);
