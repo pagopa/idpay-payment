@@ -129,9 +129,10 @@ app:
       schedule:
         authorizationExpired: ${QR_CODE_AUTH_EXPIRED_SCHEDULE:0 0 2 * * ?} # every day at 2AM and every 6 hours (for testing purposes: every 2 mins)
         cancelExpired: ${QR_CODE_CANCEL_EXPIRED_SCHEDULE:0 0 3 * * ?} # every day at 3AM (for testing purposes: every 3 mins)
-    baseUrl:
-      png: ${QR_CODE_PNG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
-      txt: ${QR_CODE_TXT_URL:https://www.idpay.it/authorizationlink}
+    trxCode:
+      baseUrl:
+        png: ${QR_CODE_PNG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
+        txt: ${QR_CODE_TXT_URL:https://www.idpay.it/authorizationlink}
 
 management:
   endpoint:

@@ -67,7 +67,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     public static final String USERID = "USERID";
     public static final String MERCHANTID = "MERCHANTID";
     public static final String ACQUIRERID = "ACQUIRERID";
-    public static final String IDTRXACQUIRER = "IDTRXACQUIRER";
 
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
@@ -97,11 +96,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
-
-    @Value("${app.qrCode.baseUrl.png}")
-    private String qrCodePngBaseUrl;
-    @Value("${app.qrCode.baseUrl.txt}")
-    private String qrCodeTxtBaseUrl;
 
     @Test
     void test() {
@@ -841,6 +835,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(userId, trxStored.getUserId());
         Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
         Assertions.assertEquals(getChannel(), trxStored.getChannel());
+        Assertions.assertEquals(trxResponse.getQrcodePngUrl(), trxStored.getQrcodePngUrl());
+        Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), trxStored.getQrcodeTxtUrl());
 
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {

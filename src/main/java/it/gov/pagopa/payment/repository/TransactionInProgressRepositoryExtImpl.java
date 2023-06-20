@@ -15,6 +15,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -35,8 +36,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
             @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
             @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes,
-            @Value("${app.qrCode.baseUrl.png}") String qrcodePgnBaseUrl,
-            @Value("${app.qrCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
+            @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodePgnBaseUrl,
+            @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
@@ -48,7 +49,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     @Override
     public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
         trx.setTrxCode(trxCode);
-        trx.setQrcodePngUrl(qrcodePgnBaseUrl.concat("%strxcode=%s".formatted(qrcodePgnBaseUrl.contains("?") ? "&" : "?", trxCode)));
+        trx.setQrcodePngUrl(UriComponentsBuilder.fromUriString(qrcodePgnBaseUrl).queryParam("trxcode",trxCode).build().toString());
         trx.setQrcodeTxtUrl(qrcodeTxtBaseUrl.concat("/%s".formatted(trxCode)));
         return mongoTemplate.upsert(
                 Query.query(Criteria.where(Fields.trxCode).is(trx.getTrxCode())),
