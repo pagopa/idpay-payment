@@ -57,10 +57,6 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                     transaction.getTrxCode(),
                                     transaction.getCorrelationId(),
                                     transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
-                                    //transaction.getRewards() != null ? CommonUtilities.euroToCents(transaction.getRewards().get("Counters").getCounters().getTotalAmount()) : BigDecimal.valueOf(0).longValue(),
-                                    /*transaction.getRewards().values().stream().map(Reward::getCounters).filter(Objects::nonNull)
-                                            .map(rewardCounters -> CommonUtilities.euroToCents(rewardCounters.getTotalAmount())).count(),
-                                     */
                                     transaction.getAmountCents(),
                                     transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
                                     transaction.getTrxDate().toLocalDateTime(),
