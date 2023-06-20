@@ -32,8 +32,6 @@ public class MerchantTransactionDTOFaker {
                 .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .trxExpirationMinutes(4320)
                 .status(status.toString())
-                .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                .qrcodePngUrl("QRCODEPNGURL%d".formatted(bias))
-                .qrcodeTxtUrl("QRCODETXTURL%d".formatted(bias));
+                .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
     }
 }

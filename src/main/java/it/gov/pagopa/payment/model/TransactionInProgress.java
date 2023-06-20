@@ -70,6 +70,4 @@ public class TransactionInProgress {
   private Map<String, Reward> rewards = new HashMap<>();
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime updateDate;
-  private String qrcodePngUrl;
-  private String qrcodeTxtUrl;
 }

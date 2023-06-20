@@ -23,8 +23,12 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
 
-    public QRCodeConfirmationServiceImpl(TransactionInProgressRepository repository, TransactionInProgress2TransactionResponseMapper mapper,
-                                         TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities) {
+
+    public QRCodeConfirmationServiceImpl(TransactionInProgressRepository repository,
+                                         TransactionInProgress2TransactionResponseMapper mapper,
+                                         TransactionNotifierService notifierService,
+                                         PaymentErrorNotifierService paymentErrorNotifierService,
+                                         AuditUtilities auditUtilities) {
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
@@ -51,7 +55,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
             auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), trx.getMerchantId());
 
-            return mapper.apply(trx);
+            return mapper.apply(trx, null, null);
         } catch (RuntimeException e) {
             auditUtilities.logErrorConfirmedPayment(trxId, merchantId);
             throw e;

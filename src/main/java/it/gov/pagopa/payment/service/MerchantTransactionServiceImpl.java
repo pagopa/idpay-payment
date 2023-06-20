@@ -5,6 +5,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -28,17 +29,23 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final DecryptRestConnector decryptRestConnector;
     private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
+    private final String qrcodeImgBaseUrl;
+    private final  String qrcodeTxtBaseUrl;
 
     public MerchantTransactionServiceImpl(
             @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
 
             DecryptRestConnector decryptRestConnector,
             EncryptRestConnector encryptRestConnector,
-            TransactionInProgressRepository transactionInProgressRepository) {
+            TransactionInProgressRepository transactionInProgressRepository,
+            @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodeImgBaseUrl,
+            @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.decryptRestConnector = decryptRestConnector;
         this.encryptRestConnector = encryptRestConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
+        this.qrcodeImgBaseUrl = qrcodeImgBaseUrl;
+        this.qrcodeTxtBaseUrl = qrcodeTxtBaseUrl;
     }
 
     @Override
@@ -62,8 +69,8 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                     authorizationExpirationMinutes,
                                     transaction.getUpdateDate(),
                                     transaction.getStatus().toString(),
-                                    transaction.getQrcodePngUrl(),
-                                    transaction.getQrcodeTxtUrl()
+                                    TransactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(qrcodeImgBaseUrl, transaction.getTrxCode()),
+                                    TransactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(qrcodeTxtBaseUrl, transaction.getTrxCode())
                             )));
         }
         long count = transactionInProgressRepository.getCount(criteria);

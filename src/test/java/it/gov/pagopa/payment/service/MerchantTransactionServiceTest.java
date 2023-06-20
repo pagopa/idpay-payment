@@ -34,7 +34,7 @@ class MerchantTransactionServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new MerchantTransactionServiceImpl(4320, decryptRestConnector, encryptRestConnector, repositoryMock);
+        service = new MerchantTransactionServiceImpl(4320, decryptRestConnector, encryptRestConnector, repositoryMock, "qrcodeImgBaseUrl", "qrcodeTxtBaseUrl");
     }
 
     @Test
@@ -48,11 +48,13 @@ class MerchantTransactionServiceTest {
         MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
         merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        setTrxCodeUrl(transaction1, merchantTransaction1);
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
         merchantTransaction2.setTrxDate(transaction2.getTrxDate().toLocalDateTime());
         merchantTransaction2.setFiscalCode(null);
+        setTrxCodeUrl(transaction2, merchantTransaction2);
 
         MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction1, merchantTransaction2))
@@ -112,6 +114,7 @@ class MerchantTransactionServiceTest {
         merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
         merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
         merchantTransaction.setFiscalCode(null);
+        setTrxCodeUrl(transaction1, merchantTransaction);
 
         MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction))
@@ -122,6 +125,11 @@ class MerchantTransactionServiceTest {
         assertEquals(1, result.getContent().size());
         assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
+    }
+
+    private void setTrxCodeUrl(TransactionInProgress transaction1, MerchantTransactionDTO merchantTransaction) {
+        merchantTransaction.setQrcodePngUrl("qrcodeImgBaseUrl?trxcode=%s".formatted(transaction1.getTrxCode()));
+        merchantTransaction.setQrcodeTxtUrl("qrcodeTxtBaseUrl/%s".formatted(transaction1.getTrxCode()));
     }
 
     @Test

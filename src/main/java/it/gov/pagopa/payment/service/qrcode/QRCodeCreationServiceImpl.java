@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -31,7 +32,9 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
   private final TrxCodeGenUtil trxCodeGenUtil;
   private final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
-
+  private final String qrcodeImgBaseUrl;
+  private final  String qrcodeTxtBaseUrl;
+  @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public QRCodeCreationServiceImpl(
           TransactionInProgress2TransactionResponseMapper
           transactionInProgress2TransactionResponseMapper,
@@ -40,7 +43,9 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
-          AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
+          AuditUtilities auditUtilities, MerchantConnector merchantConnector,
+          @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodeImgBaseUrl,
+          @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
     this.transactionInProgress2TransactionResponseMapper =
         transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
@@ -50,6 +55,8 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
     this.trxCodeGenUtil = trxCodeGenUtil;
     this.auditUtilities = auditUtilities;
     this.merchantConnector = merchantConnector;
+    this.qrcodeImgBaseUrl = qrcodeImgBaseUrl;
+    this.qrcodeTxtBaseUrl = qrcodeTxtBaseUrl;
   }
 
   @Override
@@ -80,7 +87,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 
-      return transactionInProgress2TransactionResponseMapper.apply(trx);
+      return transactionInProgress2TransactionResponseMapper.apply(trx,qrcodeImgBaseUrl,qrcodeTxtBaseUrl);
     } catch (RuntimeException e) {
       auditUtilities.logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;

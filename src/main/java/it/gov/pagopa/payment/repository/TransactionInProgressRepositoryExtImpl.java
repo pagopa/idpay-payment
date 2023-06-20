@@ -15,7 +15,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -28,29 +27,21 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     private final long trxThrottlingSeconds;
     private final long authorizationExpirationMinutes;
     private final long cancelExpirationMinutes;
-    private final String qrcodePgnBaseUrl;
-    private final String qrcodeTxtBaseUrl;
 
     public TransactionInProgressRepositoryExtImpl(
             MongoTemplate mongoTemplate,
             @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
             @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
-            @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes,
-            @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodePgnBaseUrl,
-            @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
+            @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.cancelExpirationMinutes = cancelExpirationMinutes;
-        this.qrcodePgnBaseUrl = qrcodePgnBaseUrl;
-        this.qrcodeTxtBaseUrl = qrcodeTxtBaseUrl;
     }
 
     @Override
     public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
         trx.setTrxCode(trxCode);
-        trx.setQrcodePngUrl(UriComponentsBuilder.fromUriString(qrcodePgnBaseUrl).queryParam("trxcode",trxCode).build().toString());
-        trx.setQrcodeTxtUrl(qrcodeTxtBaseUrl.concat("/%s".formatted(trxCode)));
         return mongoTemplate.upsert(
                 Query.query(Criteria.where(Fields.trxCode).is(trx.getTrxCode())),
                 new Update()
@@ -75,9 +66,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.trxCode, trxCode)
                         .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
                         .setOnInsert(Fields.businessName, trx.getBusinessName())
-                        .setOnInsert(Fields.updateDate, trx.getUpdateDate())
-                        .setOnInsert(Fields.qrcodePngUrl, trx.getQrcodePngUrl())
-                        .setOnInsert(Fields.qrcodeTxtUrl, trx.getQrcodeTxtUrl()),
+                        .setOnInsert(Fields.updateDate, trx.getUpdateDate()),
                 TransactionInProgress.class);
     }
 

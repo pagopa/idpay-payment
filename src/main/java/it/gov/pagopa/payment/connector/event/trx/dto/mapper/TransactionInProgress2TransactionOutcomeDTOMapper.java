@@ -60,8 +60,6 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .channel(trx.getChannel())
         .initiativeName(trx.getInitiativeName())
         .businessName(trx.getBusinessName())
-        .qrcodePngUrl(trx.getQrcodePngUrl())
-        .qrcodeTxtUrl(trx.getQrcodeTxtUrl())
         .build();
   }
 }

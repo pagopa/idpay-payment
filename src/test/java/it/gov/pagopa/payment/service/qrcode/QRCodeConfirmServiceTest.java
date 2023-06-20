@@ -119,7 +119,7 @@ class QRCodeConfirmServiceTest {
 
         TransactionResponse result = service.confirmPayment("TRXID", "MERCHID", "ACQID");
 
-        Assertions.assertEquals(result, mapper.apply(trx));
+        Assertions.assertEquals(result, mapper.apply(trx, null, null));
         Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());
     }
 }

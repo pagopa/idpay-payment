@@ -64,8 +64,6 @@ public class TransactionInProgressFaker {
         .reward(reward)
         .rewards(rewards)
         .channel("CHANNEL%d".formatted(bias))
-        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-        .qrcodePngUrl("QRCODEPNGURL%d".formatted(bias))
-        .qrcodeTxtUrl("QRCODETXTURL%d".formatted(bias));
+        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

@@ -13,6 +13,9 @@ class TransactionInProgress2TransactionResponseMapperTest {
 
   private TransactionInProgress2TransactionResponseMapper mapper;
 
+  private static final String QRCODE_IMG_BASEURL = "QRCODE_IMG_BASEURL";
+  private static final String QRCODE_TXT_BASEURL = "QRCODE_TXT_BASEURL";
+
   @BeforeEach
   void setUp() {
     mapper = new TransactionInProgress2TransactionResponseMapper();
@@ -23,7 +26,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
             .reward(1000L)
             .build();
-    TransactionResponse result = mapper.apply(trx);
+    TransactionResponse result = mapper.apply(trx,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
 
     Assertions.assertAll(() -> {
       assertionCommons(trx, result);
@@ -38,7 +41,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
             .reward(200L)
             .build();
-    TransactionResponse result = mapper.apply(trx);
+    TransactionResponse result = mapper.apply(trx,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
 
     Assertions.assertAll(() -> {
       assertionCommons(trx, result);
@@ -62,6 +65,8 @@ class TransactionInProgress2TransactionResponseMapperTest {
     Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
     Assertions.assertEquals(trx.getVat(), result.getVat());
     Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
+    Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
+    Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
   }
 
 }
