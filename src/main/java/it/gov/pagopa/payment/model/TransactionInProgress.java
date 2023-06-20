@@ -3,13 +3,6 @@ package it.gov.pagopa.payment.model;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +12,14 @@ import lombok.experimental.SuperBuilder;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -47,7 +48,6 @@ public class TransactionInProgress {
 
   private String operationType;
   private OperationType operationTypeTranscoded;
-  private String idTrxIssuer;
   private String correlationId;
   private Long amountCents;
   private BigDecimal effectiveAmount;
@@ -70,4 +70,6 @@ public class TransactionInProgress {
   private Map<String, Reward> rewards = new HashMap<>();
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime updateDate;
+  private String qrcodePngUrl;
+  private String qrcodeTxtUrl;
 }

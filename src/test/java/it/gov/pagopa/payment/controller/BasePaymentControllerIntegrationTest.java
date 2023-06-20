@@ -39,6 +39,7 @@ import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -97,9 +98,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
 
+    @Value("${app.qrCode.baseUrl.png}")
+    private String qrCodePngBaseUrl;
+    @Value("${app.qrCode.baseUrl.txt}")
+    private String qrCodeTxtBaseUrl;
+
     @Test
     void test() {
-        int N = Math.max(useCases.size(), 50);
+        int N =  Math.max(useCases.size(), 50);
 
         rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).build());
 
@@ -143,7 +149,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     /**
      * Invoke create transaction API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxAcquirer) throws Exception;
+    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId) throws Exception;
 
     /**
      * Invoke pre-authorize transaction API to relate <i>userId</i> to the transaction created by <i>merchantId</i>
@@ -178,7 +184,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private TransactionResponse createTrxSuccess(TransactionCreationRequest trxRequest) throws Exception {
-        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXACQUIRER), HttpStatus.CREATED, TransactionResponse.class);
+        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID), HttpStatus.CREATED, TransactionResponse.class);
         assertEquals(SyncTrxStatus.CREATED, trxCreated.getStatus());
         checkTransactionStored(trxCreated);
         assertTrxCreatedData(trxRequest, trxCreated);
@@ -194,6 +200,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()), HttpStatus.NOT_FOUND, null);
 
         assertEquals(getChannel(), stored.getChannel());
+        trxCreated.setTrxDate(OffsetDateTime.parse(
+                trxCreated.getTrxDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"))));
         assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
 
@@ -216,37 +224,37 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         return stored;
     }
 
-    public static final String IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE = "AUTHNOTNOTIFIEDDUETOFALSE";
-    public static final String IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION = "AUTHNOTNOTIFIEDDUETOEXCEPTION";
-    public static final String IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE = "CONFIRMNOTNOTIFIEDDUETOFALSE";
-    public static final String IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION = "CONFIRMNOTNOTIFIEDDUETOEXCEPTION";
-    public static final String IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE = "CANCELLEDNOTNOTIFIEDDUETOFALSE";
-    public static final String IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION = "CANCELLEDNOTNOTIFIEDDUETOEXCEPTION";
+    public static final String IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE = "AUTHNOTNOTIFIEDDUETOFALSE";
+    public static final String IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION = "AUTHNOTNOTIFIEDDUETOEXCEPTION";
+    public static final String IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE = "CONFIRMNOTNOTIFIEDDUETOFALSE";
+    public static final String IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION = "CONFIRMNOTNOTIFIEDDUETOEXCEPTION";
+    public static final String IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE = "CANCELLEDNOTNOTIFIEDDUETOFALSE";
+    public static final String IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION = "CANCELLEDNOTNOTIFIEDDUETOEXCEPTION";
 
 
     protected void configureMocks() {
         Mockito.doReturn(false).when(transactionNotifierServiceSpy)
                 .notify(Mockito.argThat(arg ->
-                                (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE) &&
+                                (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE) &&
                                         SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
                                         ||
-                                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE) &&
+                                        (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE) &&
                                                 SyncTrxStatus.REWARDED.equals(arg.getStatus()))
                                         ||
-                                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE) &&
+                                        (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE) &&
                                                 SyncTrxStatus.CANCELLED.equals(arg.getStatus()))
                         ),
                         Mockito.any());
 
         Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(transactionNotifierServiceSpy)
                 .notify(Mockito.argThat(arg ->
-                                (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION) &&
+                                (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION) &&
                                         SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
                                         ||
-                                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION) &&
+                                        (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION) &&
                                                 SyncTrxStatus.REWARDED.equals(arg.getStatus()))
                                         ||
-                                        (arg.getIdTrxIssuer().startsWith(IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION) &&
+                                        (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION) &&
                                                 SyncTrxStatus.CANCELLED.equals(arg.getStatus()))
                         ),
                         Mockito.any());
@@ -259,7 +267,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId("DUMMYINITIATIVEID");
 
-            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXACQUIRER), HttpStatus.NOT_FOUND, null);
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
 
             // Other APIs cannot be invoked because we have not a valid trxId
             TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("dummytrxcode").trxDate(OffsetDateTime.now()).build();
@@ -425,21 +433,21 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         });
 
         // useCase 6: an error occurred when publishing authorized event, returned false
-        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE));
+        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE));
         // useCase 7: an error occurred when publishing authorized event, throwing error
-        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION));
+        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION));
 
         // useCase 8: an error occurred when publishing confirmed event, returned false
-        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE));
+        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE));
         // useCase 9: an error occurred when publishing confirmed event, throwing error
-        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
+        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
 
         // useCase 10: merchant not related to the initiative
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
 
-            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.FORBIDDEN, null);
+            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID), HttpStatus.FORBIDDEN, null);
         });
 
         //useCase 11: obtain unexpected http code from ms idpay-merchant
@@ -447,7 +455,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
 
-            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID, IDTRXACQUIRER), HttpStatus.INTERNAL_SERVER_ERROR, null);
+            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID), HttpStatus.INTERNAL_SERVER_ERROR, null);
         });
 
         // useCase 12: trx cancelled after create
@@ -516,10 +524,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         });
 
         // useCase 15: an error occurred when publishing confirmed event, returned false
-        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE));
+        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE));
         // useCase 16: an error occurred when publishing confirmed event, throwing error
-        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXISSUERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION));
-        // useCase 17: trx rejected budget exhausted
+        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION));
+        //useCase 17: trx rejected budget exhausted
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId("INITIATIVEID");
@@ -550,10 +558,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         trxCreated.setId(stored.getId());
     }
 
-    private Pair<TransactionInProgress, TransactionOutcomeDTO> configureAuthEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
+    private Pair<TransactionInProgress, TransactionOutcomeDTO> configureAuthEventNotPublishedDueToError(Integer i, String idTrxAcquirerPrefix) throws Exception {
         TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
         trxRequest.setInitiativeId(INITIATIVEID);
-        trxRequest.setIdTrxIssuer("%s_%s".formatted(idTrxIssuerPrefix, trxRequest.getIdTrxIssuer()));
+        trxRequest.setIdTrxAcquirer("%s_%s".formatted(idTrxAcquirerPrefix, trxRequest.getIdTrxAcquirer()));
 
         TransactionResponse trxCreated = createTrxSuccess(trxRequest);
 
@@ -793,13 +801,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private void assertCommonFields(TransactionCreationRequest trxRequest, TransactionResponse trxResponse) {
+        OffsetDateTime now = OffsetDateTime.now();
         Assertions.assertNotNull(trxResponse.getId());
         Assertions.assertNotNull(trxResponse.getTrxCode());
         Assertions.assertEquals(trxRequest.getInitiativeId(), trxResponse.getInitiativeId());
         Assertions.assertEquals(MERCHANTID, trxResponse.getMerchantId());
-        Assertions.assertEquals(trxRequest.getIdTrxIssuer(), trxResponse.getIdTrxIssuer());
         Assertions.assertNotNull(trxResponse.getIdTrxAcquirer());
-        Assertions.assertEquals(trxRequest.getTrxDate(), trxResponse.getTrxDate());
+        Assertions.assertFalse(trxResponse.getTrxDate().isAfter(now.plusMinutes(1L)));
+        Assertions.assertFalse(trxResponse.getTrxDate().isBefore(now.minusMinutes(1L)));
         Assertions.assertEquals(trxRequest.getAmountCents(), trxResponse.getAmountCents());
         Assertions.assertEquals(PaymentConstants.CURRENCY_EUR, trxResponse.getAmountCurrency());
         Assertions.assertEquals(trxRequest.getMcc(), trxResponse.getMcc());
@@ -817,7 +826,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
-        Assertions.assertEquals(trxResponse.getIdTrxIssuer(), trxStored.getIdTrxIssuer());
         Assertions.assertEquals(trxResponse.getId(), trxStored.getCorrelationId());
         Assertions.assertEquals(trxResponse.getAmountCents(), trxStored.getAmountCents());
         Assertions.assertEquals(CommonUtilities.centsToEuro(trxResponse.getAmountCents()), trxStored.getEffectiveAmount());
@@ -870,7 +878,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
-        Assertions.assertNotNull(trxStored.getIdTrxIssuer());
         Assertions.assertEquals(authPaymentDTO.getId(), trxStored.getCorrelationId());
         Assertions.assertEquals(authPaymentDTO.getAmountCents(), trxStored.getAmountCents());
         Assertions.assertEquals(CommonUtilities.centsToEuro(authPaymentDTO.getAmountCents()), trxStored.getEffectiveAmount());

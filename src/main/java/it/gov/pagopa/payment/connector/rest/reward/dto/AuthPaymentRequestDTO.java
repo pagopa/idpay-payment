@@ -14,7 +14,6 @@ public class AuthPaymentRequestDTO {
   private String merchantId;
   private String merchantFiscalCode;
   private String vat;
-  private String idTrxIssuer;
   private OffsetDateTime trxDate;
   private OffsetDateTime trxChargeDate;
   private Long amountCents;

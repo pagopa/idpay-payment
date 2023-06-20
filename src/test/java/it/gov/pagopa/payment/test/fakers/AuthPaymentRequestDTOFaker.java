@@ -23,8 +23,7 @@ public class AuthPaymentRequestDTOFaker {
           .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
           .mcc("MCC%d".formatted(bias))
           .acquirerId("ACQUIRERID%d".formatted(bias))
-          .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
-          .idTrxIssuer("IDTRXISSUER%d".formatted(bias));
+          .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias));
     }
 
 }

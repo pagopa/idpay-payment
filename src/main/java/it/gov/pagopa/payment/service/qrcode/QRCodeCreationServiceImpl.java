@@ -1,20 +1,22 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.OffsetDateTime;
 
 @Slf4j
 @Service
@@ -55,8 +57,9 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       TransactionCreationRequest trxCreationRequest,
       String channel,
       String merchantId,
-      String acquirerId,
-      String idTrxAcquirer) {
+      String acquirerId) {
+
+    OffsetDateTime elaborationTrxDate = OffsetDateTime.now();
     try {
       if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
         log.info(
@@ -72,7 +75,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
       TransactionInProgress trx =
               transactionCreationRequest2TransactionInProgressMapper.apply(
-                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer, merchantDetail);
+                      trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, elaborationTrxDate);
       generateTrxCodeAndSave(trx);
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);

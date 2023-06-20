@@ -129,7 +129,6 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
     Assertions.assertSame(expected.getOperationType(), result.getOperationType());
     Assertions.assertSame(
         expected.getOperationTypeTranscoded(), result.getOperationTypeTranscoded());
-    Assertions.assertSame(expected.getIdTrxIssuer(), result.getIdTrxIssuer());
     Assertions.assertSame(expected.getCorrelationId(), result.getCorrelationId());
     Assertions.assertSame(expected.getAmountCents(), result.getAmountCents());
     Assertions.assertSame(expected.getEffectiveAmount(), result.getEffectiveAmount());

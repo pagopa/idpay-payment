@@ -25,8 +25,6 @@ public class TransactionResponse {
   @NotBlank
   private String merchantId;
   @NotBlank
-  private String idTrxIssuer;
-  @NotBlank
   private String idTrxAcquirer;
   @NotNull
   private OffsetDateTime trxDate;
@@ -40,6 +38,10 @@ public class TransactionResponse {
   private String acquirerId;
   @NotNull
   private SyncTrxStatus status;
+  @NotBlank
+  private String qrcodePngUrl;
+  @NotBlank
+  private String qrcodeTxtUrl;
   private String merchantFiscalCode;
   private String vat;
   private Boolean splitPayment;

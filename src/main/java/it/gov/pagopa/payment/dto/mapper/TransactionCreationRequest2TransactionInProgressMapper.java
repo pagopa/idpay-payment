@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.common.utils.CommonUtilities;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +21,8 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
           String channel,
           String merchantId,
           String acquirerId,
-          String idTrxAcquirer,
-          MerchantDetailDTO merchantDetail) {
+          MerchantDetailDTO merchantDetail,
+          OffsetDateTime elaborationTrxDate) {
     String id =
         "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
     return TransactionInProgress.builder()
@@ -31,21 +32,20 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .effectiveAmount(CommonUtilities.centsToEuro(transactionCreationRequest.getAmountCents()))
         .amountCurrency(PaymentConstants.CURRENCY_EUR)
         .merchantFiscalCode(merchantDetail.getFiscalCode())
-        .idTrxIssuer(transactionCreationRequest.getIdTrxIssuer())
         .initiativeId(transactionCreationRequest.getInitiativeId())
         .initiativeName(merchantDetail.getInitiativeName())
         .businessName(merchantDetail.getBusinessName())
         .mcc(transactionCreationRequest.getMcc())
         .vat(merchantDetail.getVatNumber())
-        .trxDate(transactionCreationRequest.getTrxDate())
-        .trxChargeDate(transactionCreationRequest.getTrxDate())
+        .trxDate(elaborationTrxDate)
+        .trxChargeDate(elaborationTrxDate)
         .status(SyncTrxStatus.CREATED)
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .channel(channel)
         .merchantId(merchantId)
         .acquirerId(acquirerId)
-        .idTrxAcquirer(idTrxAcquirer)
+        .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
         .updateDate(LocalDateTime.now())
         .build();
   }

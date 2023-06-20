@@ -28,10 +28,9 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   public TransactionResponse createTransaction(
       TransactionCreationRequest trxCreationRequest,
       String merchantId,
-      String acquirerId,
-      String idTrxAcquirer) {
+      String acquirerId) {
     log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} through acquirer {} is creating a transaction", merchantId, acquirerId);
-    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId, idTrxAcquirer);
+    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId);
   }
 
   @Override

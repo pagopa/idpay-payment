@@ -42,7 +42,6 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .elaborationDateTime((trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) ? trx.getAuthDate() : trx.getElaborationDateTime())
         .operationType(trx.getOperationType())
         .operationTypeTranscoded(trx.getOperationTypeTranscoded())
-        .idTrxIssuer(trx.getIdTrxIssuer())
         .correlationId(trx.getCorrelationId())
         .amountCents(trx.getAmountCents())
         .effectiveAmount(trx.getEffectiveAmount())
@@ -61,6 +60,8 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .channel(trx.getChannel())
         .initiativeName(trx.getInitiativeName())
         .businessName(trx.getBusinessName())
+        .qrcodePngUrl(trx.getQrcodePngUrl())
+        .qrcodeTxtUrl(trx.getQrcodeTxtUrl())
         .build();
   }
 }

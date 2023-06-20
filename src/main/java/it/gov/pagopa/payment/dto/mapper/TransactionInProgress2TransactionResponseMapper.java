@@ -26,7 +26,6 @@ public class TransactionInProgress2TransactionResponseMapper
             .amountCents(transactionInProgress.getAmountCents())
             .amountCurrency(transactionInProgress.getAmountCurrency())
             .idTrxAcquirer(transactionInProgress.getIdTrxAcquirer())
-            .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
             .initiativeId(transactionInProgress.getInitiativeId())
             .mcc(transactionInProgress.getMcc())
             .id(transactionInProgress.getId())
@@ -39,6 +38,8 @@ public class TransactionInProgress2TransactionResponseMapper
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
             .trxExpirationMinutes(authorizationExpirationMinutes)
+            .qrcodePngUrl(transactionInProgress.getQrcodePngUrl())
+            .qrcodeTxtUrl(transactionInProgress.getQrcodeTxtUrl())
             .build();
   }
 }

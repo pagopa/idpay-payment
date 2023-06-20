@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+
 class TransactionCreationRequest2TransactionInProgressMapperTest {
 
   private TransactionCreationRequest2TransactionInProgressMapper mapper;
@@ -28,9 +30,10 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
     TransactionCreationRequest transactionCreationRequest =
         TransactionCreationRequestFaker.mockInstance(1);
       MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
+    OffsetDateTime now = OffsetDateTime.now();
     TransactionInProgress result =
         mapper.apply(
-            transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", "IDTRXACQUIRER", merchantDetailDTO);
+            transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", merchantDetailDTO, now);
 
     Assertions.assertAll(
         () -> {
@@ -44,15 +47,13 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
           Assertions.assertEquals(
               CommonUtilities.centsToEuro(transactionCreationRequest.getAmountCents()),
               result.getEffectiveAmount());
-          Assertions.assertEquals(
-              transactionCreationRequest.getIdTrxIssuer(), result.getIdTrxIssuer());
           Assertions.assertEquals(transactionCreationRequest.getMcc(), result.getMcc());
           Assertions.assertEquals(
               merchantDetailDTO.getFiscalCode(), result.getMerchantFiscalCode());
           Assertions.assertEquals(merchantDetailDTO.getVatNumber(), result.getVat());
-          Assertions.assertEquals(transactionCreationRequest.getTrxDate(), result.getTrxDate());
+          Assertions.assertEquals(now, result.getTrxDate());
           Assertions.assertEquals(
-              transactionCreationRequest.getTrxDate(), result.getTrxChargeDate());
+              now, result.getTrxChargeDate());
           Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
           Assertions.assertEquals(
               PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());
@@ -60,7 +61,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
           Assertions.assertEquals("CHANNEL", result.getChannel());
           Assertions.assertEquals("MERCHANTID", result.getMerchantId());
           Assertions.assertEquals("ACQUIRERID", result.getAcquirerId());
-          Assertions.assertEquals("IDTRXACQUIRER", result.getIdTrxAcquirer());
+          Assertions.assertEquals(transactionCreationRequest.getIdTrxAcquirer(), result.getIdTrxAcquirer());
           Assertions.assertEquals(merchantDetailDTO.getInitiativeName(), result.getInitiativeName());
           Assertions.assertEquals(merchantDetailDTO.getBusinessName(), result.getBusinessName());
         });

@@ -8,8 +8,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.OffsetDateTime;
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -19,9 +17,7 @@ public class TransactionCreationRequest {
   @NotBlank
   private String initiativeId;
   @NotBlank
-  private String idTrxIssuer;
-  @NotNull
-  private OffsetDateTime trxDate;
+  private String idTrxAcquirer;
   @NotNull
   private Long amountCents;
 

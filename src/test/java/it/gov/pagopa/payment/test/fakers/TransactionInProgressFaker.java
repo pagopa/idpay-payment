@@ -56,7 +56,6 @@ public class TransactionInProgressFaker {
         .mcc("MCC%d".formatted(bias))
         .acquirerId("ACQUIRERID%d".formatted(bias))
         .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
-        .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
         .trxCode("trxcode%d".formatted(bias))
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
@@ -65,6 +64,8 @@ public class TransactionInProgressFaker {
         .reward(reward)
         .rewards(rewards)
         .channel("CHANNEL%d".formatted(bias))
-        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .qrcodePngUrl("QRCODEPNGURL%d".formatted(bias))
+        .qrcodeTxtUrl("QRCODETXTURL%d".formatted(bias));
   }
 }
