@@ -17,8 +17,6 @@ public class TransactionCreationRequest {
   @NotBlank
   private String initiativeId;
   @NotBlank
-  private String idTrxIssuer;
-  @NotBlank
   private String idTrxAcquirer;
   @NotNull
   private Long amountCents;

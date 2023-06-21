@@ -146,7 +146,7 @@ class QRCodeCreationServiceTest {
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
             "ACQUIRERID1",
-                "IDTRXISSUER1");
+            "IDTRXISSUER1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -168,7 +168,7 @@ class QRCodeCreationServiceTest {
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
                     "ACQUIRERID1",
-                        "IDTRXISSUER1"));
+                    "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());

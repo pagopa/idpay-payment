@@ -17,8 +17,7 @@ public class TransactionCreationRequestFaker {
         .initiativeId("INITIATIVEID%d".formatted(bias))
         .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))
         .amountCents(10L)
-        .mcc("MCC%d".formatted(bias))
-        .idTrxIssuer("IDTRXISSUER%d".formatted(bias));
+        .mcc("MCC%d".formatted(bias));
   }
 
 }
