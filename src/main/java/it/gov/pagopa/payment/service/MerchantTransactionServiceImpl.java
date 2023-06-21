@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
@@ -17,7 +18,6 @@ import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,12 +56,14 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         List<MerchantTransactionDTO> merchantTransactions = new ArrayList<>();
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
-                    transaction -> merchantTransactions.add(
+                    transaction ->
+                            merchantTransactions.add(
                             new MerchantTransactionDTO(
                                     transaction.getTrxCode(),
                                     transaction.getCorrelationId(),
                                     transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
-                                    transaction.getReward() != null ? CommonUtilities.centsToEuro(transaction.getReward()) : BigDecimal.valueOf(0),
+                                    transaction.getAmountCents(),
+                                    transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
                                     transaction.getTrxDate().toLocalDateTime(),
                                     authorizationExpirationMinutes,
                                     transaction.getUpdateDate(),
