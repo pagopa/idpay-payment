@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,16 +17,18 @@ import java.time.LocalDateTime;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerchantTransactionDTO {
-    String trxCode;
-    String trxId;
-    String fiscalCode;
+    private String trxCode;
+    private String trxId;
+    private String fiscalCode;
     @NotNull
-    Long effectiveAmount;
-    Long rewardAmount;
+    private Long effectiveAmount;
+    private Long rewardAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime trxDate;
-    Integer trxExpirationMinutes;
+    private LocalDateTime trxDate;
+    private Integer trxExpirationMinutes;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime updateDate;
-    String status;
+    private LocalDateTime updateDate;
+    private SyncTrxStatus status;
+    private String qrcodePngUrl;
+    private String qrcodeTxtUrl;
 }
