@@ -65,7 +65,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                     transaction.getTrxDate().toLocalDateTime(),
                                     authorizationExpirationMinutes,
                                     transaction.getUpdateDate(),
-                                    transaction.getStatus().toString(),
+                                    transaction.getStatus(),
                                     transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()),
                                     transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode())
                             )));

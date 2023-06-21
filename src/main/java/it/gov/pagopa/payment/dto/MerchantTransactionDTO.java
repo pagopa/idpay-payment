@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -25,7 +26,7 @@ public class MerchantTransactionDTO {
     private Integer trxExpirationMinutes;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime updateDate;
-    private String status;
+    private SyncTrxStatus status;
     private String qrcodePngUrl;
     private String qrcodeTxtUrl;
 }
