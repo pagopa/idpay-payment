@@ -16,6 +16,7 @@
           "amountCurrency": "EUR",
           "mcc":  "NOTALLOWEDMCC1",
           "acquirerId":  "ACQUIRERID",
+          "idTrxIssuer": "IDTRXISSUER",
           "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
           "channel": "${json-unit.regex}(QRCODE|CIE)"
         }

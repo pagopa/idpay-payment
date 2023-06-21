@@ -9,5 +9,6 @@ public interface QRCodeCreationService {
       TransactionCreationRequest trxCreationRequest,
       String channel,
       String merchantId,
-      String acquirerId);
+      String acquirerId,
+      String idTrxIssuer);
 }

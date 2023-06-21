@@ -24,6 +24,8 @@ public class SyncTrxStatusDTO {
     @NotBlank
     private String id;
     @NotBlank
+    private String idTrxIssuer;
+    @NotBlank
     private String trxCode;
 
     @NotNull

@@ -27,6 +27,7 @@ public class RewardCalculatorMapper {
                 .amountCurrency(transactionInProgress.getAmountCurrency())
                 .mcc(transactionInProgress.getMcc())
                 .acquirerId(transactionInProgress.getAcquirerId())
+                .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
                 .trxChargeDate(transactionInProgress.getTrxChargeDate())
                 .channel(transactionInProgress.getChannel())
                 .build();

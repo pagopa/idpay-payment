@@ -48,6 +48,7 @@ public class TransactionInProgress {
 
   private String operationType;
   private OperationType operationTypeTranscoded;
+  private String idTrxIssuer;
   private String correlationId;
   private Long amountCents;
   private BigDecimal effectiveAmount;

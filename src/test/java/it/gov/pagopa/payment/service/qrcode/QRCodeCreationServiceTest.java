@@ -84,6 +84,7 @@ class QRCodeCreationServiceTest {
             anyString(),
             anyString(),
             any(MerchantDetailDTO.class),
+            anyString(),
             any(OffsetDateTime.class)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class),anyString(),anyString()))
@@ -97,7 +98,8 @@ class QRCodeCreationServiceTest {
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
-            "ACQUIRERID1");
+            "ACQUIRERID1",
+                "IDTRXISSUER1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -119,6 +121,7 @@ class QRCodeCreationServiceTest {
             anyString(),
             anyString(),
             any(MerchantDetailDTO.class),
+            anyString(),
             any(OffsetDateTime.class)))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class), anyString(), anyString()))
@@ -142,7 +145,8 @@ class QRCodeCreationServiceTest {
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
-            "ACQUIRERID1");
+            "ACQUIRERID1",
+                "IDTRXISSUER1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -163,7 +167,8 @@ class QRCodeCreationServiceTest {
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
-                    "ACQUIRERID1"));
+                    "ACQUIRERID1",
+                        "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());

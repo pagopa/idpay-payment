@@ -25,6 +25,8 @@ public class TransactionResponse {
   @NotBlank
   private String merchantId;
   @NotBlank
+  private String idTrxIssuer;
+  @NotBlank
   private String idTrxAcquirer;
   @NotNull
   private OffsetDateTime trxDate;

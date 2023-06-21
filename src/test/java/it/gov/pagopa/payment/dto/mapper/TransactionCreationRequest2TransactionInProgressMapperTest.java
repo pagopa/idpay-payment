@@ -33,7 +33,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
     OffsetDateTime now = OffsetDateTime.now();
     TransactionInProgress result =
         mapper.apply(
-            transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", merchantDetailDTO, now);
+            transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", merchantDetailDTO, "IDTRXISSUER", now);
 
     Assertions.assertAll(
         () -> {
@@ -47,6 +47,8 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
           Assertions.assertEquals(
               CommonUtilities.centsToEuro(transactionCreationRequest.getAmountCents()),
               result.getEffectiveAmount());
+          Assertions.assertEquals(
+                    "IDTRXISSUER", result.getIdTrxIssuer());
           Assertions.assertEquals(transactionCreationRequest.getMcc(), result.getMcc());
           Assertions.assertEquals(
               merchantDetailDTO.getFiscalCode(), result.getMerchantFiscalCode());

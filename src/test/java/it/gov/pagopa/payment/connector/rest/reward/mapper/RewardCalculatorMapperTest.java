@@ -42,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(transaction.getMerchantId(), result.getMerchantId());
       assertEquals(transaction.getMerchantFiscalCode(), result.getMerchantFiscalCode());
       assertEquals(transaction.getVat(), result.getVat());
+      assertEquals(transaction.getIdTrxIssuer(), result.getIdTrxIssuer());
       assertEquals(transaction.getTrxDate(), result.getTrxDate());
       assertEquals(transaction.getAmountCents(), result.getAmountCents());
       assertEquals(transaction.getAmountCurrency(), result.getAmountCurrency());

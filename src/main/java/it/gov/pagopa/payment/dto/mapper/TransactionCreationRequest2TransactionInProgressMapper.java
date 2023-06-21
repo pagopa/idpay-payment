@@ -22,6 +22,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
           String merchantId,
           String acquirerId,
           MerchantDetailDTO merchantDetail,
+          String idTrxIssuer,
           OffsetDateTime elaborationTrxDate) {
     String id =
         "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
@@ -32,6 +33,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .effectiveAmount(CommonUtilities.centsToEuro(transactionCreationRequest.getAmountCents()))
         .amountCurrency(PaymentConstants.CURRENCY_EUR)
         .merchantFiscalCode(merchantDetail.getFiscalCode())
+        .idTrxIssuer(idTrxIssuer)
         .initiativeId(transactionCreationRequest.getInitiativeId())
         .initiativeName(merchantDetail.getInitiativeName())
         .businessName(merchantDetail.getBusinessName())

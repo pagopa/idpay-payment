@@ -10,6 +10,7 @@ public class TransactionInProgress2SyncTrxStatusMapper {
     public SyncTrxStatusDTO transactionInProgressMapper(TransactionInProgress transaction){
         return SyncTrxStatusDTO.builder()
                 .id(transaction.getId())
+                .idTrxIssuer(transaction.getIdTrxIssuer())
                 .trxCode(transaction.getTrxCode())
                 .trxDate(transaction.getTrxDate())
                 .authDate(transaction.getAuthDate())

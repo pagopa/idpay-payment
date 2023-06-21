@@ -16,12 +16,13 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     }
 
     @Override
-    protected MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId) throws Exception {
+    protected MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxIssuer) throws Exception {
         return mockMvc
                 .perform(
                         post("/idpay/payment/qr-code/merchant")
                                 .header("x-merchant-id", merchantId)
                                 .header("x-acquirer-id", acquirerId)
+                                .header("x-apim-request-id", idTrxIssuer)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(trxRequest)))
                 .andReturn();

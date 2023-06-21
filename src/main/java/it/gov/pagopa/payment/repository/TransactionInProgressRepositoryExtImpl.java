@@ -54,6 +54,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
                         .setOnInsert(Fields.merchantId, trx.getMerchantId())
                         .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
+                        .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
                         .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
                         .setOnInsert(Fields.mcc, trx.getMcc())
                         .setOnInsert(Fields.vat, trx.getVat())

@@ -38,6 +38,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
         assertAll(() -> {
             assertNotNull(result);
             assertEquals(transaction.getId(), result.getId());
+            assertEquals(transaction.getIdTrxIssuer(), result.getIdTrxIssuer());
             assertEquals(transaction.getTrxCode(), result.getTrxCode());
             assertEquals(transaction.getTrxDate(), result.getTrxDate());
             assertEquals(transaction.getAuthDate(), result.getAuthDate());

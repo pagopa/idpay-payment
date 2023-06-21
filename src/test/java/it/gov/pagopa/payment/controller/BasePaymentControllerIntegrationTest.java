@@ -67,6 +67,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     public static final String USERID = "USERID";
     public static final String MERCHANTID = "MERCHANTID";
     public static final String ACQUIRERID = "ACQUIRERID";
+    public static final String IDTRXISSUER = "IDTRXISSUER";
 
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
@@ -149,7 +150,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     /**
      * Invoke create transaction API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId) throws Exception;
+    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxIssuer) throws Exception;
 
     /**
      * Invoke pre-authorize transaction API to relate <i>userId</i> to the transaction created by <i>merchantId</i>
@@ -184,7 +185,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private TransactionResponse createTrxSuccess(TransactionCreationRequest trxRequest) throws Exception {
-        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID), HttpStatus.CREATED, TransactionResponse.class);
+        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.CREATED, TransactionResponse.class);
         assertEquals(SyncTrxStatus.CREATED, trxCreated.getStatus());
         checkTransactionStored(trxCreated);
         assertTrxCreatedData(trxRequest, trxCreated);
@@ -267,7 +268,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId("DUMMYINITIATIVEID");
 
-            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.NOT_FOUND, null);
 
             // Other APIs cannot be invoked because we have not a valid trxId
             TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("dummytrxcode").trxDate(OffsetDateTime.now()).build();
@@ -447,7 +448,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
 
-            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID), HttpStatus.FORBIDDEN, null);
+            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
         });
 
         //useCase 11: obtain unexpected http code from ms idpay-merchant
@@ -455,7 +456,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
 
-            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID), HttpStatus.INTERNAL_SERVER_ERROR, null);
+            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.INTERNAL_SERVER_ERROR, null);
         });
 
         // useCase 12: trx cancelled after create
@@ -806,6 +807,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertNotNull(trxResponse.getTrxCode());
         Assertions.assertEquals(trxRequest.getInitiativeId(), trxResponse.getInitiativeId());
         Assertions.assertEquals(MERCHANTID, trxResponse.getMerchantId());
+        Assertions.assertEquals(IDTRXISSUER, trxResponse.getIdTrxIssuer());
         Assertions.assertNotNull(trxResponse.getIdTrxAcquirer());
         Assertions.assertFalse(trxResponse.getTrxDate().isAfter(now.plusMinutes(1L)));
         Assertions.assertFalse(trxResponse.getTrxDate().isBefore(now.minusMinutes(1L)));
@@ -826,6 +828,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
+        Assertions.assertEquals(trxResponse.getIdTrxIssuer(), trxStored.getIdTrxIssuer());
         Assertions.assertEquals(trxResponse.getId(), trxStored.getCorrelationId());
         Assertions.assertEquals(trxResponse.getAmountCents(), trxStored.getAmountCents());
         Assertions.assertEquals(CommonUtilities.centsToEuro(trxResponse.getAmountCents()), trxStored.getEffectiveAmount());
@@ -880,6 +883,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
+        Assertions.assertNotNull(trxStored.getIdTrxIssuer());
         Assertions.assertEquals(authPaymentDTO.getId(), trxStored.getCorrelationId());
         Assertions.assertEquals(authPaymentDTO.getAmountCents(), trxStored.getAmountCents());
         Assertions.assertEquals(CommonUtilities.centsToEuro(authPaymentDTO.getAmountCents()), trxStored.getEffectiveAmount());

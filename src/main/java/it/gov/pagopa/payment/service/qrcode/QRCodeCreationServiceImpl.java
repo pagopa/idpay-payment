@@ -64,7 +64,8 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       TransactionCreationRequest trxCreationRequest,
       String channel,
       String merchantId,
-      String acquirerId) {
+      String acquirerId,
+      String idTrxIssuer) {
 
     OffsetDateTime elaborationTrxDate = OffsetDateTime.now();
     try {
@@ -82,7 +83,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
       TransactionInProgress trx =
               transactionCreationRequest2TransactionInProgressMapper.apply(
-                      trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, elaborationTrxDate);
+                      trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer, elaborationTrxDate);
       generateTrxCodeAndSave(trx);
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
