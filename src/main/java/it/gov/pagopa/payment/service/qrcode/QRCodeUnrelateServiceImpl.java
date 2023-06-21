@@ -47,11 +47,8 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
             }
 
             if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
-                AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
-                if(refund!=null) {
-                    trx.setReward(refund.getReward());
-                    trx.setRewards(refund.getRewards());
-                }
+
+                callRewardCalculatorCancelTransaction(trx);
 
                 trx.setStatus(SyncTrxStatus.CREATED);
                 trx.setUserId(null);
@@ -68,6 +65,23 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
         } catch (RuntimeException e) {
             auditUtilities.logErrorUnrelateTransaction(trxCode, userId);
             throw e;
+        }
+    }
+
+    private void callRewardCalculatorCancelTransaction(TransactionInProgress trx) {
+        AuthPaymentDTO refund;
+        try {
+            refund = rewardCalculatorConnector.cancelTransaction(trx);
+        } catch (ClientExceptionNoBody e) {
+            if (HttpStatus.FORBIDDEN.equals(e.getHttpStatus())) {
+                refund=null;
+            } else {
+                throw e;
+            }
+        }
+        if(refund!=null) {
+            trx.setReward(refund.getReward());
+            trx.setRewards(refund.getRewards());
         }
     }
 }
