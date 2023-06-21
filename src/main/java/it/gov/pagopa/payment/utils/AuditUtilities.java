@@ -103,17 +103,17 @@ public class AuditUtilities {
         );
     }
 
-    public void logUserCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
+    public void logUnrelateTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS,
-                "User cancelled the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString()
+                "User unrelated the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString()
         );
     }
 
-    public void logErrorUserCancelTransaction(String trxCode, String userId) {
+    public void logErrorUnrelateTransaction(String trxCode, String userId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_USERID,
-                "User cancelled the transaction - KO", trxCode, userId
+                "User unrelated the transaction - KO", trxCode, userId
         );
     }
     // endregion
