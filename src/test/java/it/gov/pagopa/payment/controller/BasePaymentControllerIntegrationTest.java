@@ -155,13 +155,15 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
      */
     protected abstract MvcResult authTrx(TransactionResponse trx, String userid, String merchantId) throws Exception;
 
+    protected abstract MvcResult unrelateTrx(TransactionResponse trx, String userId) throws Exception;
+
     /**
      * Invoke confirm payment API acting as <i>merchantId</i>
      */
     protected abstract MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
 
     /**
-     * Invoke confirm payment API acting as <i>merchantId</i>
+     * Invoke cancel payment API acting as <i>merchantId</i>
      */
     protected abstract MvcResult cancelTrx(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
 
@@ -534,6 +536,26 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             // Cannot invoke other APIs if REJECTED
             extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+        });
+
+        //useCase 18: user cancel payment instead of authorizing
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+
+            extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
+
+            TransactionInProgress stored = checkIfStored(trxCreated.getId());
+            Assertions.assertEquals(SyncTrxStatus.CREATED, stored.getStatus());
+            Assertions.assertNull(stored.getUserId());
         });
 
         useCases.addAll(getExtraUseCases());

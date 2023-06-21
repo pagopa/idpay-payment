@@ -47,6 +47,15 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     }
 
     @Override
+    protected MvcResult unrelateTrx(TransactionResponse trx, String userId) throws Exception {
+        return mockMvc
+                .perform(
+                        delete("/idpay/payment/qr-code/{trxCode}", trx.getTrxCode())
+                                .header("x-user-id", userId))
+                .andReturn();
+    }
+
+    @Override
     protected MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception {
         return mockMvc
                 .perform(

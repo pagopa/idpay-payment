@@ -157,4 +157,30 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logUnrelateTransaction() {
+        auditUtilities.logUnrelateTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList());
+
+
+        assertEquals(
+                CEF + " msg=User unrelated the transaction"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, "[]"),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorUnrelateTransaction() {
+        auditUtilities.logErrorUnrelateTransaction(TRX_ID, USER_ID);
+
+
+        assertEquals(
+                CEF + " msg=User unrelated the transaction - KO"
+                        + " cs1Label=trxId cs1=%s cs2Label=userId cs2=%s"
+                        .formatted(TRX_ID, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
 }

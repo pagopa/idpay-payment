@@ -54,8 +54,6 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
                 trx.setUserId(null);
                 trx.setElaborationDateTime(LocalDateTime.now());
 
-                // TODO sendCancelledTransactionNotification(trx); ?
-
                 repository.save(trx);
             }
 
