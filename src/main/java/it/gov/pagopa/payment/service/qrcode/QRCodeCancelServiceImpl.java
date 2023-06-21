@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -67,17 +68,7 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
                 throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
             }
 
-            if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){
-                AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
-                if(refund != null) {
-                    trx.setStatus(SyncTrxStatus.CANCELLED);
-                    trx.setReward(refund.getReward());
-                    trx.setRewards(refund.getRewards());
-                    trx.setElaborationDateTime(LocalDateTime.now());
-
-                    sendCancelledTransactionNotification(trx);
-                }
-            }
+            sendCancelToRewardCalculator(trx);
 
             log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
             repository.deleteById(trxId);
@@ -86,6 +77,49 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
         } catch (RuntimeException e) {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);
             throw e;
+        }
+    }
+
+    @Override
+    public void cancelTransaction(String trxCode, String userId) {
+        try {
+            TransactionInProgress trx = repository.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+
+            if (trx == null) {
+                throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "[CANCEL_TRANSACTION] Cannot find transaction having code: %s".formatted(trxCode));
+            }
+
+            String trxId = trx.getId();
+            if(!trx.getUserId().equals(userId)){
+                throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "[CANCEL_TRANSACTION] Requesting userId (%s) not allowed to operate on transaction having id %s".formatted(userId, trxId));
+            }
+            if(List.of(SyncTrxStatus.AUTHORIZED, SyncTrxStatus.REWARDED).contains(trx.getStatus())){
+                throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel already authorized transaction: id %s".formatted(trxId));
+            }
+
+            sendCancelToRewardCalculator(trx);
+
+            log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
+            repository.deleteById(trxId);
+
+            auditUtilities.logUserCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons());
+        } catch (RuntimeException e) {
+            auditUtilities.logErrorUserCancelTransaction(trxCode, userId);
+            throw e;
+        }
+    }
+
+    private void sendCancelToRewardCalculator(TransactionInProgress trx) {
+        if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){
+            AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
+            if(refund != null) {
+                trx.setStatus(SyncTrxStatus.CANCELLED);
+                trx.setReward(refund.getReward());
+                trx.setRewards(refund.getRewards());
+                trx.setElaborationDateTime(LocalDateTime.now());
+
+                sendCancelledTransactionNotification(trx);
+            }
         }
     }
 

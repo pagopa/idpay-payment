@@ -81,4 +81,9 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   public void cancelPayment(String trxId, String merchantId, String acquirerId) {
     qrCodeCancelService.cancelTransaction(trxId, merchantId, acquirerId);
   }
+
+  @Override
+  public void cancelPayment(String trxCode, String userId) {
+    qrCodeCancelService.cancelTransaction(trxCode, userId);
+  }
 }

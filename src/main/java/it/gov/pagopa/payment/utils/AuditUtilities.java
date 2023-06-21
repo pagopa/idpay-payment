@@ -16,11 +16,12 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_TRXID_TRXCODE = CEF_PATTERN_INITIATIVE + " cs2Label=trxId cs2={} cs3Label=trxCode cs3={}";
     private static final String CEF_PATTERN_TRXID_TRXCODE_MERCHANTID = CEF_PATTERN_TRXID_TRXCODE + " cs4Label=merchantId cs4={}";
     private static final String CEF_PATTERN_USER = CEF_PATTERN_TRXID_TRXCODE + " suser={}";
-    private static final String CEF_PATTERN_REWARD_REJECIONS = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={}";
-    private static final String CEF_PATTERN_REWARD_REJECIONS_MERCHANTID = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={} cs6Label=merchantId cs6={}";
+    private static final String CEF_PATTERN_REWARD_REJECTIONS = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={}";
+    private static final String CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={} cs6Label=merchantId cs6={}";
     private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
     private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
+    private static final String CEF_PATTERN_TRXID_USERID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=userId cs2={}";
     private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}" ;
 
     // region createTransaction
@@ -58,7 +59,7 @@ public class AuditUtilities {
     // region authPayment
     public void logAuthorizedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_REWARD_REJECIONS,
+                CEF_PATTERN_REWARD_REJECTIONS,
                 "User authorized the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString()
         );
     }
@@ -74,7 +75,7 @@ public class AuditUtilities {
     // region confirmPayment
     public void logConfirmedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_REWARD_REJECIONS_MERCHANTID,
+                CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
                 "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
         );
     }
@@ -90,7 +91,7 @@ public class AuditUtilities {
     // region confirmPayment
     public void logCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_REWARD_REJECIONS_MERCHANTID,
+                CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
                 "Merchant cancelled the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
         );
     }
@@ -99,6 +100,20 @@ public class AuditUtilities {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_MERCHANTID,
                 "Merchant cancelled the transaction - KO", trxId, merchantId
+        );
+    }
+
+    public void logUserCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_REWARD_REJECTIONS,
+                "User cancelled the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString()
+        );
+    }
+
+    public void logErrorUserCancelTransaction(String trxCode, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_USERID,
+                "User cancelled the transaction - KO", trxCode, userId
         );
     }
     // endregion

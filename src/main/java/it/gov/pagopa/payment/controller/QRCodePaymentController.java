@@ -29,6 +29,11 @@ public interface QRCodePaymentController {
   AuthPaymentDTO authPayment(@PathVariable("trxCode") String trxCode,
       @RequestHeader("x-user-id") String userId);
 
+  @DeleteMapping("/{trxCode}")
+  @ResponseStatus(code = HttpStatus.OK)
+  void cancelPayment(@PathVariable("trxCode") String trxCode,
+                     @RequestHeader("x-user-id") String userId);
+
   @PutMapping("/merchant/{transactionId}/confirm")
   TransactionResponse confirmPayment(@PathVariable("transactionId") String trxId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
 
