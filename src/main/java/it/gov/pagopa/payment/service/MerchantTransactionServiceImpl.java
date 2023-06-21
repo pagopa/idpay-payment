@@ -29,8 +29,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final DecryptRestConnector decryptRestConnector;
     private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
-    private final String qrcodeImgBaseUrl;
-    private final  String qrcodeTxtBaseUrl;
+    private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
     public MerchantTransactionServiceImpl(
             @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
@@ -38,14 +37,12 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             DecryptRestConnector decryptRestConnector,
             EncryptRestConnector encryptRestConnector,
             TransactionInProgressRepository transactionInProgressRepository,
-            @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodeImgBaseUrl,
-            @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
+            TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper) {
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.decryptRestConnector = decryptRestConnector;
         this.encryptRestConnector = encryptRestConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
-        this.qrcodeImgBaseUrl = qrcodeImgBaseUrl;
-        this.qrcodeTxtBaseUrl = qrcodeTxtBaseUrl;
+        this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
     }
 
     @Override
@@ -69,8 +66,8 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                     authorizationExpirationMinutes,
                                     transaction.getUpdateDate(),
                                     transaction.getStatus().toString(),
-                                    TransactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(qrcodeImgBaseUrl, transaction.getTrxCode()),
-                                    TransactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(qrcodeTxtBaseUrl, transaction.getTrxCode())
+                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()),
+                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode())
                             )));
         }
         long count = transactionInProgressRepository.getCount(criteria);

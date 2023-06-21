@@ -131,7 +131,7 @@ app:
         cancelExpired: ${QR_CODE_CANCEL_EXPIRED_SCHEDULE:0 0 3 * * ?} # every day at 3AM (for testing purposes: every 3 mins)
     trxCode:
       baseUrl:
-        png: ${QR_CODE_PNG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
+        img: ${QR_CODE_IMG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
         txt: ${QR_CODE_TXT_URL:https://www.idpay.it/authorizationlink}
 
 management:

@@ -91,18 +91,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
     @Autowired
     private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
+    @Autowired
+    private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
     @SpyBean
     private TransactionNotifierService transactionNotifierServiceSpy;
 
     @Value("${app.qrCode.throttlingSeconds}")
     private int throttlingSeconds;
-
-    @Value("${app.qrCode.trxCode.baseUrl.png}")
-    private String qrcodeImgBaseUrl;
-
-    @Value("${app.qrCode.trxCode.baseUrl.txt}")
-    private String qrcodeTxtBaseUrl;
 
     @Test
     void test() {
@@ -203,7 +199,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(getChannel(), stored.getChannel());
         trxCreated.setTrxDate(OffsetDateTime.parse(
                 trxCreated.getTrxDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"))));
-        assertEquals(trxCreated, transactionResponseMapper.apply(stored, qrcodeImgBaseUrl, qrcodeTxtBaseUrl));
+        assertEquals(trxCreated, transactionResponseMapper.apply(stored));
     }
 
     private void checkTransactionStored(AuthPaymentDTO trx, String expectedUserId) {
@@ -583,7 +579,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void configureConfirmEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
         Pair<TransactionInProgress, TransactionOutcomeDTO> trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
 
-        TransactionResponse trxResponse = transactionResponseMapper.apply(trx.getKey(), null, null);
+        TransactionResponse trxResponse = transactionResponseMapper.apply(trx.getKey());
 
         addExpectedAuthorizationEvent(trxResponse);
 
@@ -598,7 +594,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void configureCancelledEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
         Pair<TransactionInProgress, TransactionOutcomeDTO> trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
 
-        TransactionResponse trxResponse = transactionResponseMapper.apply(trx.getKey(), null, null);
+        TransactionResponse trxResponse = transactionResponseMapper.apply(trx.getKey());
         addExpectedAuthorizationEvent(trxResponse);
 
         changeTrxId2MatchCancelMatchedCondition(trxResponse);
@@ -844,8 +840,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(userId, trxStored.getUserId());
         Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
         Assertions.assertEquals(getChannel(), trxStored.getChannel());
-        Assertions.assertEquals(trxResponse.getQrcodePngUrl(), TransactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(qrcodeImgBaseUrl, trxStored.getTrxCode()));
-        Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), TransactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(qrcodeTxtBaseUrl, trxStored.getTrxCode()));
+        Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
+        Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
 
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {

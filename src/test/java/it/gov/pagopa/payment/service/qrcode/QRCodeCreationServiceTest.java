@@ -63,9 +63,7 @@ class QRCodeCreationServiceTest {
             transactionInProgressRepository,
             trxCodeGenUtil,
             auditUtilitiesMock,
-            merchantConnectorMock,
-            "qrcodeImgBaseUrl",
-            "qrcodeTxtBaseUrl");
+            merchantConnectorMock);
   }
 
   @Test
@@ -84,10 +82,9 @@ class QRCodeCreationServiceTest {
             anyString(),
             anyString(),
             any(MerchantDetailDTO.class),
-            anyString(),
-            any(OffsetDateTime.class)))
+            anyString()))
         .thenReturn(trx);
-    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class),anyString(),anyString()))
+    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenReturn("trxcode1");
     when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
@@ -121,10 +118,9 @@ class QRCodeCreationServiceTest {
             anyString(),
             anyString(),
             any(MerchantDetailDTO.class),
-            anyString(),
-            any(OffsetDateTime.class)))
+            anyString()))
         .thenReturn(trx);
-    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class), anyString(), anyString()))
+    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get())
         .thenAnswer(

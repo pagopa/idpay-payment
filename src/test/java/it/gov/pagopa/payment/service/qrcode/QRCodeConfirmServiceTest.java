@@ -29,7 +29,7 @@ class QRCodeConfirmServiceTest {
     @Mock private AuditUtilities auditUtilitiesMock;
 
     private final TransactionInProgress2TransactionResponseMapper mapper =
-            new TransactionInProgress2TransactionResponseMapper();
+            new TransactionInProgress2TransactionResponseMapper(4320, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
 
     private QRCodeConfirmationService service;
 
@@ -41,9 +41,7 @@ class QRCodeConfirmServiceTest {
                         mapper,
                         notifierServiceMock,
                         paymentErrorNotifierServiceMock,
-                        auditUtilitiesMock,
-                        "qrcodeImgBaseUrl",
-                        "qrcodeTxtBaseUrl");
+                        auditUtilitiesMock);
     }
 
     @Test
@@ -121,7 +119,7 @@ class QRCodeConfirmServiceTest {
 
         TransactionResponse result = service.confirmPayment("TRXID", "MERCHID", "ACQID");
 
-        Assertions.assertEquals(result, mapper.apply(trx, "qrcodeImgBaseUrl", "qrcodeTxtBaseUrl"));
+        Assertions.assertEquals(result, mapper.apply(trx));
         Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());
     }
 }

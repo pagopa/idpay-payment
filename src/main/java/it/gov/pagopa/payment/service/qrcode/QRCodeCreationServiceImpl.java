@@ -32,8 +32,6 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
   private final TrxCodeGenUtil trxCodeGenUtil;
   private final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
-  private final String qrcodeImgBaseUrl;
-  private final  String qrcodeTxtBaseUrl;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public QRCodeCreationServiceImpl(
           TransactionInProgress2TransactionResponseMapper
@@ -43,9 +41,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
-          AuditUtilities auditUtilities, MerchantConnector merchantConnector,
-          @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodeImgBaseUrl,
-          @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
+          AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
     this.transactionInProgress2TransactionResponseMapper =
         transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
@@ -55,8 +51,6 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
     this.trxCodeGenUtil = trxCodeGenUtil;
     this.auditUtilities = auditUtilities;
     this.merchantConnector = merchantConnector;
-    this.qrcodeImgBaseUrl = qrcodeImgBaseUrl;
-    this.qrcodeTxtBaseUrl = qrcodeTxtBaseUrl;
   }
 
   @Override
@@ -67,7 +61,6 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String acquirerId,
       String idTrxIssuer) {
 
-    OffsetDateTime elaborationTrxDate = OffsetDateTime.now();
     try {
       if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
         log.info(
@@ -83,12 +76,12 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
       TransactionInProgress trx =
               transactionCreationRequest2TransactionInProgressMapper.apply(
-                      trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer, elaborationTrxDate);
+                      trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer);
       generateTrxCodeAndSave(trx);
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 
-      return transactionInProgress2TransactionResponseMapper.apply(trx,qrcodeImgBaseUrl,qrcodeTxtBaseUrl);
+      return transactionInProgress2TransactionResponseMapper.apply(trx);
     } catch (RuntimeException e) {
       auditUtilities.logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;

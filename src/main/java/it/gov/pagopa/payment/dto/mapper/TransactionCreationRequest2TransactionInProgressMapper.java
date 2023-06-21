@@ -1,17 +1,16 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.common.utils.CommonUtilities;
+import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionCreationRequest2TransactionInProgressMapper {
@@ -22,10 +21,12 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
           String merchantId,
           String acquirerId,
           MerchantDetailDTO merchantDetail,
-          String idTrxIssuer,
-          OffsetDateTime elaborationTrxDate) {
+          String idTrxIssuer) {
     String id =
         "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
+
+    OffsetDateTime now = OffsetDateTime.now();
+
     return TransactionInProgress.builder()
         .id(id)
         .correlationId(id)
@@ -39,8 +40,8 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .businessName(merchantDetail.getBusinessName())
         .mcc(transactionCreationRequest.getMcc())
         .vat(merchantDetail.getVatNumber())
-        .trxDate(elaborationTrxDate)
-        .trxChargeDate(elaborationTrxDate)
+        .trxDate(now)
+        .trxChargeDate(now)
         .status(SyncTrxStatus.CREATED)
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
@@ -48,7 +49,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .merchantId(merchantId)
         .acquirerId(acquirerId)
         .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
-        .updateDate(LocalDateTime.now())
+        .updateDate(now.toLocalDateTime())
         .build();
   }
 }

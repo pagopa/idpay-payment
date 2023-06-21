@@ -3,20 +3,31 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.function.Function;
+
 @Service
 @Slf4j
 public class TransactionInProgress2TransactionResponseMapper
-    implements TriFunction<TransactionInProgress, String, String, TransactionResponse> {
+    implements Function<TransactionInProgress, TransactionResponse> {
 
-  @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes;
+  private final int authorizationExpirationMinutes;
+  private final String imgBaseUrl;
+  private final String txtBaseUrl;
+
+  public TransactionInProgress2TransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+                                                         @Value("${app.qrCode.trxCode.baseUrl.img}") String imgBaseUrl,
+                                                         @Value("${app.qrCode.trxCode.baseUrl.txt}") String txtBaseUrl) {
+    this.authorizationExpirationMinutes = authorizationExpirationMinutes;
+    this.imgBaseUrl = imgBaseUrl;
+    this.txtBaseUrl = txtBaseUrl;
+  }
 
   @Override
-  public TransactionResponse apply(TransactionInProgress transactionInProgress, String qrcodeImgBaseUrl, String qrcodeTxtBaseUrl) {
+  public TransactionResponse apply(TransactionInProgress transactionInProgress) {
     Long residualAmountCents = null;
     Boolean splitPayment = null;
     if (transactionInProgress.getAmountCents() != null && transactionInProgress.getReward() != null) {
@@ -41,12 +52,12 @@ public class TransactionInProgress2TransactionResponseMapper
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
             .trxExpirationMinutes(authorizationExpirationMinutes)
-            .qrcodePngUrl(generateTrxCodeImgUrl(qrcodeImgBaseUrl, transactionInProgress.getTrxCode()))
-            .qrcodeTxtUrl(generateTrxCodeTxtUrl(qrcodeTxtBaseUrl, transactionInProgress.getTrxCode()))
+            .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
+            .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
             .build();
   }
 
-  public static String generateTrxCodeImgUrl(String imgBaseUrl, String trxCode){
+  public String generateTrxCodeImgUrl(String trxCode){
     try {
       return UriComponentsBuilder.fromUriString(imgBaseUrl).queryParam("trxcode", trxCode).build().toString();
     } catch (Exception e) {
@@ -55,7 +66,7 @@ public class TransactionInProgress2TransactionResponseMapper
     return null;
   }
 
-  public static String generateTrxCodeTxtUrl(String txtBaseUrl, String trxCode){
+  public String generateTrxCodeTxtUrl(String trxCode){
     try {
       return txtBaseUrl.concat("/%s".formatted(trxCode));
     } catch (Exception e) {

@@ -18,7 +18,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
 
   @BeforeEach
   void setUp() {
-    mapper = new TransactionInProgress2TransactionResponseMapper();
+    mapper = new TransactionInProgress2TransactionResponseMapper(4300, QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
   }
 
   @Test
@@ -26,7 +26,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
             .reward(1000L)
             .build();
-    TransactionResponse result = mapper.apply(trx,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
+    TransactionResponse result = mapper.apply(trx);
 
     Assertions.assertAll(() -> {
       assertionCommons(trx, result);
@@ -41,7 +41,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
             .reward(200L)
             .build();
-    TransactionResponse result = mapper.apply(trx,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
+    TransactionResponse result = mapper.apply(trx);
 
     Assertions.assertAll(() -> {
       assertionCommons(trx, result);

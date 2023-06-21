@@ -23,24 +23,17 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
-    private final String qrcodeImgBaseUrl;
-    private final  String qrcodeTxtBaseUrl;
-
 
     public QRCodeConfirmationServiceImpl(TransactionInProgressRepository repository,
                                          TransactionInProgress2TransactionResponseMapper mapper,
                                          TransactionNotifierService notifierService,
                                          PaymentErrorNotifierService paymentErrorNotifierService,
-                                         AuditUtilities auditUtilities,
-                                         @Value("${app.qrCode.trxCode.baseUrl.png}") String qrcodeImgBaseUrl,
-                                         @Value("${app.qrCode.trxCode.baseUrl.txt}") String qrcodeTxtBaseUrl) {
+                                         AuditUtilities auditUtilities) {
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
-        this.qrcodeImgBaseUrl = qrcodeImgBaseUrl;
-        this.qrcodeTxtBaseUrl = qrcodeTxtBaseUrl;
     }
 
     @Override
@@ -62,7 +55,7 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
 
             auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getReward(), trx.getRejectionReasons(), trx.getMerchantId());
 
-            return mapper.apply(trx, qrcodeImgBaseUrl,qrcodeTxtBaseUrl);
+            return mapper.apply(trx);
         } catch (RuntimeException e) {
             auditUtilities.logErrorConfirmedPayment(trxId, merchantId);
             throw e;
