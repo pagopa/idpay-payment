@@ -47,23 +47,19 @@ public class TransactionInProgress2TransactionResponseMapper
   }
 
   public static String generateTrxCodeImgUrl(String imgBaseUrl, String trxCode){
-    if(imgBaseUrl != null) {
-      try {
-        return UriComponentsBuilder.fromUriString(imgBaseUrl).queryParam("trxcode", trxCode).build().toString();
-      } catch (Exception e) {
-        log.error("Something went wrong with generated url for trxCode image", e);
-      }
+    try {
+      return UriComponentsBuilder.fromUriString(imgBaseUrl).queryParam("trxcode", trxCode).build().toString();
+    } catch (Exception e) {
+      log.error("Something went wrong with generated url for trxCode image", e);
     }
     return null;
   }
 
   public static String generateTrxCodeTxtUrl(String txtBaseUrl, String trxCode){
-    if(txtBaseUrl != null) {
-      try {
-        return txtBaseUrl.concat("/%s".formatted(trxCode));
-      } catch (Exception e) {
-        log.error("Something went wrong with generated url for trxCode txt", e);
-      }
+    try {
+      return txtBaseUrl.concat("/%s".formatted(trxCode));
+    } catch (Exception e) {
+      log.error("Something went wrong with generated url for trxCode txt", e);
     }
     return null;
   }
