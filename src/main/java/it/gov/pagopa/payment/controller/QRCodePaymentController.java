@@ -31,8 +31,8 @@ public interface QRCodePaymentController {
 
   @DeleteMapping("/{trxCode}")
   @ResponseStatus(code = HttpStatus.OK)
-  void unrelateUserPayment(@PathVariable("trxCode") String trxCode,
-                           @RequestHeader("x-user-id") String userId);
+  void unrelateUser(@PathVariable("trxCode") String trxCode,
+                    @RequestHeader("x-user-id") String userId);
 
   @PutMapping("/merchant/{transactionId}/confirm")
   TransactionResponse confirmPayment(@PathVariable("transactionId") String trxId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);

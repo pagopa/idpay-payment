@@ -545,6 +545,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             // Creating transaction
             TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+            TransactionInProgress trxInProgressCreated = checkIfStored(trxCreated.getId());
 
             // Relating to user
             AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
@@ -553,12 +554,20 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
 
-            TransactionInProgress stored = checkIfStored(trxCreated.getId());
-            Assertions.assertEquals(SyncTrxStatus.CREATED, stored.getStatus());
-            Assertions.assertNull(stored.getUserId());
+            TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
+            cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
         });
 
         useCases.addAll(getExtraUseCases());
+    }
+
+    private static void cleanDatesAndCheckUnrelatedTrx(TransactionInProgress preAuthTrx, TransactionInProgress unrelated) {
+        Assertions.assertNotNull(preAuthTrx.getUpdateDate());
+        preAuthTrx.setUpdateDate(null);
+        Assertions.assertNotNull(unrelated.getUpdateDate());
+        unrelated.setUpdateDate(null);
+
+        Assertions.assertEquals(preAuthTrx, unrelated);
     }
 
     private void changeTrxId2MatchCancelMatchedCondition(TransactionResponse trxCreated) {

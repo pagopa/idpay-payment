@@ -87,7 +87,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   @Override
-  public void unrelateUserPayment(String trxCode, String userId) {
+  public void unrelateUser(String trxCode, String userId) {
     qrCodeUnrelateService.unrelateTransaction(trxCode, userId);
   }
 }

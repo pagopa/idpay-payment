@@ -97,6 +97,38 @@ class QRCodeUnrelateServiceImplTest {
         Mockito.verify(repositoryMock).save(expectedTrx);
     }
 
+    @Test
+    void testSuccessfulRewardCalculator403() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
+                .userId(USERID)
+                .build();
+        when(repositoryMockFindInvocation()).thenReturn(trx);
+
+        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "msg"));
+
+        invokeService();
+
+        TransactionInProgress expectedTrx = trx.toBuilder().status(SyncTrxStatus.CREATED).userId(null).build();
+
+        Mockito.verify(repositoryMock).save(expectedTrx);
+    }
+
+    @Test
+    void testSuccessfulRewardCalculator404() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
+                .userId(USERID)
+                .build();
+        when(repositoryMockFindInvocation()).thenReturn(trx);
+
+        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "msg"));
+
+        invokeService();
+
+        TransactionInProgress expectedTrx = trx.toBuilder().status(SyncTrxStatus.CREATED).userId(null).build();
+
+        Mockito.verify(repositoryMock).save(expectedTrx);
+    }
+
     private TransactionInProgress repositoryMockFindInvocation() {
         return repositoryMock.findByTrxCodeAndAuthorizationNotExpired(TRXCODE.toLowerCase());
     }
