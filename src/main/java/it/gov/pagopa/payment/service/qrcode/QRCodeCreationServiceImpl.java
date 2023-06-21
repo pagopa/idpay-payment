@@ -1,20 +1,23 @@
 package it.gov.pagopa.payment.service.qrcode;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+
+import java.time.OffsetDateTime;
 
 @Slf4j
 @Service
@@ -29,7 +32,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
   private final TrxCodeGenUtil trxCodeGenUtil;
   private final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
-
+  @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public QRCodeCreationServiceImpl(
           TransactionInProgress2TransactionResponseMapper
           transactionInProgress2TransactionResponseMapper,
@@ -56,7 +59,8 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String channel,
       String merchantId,
       String acquirerId,
-      String idTrxAcquirer) {
+      String idTrxIssuer) {
+
     try {
       if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
         log.info(
@@ -72,7 +76,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
       TransactionInProgress trx =
               transactionCreationRequest2TransactionInProgressMapper.apply(
-                      trxCreationRequest, channel, merchantId, acquirerId, idTrxAcquirer, merchantDetail);
+                      trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer);
       generateTrxCodeAndSave(trx);
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);

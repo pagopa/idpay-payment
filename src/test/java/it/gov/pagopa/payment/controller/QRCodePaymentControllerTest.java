@@ -39,7 +39,7 @@ class QRCodePaymentControllerTest {
   @Test
   void createTransaction_testMandatoryFields() throws Exception {
     String expectedCode = "INVALID_REQUEST";
-    List<String> expectedInvalidFields = Arrays.asList("initiativeId", "trxDate", "amountCents");
+    List<String> expectedInvalidFields = Arrays.asList("initiativeId", "amountCents", "idTrxAcquirer");
 
     MvcResult result = mockMvc.perform(
             post("/idpay/payment/qr-code/merchant")

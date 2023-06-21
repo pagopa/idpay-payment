@@ -2,16 +2,29 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class TransactionInProgress2TransactionResponseMapper
     implements Function<TransactionInProgress, TransactionResponse> {
 
-  @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes;
+  private final int authorizationExpirationMinutes;
+  private final String imgBaseUrl;
+  private final String txtBaseUrl;
+
+  public TransactionInProgress2TransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+                                                         @Value("${app.qrCode.trxCode.baseUrl.img}") String imgBaseUrl,
+                                                         @Value("${app.qrCode.trxCode.baseUrl.txt}") String txtBaseUrl) {
+    this.authorizationExpirationMinutes = authorizationExpirationMinutes;
+    this.imgBaseUrl = imgBaseUrl;
+    this.txtBaseUrl = txtBaseUrl;
+  }
 
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
@@ -39,6 +52,26 @@ public class TransactionInProgress2TransactionResponseMapper
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
             .trxExpirationMinutes(authorizationExpirationMinutes)
+            .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
+            .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
             .build();
+  }
+
+  public String generateTrxCodeImgUrl(String trxCode){
+    try {
+      return UriComponentsBuilder.fromUriString(imgBaseUrl).queryParam("trxcode", trxCode).build().toString();
+    } catch (Exception e) {
+      log.error("Something went wrong with generated url for trxCode image", e);
+    }
+    return null;
+  }
+
+  public String generateTrxCodeTxtUrl(String trxCode){
+    try {
+      return txtBaseUrl.concat("/%s".formatted(trxCode));
+    } catch (Exception e) {
+      log.error("Something went wrong with generated url for trxCode txt", e);
+    }
+    return null;
   }
 }

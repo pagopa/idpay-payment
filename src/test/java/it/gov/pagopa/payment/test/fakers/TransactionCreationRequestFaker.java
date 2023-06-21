@@ -15,10 +15,9 @@ public class TransactionCreationRequestFaker {
   public static TransactionCreationRequest.TransactionCreationRequestBuilder mockInstanceBuilder(Integer bias) {
     return TransactionCreationRequest.builder()
         .initiativeId("INITIATIVEID%d".formatted(bias))
-        .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .idTrxAcquirer("IDTRXACQUIRER%s".formatted(bias))
         .amountCents(10L)
-        .mcc("MCC%d".formatted(bias))
-        .idTrxIssuer("IDTRXISSUER%d".formatted(bias));
+        .mcc("MCC%d".formatted(bias));
   }
 
 }
