@@ -54,7 +54,7 @@ class QRCodeUnrelateServiceImplTest {
     @Test
     void testUserIdForbidden() {
         when(repositoryMockFindInvocation())
-                .thenReturn(TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.AUTHORIZED)
+                .thenReturn(TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
                         .userId(USERID+"1")
                         .build()
                 );
