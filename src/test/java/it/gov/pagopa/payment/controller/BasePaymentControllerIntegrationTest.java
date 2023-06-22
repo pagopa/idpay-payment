@@ -557,6 +557,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
             checkTransactionStored(preAuthResult, USERID);
 
+            extractResponse(unrelateTrx(trxCreated, USERID+"1"), HttpStatus.FORBIDDEN, null);
             extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
 
             TransactionInProgress unrelated = checkIfStored(trxCreated.getId());

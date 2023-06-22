@@ -47,13 +47,12 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
 
                 revertTrxToCreatedStatus(trx);
                 repository.save(trx);
+
+                log.info("[TRX_STATUS][UNRELATED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
+                auditUtilities.logUnrelateTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons());
             } else {
                 throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[UNRELATE_TRANSACTION] Cannot unrelate transaction not in status IDENTIFIED: id %s".formatted(trx.getId()));
             }
-
-            log.info("[TRX_STATUS][UNRELATED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
-
-            auditUtilities.logUnrelateTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons());
         } catch (RuntimeException e) {
             auditUtilities.logErrorUnrelateTransaction(trxCode, userId);
             throw e;
