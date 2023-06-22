@@ -1,10 +1,8 @@
 package it.gov.pagopa.payment.test.fakers;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -27,11 +25,12 @@ public class MerchantTransactionDTOFaker {
         return MerchantTransactionDTO.builder()
                 .trxId(id)
                 .fiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
-                .effectiveAmount(reward != null ? CommonUtilities.centsToEuro(reward) : BigDecimal.valueOf(0))
+                .effectiveAmount(1000L)
+                .rewardAmount(reward != null ? reward : Long.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))
                 .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .trxExpirationMinutes(4320)
-                .status(status.toString())
+                .status(status)
                 .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
     }
 }

@@ -1,11 +1,8 @@
 package it.gov.pagopa.payment.service.qrcode;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
@@ -13,8 +10,6 @@ import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionRespons
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -22,9 +17,9 @@ import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +30,11 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
+
+import java.time.OffsetDateTime;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeCreationServiceTest {
@@ -62,7 +62,8 @@ class QRCodeCreationServiceTest {
             rewardRuleRepository,
             transactionInProgressRepository,
             trxCodeGenUtil,
-                auditUtilitiesMock, merchantConnectorMock);
+            auditUtilitiesMock,
+            merchantConnectorMock);
   }
 
   @Test
@@ -80,8 +81,8 @@ class QRCodeCreationServiceTest {
             eq(RewardConstants.TRX_CHANNEL_QRCODE),
             anyString(),
             anyString(),
-            anyString(),
-            any(MerchantDetailDTO.class)))
+            any(MerchantDetailDTO.class),
+            anyString()))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
@@ -95,7 +96,7 @@ class QRCodeCreationServiceTest {
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
             "ACQUIRERID1",
-            "IDTRXACQUIRER1");
+                "IDTRXISSUER1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -116,8 +117,8 @@ class QRCodeCreationServiceTest {
             eq(RewardConstants.TRX_CHANNEL_QRCODE),
             anyString(),
             anyString(),
-            anyString(),
-            any(MerchantDetailDTO.class)))
+            any(MerchantDetailDTO.class),
+            anyString()))
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
@@ -141,7 +142,7 @@ class QRCodeCreationServiceTest {
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
             "ACQUIRERID1",
-            "IDTRXACQUIRER1");
+            "IDTRXISSUER1");
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(trxCreated, result);
@@ -163,7 +164,7 @@ class QRCodeCreationServiceTest {
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
                     "ACQUIRERID1",
-                    "IDTRXACQUIRER1"));
+                    "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
