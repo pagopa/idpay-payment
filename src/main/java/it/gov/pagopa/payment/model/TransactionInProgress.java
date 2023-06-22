@@ -24,7 +24,7 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @FieldNameConstants()
 @Document(collection = "transaction_in_progress")
 public class TransactionInProgress {

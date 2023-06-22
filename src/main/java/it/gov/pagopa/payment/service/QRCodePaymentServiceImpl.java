@@ -21,6 +21,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
   private final QRCodeConfirmationService qrCodeConfirmationService;
   private final QRCodeCancelService qrCodeCancelService;
+  private final QRCodeUnrelateService qrCodeUnrelateService;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper;
 
@@ -29,13 +30,16 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
           QRCodePreAuthService qrCodePreAuthService,
           QRCodeAuthPaymentService qrCodeAuthPaymentService,
           QRCodeConfirmationService qrCodeConfirmationService,
-          QRCodeCancelService qrCodeCancelService, TransactionInProgressRepository transactionInProgressRepository,
+          QRCodeCancelService qrCodeCancelService,
+          QRCodeUnrelateService qrCodeUnrelateService,
+          TransactionInProgressRepository transactionInProgressRepository,
           TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
     this.qrCodeConfirmationService = qrCodeConfirmationService;
     this.qrCodeCancelService = qrCodeCancelService;
+    this.qrCodeUnrelateService = qrCodeUnrelateService;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.transaction2statusMapper = transaction2statusMapper;
   }
@@ -80,5 +84,10 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public void cancelPayment(String trxId, String merchantId, String acquirerId) {
     qrCodeCancelService.cancelTransaction(trxId, merchantId, acquirerId);
+  }
+
+  @Override
+  public void unrelateUser(String trxCode, String userId) {
+    qrCodeUnrelateService.unrelateTransaction(trxCode, userId);
   }
 }

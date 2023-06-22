@@ -158,13 +158,15 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
      */
     protected abstract MvcResult authTrx(TransactionResponse trx, String userid, String merchantId) throws Exception;
 
+    protected abstract MvcResult unrelateTrx(TransactionResponse trx, String userId) throws Exception;
+
     /**
      * Invoke confirm payment API acting as <i>merchantId</i>
      */
     protected abstract MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
 
     /**
-     * Invoke confirm payment API acting as <i>merchantId</i>
+     * Invoke cancel payment API acting as <i>merchantId</i>
      */
     protected abstract MvcResult cancelTrx(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
 
@@ -541,7 +543,37 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 
+        //useCase 18: user cancel payment instead of authorizing
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+            TransactionInProgress trxInProgressCreated = checkIfStored(trxCreated.getId());
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+
+            extractResponse(unrelateTrx(trxCreated, USERID+"1"), HttpStatus.FORBIDDEN, null);
+            extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
+
+            TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
+            cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
+        });
+
         useCases.addAll(getExtraUseCases());
+    }
+
+    private static void cleanDatesAndCheckUnrelatedTrx(TransactionInProgress preAuthTrx, TransactionInProgress unrelated) {
+        Assertions.assertNotNull(preAuthTrx.getUpdateDate());
+        preAuthTrx.setUpdateDate(null);
+        Assertions.assertNotNull(unrelated.getUpdateDate());
+        unrelated.setUpdateDate(null);
+
+        Assertions.assertEquals(preAuthTrx, unrelated);
     }
 
     private void changeTrxId2MatchCancelMatchedCondition(TransactionResponse trxCreated) {
