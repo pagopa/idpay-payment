@@ -29,9 +29,9 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
       TransactionCreationRequest trxCreationRequest,
       String merchantId,
       String acquirerId,
-      String idTrxAcquirer) {
+      String idTrxIssuer) {
     log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} through acquirer {} is creating a transaction", merchantId, acquirerId);
-    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId, idTrxAcquirer);
+    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId, idTrxIssuer);
   }
 
   @Override
@@ -56,6 +56,19 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
         userId,
         trxCode);
     return qrCodePaymentService.authPayment(userId, trxCode);
+  }
+
+  @Override
+  @PerformanceLog(
+          value = "QR_CODE_USER_CANCEL_TRANSACTION"
+  )
+  public void unrelateUser(String trxCode, String userId) {
+      log.info(
+             "[QR_CODE_USER_CANCEL_TRANSACTION] The user {} is unrelating the transaction having trxCode {}",
+             userId,
+             trxCode
+      );
+      qrCodePaymentService.unrelateUser(trxCode, userId);
   }
 
   @Override

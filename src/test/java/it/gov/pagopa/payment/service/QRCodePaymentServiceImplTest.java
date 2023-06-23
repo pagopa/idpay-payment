@@ -42,6 +42,8 @@ class QRCodePaymentServiceImplTest {
     private QRCodeConfirmationService qrCodeConfirmationServiceMock;
     @Mock
     private QRCodeCancelService qrCodeCancelServiceMock;
+    @Mock
+    private QRCodeUnrelateService qrCodeUnrelateService;
 
     private final TransactionInProgress2SyncTrxStatusMapper transactionMapper= new TransactionInProgress2SyncTrxStatusMapper();
 
@@ -53,7 +55,9 @@ class QRCodePaymentServiceImplTest {
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
                 qrCodeConfirmationServiceMock,
-                qrCodeCancelServiceMock, transactionInProgressRepositoryMock,
+                qrCodeCancelServiceMock,
+                qrCodeUnrelateService,
+                transactionInProgressRepositoryMock,
                 transactionMapper);
     }
 

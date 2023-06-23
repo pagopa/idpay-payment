@@ -29,7 +29,7 @@ class QRCodeConfirmServiceTest {
     @Mock private AuditUtilities auditUtilitiesMock;
 
     private final TransactionInProgress2TransactionResponseMapper mapper =
-            new TransactionInProgress2TransactionResponseMapper();
+            new TransactionInProgress2TransactionResponseMapper(4320, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
 
     private QRCodeConfirmationService service;
 

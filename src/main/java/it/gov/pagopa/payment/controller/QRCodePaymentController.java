@@ -17,7 +17,7 @@ public interface QRCodePaymentController {
       @RequestBody @Valid TransactionCreationRequest trxCreationRequest,
       @RequestHeader("x-merchant-id") String merchantId,
       @RequestHeader("x-acquirer-id") String acquirerId,
-      @RequestHeader("x-apim-request-id") String idTrxAcquirer);
+      @RequestHeader("x-apim-request-id") String idTrxIssuer);
 
   @PutMapping("/{trxCode}/relate-user")
   @ResponseStatus(code = HttpStatus.OK)
@@ -28,6 +28,11 @@ public interface QRCodePaymentController {
   @ResponseStatus(code = HttpStatus.OK)
   AuthPaymentDTO authPayment(@PathVariable("trxCode") String trxCode,
       @RequestHeader("x-user-id") String userId);
+
+  @DeleteMapping("/{trxCode}")
+  @ResponseStatus(code = HttpStatus.OK)
+  void unrelateUser(@PathVariable("trxCode") String trxCode,
+                    @RequestHeader("x-user-id") String userId);
 
   @PutMapping("/merchant/{transactionId}/confirm")
   TransactionResponse confirmPayment(@PathVariable("transactionId") String trxId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);

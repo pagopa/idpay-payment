@@ -10,5 +10,5 @@ public interface QRCodeCreationService {
       String channel,
       String merchantId,
       String acquirerId,
-      String idTrxAcquirer);
+      String idTrxIssuer);
 }
