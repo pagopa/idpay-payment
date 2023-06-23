@@ -3,9 +3,9 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.function.Function;
 
@@ -58,19 +58,19 @@ public class TransactionInProgress2TransactionResponseMapper
   }
 
   public String generateTrxCodeImgUrl(String trxCode){
-    try {
-      return UriComponentsBuilder.fromUriString(imgBaseUrl).queryParam("trxcode", trxCode).build().toString();
-    } catch (Exception e) {
-      log.error("Something went wrong with generated url for trxCode image", e);
-    }
-    return null;
+    return addPathUrl(imgBaseUrl, trxCode);
   }
 
   public String generateTrxCodeTxtUrl(String trxCode){
+    return addPathUrl(txtBaseUrl, trxCode);
+  }
+
+  @Nullable
+  private String addPathUrl(String baseUrl, String trxCode) {
     try {
-      return txtBaseUrl.concat("/%s".formatted(trxCode));
+      return baseUrl.concat("/%s".formatted(trxCode));
     } catch (Exception e) {
-      log.error("Something went wrong with generated url for trxCode txt", e);
+      log.error("Something went wrong with generated url for trxCode", e);
     }
     return null;
   }

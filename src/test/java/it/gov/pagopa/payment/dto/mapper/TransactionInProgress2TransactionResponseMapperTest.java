@@ -66,7 +66,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
     Assertions.assertEquals(trx.getVat(), result.getVat());
     Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
-    Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
+    Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
     Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
   }
 
