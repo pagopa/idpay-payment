@@ -7,17 +7,17 @@ import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionIn
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.enums.InitiativeRewardType;
+import it.gov.pagopa.payment.model.InitiativeConfig;
+import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.OffsetDateTime;
 
 @Slf4j
 @Service
@@ -62,7 +62,10 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String idTrxIssuer) {
 
     try {
-      if (!rewardRuleRepository.existsById(trxCreationRequest.getInitiativeId())) {
+      InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
+              .map(RewardRule::getInitiativeConfig)
+              .orElse(null);
+      if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
         log.info(
                 "[QR_CODE_CREATE_TRANSACTION] Cannot find initiative with ID: [{}]",
                 trxCreationRequest.getInitiativeId());
