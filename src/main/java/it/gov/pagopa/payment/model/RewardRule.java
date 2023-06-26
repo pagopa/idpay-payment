@@ -16,5 +16,5 @@ public class RewardRule {
 
   @Id
   private String id;
-
+  private InitiativeConfig initiativeConfig;
 }

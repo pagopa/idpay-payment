@@ -14,8 +14,10 @@ import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionRespons
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
@@ -104,7 +106,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     void test() {
         int N =  Math.max(useCases.size(), 50);
 
-        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).build());
+        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).initiativeConfig(InitiativeConfig.builder().initiativeId(INITIATIVEID).initiativeRewardType(InitiativeRewardType.DISCOUNT).build()).build());
 
         configureMocks();
 
