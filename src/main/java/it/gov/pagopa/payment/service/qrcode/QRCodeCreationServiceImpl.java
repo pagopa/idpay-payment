@@ -75,7 +75,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
                 "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
       }
 
-      if (trxCreationRequest.getAmountCents().compareTo(0L) == 0) {
+      if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction with invalid amount: [{}]", trxCreationRequest.getAmountCents());
         throw new ClientExceptionWithBody(
                 HttpStatus.BAD_REQUEST,
