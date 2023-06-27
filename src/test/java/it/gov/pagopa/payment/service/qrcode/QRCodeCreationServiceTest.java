@@ -9,7 +9,10 @@ import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionIn
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.model.InitiativeConfig;
+import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -30,6 +33,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
+
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -72,7 +77,7 @@ class QRCodeCreationServiceTest {
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
-    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
     when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
             any(TransactionCreationRequest.class),
@@ -100,6 +105,15 @@ class QRCodeCreationServiceTest {
     Assertions.assertEquals(trxCreated, result);
   }
 
+  private RewardRule buildRule(String initiativeid, InitiativeRewardType initiativeRewardType) {
+    return RewardRule.builder().id(initiativeid)
+            .initiativeConfig(InitiativeConfig.builder()
+                    .initiativeId(initiativeid)
+                    .initiativeRewardType(initiativeRewardType)
+                    .build())
+            .build();
+  }
+
   @Test
   void createTransactionTrxCodeHit() {
 
@@ -108,7 +122,7 @@ class QRCodeCreationServiceTest {
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
-    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
     when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
             any(TransactionCreationRequest.class),
@@ -147,11 +161,11 @@ class QRCodeCreationServiceTest {
   }
 
   @Test
-  void createTransactionNotFound() {
+  void createTransaction_InitiativeNotFound() {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
 
-    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(false);
+    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.empty());
 
     ClientException result =
         Assertions.assertThrows(
@@ -163,6 +177,28 @@ class QRCodeCreationServiceTest {
                     "MERCHANTID1",
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
+
+    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+  }
+
+  @Test
+  void createTransaction_InitiativeNotDiscount() {
+
+    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+
+    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.REFUND)));
+
+    ClientException result =
+            Assertions.assertThrows(
+                    ClientException.class,
+                    () ->
+                            qrCodeCreationService.createTransaction(
+                                    trxCreationReq,
+                                    RewardConstants.TRX_CHANNEL_QRCODE,
+                                    "MERCHANTID1",
+                                    "ACQUIRERID1",
+                                    "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
