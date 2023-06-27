@@ -42,7 +42,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -605,7 +604,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         TransactionOutcomeDTO expectedNotification = transactionInProgress2TransactionOutcomeDTOMapper.apply(authStored);
         expectedErrors.add(expectedNotification);
 
-       expectedNotification.setElaborationDateTime(expectedNotification.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES));
+        expectedNotification.setElaborationDateTime(TestUtils.truncateTimestamp(expectedNotification.getElaborationDateTime()));
 
         return Pair.of(authStored, expectedNotification);
     }
@@ -622,7 +621,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         // updating status on errorNotificationStored expected
         trx.getValue().setStatus(SyncTrxStatus.REWARDED);
-        trx.getValue().setElaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        trx.getValue().setElaborationDateTime(TestUtils.truncateTimestamp(LocalDateTime.now()));
     }
 
     private void configureCancelledEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
@@ -639,7 +638,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         trx.getValue().setId(trxResponse.getId());
         trx.getValue().setCorrelationId(trxResponse.getId());
         trx.getValue().setStatus(SyncTrxStatus.CANCELLED);
-        trx.getValue().setElaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        trx.getValue().setElaborationDateTime(TestUtils.truncateTimestamp(LocalDateTime.now()));
         trx.getValue().getRewards().values().forEach(r->{
             r.setAccruedReward(r.getAccruedReward().negate());
             r.setProvidedReward(r.getProvidedReward().negate());
@@ -741,8 +740,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private void assertNotifications(Set<TransactionOutcomeDTO> expectedNotificationEvents, Set<TransactionOutcomeDTO> notificationDTOS) {
-        expectedNotificationEvents.stream().filter(n->n.getElaborationDateTime()!=null).forEach(e->e.setElaborationDateTime(e.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES)));
-        notificationDTOS.stream().filter(n->n.getElaborationDateTime()!=null).forEach(e->e.setElaborationDateTime(e.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES)));
+        expectedNotificationEvents.stream().filter(n->n.getElaborationDateTime()!=null).forEach(e->e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
+        notificationDTOS.stream().filter(n->n.getElaborationDateTime()!=null).forEach(e->e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
         assertEquals(expectedNotificationEvents.size(), notificationDTOS.size());
         assertEquals(
                 sortEvents(expectedNotificationEvents),
@@ -776,7 +775,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                     checkErrorMessageHeaders(topicConfirmNotification, null, r, expectedErrorDescription, r.value(), expectedKey, false, false);
 
                     if(out.getElaborationDateTime()!=null){
-                        out.setElaborationDateTime(out.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES));
+                        out.setElaborationDateTime(TestUtils.truncateTimestamp(out.getElaborationDateTime()));
                     }
 
                     return out;
