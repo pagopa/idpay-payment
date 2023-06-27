@@ -210,7 +210,8 @@ class QRCodeCreationServiceTest {
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     trxCreationReq.setAmountCents(0L);
 
-    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+    when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
+            .thenReturn(Optional.of(buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT)));
 
     ClientException result =
         Assertions.assertThrows(
