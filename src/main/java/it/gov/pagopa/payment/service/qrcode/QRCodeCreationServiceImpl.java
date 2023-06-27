@@ -65,6 +65,14 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
 
     LocalDate today = LocalDate.now();
     try {
+      if (trxCreationRequest.getAmountCents() <= 0L) {
+        log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction with invalid amount: [{}]", trxCreationRequest.getAmountCents());
+        throw new ClientExceptionWithBody(
+                HttpStatus.BAD_REQUEST,
+                "INVALID AMOUNT",
+                "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
+      }
+
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
               .map(RewardRule::getInitiativeConfig)
               .orElse(null);
@@ -86,14 +94,6 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
                 "INVALID DATE",
                 "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
                         .formatted(initiative.getStartDate(), initiative.getEndDate()));
-      }
-
-      if (trxCreationRequest.getAmountCents().compareTo(0L) == 0) {
-        log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction with invalid amount: [{}]", trxCreationRequest.getAmountCents());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                "INVALID AMOUNT",
-                "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
       }
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());

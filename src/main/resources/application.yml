@@ -132,7 +132,7 @@ app:
     trxCode:
       baseUrl:
         img: ${QR_CODE_IMG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
-        txt: ${QR_CODE_TXT_URL:https://www.idpay.it/authorizationlink}
+        txt: ${QR_CODE_TXT_URL:https://continua.io.pagopa.it/idpay/auth}
 
 management:
   endpoint:
