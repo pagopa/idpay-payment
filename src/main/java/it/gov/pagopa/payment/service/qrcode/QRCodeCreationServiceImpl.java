@@ -62,6 +62,14 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String idTrxIssuer) {
 
     try {
+      if (trxCreationRequest.getAmountCents() <= 0L) {
+        log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction with invalid amount: [{}]", trxCreationRequest.getAmountCents());
+        throw new ClientExceptionWithBody(
+                HttpStatus.BAD_REQUEST,
+                "INVALID AMOUNT",
+                "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
+      }
+
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
               .map(RewardRule::getInitiativeConfig)
               .orElse(null);
