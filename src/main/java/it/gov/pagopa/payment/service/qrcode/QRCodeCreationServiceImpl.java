@@ -13,11 +13,8 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.OffsetDateTime;
 
 @Slf4j
 @Service
@@ -70,6 +67,14 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
                 HttpStatus.NOT_FOUND,
                 "NOT FOUND",
                 "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
+      }
+
+      if (trxCreationRequest.getAmountCents().compareTo(0L) == 0) {
+        log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction with invalid amount: [{}]", trxCreationRequest.getAmountCents());
+        throw new ClientExceptionWithBody(
+                HttpStatus.BAD_REQUEST,
+                "INVALID AMOUNT",
+                "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
       }
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());

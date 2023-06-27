@@ -31,8 +31,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
 
-import java.time.OffsetDateTime;
-
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -168,5 +166,28 @@ class QRCodeCreationServiceTest {
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+  }
+
+  @Test
+  void createTransactionAmountZero() {
+
+    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+    trxCreationReq.setAmountCents(0L);
+
+    when(rewardRuleRepository.existsById("INITIATIVEID1")).thenReturn(true);
+
+    ClientException result =
+        Assertions.assertThrows(
+            ClientException.class,
+            () ->
+                qrCodeCreationService.createTransaction(
+                    trxCreationReq,
+                    RewardConstants.TRX_CHANNEL_QRCODE,
+                    "MERCHANTID1",
+                    "ACQUIRERID1",
+                    "IDTRXISSUER1"));
+
+    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
+    Assertions.assertEquals("INVALID AMOUNT", ((ClientExceptionWithBody) result).getCode());
   }
 }
