@@ -39,6 +39,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -69,6 +70,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     public static final String MERCHANTID = "MERCHANTID";
     public static final String ACQUIRERID = "ACQUIRERID";
     public static final String IDTRXISSUER = "IDTRXISSUER";
+    public static final LocalDate TODAY = LocalDate.now();
 
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
@@ -105,7 +107,24 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     void test() {
         int N =  Math.max(useCases.size(), 50);
 
-        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).initiativeConfig(InitiativeConfig.builder().initiativeId(INITIATIVEID).initiativeRewardType(InitiativeRewardType.DISCOUNT).build()).build());
+        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID)
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(INITIATIVEID)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.minusDays(1))
+                        .endDate(TODAY.plusDays(1))
+                        .build())
+                .build());
+
+        // rule for useCase 20
+        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID+"1")
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(INITIATIVEID+"1")
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.plusDays(1))
+                        .endDate(TODAY.plusDays(1))
+                        .build())
+                .build());
 
         configureMocks();
 
@@ -530,7 +549,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         //useCase 17: trx rejected budget exhausted
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-            trxRequest.setInitiativeId("INITIATIVEID");
+            trxRequest.setInitiativeId(INITIATIVEID);
             trxRequest.setMcc("NOTALLOWEDMCC1");
 
             // Creating transaction
@@ -563,6 +582,24 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
             TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
             cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
+        });
+
+        //useCase 19: merchant tries to create transaction with amount = 0
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setAmountCents(0L);
+
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
+        });
+
+        //useCase 20: merchant tries to create transaction out of valid initiative period
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID+"1");
+
+            // Creating transaction
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
         });
 
         useCases.addAll(getExtraUseCases());
