@@ -236,11 +236,11 @@ class QRCodeCreationServiceTest {
 
   @ParameterizedTest
   @MethodSource("dateArguments")
-  void createTransaction_InvalidDate() {
+  void createTransaction_InvalidDate(LocalDate invalidDate) {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
 
-    RewardRule rule = buildRuleWithInvalidDate(trxCreationReq, TODAY.plusDays(1));
+    RewardRule rule = buildRuleWithInvalidDate(trxCreationReq, invalidDate);
     when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
             .thenReturn(Optional.of(rule));
 
