@@ -66,6 +66,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
+    public static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";
     public static final String USERID = "USERID";
     public static final String MERCHANTID = "MERCHANTID";
     public static final String ACQUIRERID = "ACQUIRERID";
@@ -117,9 +118,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 .build());
 
         // rule for useCase 20
-        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID+"1")
+        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID_NOT_STARTED)
                 .initiativeConfig(InitiativeConfig.builder()
-                        .initiativeId(INITIATIVEID+"1")
+                        .initiativeId(INITIATIVEID_NOT_STARTED)
                         .initiativeRewardType(InitiativeRewardType.DISCOUNT)
                         .startDate(TODAY.plusDays(1))
                         .endDate(TODAY.plusDays(1))
@@ -596,7 +597,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         //useCase 20: merchant tries to create transaction out of valid initiative period
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-            trxRequest.setInitiativeId(INITIATIVEID+"1");
+            trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
 
             // Creating transaction
             extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
