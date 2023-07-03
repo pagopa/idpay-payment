@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Slf4j
 @Service
 public class QRCodeCreationServiceImpl implements QRCodeCreationService {
@@ -61,6 +63,7 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
       String acquirerId,
       String idTrxIssuer) {
 
+    LocalDate today = LocalDate.now();
     try {
       if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction with invalid amount: [{}]", trxCreationRequest.getAmountCents());
@@ -81,6 +84,16 @@ public class QRCodeCreationServiceImpl implements QRCodeCreationService {
                 HttpStatus.NOT_FOUND,
                 "NOT FOUND",
                 "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
+      }
+
+      if (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate())) {
+        log.info("[QR_CODE_CREATE_TRANSACTION] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
+                initiative.getStartDate(), initiative.getEndDate());
+        throw new ClientExceptionWithBody(
+                HttpStatus.BAD_REQUEST,
+                "INVALID DATE",
+                "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
+                        .formatted(initiative.getStartDate(), initiative.getEndDate()));
       }
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
