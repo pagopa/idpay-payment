@@ -24,17 +24,23 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import org.bson.BsonString;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
 import org.springframework.http.HttpStatus;
 
+import java.time.LocalDate;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
@@ -42,6 +48,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class QRCodeCreationServiceTest {
 
+  public static final LocalDate TODAY = LocalDate.now();
   @Mock
   private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
   @Mock
@@ -110,6 +117,8 @@ class QRCodeCreationServiceTest {
             .initiativeConfig(InitiativeConfig.builder()
                     .initiativeId(initiativeid)
                     .initiativeRewardType(initiativeRewardType)
+                    .startDate(TODAY.minusDays(1))
+                    .endDate(TODAY.plusDays(1))
                     .build())
             .build();
   }
@@ -202,5 +211,73 @@ class QRCodeCreationServiceTest {
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+  }
+
+  @Test
+  void createTransaction_AmountZero() {
+
+    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+    trxCreationReq.setAmountCents(0L);
+
+    ClientException result =
+        Assertions.assertThrows(
+            ClientException.class,
+            () ->
+                qrCodeCreationService.createTransaction(
+                    trxCreationReq,
+                    RewardConstants.TRX_CHANNEL_QRCODE,
+                    "MERCHANTID1",
+                    "ACQUIRERID1",
+                    "IDTRXISSUER1"));
+
+    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
+    Assertions.assertEquals("INVALID AMOUNT", ((ClientExceptionWithBody) result).getCode());
+  }
+
+  @ParameterizedTest
+  @MethodSource("dateArguments")
+  void createTransaction_InvalidDate(LocalDate invalidDate) {
+
+    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
+
+    RewardRule rule = buildRuleWithInvalidDate(trxCreationReq, invalidDate);
+    when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
+            .thenReturn(Optional.of(rule));
+
+    ClientException result =
+        Assertions.assertThrows(
+            ClientException.class,
+            () ->
+                qrCodeCreationService.createTransaction(
+                    trxCreationReq,
+                    RewardConstants.TRX_CHANNEL_QRCODE,
+                    "MERCHANTID1",
+                    "ACQUIRERID1",
+                    "IDTRXISSUER1"));
+
+    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
+    Assertions.assertEquals("INVALID DATE", ((ClientExceptionWithBody) result).getCode());
+  }
+
+  private static Stream<Arguments> dateArguments() {
+     return Stream.of(
+             Arguments.of(TODAY.plusDays(1)),
+             Arguments.of(TODAY.minusDays(1))
+     );
+  }
+
+  @NotNull
+  private RewardRule buildRuleWithInvalidDate(TransactionCreationRequest trxCreationReq, LocalDate invalidDate) {
+    RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
+    InitiativeConfig config = rule.getInitiativeConfig();
+
+    if (invalidDate.isAfter(TODAY)) {
+      config.setStartDate(invalidDate);
+    } else {
+      config.setEndDate(invalidDate);
+    }
+    rule.setInitiativeConfig(config);
+
+    return rule;
   }
 }
