@@ -228,7 +228,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     @Override
     public TransactionInProgress findAuthorizationExpiredTransaction() {
-        return findExpiredTransaction(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED));
+        return findExpiredTransaction(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED, SyncTrxStatus.REJECTED));
     }
 
     private TransactionInProgress findExpiredTransaction(long expirationMinutes, List<SyncTrxStatus> statusList) {
