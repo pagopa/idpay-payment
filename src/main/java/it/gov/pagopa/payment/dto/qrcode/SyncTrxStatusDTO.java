@@ -32,7 +32,7 @@ public class SyncTrxStatusDTO {
     private OffsetDateTime trxDate;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxChargeDate;
+    private OffsetDateTime authDate;
 
     @NotNull
     private OperationType operationType;
