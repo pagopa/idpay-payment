@@ -20,8 +20,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,7 +73,6 @@ class QRCodePaymentServiceImplTest {
     void getStatusTransaction() {
         //given
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .authDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();

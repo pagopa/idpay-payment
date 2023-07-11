@@ -47,7 +47,6 @@ class TransactionServiceTest {
   void getTransaction() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
             .userId(USER_ID)
-            .authDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
             .reward(0L)
             .build();
 

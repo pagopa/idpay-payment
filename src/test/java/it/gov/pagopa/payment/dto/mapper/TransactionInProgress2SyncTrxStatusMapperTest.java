@@ -9,8 +9,6 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,7 +24,6 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
     @Test
     void transactionInProgressMapper() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
-                .authDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
@@ -41,7 +38,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
             assertEquals(transaction.getIdTrxIssuer(), result.getIdTrxIssuer());
             assertEquals(transaction.getTrxCode(), result.getTrxCode());
             assertEquals(transaction.getTrxDate(), result.getTrxDate());
-            assertEquals(transaction.getAuthDate(), result.getAuthDate());
+            assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
             assertEquals(transaction.getOperationTypeTranscoded(), result.getOperationType());
             assertEquals(transaction.getAmountCents(), result.getAmountCents());
             assertEquals(transaction.getAmountCurrency(), result.getAmountCurrency());

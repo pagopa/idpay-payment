@@ -95,6 +95,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress transaction =
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setTrxChargeDate(null);
     transactionInProgressRepository.save(transaction);
 
     TransactionInProgress result =
@@ -162,7 +163,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         "rejectionReasons",
         "rewards");
 
-    transactionInProgress.setTrxChargeDate(OffsetDateTime.now().minusMinutes(4350));
+    transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(4350));
     transactionInProgressRepository.save(transactionInProgress);
 
     TransactionInProgress resultSecondSave =
@@ -307,7 +308,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     // expired transaction
     TransactionInProgress transactionExpired =
             TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
-    transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(10L));
+    transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(10L));
     transactionInProgressRepository.save(transactionExpired);
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction();
@@ -335,7 +336,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     // expired transaction
     TransactionInProgress transactionExpired =
             TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
-    transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(20L));
+    transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(20L));
     transactionInProgressRepository.save(transactionExpired);
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction();
