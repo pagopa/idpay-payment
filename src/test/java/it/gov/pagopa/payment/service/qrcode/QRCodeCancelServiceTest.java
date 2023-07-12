@@ -109,7 +109,7 @@ class QRCodeCancelServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
-        trx.setTrxChargeDate(OffsetDateTime.now().minusMinutes(cancelExpirationMinutes+1));
+        trx.setTrxDate(OffsetDateTime.now().minusMinutes(cancelExpirationMinutes+1));
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         try {

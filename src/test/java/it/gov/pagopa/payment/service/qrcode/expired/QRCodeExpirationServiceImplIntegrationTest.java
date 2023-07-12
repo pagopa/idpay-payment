@@ -46,8 +46,8 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     private int cancelMinutes;
 
     private OffsetDateTime OFFSET_NOW;
-    private OffsetDateTime AUTHORIZATION_EXPIRED_CHARGE_DATE;
-    private OffsetDateTime CANCEL_EXPIRED_CHARGE_DATE;
+    private OffsetDateTime AUTHORIZATION_EXPIRED_DATE;
+    private OffsetDateTime CANCEL_EXPIRED_DATE;
 
     @SpyBean
     private RewardCalculatorRestClient rewardCalculatorRestClientSpy;
@@ -72,7 +72,7 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         SyncTrxStatus status = getStatus(bias);
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(bias, status)
                 .elaborationDateTime(LocalDateTime.now().minusSeconds(1))
-                .trxChargeDate(expired ? getExpiredChargeDate(bias) : OFFSET_NOW)
+                .trxDate(expired ? getExpiredDate(bias) : OFFSET_NOW)
                 .build();
 
         if (SyncTrxStatus.IDENTIFIED.equals(status) && bias%2==1) {
@@ -97,18 +97,18 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         };
     }
 
-    private OffsetDateTime getExpiredChargeDate(int bias) {
+    private OffsetDateTime getExpiredDate(int bias) {
         return switch (bias % 4) {
-            case 1, 2, 3 -> AUTHORIZATION_EXPIRED_CHARGE_DATE;
-            default -> CANCEL_EXPIRED_CHARGE_DATE;
+            case 1, 2, 3 -> AUTHORIZATION_EXPIRED_DATE;
+            default -> CANCEL_EXPIRED_DATE;
         };
     }
 
     @BeforeEach
     void init() {
         OFFSET_NOW = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS);
-        AUTHORIZATION_EXPIRED_CHARGE_DATE = OFFSET_NOW.minusMinutes(authorizationMinutes+50L);
-        CANCEL_EXPIRED_CHARGE_DATE = OFFSET_NOW.minusMinutes(cancelMinutes+50L);
+        AUTHORIZATION_EXPIRED_DATE = OFFSET_NOW.minusMinutes(authorizationMinutes+50L);
+        CANCEL_EXPIRED_DATE = OFFSET_NOW.minusMinutes(cancelMinutes+50L);
 
         storeData();
     }

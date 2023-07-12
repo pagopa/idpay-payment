@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+
 @Service
 @Slf4j
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
@@ -58,6 +60,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
       }
 
       trx.setUserId(userId);
+      trx.setTrxChargeDate(OffsetDateTime.now());
 
       AuthPaymentDTO preview =
               rewardCalculatorConnector.previewTransaction(trx);
