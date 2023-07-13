@@ -58,8 +58,6 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
       Assertions.assertEquals(merchantDetailDTO.getVatNumber(), result.getVat());
       Assertions.assertFalse(result.getTrxDate().isBefore(now));
       Assertions.assertFalse(result.getTrxDate().isAfter(OffsetDateTime.now()));
-      Assertions.assertFalse(result.getTrxChargeDate().isBefore(now));
-      Assertions.assertFalse(result.getTrxChargeDate().isAfter(OffsetDateTime.now()));
       Assertions.assertFalse(result.getUpdateDate().isBefore(now.toLocalDateTime()));
       Assertions.assertFalse(result.getUpdateDate().isAfter(LocalDateTime.now()));
       Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());

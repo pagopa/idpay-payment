@@ -26,7 +26,6 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
     TransactionInProgress trx =
         TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
     trx.setUserId("userId");
-    trx.setAuthDate(LocalDateTime.now());
     trx.setElaborationDateTime(LocalDateTime.now());
     return trx;
   }
@@ -120,10 +119,9 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
     Assertions.assertSame(expected.getIdTrxAcquirer(), result.getIdTrxAcquirer());
     Assertions.assertSame(expected.getTrxDate(), result.getTrxDate());
     Assertions.assertSame(expected.getTrxChargeDate(), result.getTrxChargeDate());
-    Assertions.assertSame(expected.getAuthDate(), result.getAuthDate());
     Assertions.assertEquals(
         (expected.getStatus().equals(SyncTrxStatus.AUTHORIZED))
-            ? expected.getAuthDate()
+            ? expected.getTrxChargeDate().toLocalDateTime()
             : expected.getElaborationDateTime(),
         result.getElaborationDateTime());
     Assertions.assertSame(expected.getOperationType(), result.getOperationType());

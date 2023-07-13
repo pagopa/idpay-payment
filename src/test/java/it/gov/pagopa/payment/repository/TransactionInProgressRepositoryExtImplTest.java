@@ -95,6 +95,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     TransactionInProgress transaction =
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setTrxChargeDate(null);
     transactionInProgressRepository.save(transaction);
 
     TransactionInProgress result =
@@ -162,7 +163,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         "rejectionReasons",
         "rewards");
 
-    transactionInProgress.setTrxChargeDate(OffsetDateTime.now().minusMinutes(4350));
+    transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(4350));
     transactionInProgressRepository.save(transactionInProgress);
 
     TransactionInProgress resultSecondSave =
@@ -259,10 +260,10 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   @Test
   void findByFilter() {
     TransactionInProgress transactionInProgress =
-            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgress.setUserId(USER_ID);
     transactionInProgressRepository.save(transactionInProgress);
-    Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.REJECTED.toString());
+    Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString());
     Pageable paging = PageRequest.of(0, 10);
     List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, paging);
     assertEquals(transactionInProgress, transactionInProgressList.get(0));
@@ -307,7 +308,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     // expired transaction
     TransactionInProgress transactionExpired =
             TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
-    transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(10L));
+    transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(10L));
     transactionInProgressRepository.save(transactionExpired);
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction();
@@ -335,7 +336,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     // expired transaction
     TransactionInProgress transactionExpired =
             TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
-    transactionExpired.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(20L));
+    transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusDays(20L));
     transactionInProgressRepository.save(transactionExpired);
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction();

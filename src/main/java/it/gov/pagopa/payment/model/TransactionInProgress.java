@@ -41,9 +41,6 @@ public class TransactionInProgress {
   private OffsetDateTime trxChargeDate;
 
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-  private LocalDateTime authDate;
-
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime elaborationDateTime;
 
   private String operationType;

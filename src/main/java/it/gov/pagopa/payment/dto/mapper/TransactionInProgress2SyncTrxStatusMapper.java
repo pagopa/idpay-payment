@@ -13,7 +13,7 @@ public class TransactionInProgress2SyncTrxStatusMapper {
                 .idTrxIssuer(transaction.getIdTrxIssuer())
                 .trxCode(transaction.getTrxCode())
                 .trxDate(transaction.getTrxDate())
-                .authDate(transaction.getAuthDate())
+                .authDate(transaction.getTrxChargeDate())
                 .operationType(transaction.getOperationTypeTranscoded())
                 .amountCents(transaction.getAmountCents())
                 .amountCurrency(transaction.getAmountCurrency())

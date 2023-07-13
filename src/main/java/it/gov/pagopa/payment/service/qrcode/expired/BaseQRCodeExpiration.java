@@ -19,12 +19,12 @@ public abstract class BaseQRCodeExpiration {
     public final void execute(){
          TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
          while((expiredTransaction[0] = findExpiredTransaction()) != null ){
-             log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxChargeDate {}",
+             log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
                      EXPIRED_QR_CODE,
                      getFlowName(),
                      expiredTransaction[0].getId(),
                      expiredTransaction[0].getStatus(),
-                     expiredTransaction[0].getTrxChargeDate());
+                     expiredTransaction[0].getTrxDate());
              try{
                 PerformanceLogger.execute(EXPIRED_QR_CODE,
                         () -> handleExpiredTransaction(expiredTransaction[0]),

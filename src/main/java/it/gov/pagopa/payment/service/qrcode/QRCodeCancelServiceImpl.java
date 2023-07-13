@@ -63,7 +63,7 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
             if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
                 throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
             }
-            if(cancelExpiration.compareTo(Duration.between(trx.getTrxChargeDate(), OffsetDateTime.now())) < 0){
+            if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
                 throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
             }
 

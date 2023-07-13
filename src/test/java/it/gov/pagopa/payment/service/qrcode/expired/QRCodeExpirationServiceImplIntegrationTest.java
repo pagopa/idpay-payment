@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.service.qrcode.expired;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorRestClient;
@@ -33,12 +32,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(properties = {
-        "app.qrCode.expirations.schedule.authorizationExpired=0 */1 * * * ?",
-        "app.qrCode.expirations.schedule.cancelExpired=0 */1 * * * ?"
+        "app.qrCode.expirations.schedule.authorizationExpired=0/30 * * * * ?",
+        "app.qrCode.expirations.schedule.cancelExpired=0/30 * * * * ?"
 })
 class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
 
     private static final int N = 20;
+    private static final int N_EXPIRED = N/2;
 
     @Value("${app.qrCode.expirations.authorizationMinutes}")
     private int authorizationMinutes;
@@ -46,33 +46,25 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     private int cancelMinutes;
 
     private OffsetDateTime OFFSET_NOW;
-    private OffsetDateTime AUTHORIZATION_EXPIRED_CHARGE_DATE;
-    private OffsetDateTime CANCEL_EXPIRED_CHARGE_DATE;
+    private OffsetDateTime AUTHORIZATION_EXPIRED_DATE;
+    private OffsetDateTime CANCEL_EXPIRED_DATE;
 
     @SpyBean
     private RewardCalculatorRestClient rewardCalculatorRestClientSpy;
-    @SpyBean
-    private TransactionNotifierService notifierServiceSpy;
 
-    @Autowired
-    private QRCodeAuthorizationExpiredService authorizationExpiredService;
-    @Autowired
-    private QRCodeCancelExpiredService cancelExpiredService;
     @Autowired
     private TransactionInProgress2TransactionOutcomeDTOMapper transactionOutcomeDTOMapper;
 
     @Autowired
     private TransactionInProgressRepository repository;
 
-    private QRCodeExpirationServiceImpl service;
-
     private final List<TransactionInProgress> trxs = new ArrayList<>(N);
     private final Map<SyncTrxStatus, List<TransactionInProgress>> expiredTrxs = new HashMap<>();
-    private final Map<SyncTrxStatus, List<TransactionInProgress>> validTrxs = new HashMap<>();;
+    private final Map<SyncTrxStatus, List<TransactionInProgress>> validTrxs = new HashMap<>();
 
     private void storeData() {
         trxs.addAll(repository.saveAll(
-                IntStream.range(0, N).mapToObj(i -> buildValidTransactionInProgress(i, i < (N / 2))).toList()
+                IntStream.range(0, N).mapToObj(i -> buildValidTransactionInProgress(i, i < N_EXPIRED)).toList()
         ));
     }
 
@@ -80,7 +72,7 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         SyncTrxStatus status = getStatus(bias);
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(bias, status)
                 .elaborationDateTime(LocalDateTime.now().minusSeconds(1))
-                .trxChargeDate(expired ? getExpiredChargeDate(bias) : OFFSET_NOW)
+                .trxDate(expired ? getExpiredDate(bias) : OFFSET_NOW)
                 .build();
 
         if (SyncTrxStatus.IDENTIFIED.equals(status) && bias%2==1) {
@@ -97,28 +89,33 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     }
 
     private SyncTrxStatus getStatus(int bias) {
-        return switch (bias % 3) {
+        return switch (bias % 4) {
             case 1 -> SyncTrxStatus.CREATED;
             case 2 -> SyncTrxStatus.IDENTIFIED;
+            case 3 -> SyncTrxStatus.REJECTED;
             default -> SyncTrxStatus.AUTHORIZED;
         };
     }
 
-    private OffsetDateTime getExpiredChargeDate(int bias) {
-        return switch (bias % 3) {
-            case 1, 2 -> AUTHORIZATION_EXPIRED_CHARGE_DATE;
-            default -> CANCEL_EXPIRED_CHARGE_DATE;
+    private OffsetDateTime getExpiredDate(int bias) {
+        return switch (bias % 4) {
+            case 1, 2, 3 -> AUTHORIZATION_EXPIRED_DATE;
+            default -> CANCEL_EXPIRED_DATE;
         };
     }
 
     @BeforeEach
     void init() {
         OFFSET_NOW = OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS);
-        AUTHORIZATION_EXPIRED_CHARGE_DATE = OFFSET_NOW.minusMinutes(authorizationMinutes+50L);
-        CANCEL_EXPIRED_CHARGE_DATE = OFFSET_NOW.minusMinutes(cancelMinutes+50L);
+        AUTHORIZATION_EXPIRED_DATE = OFFSET_NOW.minusMinutes(authorizationMinutes+50L);
+        CANCEL_EXPIRED_DATE = OFFSET_NOW.minusMinutes(cancelMinutes+50L);
 
-        service = new QRCodeExpirationServiceImpl(authorizationExpiredService, cancelExpiredService);
         storeData();
+    }
+
+    @AfterEach
+    void verifyNotMoreInvocations() {
+        Mockito.verifyNoMoreInteractions(rewardCalculatorRestClientSpy);
     }
 
     @AfterEach
@@ -130,15 +127,16 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     void test() {
         // waitFor expired trxs deleted from db
         long[] count = {0};
-        TestUtils.waitFor(() -> (count[0]=repository.count()) <= extractIdsFromTrxsMap(validTrxs).size(),
-                () -> "Expected %d trxs, found %d".formatted(N/2, count[0]),
-                200,
+        List<String> testIds = trxs.stream().map(TransactionInProgress::getId).toList();
+        TestUtils.waitFor(() -> (count[0]=repository.findAllById(testIds).size()) == N_EXPIRED,
+                () -> "Expected %d trxs, found %d".formatted(N_EXPIRED, count[0]),
+                60,
                 1000);
 
         // valid trxs still on db
         checkNotExpiredTrxs();
 
-        // verify call to rewardCalculator cancel for IDENTIFIED expired trxs
+        // verify call to rewardCalculator cancel for IDENTIFIED and REJECTED expired trxs
         expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach(t -> Mockito.verify(rewardCalculatorRestClientSpy).cancelTransaction(t.getId()));
 
         // verify AUTHORIZED expired trxs to be notified in idpay-transaction queue

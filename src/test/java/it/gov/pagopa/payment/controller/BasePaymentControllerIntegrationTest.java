@@ -386,7 +386,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
             updateStoredTransaction(trxCreated.getId(), t -> {
                 // resetting throttling data in order to assert preAuth data
-                t.setAuthDate(null);
+                t.setTrxChargeDate(null);
                 t.setElaborationDateTime(null);
             });
 
@@ -829,14 +829,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void checkAuthorizationDateTime(Map<String, TransactionInProgress> trxId2AuthEvent, TransactionInProgress out) {
         TransactionInProgress expectedEvent = trxId2AuthEvent.get(out.getId());
         Assertions.assertNotNull(expectedEvent);
-        Duration diffAuthDateTime = Duration.between(out.getAuthDate(),
-                expectedEvent.getAuthDate());
+        Duration diffAuthDateTime = Duration.between(out.getTrxChargeDate(),
+                expectedEvent.getTrxChargeDate());
         Assertions.assertTrue(diffAuthDateTime
                 .compareTo(Duration.ofSeconds(throttlingSeconds)) >= 0 ||
-                out.getAuthDate().equals(expectedEvent.getAuthDate()));
+                out.getTrxChargeDate().equals(expectedEvent.getTrxChargeDate()));
         Assertions.assertTrue(diffAuthDateTime
                 .compareTo(Duration.ofSeconds(10L * throttlingSeconds)) < 0);
-        out.setAuthDate(expectedEvent.getAuthDate());
+        out.setTrxChargeDate(expectedEvent.getTrxChargeDate());
     }
 
     private List<TransactionOutcomeDTO> sortEvents(Set<TransactionOutcomeDTO> list) {
@@ -892,7 +892,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(trxResponse.getTrxCode(), trxStored.getTrxCode());
         Assertions.assertEquals(trxResponse.getIdTrxAcquirer(), trxStored.getIdTrxAcquirer());
         Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxDate());
-        Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
         Assertions.assertEquals(trxResponse.getIdTrxIssuer(), trxStored.getIdTrxIssuer());
@@ -916,14 +915,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {
-                Assertions.assertNull(trxStored.getAuthDate());
+                Assertions.assertNull(trxStored.getTrxChargeDate());
                 Assertions.assertNull(trxStored.getElaborationDateTime());
                 Assertions.assertNull(trxStored.getReward());
                 Assertions.assertEquals(Collections.emptyList(), trxStored.getRejectionReasons());
                 Assertions.assertEquals(Collections.emptyMap(), trxStored.getRewards());
             }
             case AUTHORIZED -> {
-                Assertions.assertNotNull(trxStored.getAuthDate());
+                Assertions.assertNotNull(trxStored.getTrxChargeDate());
 
                 if (expectedRewarded) {
                     Assertions.assertNotNull(trxStored.getReward());
@@ -947,7 +946,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(authPaymentDTO.getTrxCode(), trxStored.getTrxCode());
         Assertions.assertNotNull(trxStored.getIdTrxAcquirer());
         Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxDate());
-        Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
         Assertions.assertNotNull(trxStored.getIdTrxIssuer());
@@ -973,7 +971,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         switch (trxStored.getStatus()) {
             case CREATED -> {
-                Assertions.assertNull(trxStored.getAuthDate());
+                Assertions.assertNull(trxStored.getTrxChargeDate());
                 Assertions.assertNull(trxStored.getElaborationDateTime());
                 Assertions.assertNull(trxStored.getReward());
                 Assertions.assertEquals(Collections.emptyList(), trxStored.getRejectionReasons());
@@ -993,9 +991,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 Assertions.assertFalse(trxStored.getRewards().isEmpty());
 
                 if(trxStored.getStatus().equals(SyncTrxStatus.AUTHORIZED)){
-                    Assertions.assertNotNull(trxStored.getAuthDate());
+                    Assertions.assertNotNull(trxStored.getTrxChargeDate());
                 } else {
-                    Assertions.assertNull(trxStored.getAuthDate());
+                    Assertions.assertNull(trxStored.getTrxChargeDate());
                 }
                 Assertions.assertNull(trxStored.getElaborationDateTime());
             }
