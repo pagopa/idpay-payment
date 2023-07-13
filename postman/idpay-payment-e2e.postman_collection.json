@@ -921,7 +921,7 @@
 												{
 													"key": "file",
 													"type": "file",
-													"src": "./postman/Esercente_di_test_IdPay.csv"
+													"src": "./postman/Esercente di test IdPay.csv"
 												}
 											]
 										},
@@ -1058,7 +1058,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -1068,15 +1068,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -1351,7 +1349,7 @@
 											"    let trxCode = jsonResponse.trxCode;\r",
 											"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
 											"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 											"});\r",
 											"\r",
 											"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -1372,7 +1370,7 @@
 											"\r",
 											"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
 											"\r",
-											"setTimeout(() => {}, 10000);"
+											"setTimeout(() => {}, 180000);"
 										],
 										"type": "text/javascript"
 									}
@@ -1464,7 +1462,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -1474,15 +1472,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -1855,7 +1851,7 @@
 											"    let trxCode = jsonResponse.trxCode;\r",
 											"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
 											"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 											"});\r",
 											"\r",
 											"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -1962,7 +1958,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -1972,15 +1968,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -2262,7 +2256,7 @@
 											"    let trxCode = jsonResponse.trxCode;\r",
 											"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
 											"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 											"});\r",
 											"\r",
 											"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -2341,6 +2335,15 @@
 							"name": "Generate Token IO",
 							"event": [
 								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"setTimeout(() => {}, 10000);"
+										],
+										"type": "text/javascript"
+									}
+								},
+								{
 									"listen": "test",
 									"script": {
 										"exec": [
@@ -2353,15 +2356,6 @@
 										],
 										"type": "text/javascript"
 									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
-										"type": "text/javascript"
-									}
 								}
 							],
 							"request": {
@@ -2369,7 +2363,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -2379,15 +2373,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -2547,7 +2539,7 @@
 											"    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
 											"    pm.expect(jsonResponse.content[0].rewardAmount).equals(parseInt(`${rewardAmount}`));\r",
 											"    pm.expect(jsonResponse.content[0].qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-											"    pm.expect(jsonResponse.content[0].qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+											"    pm.expect(jsonResponse.content[0].qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 											"});"
 										],
 										"type": "text/javascript"
@@ -2751,7 +2743,10 @@
 											"});\r",
 											"pm.test(\"Payment - Happy case: [ACQUIRER] Create transaction [QR-CODE] - Verify response body contains fields\", function () {\r",
 											"    let jsonResponse = pm.response.json();\r",
+											"    let trxCode = jsonResponse.trxCode;\r",
 											"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
+											"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
+											"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 											"});\r",
 											"\r",
 											"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -2855,7 +2850,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -2865,15 +2860,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -2958,7 +2951,9 @@
 											"pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
 											"    let jsonResponse = pm.response.json();\r",
 											"    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-											"    pm.expect(jsonResponse.residualBudget).to.eql(jsonResponse.counters.initiativeBudget-jsonResponse.counters.totalReward);\r",
+											"    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
+											"    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
+											"    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
 											"});\r",
 											"\r",
 											"pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
@@ -4063,7 +4058,7 @@
 												{
 													"key": "file",
 													"type": "file",
-													"src": "./postman/Esercente_di_test_IdPay.csv"
+													"src": "./postman/Esercente di test IdPay.csv"
 												}
 											]
 										},
@@ -4198,7 +4193,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -4208,15 +4203,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -4510,7 +4503,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -4520,15 +4513,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -4568,7 +4559,7 @@
 											"\r",
 											"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
 											"\r",
-											"setTimeout(() => {}, 10000);"
+											"setTimeout(() => {}, 180000);"
 										],
 										"type": "text/javascript"
 									}
@@ -4651,7 +4642,7 @@
 								"header": [
 									{
 										"key": "Ocp-Apim-Subscription-Key",
-										"value": "",
+										"value": "{{genericSubscriptionKey}}",
 										"type": "default"
 									},
 									{
@@ -4661,15 +4652,13 @@
 									}
 								],
 								"url": {
-									"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_2}}",
+									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
 									"host": [
 										"{{baseUrl}}"
 									],
 									"path": [
-										"bpd",
-										"pagopa",
-										"api",
-										"v1",
+										"rtd",
+										"mock-io",
 										"login"
 									],
 									"query": [
@@ -4883,6 +4872,161 @@
 										"body": {
 											"mode": "raw",
 											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_fake}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"merchant",
+												"portal",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Amount 0 - 400",
+							"item": [
+								{
+									"name": "Generate Merchant Token",
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"let textResponse = pm.response.text()\r",
+													"\r",
+													"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
+													"});\r",
+													"\r",
+													"//response time is less than 1s\r",
+													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODcyNTY3OTQsImV4cCI6MTY4NzI4NTU5NCwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMmY5ZDk3MGQtMzFmYi00MzkzLTg3MjEtMmNhOTIxYmIyYmJjIiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX2RldkB0ZXN0LmVtYWlsLml0Iiwib3JnX2lkIjoiMmI0OGJmOTYtZmQ3NC00NzdlLWE3MGEtMjg2YjQxMGYwMjBhIiwib3JnX3ZhdCI6IjMzNDQ0NDMzNDg4Iiwib3JnX25hbWUiOiJFc2VyY2VudGUgZGkgdGVzdCBJZFBheSIsIm9yZ19wYXJ0eV9yb2xlIjoiTUFOQUdFUiIsIm9yZ19yb2xlIjoiYWRtaW4ifQ.s2Iv-nUBUtM6B9-1C_zw6JcwIUR2X0aXY1lVCntNsIbGwOPAz7f0dYfZuRB_4qyz6Zy4P7ImJKF5ANrDUZL0zrT0DizxM6mvWqpvS7K82gVOyB-h01My1V_YEs_eU_-iIIt2NqkpG-UjhRw7mRcz13IECAnuQrUjmyj1eKO81qvSUA1HqyBVS6Tq2pVIZfKFYFKVY-L3Ojx2z2au7xItDVjx5LFArlIK98TMSyZBLqGDaEo-5eGfwjdbHMCUG5Ude-FKieEyyPHDF9n5HQSlXEWTjoVYNikWcwCVtsYsDqIxMC08szgvnb7V6ELSutsVAl4HvEFTwqmAGhdmE4CPXw",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"aud\": \"idpay.merchant.welfare.pagopa.it\",\r\n  \"iss\": \"https://api-io.dev.cstar.pagopa.it\",\r\n  \"uid\": \"{{uid_Merchant}}\",\r\n  \"name\": \"esercente\",\r\n  \"familyName\": \"test\",\r\n  \"email\": \"{{email_Merchant}}\",\r\n  \"acquirerId\": \"PAGOPA\",\r\n  \"merchantId\": \"3a602b17-ac1c-3029-9e78-0a4bbb8693d4\",\r\n  \"orgId\": \"{{orgId_Merchant}}\",\r\n  \"orgVAT\": \"33444433488\",\r\n  \"orgName\": \"Esercente di test IdPay\",\r\n  \"orgPartyRole\": \"MANAGER\",\r\n  \"orgRole\": \"admin\"\r\n}\r\n\r\n\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrlToken}}/merchant/token/test",
+											"host": [
+												"{{baseUrlToken}}"
+											],
+											"path": [
+												"merchant",
+												"token",
+												"test"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - TokenIO not valid (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: QR Code create transaction - Amount 0 -[CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE] Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(400);\r",
+													"});\r",
+													"\r",
+													"pm.test(\"Payment - Unhappy case: QR Code create transaction - Amount 0 - [CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE] - Response contains info about a not existing initiativeId\", function () {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    pm.expect(responseJson.code).to.eql(\"INVALID AMOUNT\");\r",
+													"    pm.expect(responseJson.message).to.eql(\"Cannot create transaction with invalid amount: 0\");\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{merchantPortalToken}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{merchantId}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"0\"\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -5282,7 +5426,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -5292,15 +5436,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -5386,7 +5528,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -5396,15 +5538,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_2}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -5501,7 +5641,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -5511,15 +5651,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -5631,7 +5769,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -5641,15 +5779,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -5798,7 +5934,7 @@
 													"    let trxCode = jsonResponse.trxCode;\r",
 													"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
 													"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-													"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+													"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 													"});\r",
 													"\r",
 													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -5905,7 +6041,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -5915,15 +6051,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -6072,7 +6206,7 @@
 													"    let trxCode = jsonResponse.trxCode;\r",
 													"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
 													"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-													"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+													"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 													"});\r",
 													"\r",
 													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -6179,7 +6313,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -6189,15 +6323,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -6228,6 +6360,15 @@
 													"    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
 													"    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 15000);"
 												],
 												"type": "text/javascript"
 											}
@@ -6300,7 +6441,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -6310,15 +6451,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_2}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -6560,7 +6699,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -6570,15 +6709,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -6820,7 +6957,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -6830,15 +6967,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -6924,7 +7059,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -6934,15 +7069,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_2}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -7039,7 +7172,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -7049,15 +7182,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -7306,7 +7437,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -7316,15 +7447,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -7579,7 +7708,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -7589,15 +7718,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -8140,7 +8267,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -8150,15 +8277,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -8495,7 +8620,9 @@
 													"\r",
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
-													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+													"\r",
+													"setTimeout(() => { }, 120000);"
 												],
 												"type": "text/javascript"
 											}
@@ -8572,7 +8699,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -8582,15 +8709,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -8953,7 +9078,7 @@
 													"    let trxCode = jsonResponse.trxCode;\r",
 													"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
 													"    pm.expect(jsonResponse.qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
-													"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://www.idpay.it/authorizationlink/${trxCode}`);\r",
+													"    pm.expect(jsonResponse.qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
 													"});\r",
 													"\r",
 													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
@@ -9060,7 +9185,7 @@
 										"header": [
 											{
 												"key": "Ocp-Apim-Subscription-Key",
-												"value": "",
+												"value": "{{genericSubscriptionKey}}",
 												"type": "default"
 											},
 											{
@@ -9070,15 +9195,13 @@
 											}
 										],
 										"url": {
-											"raw": "{{baseUrl}}/bpd/pagopa/api/v1/login?fiscalCode={{CF_1}}",
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
 											"host": [
 												"{{baseUrl}}"
 											],
 											"path": [
-												"bpd",
-												"pagopa",
-												"api",
-												"v1",
+												"rtd",
+												"mock-io",
 												"login"
 											],
 											"query": [
@@ -9282,6 +9405,1183 @@
 							]
 						}
 					]
+				},
+				{
+					"name": "Initiative not started",
+					"item": [
+						{
+							"name": "Initiative creation",
+							"item": [
+								{
+									"name": "ENTE - Initiative creation",
+									"item": [
+										{
+											"name": "Generate Portal Token",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"let textResponse = pm.response.text()\r",
+															"\r",
+															"pm.test('Payment - Unhappy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
+															"    //verify response HTTP status \r",
+															"    pm.response.to.have.status(200);\r",
+															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
+															"});\r",
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "noauth"
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "Ocp-Apim-Trace",
+														"value": "true",
+														"type": "default"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"aud\": \"idpay.welfare.pagopa.it\",\r\n    \"uid\": \"{{uid_Ente}}\",\r\n    \"name\": \"{{name_Ente}}\",\r\n    \"familyName\": \"{{familyName_Ente}}\",\r\n    \"email\": \"{{email_Ente}}\",\r\n    \"orgId\": \"{{orgId_Ente}}\",\r\n    \"orgVAT\": \"{{orgVAT_Ente}}\",\r\n    \"orgName\": \"Ente di test IdPay\",\r\n    \"orgPartyRole\": \"{{orgPartyRole_Ente}}\",\r\n    \"orgRole\": \"{{orgRole_Ente}}\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"host": [
+														"{{baseUrlToken}}"
+													],
+													"path": [
+														"welfare",
+														"token",
+														"test"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "STEP1-Insert Initiative (Service Info)",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"let moment = require('moment');\r",
+															"const now = String(moment().format('DD-MM-YYYY hh:mm'));\r",
+															"const serviceName = 'Test funzionali App IO Initiative with criteria and discount ' + now;\r",
+															"pm.collectionVariables.set('serviceName', serviceName);\r",
+															"pm.collectionVariables.set('description', pm.variables.replaceIn('{{$randomLoremSentence}}'));\r",
+															"\r",
+															"pm.collectionVariables.set('channel_type', 'web');\r",
+															"pm.collectionVariables.set('channel_contact', pm.variables.replaceIn('{{$randomUrl}}'));"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"var jsonData = JSON.parse(responseBody);\r",
+															"// console.log('jsondata', jsonData);\r",
+															"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
+															"pm.collectionVariables.set('initiativeId', jsonData.initiativeId);\r",
+															"\r",
+															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP1 - Responses with 201\", function () {\r",
+															"    pm.response.to.have.status(201);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP1 - Verify response body\", function () {\r",
+															"    let jsonResponse = pm.response.json();\r",
+															"    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n    \"serviceIO\": true,\n    \"serviceName\": \"{{serviceName}}\",\n    \"serviceScope\": \"LOCAL\",\n    \"description\": \"{{description}}\",\n    \"privacyLink\": \"https://www.google.it\",\n    \"tcLink\": \"https://www.google.com\",\n    \"channels\": [\n        {\n            \"type\": \"{{channel_type}}\",\n            \"contact\": \"{{channel_contact}}\"\n        }\n    ]\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlInitiative}}/info",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														"info"
+													]
+												},
+												"description": "Save initiative and first subset of data 'general info'"
+											},
+											"response": []
+										},
+										{
+											"name": "STEP2-Update Initiative (general Info)",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"let moment = require('moment');\r",
+															"//Format: YYYY-MM-DD\r",
+															"let today = String(moment().format('YYYY-MM-DD'));\r",
+															"let todayP1 = String(moment().add(1,'months').format('YYYY-MM-DD'));\r",
+															"let todayP2 = String(moment().add(2,'months').format('YYYY-MM-DD'));\r",
+															"let todayP3 = String(moment().add(3,'months').format('YYYY-MM-DD'));\r",
+															"\r",
+															"let yesterday = String(moment().subtract(1, 'days').format('YYYY-MM-DD'));\r",
+															"\r",
+															"\r",
+															"/*\r",
+															"var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
+															"pm.collectionVariables.set('...', _.random(0, 180));\r",
+															"*/\r",
+															"//_.floor(_.random(1.0, 100000.0, true),2)\r",
+															"pm.collectionVariables.set('budget', 1200);\r",
+															"pm.collectionVariables.set('beneficiaryType', 'PF');\r",
+															"//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
+															"pm.collectionVariables.set('beneficiaryKnown', false);\r",
+															"pm.collectionVariables.set('rankingEnabled', false);\r",
+															"pm.collectionVariables.set('beneficiaryBudget', 400);//default max 1000\r",
+															"pm.collectionVariables.set('rankingStartDate', today);\r",
+															"pm.collectionVariables.set('rankingEndDate', todayP1);\r",
+															"pm.collectionVariables.set('startDate', todayP1);\r",
+															"pm.collectionVariables.set('endDate', todayP3);"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP2 - Responses with 204\", function () {\r",
+															"    pm.response.to.have.status(204);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlInitiative}}/:initiativeId/general",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														":initiativeId",
+														"general"
+													],
+													"variable": [
+														{
+															"key": "initiativeId",
+															"value": "{{initiativeId}}",
+															"description": "(Required) The initiative ID"
+														}
+													]
+												},
+												"description": "Save initiative and first subset of data 'general info'"
+											},
+											"response": []
+										},
+										{
+											"name": "STEP3-Update Initiative (criteria)",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP3 - Responses with 204\", function () {\r",
+															"    pm.response.to.have.status(204);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"automatedCriteria\": [\r\n        {\r\n            \"authority\": \"INPS\",\r\n            \"code\": \"ISEE\",\r\n            \"operator\": \"GT\",\r\n            \"value\": \"1\",\r\n            \"value2\": \"\",\r\n            \"iseeTypes\": [\r\n                \"ORDINARIO\",\r\n                \"MINORENNE\",\r\n                \"UNIVERSITARIO\",\r\n                \"SOCIOSANITARIO\",\r\n                \"DOTTORATO\",\r\n                \"RESIDENZIALE\",\r\n                \"CORRENTE\"\r\n            ]\r\n        }\r\n    ],\r\n    \"selfDeclarationCriteria\": []\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlInitiative}}/{{initiativeId}}/beneficiary",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														"{{initiativeId}}",
+														"beneficiary"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "STEP4-Update Initiative Trx-Reward rules",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP4 - Responses with 204\", function () {\r",
+															"    pm.response.to.have.status(204);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(()=> {}, 10000)\r",
+															"const d = new Date();\r",
+															"dateString = d.toISOString()\r",
+															"let endTime = dateString.split('T');\r",
+															"endTime = endTime[1].split('Z');\r",
+															"\r",
+															"pm.collectionVariables.set('rewardRuleType', 'rewardValue');\r",
+															"const rewardValueTypes = [\"PERCENTAGE\", \"ABSOLUTE\"];\r",
+															"rewardValueTypeRandomIndex = _.random(0, rewardValueTypes.length - 1);\r",
+															"const selectedRewardValueType = rewardValueTypes[rewardValueTypeRandomIndex];\r",
+															"pm.collectionVariables.set('rewardValueType', selectedRewardValueType);\r",
+															"if (selectedRewardValueType == \"PERCENTAGE\") {\r",
+															"    pm.collectionVariables.set('rewardRuleValue', 100);\r",
+															"} else {\r",
+															"    pm.collectionVariables.set('rewardRuleValue', 50);\r",
+															"}\r",
+															"\r",
+															"pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
+															"pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
+															"pm.collectionVariables.set('trxThresholdFrom', 10);\r",
+															"pm.collectionVariables.set('trxThresholdTo', 50);\r",
+															"pm.collectionVariables.set('trxCountFrom', 3);\r",
+															"pm.collectionVariables.set('trxCountTo', 11);\r",
+															"pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
+															"pm.collectionVariables.set('trxRewardLimitValue', 3);"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n  }\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlInitiative}}/:initiativeId/reward",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														":initiativeId",
+														"reward"
+													],
+													"variable": [
+														{
+															"key": "initiativeId",
+															"value": "{{initiativeId}}",
+															"description": "(Required) The initiative ID"
+														}
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "STEP5-Update Initiative Refund Rule",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP5 - Responses with 204\", function () {\r",
+															"    pm.response.to.have.status(204);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"/*const timeType = [\"CLOSED\",\"DAILY\",\"WEEKLY\",\"MONTHLY\",\"QUARTERLY\"];\r",
+															"timeTypeRandomIndex = _.random(0, timeType.length-1);\r",
+															"\r",
+															"const accumulatedType = [\"BUDGET_EXHAUSTED\",\"THRESHOLD_REACHED\"];\r",
+															"accumulatedTypeRandomIndex = _.random(0, timeType.length-1);\r",
+															"\r",
+															"pm.collectionVariables.set('timeType', timeType[timeTypeRandomIndex]);\r",
+															"pm.collectionVariables.set('accumulatedType', accumulatedType[accumulatedTypeRandomIndex]);\r",
+															"pm.collectionVariables.set('identificationCode', pm.variables.replaceIn('{{$randomLoremSentence}}'));\r",
+															"*/\r",
+															"\r",
+															"/*\r",
+															"let refundType = \"timeParameter\";\r",
+															"refundTypeRandomIndex = _.random(0, refundType.length - 1);\r",
+															"\r",
+															"const refundTypeSelected = \"timeParameter\";\r",
+															"let body = {};\r",
+															"if (refundTypeSelected == \"timeParameter\") {\r",
+															"    const timeType = [\"CLOSED\",\"DAILY\",\"WEEKLY\",\"MONTHLY\",\"QUARTERLY\"];\r",
+															"    timeTypeRandomIndex = _.random(0, timeType.length-1);\r",
+															"    body = {\r",
+															"        timeParameter: {\r",
+															"            timeType: timeType[timeTypeRandomIndex]\r",
+															"        }\r",
+															"    };\r",
+															"} else {\r",
+															"    const accumulatedType = [\"BUDGET_EXHAUSTED\", \"THRESHOLD_REACHED\"];\r",
+															"    accumulatedTypeRandomIndex = _.random(0, accumulatedType.length - 1);\r",
+															"    const accumulatedTypeSelected = accumulatedType[accumulatedTypeRandomIndex];\r",
+															"    if (accumulatedTypeSelected == \"BUDGET_EXHAUSTED\") {\r",
+															"        body = {\r",
+															"            accumulatedAmount: {\r",
+															"                accumulatedType: \"BUDGET_EXHAUSTED\"\r",
+															"            }\r",
+															"        };\r",
+															"    } else {\r",
+															"        body = {\r",
+															"            accumulatedAmount: {\r",
+															"                accumulatedType: \"THRESHOLD_REACHED\",\r",
+															"                refundThreshold: 10\r",
+															"            }\r",
+															"        };\r",
+															"    }\r",
+															"}\r",
+															"*/\r",
+															"/*const timeType = [\"CLOSED\", \"DAILY\", \"WEEKLY\", \"MONTHLY\", \"QUARTERLY\"];\r",
+															"timeTypeRandomIndex = _.random(0, timeType.length - 1);\r",
+															"const body = {\r",
+															"    timeParameter: {\r",
+															"        timeType: timeType[timeTypeRandomIndex]\r",
+															"    }\r",
+															"};\r",
+															"pm.collectionVariables.set('body', JSON.stringify(body));\r",
+															"*/"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": " {\r\n     \"timeParameter\": {\r\n        \"timeType\": \"DAILY\"\r\n    }\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlInitiative}}/:initiativeId/refund",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														":initiativeId",
+														"refund"
+													],
+													"variable": [
+														{
+															"key": "initiativeId",
+															"value": "{{initiativeId}}",
+															"description": "(Required) The initiative ID"
+														}
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "PAGOPA - Initiative update status APPROVED",
+									"item": [
+										{
+											"name": "Generate Portal Token",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"let textResponse = pm.response.text()\r",
+															"\r",
+															"pm.test('Payment - Unhappy case - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
+															"    //verify response HTTP status \r",
+															"    pm.response.to.have.status(200);\r",
+															"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
+															"});\r",
+															"\r",
+															"//response time is less than 1s\r",
+															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "noauth"
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "Ocp-Apim-Trace",
+														"value": "true",
+														"type": "default"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n  \"aud\": \"idpay.welfare.pagopa.it\",\r\n  \"uid\": \"{{uid_Pagopa}}\",\r\n  \"name\": \"{{name_Pagopa}}\",\r\n  \"familyName\": \"{{familyName_Pagopa}}\",\r\n  \"email\": \"{{email_Pagopa}}\",\r\n  \"orgId\": \"{{orgId_Pagopa}}\",\r\n  \"orgVAT\": \"{{orgVAT_Pagopa}}\",\r\n  \"orgName\": \"Ente di test IdPay\",\r\n  \"orgPartyRole\": \"{{orgPartyRole_Pagopa}}\",\r\n  \"orgRole\": \"{{orgRole_Pagopa}}\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"host": [
+														"{{baseUrlToken}}"
+													],
+													"path": [
+														"welfare",
+														"token",
+														"test"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Update initiative into APPROVED status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
+															"    pm.response.to.have.status(204);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"//setTimeout(function(){}, 20000); //milliseconds"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalTokenPagopa}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Content-Type",
+														"value": "application/json"
+													},
+													{
+														"key": "Accept",
+														"value": "application/json"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrlInitiative}}/{{initiativeId}}/approved",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														"{{initiativeId}}",
+														"approved"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "ENTE - Initiative PUBLISHED",
+									"item": [
+										{
+											"name": "Generate Portal Token",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"let textResponse = pm.response.text()\r",
+															"\r",
+															"pm.test('Payment - Unhappy case - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
+															"    //verify response HTTP status \r",
+															"    pm.response.to.have.status(200);\r",
+															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
+															"});\r",
+															"\r",
+															"//response time is less than 1s\r",
+															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "noauth"
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "Ocp-Apim-Trace",
+														"value": "true",
+														"type": "default"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"aud\": \"idpay.welfare.pagopa.it\",\r\n    \"uid\": \"{{uid_Ente}}\",\r\n    \"name\": \"{{name_Ente}}\",\r\n    \"familyName\": \"{{familyName_Ente}}\",\r\n    \"email\": \"{{email_Ente}}\",\r\n    \"orgId\": \"{{orgId_Ente}}\",\r\n    \"orgVAT\": \"{{orgVAT_Ente}}\",\r\n    \"orgName\": \"Ente di test IdPay\",\r\n    \"orgPartyRole\": \"{{orgPartyRole_Ente}}\",\r\n    \"orgRole\": \"{{orgRole_Ente}}\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"host": [
+														"{{baseUrlToken}}"
+													],
+													"path": [
+														"welfare",
+														"token",
+														"test"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Initiative PUBLISHED",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
+															"    pm.response.to.have.status(204);\r",
+															"});\r",
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"/*let body;\r",
+															"baseUrlInitiative = pm.variables.get('baseUrlInitiative')\r",
+															"if(baseUrlInitiative.includes('localhost')){\r",
+															"    body = {\r",
+															"        mode: 'raw',\r",
+															"        raw: JSON.stringify({\r",
+															"            organizationName: 'Comune di Milano',\r",
+															"            organizationFiscalCode: '11122233344',\r",
+															"            organizationUserId: 'b8986bf2-1f93-4827-ab16-b21eb8aeae2b',\r",
+															"            organizationUserRole: 'admin'\r",
+															"        })\r",
+															"    }\r",
+															"    pm.request.headers.add({\r",
+															"        key: \"Content-Type\",\r",
+															"        value: \"application/json\"\r",
+															"    });\r",
+															"    pm.variables.set('body', JSON.stringify(body));\r",
+															"    pm.request.body.update(body);\r",
+															"}\r",
+															"*/"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"protocolProfileBehavior": {
+												"disabledSystemHeaders": {}
+											},
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrlInitiative}}/{{initiativeId}}/published",
+													"host": [
+														"{{baseUrlInitiative}}"
+													],
+													"path": [
+														"{{initiativeId}}",
+														"published"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Upload csv",
+									"item": [
+										{
+											"name": "Generate Portal Token",
+											"event": [
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"let textResponse = pm.response.text()\r",
+															"\r",
+															"pm.test('Payment - Unhappy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
+															"    //verify response HTTP status \r",
+															"    pm.response.to.have.status(200);\r",
+															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
+															"});\r",
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "noauth"
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "Ocp-Apim-Trace",
+														"value": "true",
+														"type": "default"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"aud\": \"idpay.welfare.pagopa.it\",\r\n    \"uid\": \"{{uid_Ente}}\",\r\n    \"name\": \"{{name_Ente}}\",\r\n    \"familyName\": \"{{familyName_Ente}}\",\r\n    \"email\": \"{{email_Ente}}\",\r\n    \"orgId\": \"{{orgId_Ente}}\",\r\n    \"orgVAT\": \"{{orgVAT_Ente}}\",\r\n    \"orgName\": \"Ente di test IdPay\",\r\n    \"orgPartyRole\": \"{{orgPartyRole_Ente}}\",\r\n    \"orgRole\": \"{{orgRole_Ente}}\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"host": [
+														"{{baseUrlToken}}"
+													],
+													"path": [
+														"welfare",
+														"token",
+														"test"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Upload csv",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Upload csv - Response status is 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - Unhappy case - Upload csv - Verify response body contains status: VALIDATED\", function () {\r",
+															"    let jsonResponse = pm.response.json();\r",
+															"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [],
+												"body": {
+													"mode": "formdata",
+													"formdata": [
+														{
+															"key": "file",
+															"type": "file",
+															"src": "./postman/Esercente di test IdPay.csv"
+														}
+													]
+												},
+												"url": {
+													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+													"host": [
+														"{{baseUrlToken}}"
+													],
+													"path": [
+														"merchant",
+														"initiative",
+														"{{initiativeId}}",
+														"upload"
+													],
+													"query": [
+														{
+															"key": "",
+															"value": null,
+															"disabled": true
+														}
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Get Merchant list on initiative",
+									"item": [
+										{
+											"name": "Get Merchant List",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Unhappy case - Get merchant list - Response status is 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - Unhappy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+															"\r",
+															"    const response = pm.response.json().content[0];\r",
+															"    pm.expect(response).have.property(\"merchantId\");\r",
+															"    pm.expect(response).have.property(\"businessName\");\r",
+															"    pm.expect(response).have.property(\"fiscalCode\");\r",
+															"    pm.expect(response).have.property(\"merchantStatus\");\r",
+															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
+															"\r",
+															"    //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
+															"    pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 10000);"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{identityPortalToken}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrlMerchant}}/initiative/{{initiativeId}}/merchants",
+													"host": [
+														"{{baseUrlMerchant}}"
+													],
+													"path": [
+														"initiative",
+														"{{initiativeId}}",
+														"merchants"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								}
+							]
+						},
+						{
+							"name": "Try to create transaction - 400",
+							"item": [
+								{
+									"name": "Generate Merchant Token",
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"let textResponse = pm.response.text()\r",
+													"\r",
+													"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
+													"});\r",
+													"\r",
+													"//response time is less than 1s\r",
+													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODcyNTY3OTQsImV4cCI6MTY4NzI4NTU5NCwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMmY5ZDk3MGQtMzFmYi00MzkzLTg3MjEtMmNhOTIxYmIyYmJjIiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX2RldkB0ZXN0LmVtYWlsLml0Iiwib3JnX2lkIjoiMmI0OGJmOTYtZmQ3NC00NzdlLWE3MGEtMjg2YjQxMGYwMjBhIiwib3JnX3ZhdCI6IjMzNDQ0NDMzNDg4Iiwib3JnX25hbWUiOiJFc2VyY2VudGUgZGkgdGVzdCBJZFBheSIsIm9yZ19wYXJ0eV9yb2xlIjoiTUFOQUdFUiIsIm9yZ19yb2xlIjoiYWRtaW4ifQ.s2Iv-nUBUtM6B9-1C_zw6JcwIUR2X0aXY1lVCntNsIbGwOPAz7f0dYfZuRB_4qyz6Zy4P7ImJKF5ANrDUZL0zrT0DizxM6mvWqpvS7K82gVOyB-h01My1V_YEs_eU_-iIIt2NqkpG-UjhRw7mRcz13IECAnuQrUjmyj1eKO81qvSUA1HqyBVS6Tq2pVIZfKFYFKVY-L3Ojx2z2au7xItDVjx5LFArlIK98TMSyZBLqGDaEo-5eGfwjdbHMCUG5Ude-FKieEyyPHDF9n5HQSlXEWTjoVYNikWcwCVtsYsDqIxMC08szgvnb7V6ELSutsVAl4HvEFTwqmAGhdmE4CPXw",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"aud\": \"idpay.merchant.welfare.pagopa.it\",\r\n  \"iss\": \"https://api-io.dev.cstar.pagopa.it\",\r\n  \"uid\": \"{{uid_Merchant}}\",\r\n  \"name\": \"esercente\",\r\n  \"familyName\": \"test\",\r\n  \"email\": \"{{email_Merchant}}\",\r\n  \"acquirerId\": \"PAGOPA\",\r\n  \"merchantId\": \"3a602b17-ac1c-3029-9e78-0a4bbb8693d4\",\r\n  \"orgId\": \"{{orgId_Merchant}}\",\r\n  \"orgVAT\": \"33444433488\",\r\n  \"orgName\": \"Esercente di test IdPay\",\r\n  \"orgPartyRole\": \"MANAGER\",\r\n  \"orgRole\": \"admin\"\r\n}\r\n\r\n\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrlToken}}/merchant/token/test",
+											"host": [
+												"{{baseUrlToken}}"
+											],
+											"path": [
+												"merchant",
+												"token",
+												"test"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - TokenIO not valid (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: Initiative not started - Try to create transaction - [CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE] Response status is 400\", function () {\r",
+													"    pm.response.to.have.status(400);\r",
+													"});\r",
+													"\r",
+													"pm.test(\"Payment - Unhappy case: Initiative not started - Try to create transaction - [CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE] - Response contains info about an invalid date\", function () {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    let startDate = pm.collectionVariables.get(\"startDate\");\r",
+													"    let endDate = pm.collectionVariables.get(\"endDate\");\r",
+													"    pm.expect(responseJson.code).to.eql(\"INVALID DATE\");\r",
+													"    pm.expect(responseJson.message).to.eql(`Cannot create transaction out of valid period. Initiative startDate: ${startDate} endDate: ${endDate}`);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
+													"\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{merchantPortalToken}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{merchantId}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"merchant",
+												"portal",
+												"transactions"
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						}
+					]
 				}
 			]
 		}
@@ -9317,7 +10617,7 @@
 		},
 		{
 			"key": "initiativeId",
-			"value": "648adcaf3d8a95556915f514",
+			"value": "649570e23d8a95556915f642",
 			"type": "string"
 		},
 		{
@@ -9478,7 +10778,7 @@
 		},
 		{
 			"key": "initiativeId_exhausted",
-			"value": ""
+			"value": "649570e23d8a95556915f642"
 		},
 		{
 			"key": "transactionId_fake",
