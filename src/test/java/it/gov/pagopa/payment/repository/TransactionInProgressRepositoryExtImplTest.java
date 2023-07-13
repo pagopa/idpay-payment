@@ -260,10 +260,10 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
   @Test
   void findByFilter() {
     TransactionInProgress transactionInProgress =
-            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgress.setUserId(USER_ID);
     transactionInProgressRepository.save(transactionInProgress);
-    Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.REJECTED.toString());
+    Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString());
     Pageable paging = PageRequest.of(0, 10);
     List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, paging);
     assertEquals(transactionInProgress, transactionInProgressList.get(0));

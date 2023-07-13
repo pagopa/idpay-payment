@@ -201,10 +201,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             criteria.and(Fields.userId).is(userId);
         }
         if (status != null) {
-            if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString(), SyncTrxStatus.REJECTED.toString())
-                    .contains(status)) {criteria.orOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
-                    Criteria.where(Fields.status).is(SyncTrxStatus.IDENTIFIED),
-                    Criteria.where(Fields.status).is(SyncTrxStatus.REJECTED));
+            if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString())
+                    .contains(status)) {
+                criteria.orOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
+                    Criteria.where(Fields.status).is(SyncTrxStatus.IDENTIFIED));
             } else {
                 criteria.and(TransactionInProgress.Fields.status).is(status);
             }
