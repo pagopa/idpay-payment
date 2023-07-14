@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,12 +25,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @WebMvcTest(QRCodePaymentControllerImpl.class)
 @Import(JsonConfig.class)
 class QRCodePaymentControllerImplTest {
-    @MockBean
-    private QRCodePaymentService qrCodePaymentService;
+
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private QRCodePaymentService qrCodePaymentService;
+    @MockBean
+    private QRCodeExpirationService qrCodeExpirationService;
 
     @Test
     void getStatusTransaction() throws Exception {
