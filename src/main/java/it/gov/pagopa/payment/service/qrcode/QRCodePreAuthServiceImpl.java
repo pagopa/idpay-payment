@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -21,13 +22,17 @@ import java.time.OffsetDateTime;
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
+  private final QRCodeAuthorizationExpiredService authorizationExpiredService;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuditUtilities auditUtilities;
 
   public QRCodePreAuthServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
-          RewardCalculatorConnector rewardCalculatorConnector, AuditUtilities auditUtilities) {
+          QRCodeAuthorizationExpiredService authorizationExpiredService,
+          RewardCalculatorConnector rewardCalculatorConnector,
+          AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
+    this.authorizationExpiredService = authorizationExpiredService;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.auditUtilities = auditUtilities;
   }
@@ -35,8 +40,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
     try {
-      TransactionInProgress trx =
-              transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+      TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
       if (trx == null) {
         throw new ClientExceptionWithBody(

@@ -6,6 +6,7 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class QRCodePaymentControllerTest {
 
   @MockBean
-  private QRCodePaymentService qrCodePaymentService;
+  private QRCodePaymentService qrCodePaymentServiceMock;
+  @MockBean
+  private QRCodeExpirationService qrCodeExpirationServiceMock;
 
   @Autowired
   private MockMvc mockMvc;

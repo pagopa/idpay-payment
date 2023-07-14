@@ -84,4 +84,20 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
                                 .header("x-acquirer-id",acquirerId)
                 ).andReturn();
     }
+
+    @Override
+    protected MvcResult forceAuthExpiration(String initiativeId) throws Exception {
+        return mockMvc
+                .perform(
+                        put("/idpay/payment/qr-code/force-expiration/authorization/{initiativeId}",initiativeId)
+                ).andReturn();
+    }
+
+    @Override
+    protected MvcResult forceConfirmExpiration(String initiativeId) throws Exception {
+        return mockMvc
+                .perform(
+                        put("/idpay/payment/qr-code/force-expiration/confirm/{initiativeId}",initiativeId)
+                ).andReturn();
+    }
 }

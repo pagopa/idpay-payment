@@ -25,18 +25,12 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     private final MongoTemplate mongoTemplate;
     private final long trxThrottlingSeconds;
-    private final long authorizationExpirationMinutes;
-    private final long cancelExpirationMinutes;
 
     public TransactionInProgressRepositoryExtImpl(
             MongoTemplate mongoTemplate,
-            @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
-            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
-            @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes) {
+            @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
-        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
-        this.cancelExpirationMinutes = cancelExpirationMinutes;
     }
 
     @Override
@@ -72,7 +66,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
+    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes) {
         return mongoTemplate.findOne(
                 Query.query(
                         criteriaByTrxCodeAndDateGreaterThan(trxCode, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
@@ -80,7 +74,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
+    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes) {
         LocalDateTime minTrxDate = LocalDateTime.now().minusMinutes(authorizationExpirationMinutes);
         TransactionInProgress transaction =
                 mongoTemplate.findAndModify(
@@ -222,29 +216,31 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public TransactionInProgress findCancelExpiredTransaction() {
-        return findExpiredTransaction(cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
+    public TransactionInProgress findCancelExpiredTransaction(String initiativeId, long cancelExpirationMinutes) {
+        return findExpiredTransaction(initiativeId, cancelExpirationMinutes, List.of(SyncTrxStatus.AUTHORIZED));
     }
 
     @Override
-    public TransactionInProgress findAuthorizationExpiredTransaction() {
-        return findExpiredTransaction(authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED, SyncTrxStatus.REJECTED));
+    public TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId, long authorizationExpirationMinutes) {
+        return findExpiredTransaction(initiativeId, authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED, SyncTrxStatus.REJECTED));
     }
 
-    private TransactionInProgress findExpiredTransaction(long expirationMinutes, List<SyncTrxStatus> statusList) {
+    private TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes, List<SyncTrxStatus> statusList) {
         LocalDateTime now = LocalDateTime.now();
 
-        Query query = Query.query(
-                Criteria.where(Fields.trxDate).lt(now.minusMinutes(expirationMinutes)).andOperator(
-                        Criteria.where(Fields.status).in(statusList)
-                                .orOperator(
-                                        Criteria.where(Fields.elaborationDateTime).is(null),
-                                        Criteria.where(Fields.elaborationDateTime).lt(now.minusSeconds(trxThrottlingSeconds))
-                                )
-                )
+        Criteria criteria = Criteria.where(Fields.trxDate).lt(now.minusMinutes(expirationMinutes)).andOperator(
+                Criteria.where(Fields.status).in(statusList)
+                        .orOperator(
+                                Criteria.where(Fields.elaborationDateTime).is(null),
+                                Criteria.where(Fields.elaborationDateTime).lt(now.minusSeconds(trxThrottlingSeconds))
+                        )
         );
 
-        return mongoTemplate.findAndModify(query,
+        if(initiativeId!=null){
+            criteria.and(Fields.initiativeId).is(initiativeId);
+        }
+
+        return mongoTemplate.findAndModify(Query.query(criteria),
                 new Update()
                         .currentDate(Fields.elaborationDateTime),
                 FindAndModifyOptions.options().returnNew(true),

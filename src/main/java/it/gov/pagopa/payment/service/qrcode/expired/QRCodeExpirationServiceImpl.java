@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodeExpirationServiceImpl {
+public class QRCodeExpirationServiceImpl implements QRCodeExpirationService {
 
     private final QRCodeAuthorizationExpiredService authorizationExpiredService;
     private final QRCodeCancelExpiredService cancelExpiredService;
@@ -20,13 +20,24 @@ public class QRCodeExpirationServiceImpl {
     @Scheduled(cron = "${app.qrCode.expirations.schedule.authorizationExpired}")
     void scheduleAuthorizationExpired() {
         log.info("[EXPIRED_QR_CODE][TRANSACTION_AUTHORIZATION_EXPIRED] Starting schedule to handle transactions with authorization expired");
-        authorizationExpiredService.execute();
+        Long count = authorizationExpiredService.execute();
+        log.info("[EXPIRED_QR_CODE][TRANSACTION_AUTHORIZATION_EXPIRED] Found {} expired transactions", count);
+    }
+
+    @Override
+    public Long forceAuthorizationTrxExpiration(String initiativeId) {
+        return authorizationExpiredService.forceExpiration(initiativeId);
     }
 
     @Scheduled(cron = "${app.qrCode.expirations.schedule.cancelExpired}")
     void scheduleCancelExpired() {
         log.info("[EXPIRED_QR_CODE][TRANSACTION_CANCEL_EXPIRED] Starting schedule to handle transactions with cancel expired");
-        cancelExpiredService.execute();
+        Long count = cancelExpiredService.execute();
+        log.info("[EXPIRED_QR_CODE][TRANSACTION_CANCEL_EXPIRED] Found {} expired transactions", count);
     }
 
+    @Override
+    public Long forceConfirmTrxExpiration(String initiativeId) {
+        return cancelExpiredService.forceExpiration(initiativeId);
+    }
 }

@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -20,11 +21,17 @@ import java.util.List;
 public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
 
     private final TransactionInProgressRepository repository;
+    private final QRCodeAuthorizationExpiredService authorizationExpiredService;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final AuditUtilities auditUtilities;
 
-    public QRCodeUnrelateServiceImpl(TransactionInProgressRepository repository, RewardCalculatorConnector rewardCalculatorConnector, AuditUtilities auditUtilities) {
+    public QRCodeUnrelateServiceImpl(
+            TransactionInProgressRepository repository,
+            QRCodeAuthorizationExpiredService authorizationExpiredService,
+            RewardCalculatorConnector rewardCalculatorConnector,
+            AuditUtilities auditUtilities) {
         this.repository = repository;
+        this.authorizationExpiredService = authorizationExpiredService;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.auditUtilities = auditUtilities;
     }
@@ -32,7 +39,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
     @Override
     public void unrelateTransaction(String trxCode, String userId) {
         try {
-            TransactionInProgress trx = repository.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+            TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
             if (trx == null) {
                 throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "[UNRELATE_TRANSACTION] Cannot find transaction having code: %s".formatted(trxCode));
