@@ -41,7 +41,6 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .mcc(transactionCreationRequest.getMcc())
         .vat(merchantDetail.getVatNumber())
         .trxDate(now)
-        .trxChargeDate(now)
         .status(SyncTrxStatus.CREATED)
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)

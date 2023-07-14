@@ -44,4 +44,11 @@ public interface QRCodePaymentController {
   @GetMapping("/merchant/status/{transactionId}")
   @ResponseStatus(code = HttpStatus.OK)
   SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
+
+  @PutMapping("/force-expiration/confirm/{initiativeId}")
+  Long forceConfirmTrxExpiration(@PathVariable("initiativeId") String initiativeId);
+
+  @PutMapping("/force-expiration/authorization/{initiativeId}")
+  Long forceAuthorizationTrxExpiration(@PathVariable("initiativeId") String initiativeId);
+
 }

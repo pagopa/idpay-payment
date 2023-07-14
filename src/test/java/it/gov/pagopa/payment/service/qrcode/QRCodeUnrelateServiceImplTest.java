@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -23,8 +24,9 @@ import static org.mockito.Mockito.when;
 class QRCodeUnrelateServiceImplTest {
     public static final String TRXCODE = "TRXCODE";
     public static final String USERID = "USERID";
-    @Mock
-    private TransactionInProgressRepository repositoryMock;
+
+    @Mock private TransactionInProgressRepository repositoryMock;
+    @Mock private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredServiceMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
     @Mock private AuditUtilities auditUtilitiesMock;
 
@@ -35,6 +37,7 @@ class QRCodeUnrelateServiceImplTest {
         service =
                 new QRCodeUnrelateServiceImpl(
                         repositoryMock,
+                        qrCodeAuthorizationExpiredServiceMock,
                         rewardCalculatorConnectorMock,
                         auditUtilitiesMock);
     }
@@ -130,7 +133,7 @@ class QRCodeUnrelateServiceImplTest {
     }
 
     private TransactionInProgress repositoryMockFindInvocation() {
-        return repositoryMock.findByTrxCodeAndAuthorizationNotExpired(TRXCODE.toLowerCase());
+        return qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRXCODE.toLowerCase());
     }
 
     private void invokeService() {

@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeExpirationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class QRCodePaymentControllerImpl implements QRCodePaymentController {
 
   private final QRCodePaymentService qrCodePaymentService;
+  private final QRCodeExpirationService qrCodeExpirationService;
 
-  public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService) {
+  public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService, QRCodeExpirationService qrCodeExpirationService) {
     this.qrCodePaymentService = qrCodePaymentService;
+    this.qrCodeExpirationService = qrCodeExpirationService;
   }
 
   @Override
@@ -102,5 +105,19 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
     log.info("[GET_STATUS_TRANSACTION] Merchant with {},{} requested to retrieve status of transaction{} ", merchantId, acquirerId, transactionId);
     return qrCodePaymentService.getStatusTransaction(transactionId, merchantId, acquirerId);
+  }
+
+  @Override
+  @PerformanceLog("FORCE_CONFIRM_EXPIRATION")
+  public Long forceConfirmTrxExpiration(String initiativeId) {
+    log.info("[FORCE_CONFIRM_EXPIRATION] Requested confirm trx expiration for initiative {}", initiativeId);
+    return qrCodeExpirationService.forceConfirmTrxExpiration(initiativeId);
+  }
+
+  @Override
+  @PerformanceLog("FORCE_AUTHORIZATION_EXPIRATION")
+  public Long forceAuthorizationTrxExpiration(String initiativeId) {
+    log.info("[FORCE_AUTHORIZATION_EXPIRATION] Requested authorization trx expiration for initiative {}", initiativeId);
+    return qrCodeExpirationService.forceAuthorizationTrxExpiration(initiativeId);
   }
 }

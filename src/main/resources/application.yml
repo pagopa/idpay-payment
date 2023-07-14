@@ -84,7 +84,6 @@ logging:
     root: ${LOG_LEVEL_ROOT:INFO}
     it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
     it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
-    it.gov.pagopa.reward.service.BaseKafkaConsumer: ${LOG_LEVEL_BASE_KAFKA_CONSUMER:INFO}
     org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
     org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
     org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}
@@ -132,7 +131,7 @@ app:
     trxCode:
       baseUrl:
         img: ${QR_CODE_IMG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
-        txt: ${QR_CODE_TXT_URL:https://www.idpay.it/authorizationlink}
+        txt: ${QR_CODE_TXT_URL:https://continua.io.pagopa.it/idpay/auth}
 
 management:
   endpoint:

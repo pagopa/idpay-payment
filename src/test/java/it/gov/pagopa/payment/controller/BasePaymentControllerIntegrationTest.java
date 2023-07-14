@@ -14,8 +14,10 @@ import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionRespons
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
@@ -37,10 +39,10 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -64,10 +66,12 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
+    public static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";
     public static final String USERID = "USERID";
     public static final String MERCHANTID = "MERCHANTID";
     public static final String ACQUIRERID = "ACQUIRERID";
     public static final String IDTRXISSUER = "IDTRXISSUER";
+    public static final LocalDate TODAY = LocalDate.now();
 
     private static final int parallelism = 8;
     private static final ExecutorService executor = Executors.newFixedThreadPool(parallelism);
@@ -101,10 +105,27 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private int throttlingSeconds;
 
     @Test
-    void test() {
-        int N =  Math.max(useCases.size(), 50);
+    void test() throws Exception {
+        int N = Math.max(useCases.size(), 50);
 
-        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID).build());
+        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID)
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(INITIATIVEID)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.minusDays(1))
+                        .endDate(TODAY.plusDays(1))
+                        .build())
+                .build());
+
+        // rule for useCase 20
+        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID_NOT_STARTED)
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(INITIATIVEID_NOT_STARTED)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.plusDays(1))
+                        .endDate(TODAY.plusDays(1))
+                        .build())
+                .build());
 
         configureMocks();
 
@@ -136,6 +157,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         //verifying error event notification
         checkErrorNotificationEvents();
+
+        checkForceExpiration();
     }
 
     /**
@@ -174,6 +197,16 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
      * Invoke getStatusTransaction API acting as <i>merchantId</i>
      */
     protected abstract MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception;
+
+    /**
+     * Force auth transaction expiration
+     */
+    protected abstract MvcResult forceAuthExpiration(String initiativeId) throws Exception;
+
+    /**
+     * Force confirm transaction expiration
+     */
+    protected abstract MvcResult forceConfirmExpiration(String initiativeId) throws Exception;
 
     /**
      * Override in order to add specific use cases
@@ -365,7 +398,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
             updateStoredTransaction(trxCreated.getId(), t -> {
                 // resetting throttling data in order to assert preAuth data
-                t.setAuthDate(null);
+                t.setTrxChargeDate(null);
                 t.setElaborationDateTime(null);
             });
 
@@ -529,7 +562,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         //useCase 17: trx rejected budget exhausted
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-            trxRequest.setInitiativeId("INITIATIVEID");
+            trxRequest.setInitiativeId(INITIATIVEID);
             trxRequest.setMcc("NOTALLOWEDMCC1");
 
             // Creating transaction
@@ -557,11 +590,29 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
             checkTransactionStored(preAuthResult, USERID);
 
-            extractResponse(unrelateTrx(trxCreated, USERID+"1"), HttpStatus.FORBIDDEN, null);
+            extractResponse(unrelateTrx(trxCreated, USERID + "1"), HttpStatus.FORBIDDEN, null);
             extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
 
             TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
             cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
+        });
+
+        //useCase 19: merchant tries to create transaction with amount = 0
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setAmountCents(0L);
+
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
+        });
+
+        //useCase 20: merchant tries to create transaction out of valid initiative period
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
+
+            // Creating transaction
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
         });
 
         useCases.addAll(getExtraUseCases());
@@ -603,7 +654,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         TransactionOutcomeDTO expectedNotification = transactionInProgress2TransactionOutcomeDTOMapper.apply(authStored);
         expectedErrors.add(expectedNotification);
 
-       expectedNotification.setElaborationDateTime(expectedNotification.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES));
+        expectedNotification.setElaborationDateTime(TestUtils.truncateTimestamp(expectedNotification.getElaborationDateTime()));
 
         return Pair.of(authStored, expectedNotification);
     }
@@ -620,7 +671,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         // updating status on errorNotificationStored expected
         trx.getValue().setStatus(SyncTrxStatus.REWARDED);
-        trx.getValue().setElaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        trx.getValue().setElaborationDateTime(TestUtils.truncateTimestamp(LocalDateTime.now()));
     }
 
     private void configureCancelledEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
@@ -637,8 +688,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         trx.getValue().setId(trxResponse.getId());
         trx.getValue().setCorrelationId(trxResponse.getId());
         trx.getValue().setStatus(SyncTrxStatus.CANCELLED);
-        trx.getValue().setElaborationDateTime(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        trx.getValue().getRewards().values().forEach(r->{
+        trx.getValue().setElaborationDateTime(TestUtils.truncateTimestamp(LocalDateTime.now()));
+        trx.getValue().getRewards().values().forEach(r -> {
             r.setAccruedReward(r.getAccruedReward().negate());
             r.setProvidedReward(r.getProvidedReward().negate());
         });
@@ -649,6 +700,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertNotEquals(Collections.emptyMap(), trxAuth.getRewards());
         expectedAuthorizationNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxAuth));
     }
+
     private void addExpectedAuthorizationEventRejected(TransactionResponse trx) {
         TransactionInProgress trxRejected = checkIfStored(trx.getId());
         expectedAuthorizationNotificationRejectedEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxRejected));
@@ -666,7 +718,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertNotEquals(Collections.emptyMap(), trxCancelled.getRewards());
         trxCancelled.setStatus(SyncTrxStatus.CANCELLED);
         trxCancelled.setReward(-trxCancelled.getReward());
-        trxCancelled.getRewards().values().forEach(r->{
+        trxCancelled.getRewards().values().forEach(r -> {
             r.setAccruedReward(r.getAccruedReward().negate());
             r.setProvidedReward(r.getProvidedReward().negate());
         });
@@ -739,8 +791,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private void assertNotifications(Set<TransactionOutcomeDTO> expectedNotificationEvents, Set<TransactionOutcomeDTO> notificationDTOS) {
-        expectedNotificationEvents.stream().filter(n->n.getElaborationDateTime()!=null).forEach(e->e.setElaborationDateTime(e.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES)));
-        notificationDTOS.stream().filter(n->n.getElaborationDateTime()!=null).forEach(e->e.setElaborationDateTime(e.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES)));
+        expectedNotificationEvents.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
+        notificationDTOS.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
         assertEquals(expectedNotificationEvents.size(), notificationDTOS.size());
         assertEquals(
                 sortEvents(expectedNotificationEvents),
@@ -773,8 +825,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
                     checkErrorMessageHeaders(topicConfirmNotification, null, r, expectedErrorDescription, r.value(), expectedKey, false, false);
 
-                    if(out.getElaborationDateTime()!=null){
-                        out.setElaborationDateTime(out.getElaborationDateTime().truncatedTo(ChronoUnit.MINUTES));
+                    if (out.getElaborationDateTime() != null) {
+                        out.setElaborationDateTime(TestUtils.truncateTimestamp(out.getElaborationDateTime()));
                     }
 
                     return out;
@@ -790,14 +842,43 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void checkAuthorizationDateTime(Map<String, TransactionInProgress> trxId2AuthEvent, TransactionInProgress out) {
         TransactionInProgress expectedEvent = trxId2AuthEvent.get(out.getId());
         Assertions.assertNotNull(expectedEvent);
-        Duration diffAuthDateTime = Duration.between(out.getAuthDate(),
-                expectedEvent.getAuthDate());
+        Duration diffAuthDateTime = Duration.between(out.getTrxChargeDate(),
+                expectedEvent.getTrxChargeDate());
         Assertions.assertTrue(diffAuthDateTime
                 .compareTo(Duration.ofSeconds(throttlingSeconds)) >= 0 ||
-                out.getAuthDate().equals(expectedEvent.getAuthDate()));
+                out.getTrxChargeDate().equals(expectedEvent.getTrxChargeDate()));
         Assertions.assertTrue(diffAuthDateTime
                 .compareTo(Duration.ofSeconds(10L * throttlingSeconds)) < 0);
-        out.setAuthDate(expectedEvent.getAuthDate());
+        out.setTrxChargeDate(expectedEvent.getTrxChargeDate());
+    }
+
+    private void checkForceExpiration() throws Exception {
+        Map<SyncTrxStatus, List<TransactionInProgress>> trxByStatus = transactionInProgressRepository.findAll().stream()
+                .collect(Collectors.groupingBy(TransactionInProgress::getStatus));
+
+
+        List<TransactionInProgress> expectedConfirmForced = trxByStatus.get(SyncTrxStatus.AUTHORIZED);
+        List<TransactionInProgress> expectedAuthorizationForced = Arrays.stream(SyncTrxStatus.values())
+                .filter(s -> !s.equals(SyncTrxStatus.AUTHORIZED))
+                .map(trxByStatus::get)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .toList();
+
+        Assertions.assertEquals(0L, extractResponse(forceAuthExpiration("DUMMYINITIATIVEID"), HttpStatus.OK, Long.class));
+        Assertions.assertEquals(expectedAuthorizationForced.size(),
+                extractResponse(forceAuthExpiration(INITIATIVEID), HttpStatus.OK, Long.class));
+
+        Assertions.assertEquals(0L, extractResponse(forceConfirmExpiration("DUMMYINITIATIVEID"), HttpStatus.OK, Long.class));
+        Assertions.assertEquals(
+                expectedConfirmForced.size(),
+                extractResponse(forceConfirmExpiration(INITIATIVEID), HttpStatus.OK, Long.class));
+
+        expectedConfirmNotificationEvents.addAll(expectedConfirmForced.stream()
+                .map(transactionInProgress2TransactionOutcomeDTOMapper)
+                .peek(t -> t.setStatus(SyncTrxStatus.REWARDED))
+                .toList());
+        checkNotificationEventsOnTransactionQueue();
     }
 
     private List<TransactionOutcomeDTO> sortEvents(Set<TransactionOutcomeDTO> list) {
@@ -853,7 +934,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(trxResponse.getTrxCode(), trxStored.getTrxCode());
         Assertions.assertEquals(trxResponse.getIdTrxAcquirer(), trxStored.getIdTrxAcquirer());
         Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxDate());
-        Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
         Assertions.assertEquals(trxResponse.getIdTrxIssuer(), trxStored.getIdTrxIssuer());
@@ -877,14 +957,14 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {
-                Assertions.assertNull(trxStored.getAuthDate());
+                Assertions.assertNull(trxStored.getTrxChargeDate());
                 Assertions.assertNull(trxStored.getElaborationDateTime());
                 Assertions.assertNull(trxStored.getReward());
                 Assertions.assertEquals(Collections.emptyList(), trxStored.getRejectionReasons());
                 Assertions.assertEquals(Collections.emptyMap(), trxStored.getRewards());
             }
             case AUTHORIZED -> {
-                Assertions.assertNotNull(trxStored.getAuthDate());
+                Assertions.assertNotNull(trxStored.getTrxChargeDate());
 
                 if (expectedRewarded) {
                     Assertions.assertNotNull(trxStored.getReward());
@@ -908,7 +988,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(authPaymentDTO.getTrxCode(), trxStored.getTrxCode());
         Assertions.assertNotNull(trxStored.getIdTrxAcquirer());
         Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxDate());
-        Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxChargeDate());
         Assertions.assertEquals("00", trxStored.getOperationType());
         Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
         Assertions.assertNotNull(trxStored.getIdTrxIssuer());
@@ -928,13 +1007,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(authPaymentDTO.getStatus(), trxStored.getStatus());
         Assertions.assertEquals(getChannel(), trxStored.getChannel());
 
-        if(!expectedRewarded){
+        if (!expectedRewarded) {
             Assertions.assertEquals(SyncTrxStatus.REJECTED, trxStored.getStatus());
         }
 
         switch (trxStored.getStatus()) {
             case CREATED -> {
-                Assertions.assertNull(trxStored.getAuthDate());
+                Assertions.assertNull(trxStored.getTrxChargeDate());
                 Assertions.assertNull(trxStored.getElaborationDateTime());
                 Assertions.assertNull(trxStored.getReward());
                 Assertions.assertEquals(Collections.emptyList(), trxStored.getRejectionReasons());
@@ -953,10 +1032,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 Assertions.assertNotNull(trxStored.getRewards());
                 Assertions.assertFalse(trxStored.getRewards().isEmpty());
 
-                if(trxStored.getStatus().equals(SyncTrxStatus.AUTHORIZED)){
-                    Assertions.assertNotNull(trxStored.getAuthDate());
+                if (trxStored.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
+                    Assertions.assertNotNull(trxStored.getTrxChargeDate());
                 } else {
-                    Assertions.assertNull(trxStored.getAuthDate());
+                    Assertions.assertNull(trxStored.getTrxChargeDate());
                 }
                 Assertions.assertNull(trxStored.getElaborationDateTime());
             }

@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.service.QRCodePaymentService;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,17 +25,21 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @WebMvcTest(QRCodePaymentControllerImpl.class)
 @Import(JsonConfig.class)
 class QRCodePaymentControllerImplTest {
-    @MockBean
-    private QRCodePaymentService qrCodePaymentService;
+
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockBean
+    private QRCodePaymentService qrCodePaymentServiceMock;
+    @MockBean
+    private QRCodeExpirationService qrCodeExpirationServiceMock;
+
     @Test
     void getStatusTransaction() throws Exception {
         SyncTrxStatusDTO trx= SyncTrxStatusFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
-        Mockito.when(qrCodePaymentService.getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId())).thenReturn(trx);
+        Mockito.when(qrCodePaymentServiceMock.getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId())).thenReturn(trx);
 
         MvcResult result= mockMvc.perform(
                 get("/idpay/payment/qr-code/merchant/status/{transactionId}",trx.getId())
@@ -49,13 +54,13 @@ class QRCodePaymentControllerImplTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(trx,resultResponse);
-        Mockito.verify(qrCodePaymentService).getStatusTransaction(anyString(),anyString(),anyString());
+        Mockito.verify(qrCodePaymentServiceMock).getStatusTransaction(anyString(),anyString(),anyString());
     }
 
     @Test
     void getStatusTransaction_NotFoundException() throws Exception {
 
-        Mockito.when(qrCodePaymentService.getStatusTransaction("TRANSACTIONID","MERCHANTID","ACQUIRERID"))
+        Mockito.when(qrCodePaymentServiceMock.getStatusTransaction("TRANSACTIONID","MERCHANTID","ACQUIRERID"))
                 .thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Transaction does not exist"));
 
         mockMvc.perform(
@@ -65,6 +70,6 @@ class QRCodePaymentControllerImplTest {
                 ).andExpect(status().isNotFound())
                 .andExpect(res -> Assertions.assertTrue(res.getResolvedException() instanceof ClientExceptionNoBody))
                 .andReturn();
-        Mockito.verify(qrCodePaymentService).getStatusTransaction(anyString(),anyString(),anyString());
+        Mockito.verify(qrCodePaymentServiceMock).getStatusTransaction(anyString(),anyString(),anyString());
     }
 }
