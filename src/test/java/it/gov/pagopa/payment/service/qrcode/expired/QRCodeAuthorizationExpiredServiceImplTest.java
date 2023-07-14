@@ -20,14 +20,18 @@ import org.springframework.http.HttpStatus;
 @ExtendWith(MockitoExtension.class)
 class QRCodeAuthorizationExpiredServiceImplTest {
 
+    private final static long EXPIRATION_MINUTES=15;
+
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
+
     private final AuditUtilities auditUtilities = new AuditUtilities();
+
     private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService;
 
     @BeforeEach
     void setUp() {
-        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
+        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
     }
 
     @Test
@@ -37,7 +41,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
         TransactionInProgress trxIdentifiedException404 = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.IDENTIFIED);
         TransactionInProgress trxIdentifiedException500 = TransactionInProgressFaker.mockInstance(4, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction())
+        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES))
                 .thenReturn(trxCreate)
                 .thenReturn(trxIdentified)
                 .thenReturn(trxIdentifiedException404)
@@ -61,7 +65,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
     void handleExpiredTransactionException() {
         TransactionInProgress trxIdentified = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction())
+        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES))
                 .thenReturn(trxIdentified)
                 .thenReturn(null);
 
