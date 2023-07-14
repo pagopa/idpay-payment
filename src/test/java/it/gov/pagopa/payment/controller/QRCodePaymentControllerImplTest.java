@@ -32,14 +32,14 @@ class QRCodePaymentControllerImplTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private QRCodePaymentService qrCodePaymentService;
+    private QRCodePaymentService qrCodePaymentServiceMock;
     @MockBean
-    private QRCodeExpirationService qrCodeExpirationService;
+    private QRCodeExpirationService qrCodeExpirationServiceMock;
 
     @Test
     void getStatusTransaction() throws Exception {
         SyncTrxStatusDTO trx= SyncTrxStatusFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
-        Mockito.when(qrCodePaymentService.getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId())).thenReturn(trx);
+        Mockito.when(qrCodePaymentServiceMock.getStatusTransaction(trx.getId(), trx.getMerchantId(), trx.getAcquirerId())).thenReturn(trx);
 
         MvcResult result= mockMvc.perform(
                 get("/idpay/payment/qr-code/merchant/status/{transactionId}",trx.getId())
@@ -54,13 +54,13 @@ class QRCodePaymentControllerImplTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(trx,resultResponse);
-        Mockito.verify(qrCodePaymentService).getStatusTransaction(anyString(),anyString(),anyString());
+        Mockito.verify(qrCodePaymentServiceMock).getStatusTransaction(anyString(),anyString(),anyString());
     }
 
     @Test
     void getStatusTransaction_NotFoundException() throws Exception {
 
-        Mockito.when(qrCodePaymentService.getStatusTransaction("TRANSACTIONID","MERCHANTID","ACQUIRERID"))
+        Mockito.when(qrCodePaymentServiceMock.getStatusTransaction("TRANSACTIONID","MERCHANTID","ACQUIRERID"))
                 .thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Transaction does not exist"));
 
         mockMvc.perform(
@@ -70,6 +70,6 @@ class QRCodePaymentControllerImplTest {
                 ).andExpect(status().isNotFound())
                 .andExpect(res -> Assertions.assertTrue(res.getResolvedException() instanceof ClientExceptionNoBody))
                 .andReturn();
-        Mockito.verify(qrCodePaymentService).getStatusTransaction(anyString(),anyString(),anyString());
+        Mockito.verify(qrCodePaymentServiceMock).getStatusTransaction(anyString(),anyString(),anyString());
     }
 }
