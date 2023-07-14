@@ -5,23 +5,40 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.qrcode.QRCodeConfirmationService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration implements QRCodeCancelExpiredService{
+public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration implements QRCodeCancelExpiredService {
+
+    private final long cancelExpirationMinutes;
+
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final QRCodeConfirmationService qrCodeConfirmationService;
 
-    public QRCodeCancelExpiredServiceImpl(TransactionInProgressRepository transactionInProgressRepository, QRCodeConfirmationService qrCodeConfirmationService, AuditUtilities auditUtilities) {
+    public QRCodeCancelExpiredServiceImpl(
+            @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes,
+
+            TransactionInProgressRepository transactionInProgressRepository,
+            QRCodeConfirmationService qrCodeConfirmationService,
+            AuditUtilities auditUtilities) {
         super(auditUtilities);
+
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.qrCodeConfirmationService = qrCodeConfirmationService;
+
+        this.cancelExpirationMinutes = cancelExpirationMinutes;
     }
 
     @Override
-    protected TransactionInProgress findExpiredTransaction() {
-        return transactionInProgressRepository.findCancelExpiredTransaction();
+    protected long getExpirationMinutes() {
+        return cancelExpirationMinutes;
+    }
+
+    @Override
+    protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
+        return transactionInProgressRepository.findCancelExpiredTransaction(initiativeId, expirationMinutes);
     }
 
     @Override

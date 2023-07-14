@@ -16,9 +16,18 @@ public abstract class BaseQRCodeExpiration {
         this.auditUtilities = auditUtilities;
     }
 
-    public final void execute(){
+    public Long forceExpiration(String initiativeId) {
+        return execute(initiativeId, 0);
+    }
+
+    public final Long execute(){
+        return execute(null, getExpirationMinutes());
+    }
+
+    public final Long execute(String initiativeId, long expirationMinutes){
+        long count = 0L;
          TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
-         while((expiredTransaction[0] = findExpiredTransaction()) != null ){
+         while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
              log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
                      EXPIRED_QR_CODE,
                      getFlowName(),
@@ -29,16 +38,22 @@ public abstract class BaseQRCodeExpiration {
                 PerformanceLogger.execute(EXPIRED_QR_CODE,
                         () -> handleExpiredTransaction(expiredTransaction[0]),
                         t -> "Evaluated transaction with ID %s due to %s ". formatted(t.getId(), getFlowName()));
+                count++;
                 auditUtilities.logExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
              } catch (Exception e){
                  log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", EXPIRED_QR_CODE, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
                  auditUtilities.logErrorExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
              }
          }
+
+         return count;
      }
 
-     /**The invoked function to retrieve lapsed transactions*/
-     protected abstract TransactionInProgress findExpiredTransaction();
+    /** The trx expiration minutes  */
+    protected abstract long getExpirationMinutes();
+
+     /** The invoked function to retrieve lapsed transactions */
+     protected abstract TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes);
 
      /** The invoked function to manage lapsed transactions */
      protected abstract TransactionInProgress handleExpiredTransaction(TransactionInProgress trx);

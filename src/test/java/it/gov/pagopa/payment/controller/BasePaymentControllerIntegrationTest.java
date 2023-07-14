@@ -105,7 +105,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private int throttlingSeconds;
 
     @Test
-    void test() {
+    void test() throws Exception {
         int N =  Math.max(useCases.size(), 50);
 
         rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID)
@@ -157,6 +157,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         //verifying error event notification
         checkErrorNotificationEvents();
+
+        checkForceExpiration();
     }
 
     /**
@@ -195,6 +197,16 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
      * Invoke getStatusTransaction API acting as <i>merchantId</i>
      */
     protected abstract MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception;
+
+    /**
+     * Force auth transaction expiration
+     */
+    protected abstract MvcResult forceAuthExpiration(String initiativeId) throws Exception;
+
+    /**
+     * Force confirm transaction expiration
+     */
+    protected abstract MvcResult forceConfirmExpiration(String initiativeId) throws Exception;
 
     /**
      * Override in order to add specific use cases
@@ -837,6 +849,25 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertTrue(diffAuthDateTime
                 .compareTo(Duration.ofSeconds(10L * throttlingSeconds)) < 0);
         out.setTrxChargeDate(expectedEvent.getTrxChargeDate());
+    }
+
+    private void checkForceExpiration() throws Exception {
+        Map<SyncTrxStatus, List<TransactionInProgress>> trxByStatus = transactionInProgressRepository.findAll().stream()
+                .collect(Collectors.groupingBy(TransactionInProgress::getStatus));
+
+        Assertions.assertEquals(0L, extractResponse(forceAuthExpiration("DUMMYINITIATIVEID"), HttpStatus.OK, Long.class));
+        Assertions.assertEquals(
+                Arrays.stream(SyncTrxStatus.values())
+                        .filter(s -> !s.equals(SyncTrxStatus.AUTHORIZED))
+                        .map(s -> trxByStatus.get(s))
+                        .mapToLong(l -> l==null?0:l.size())
+                        .sum(),
+                extractResponse(forceAuthExpiration(INITIATIVEID), HttpStatus.OK, Long.class));
+
+        Assertions.assertEquals(0L, extractResponse(forceConfirmExpiration("DUMMYINITIATIVEID"), HttpStatus.OK, Long.class));
+        Assertions.assertEquals(
+                trxByStatus.get(SyncTrxStatus.AUTHORIZED).size(),
+                extractResponse(forceConfirmExpiration(INITIATIVEID), HttpStatus.OK, Long.class));
     }
 
     private List<TransactionOutcomeDTO> sortEvents(Set<TransactionOutcomeDTO> list) {

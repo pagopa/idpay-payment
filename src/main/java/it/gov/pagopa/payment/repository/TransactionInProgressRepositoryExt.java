@@ -12,8 +12,8 @@ import java.util.Map;
 public interface TransactionInProgressRepositoryExt {
   UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
   TransactionInProgress findByIdThrottled(String trxId);
-  TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode);
-  TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode);
+  TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes);
+  TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons);
   void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards);
   void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons);
@@ -21,6 +21,6 @@ public interface TransactionInProgressRepositoryExt {
   Criteria getCriteria(String merchantId, String initiativeId, String userId, String status);
   List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable);
   long getCount(Criteria criteria);
-  TransactionInProgress findCancelExpiredTransaction();
-  TransactionInProgress findAuthorizationExpiredTransaction();
+  TransactionInProgress findCancelExpiredTransaction(String initiativeId, long cancelExpirationMinutes);
+  TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId, long authorizationExpirationMinutes);
 }

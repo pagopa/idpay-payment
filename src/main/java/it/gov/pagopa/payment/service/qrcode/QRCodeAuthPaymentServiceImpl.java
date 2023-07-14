@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.service.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
 
   private final TransactionInProgressRepository transactionInProgressRepository;
+  private final QRCodeAuthorizationExpiredService authorizationExpiredService;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuthPaymentMapper requestMapper;
   private final TransactionNotifierService notifierService;
@@ -30,11 +32,13 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
 
   public QRCodeAuthPaymentServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
+          QRCodeAuthorizationExpiredService authorizationExpiredService,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuthPaymentMapper requestMapper,
           TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
           AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
+    this.authorizationExpiredService = authorizationExpiredService;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.requestMapper = requestMapper;
     this.notifierService = notifierService;
@@ -45,8 +49,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     try {
-      TransactionInProgress trx =
-              transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode.toLowerCase());
+      TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode.toLowerCase());
 
       if (trx == null) {
         throw new ClientExceptionWithBody(
