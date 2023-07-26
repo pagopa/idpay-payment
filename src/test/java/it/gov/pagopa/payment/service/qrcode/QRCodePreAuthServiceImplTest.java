@@ -22,6 +22,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -172,6 +173,25 @@ class QRCodePreAuthServiceImplTest {
 
     ClientException result = Assertions.assertThrows(ClientException.class, () ->
         qrCodePreAuthService.relateUser("trxcode1", "USERID1")
+    );
+
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
+  }
+
+  @Test
+  void relateUserTrxExpired() {
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
+    trx.setUserId("USERID1");
+
+    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
+
+    ClientException result = Assertions.assertThrows(ClientException.class, () ->
+            qrCodePreAuthService.relateUser("trxcode1", "USERID1")
     );
 
     Assertions.assertNotNull(result);
