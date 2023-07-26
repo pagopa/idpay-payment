@@ -6,7 +6,6 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -25,7 +24,6 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final QRCodeAuthorizationExpiredService authorizationExpiredService;
   private final RewardCalculatorConnector rewardCalculatorConnector;
-  private final AuthPaymentMapper requestMapper;
   private final TransactionNotifierService notifierService;
   private final PaymentErrorNotifierService paymentErrorNotifierService;
   private final AuditUtilities auditUtilities;
@@ -34,13 +32,11 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
           TransactionInProgressRepository transactionInProgressRepository,
           QRCodeAuthorizationExpiredService authorizationExpiredService,
           RewardCalculatorConnector rewardCalculatorConnector,
-          AuthPaymentMapper requestMapper,
           TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
           AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.authorizationExpiredService = authorizationExpiredService;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
-    this.requestMapper = requestMapper;
     this.notifierService = notifierService;
     this.paymentErrorNotifierService = paymentErrorNotifierService;
     this.auditUtilities = auditUtilities;
@@ -117,7 +113,10 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       sendAuthPaymentNotification(trx);
 
     } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
-      authPaymentDTO = requestMapper.transactionMapper(trx);
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED,
+              "Transaction with trxCode [%s] is already authorized".formatted(trxCode));
     } else {
       throw new ClientExceptionWithBody(
               HttpStatus.BAD_REQUEST,

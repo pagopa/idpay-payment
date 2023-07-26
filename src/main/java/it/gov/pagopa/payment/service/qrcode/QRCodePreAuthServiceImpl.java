@@ -8,10 +8,10 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -20,19 +20,18 @@ import java.time.OffsetDateTime;
 @Service
 @Slf4j
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
-
+  private final long authorizationExpirationMinutes;
   private final TransactionInProgressRepository transactionInProgressRepository;
-  private final QRCodeAuthorizationExpiredService authorizationExpiredService;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuditUtilities auditUtilities;
 
   public QRCodePreAuthServiceImpl(
+          @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
           TransactionInProgressRepository transactionInProgressRepository,
-          QRCodeAuthorizationExpiredService authorizationExpiredService,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuditUtilities auditUtilities) {
+    this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     this.transactionInProgressRepository = transactionInProgressRepository;
-    this.authorizationExpiredService = authorizationExpiredService;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.auditUtilities = auditUtilities;
   }
@@ -40,28 +39,9 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
     try {
-      TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+      TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase()).orElse(null);
 
-      if (trx == null) {
-        throw new ClientExceptionWithBody(
-                HttpStatus.NOT_FOUND,
-                PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                "Cannot find transaction with trxCode [%s]".formatted(trxCode));
-      }
-
-      if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
-        throw new ClientExceptionWithBody(
-                HttpStatus.FORBIDDEN,
-                PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
-                "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
-      }
-
-      if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
-                "Cannot relate transaction [%s] in status %s".formatted(trxCode, trx.getStatus()));
-      }
+      checkPreAuth(trxCode, userId, trx);
 
       trx.setUserId(userId);
       trx.setTrxChargeDate(OffsetDateTime.now());
@@ -105,6 +85,36 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
                 PaymentConstants.ExceptionCode.GENERIC_ERROR,
                 "A generic error occurred for trxCode: [%s]".formatted(trxCode));
       }
+    }
+  }
+
+  private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx) {
+    if (trx == null || trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
+      throw new ClientExceptionWithBody(
+              HttpStatus.NOT_FOUND,
+              PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+              "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+    }
+
+    if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
+              "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+    }
+
+    if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED,
+              "Transaction with trxCode [%s] is already authorized".formatted(trxCode));
+    }
+
+    if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
+      throw new ClientExceptionWithBody(
+              HttpStatus.BAD_REQUEST,
+              PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
+              "Cannot relate transaction [%s] in status %s".formatted(trxCode, trx.getStatus()));
     }
   }
 }
