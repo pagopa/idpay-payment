@@ -9,7 +9,6 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
-import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
@@ -33,7 +32,8 @@ import org.springframework.http.HttpStatus;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,8 +45,6 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private TransactionNotifierService notifierServiceMock;
   @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
   @Mock private AuditUtilities auditUtilitiesMock;
-  
-  private final AuthPaymentMapper authPaymentMapper = new AuthPaymentMapper();
 
   QRCodeAuthPaymentService service;
 
@@ -57,7 +55,6 @@ class QRCodeAuthPaymentServiceTest {
                     repositoryMock,
                     qrCodeAuthorizationExpiredServiceMock,
                     rewardCalculatorConnectorMock,
-                    authPaymentMapper,
                     notifierServiceMock,
                     paymentErrorNotifierServiceMock,
                     auditUtilitiesMock);
@@ -200,9 +197,10 @@ class QRCodeAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpiredThrottled(transaction.getTrxCode()))
         .thenReturn(transaction);
 
-    AuthPaymentDTO result = service.authPayment(transaction.getUserId(), transaction.getTrxCode());
-    assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons");
+    ClientException result =
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test

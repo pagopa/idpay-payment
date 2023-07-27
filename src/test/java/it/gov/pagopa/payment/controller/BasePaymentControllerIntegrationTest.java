@@ -432,7 +432,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
             assertAuthData(authResult, true);
             // Cannot invoke preAuth after authorization
-            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
             // Authorizing transaction resubmission after throttling time
             waitThrottlingTime();
 
@@ -440,9 +440,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             addExpectedAuthorizationEvent(trxCreated);
 
             updateStoredTransaction(authResult.getId(), t -> t.setCorrelationId("ALREADY_AUTHORED"));
-            AuthPaymentDTO authResultResubmitted = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-            assertEquals(authResult, authResultResubmitted);
-            checkTransactionStored(authResult, USERID);
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
 
             // Unexpected merchant trying to confirm
             extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
