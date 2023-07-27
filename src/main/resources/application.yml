@@ -7,9 +7,9 @@ spring:
     activate:
       on-profile: default
   cloud:
+    function:
+      definition: errors;transactionOutcome
     stream:
-      function:
-        definition: errors;transactionOutcome
       binders:
         kafka-errors:
           type: kafka
@@ -61,6 +61,7 @@ spring:
           transactionOutcome-out-0:
             producer:
               configuration:
+                client.id: transactionOutcome
                 connections.max.idle.ms: ${KAFKA_TRANSACTION_OUTCOME_CONNECTION_MAX_IDLE_TIME:180000}
                 retry.backoff.ms: ${KAFKA_TRANSACTION_OUTCOME_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
                 linger.ms: ${KAFKA_TRANSACTION_OUTCOME_LINGER_MS:${KAFKA_LINGER_MS:2}}
