@@ -22,17 +22,23 @@ public class MongoRequestRateTooLargeRetryableAspect {
   public Object mongoRequestTooLargeRetryable(ProceedingJoinPoint pjp,
       MongoRequestRateTooLargeRetryable mongoRequestRateTooLargeRetryable)
       throws InterruptedException {
+    return executeJoinPointRetryable(pjp, mongoRequestRateTooLargeRetryable.maxRetry(),
+        mongoRequestRateTooLargeRetryable.maxMillisElapsed());
+  }
+
+  public static Object executeJoinPointRetryable(ProceedingJoinPoint pjp, long maxRetry, long maxMillisElapsed)
+      throws InterruptedException {
     return MongoRequestRateTooLargeRetryer.execute(() -> {
-      try {
-        return pjp.proceed();
-      } catch (RuntimeException e) {
-        throw e;
-      } catch (Throwable e) {
-        throw new IllegalStateException(
-            "[REQUEST_RATE_TOO_LARGE_RETRY] Something went wrong while executing MongoRequestRateTooLargeRetryable annotated method",
-            e);
-      }
-    }, mongoRequestRateTooLargeRetryable.maxRetry(), mongoRequestRateTooLargeRetryable.maxMillisElapsed());
+          try {
+            return pjp.proceed();
+          } catch (RuntimeException e) {
+            throw e;
+          } catch (Throwable e) {
+            throw new IllegalStateException(
+                "[REQUEST_RATE_TOO_LARGE_RETRY] Something went wrong while executing MongoRequestRateTooLargeRetryable annotated method",
+                e);
+          }
+        }, maxRetry, maxMillisElapsed);
   }
 
 }
