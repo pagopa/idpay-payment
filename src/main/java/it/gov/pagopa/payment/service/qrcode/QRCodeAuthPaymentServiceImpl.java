@@ -13,6 +13,8 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,7 +47,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     try {
-      TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode.toLowerCase());
+      TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
       if (trx == null) {
         throw new ClientExceptionWithBody(
@@ -60,7 +62,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
                 PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
                 "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
       }
-      AuthPaymentDTO authPaymentDTO = checkRejectedPayment(userId, trxCode, trx);
+      AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
 
       auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
       authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
@@ -79,9 +81,10 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
     }
   }
 
-  private AuthPaymentDTO checkRejectedPayment(String userId, String trxCode, TransactionInProgress trx){
+  private AuthPaymentDTO invokeRuleEngine(String userId, String trxCode, TransactionInProgress trx){
     AuthPaymentDTO authPaymentDTO;
     if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
+      trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
       authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
 
       trx.setReward(authPaymentDTO.getReward());
@@ -94,7 +97,7 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
         transactionInProgressRepository.updateTrxAuthorized(trx,
                 authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
       } else {
-        transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons());
+        transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons(), trx.getTrxChargeDate());
         log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
         if (authPaymentDTO.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
           throw new ClientExceptionWithBody(
