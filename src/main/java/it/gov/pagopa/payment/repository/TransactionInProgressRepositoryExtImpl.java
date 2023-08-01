@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
+import java.time.OffsetDateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -147,12 +148,13 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.rewards, trx.getRewards())
+                        .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
 
     @Override
-    public void updateTrxRejected(String id, List<String> rejectionReasons) {
+    public void updateTrxRejected(String id, List<String> rejectionReasons, OffsetDateTime trxChargeDate) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -160,6 +162,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, 0L)
                         .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.trxChargeDate, trxChargeDate)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }

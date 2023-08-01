@@ -1,5 +1,10 @@
 package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
@@ -9,14 +14,11 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
  class RewardCalculatorMapperTest {
 
@@ -51,7 +53,7 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
       assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
       assertEquals(transaction.getCorrelationId(), result.getTransactionId());
-      TestUtils.checkNotNullFields(result);
+      TestUtils.checkNotNullFields(result, "trxChargeDate");
     });
   }
 

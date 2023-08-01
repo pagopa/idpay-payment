@@ -39,6 +39,8 @@ public class TransactionInProgressFaker {
       rewards = Collections.emptyMap();
     }
 
+    boolean trxStatus = status.equals(SyncTrxStatus.REJECTED) || status.equals(SyncTrxStatus.REWARDED) || status.equals(SyncTrxStatus.AUTHORIZED);
+
     return TransactionInProgress.builder()
         .id(id)
         .correlationId(id)
@@ -49,7 +51,7 @@ public class TransactionInProgressFaker {
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-        .trxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .trxChargeDate(trxStatus ? OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS) : null)
         .amountCents(1000L)
         .effectiveAmount(BigDecimal.TEN.setScale(2, RoundingMode.UNNECESSARY))
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
