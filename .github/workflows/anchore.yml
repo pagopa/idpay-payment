@@ -52,6 +52,11 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
+
+      - name: test slack notification
+      if: always()
+      run: echo "${{ steps.scan.outputs.json }}"
+
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
