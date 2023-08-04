@@ -76,7 +76,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\n${{ toJSON(env.SCAN_RESULTS) }}"
+                    "text": "GitHub Action scan results:\n${{ env.SCAN_RESULTS }}"
                   }
                 }
               ]
