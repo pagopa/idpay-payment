@@ -52,8 +52,14 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
+      - name: CVE Description extraction
+        run: |
+          echo "SCAN_RESULTS<<EOF" >> $GITHUB_ENV
+          echo "$(jq -r '.runs[0].tool.driver.rules[].shortDescription.text' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Send notification to Slack
         id: slack
+        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
@@ -71,19 +77,11 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan result: ${{ steps.scan.outcome }}"
+                    "text": "GitHub Action scan result: ${{ toJSON(env.SCAN_RESULTS) }}"
                   }
                 }
               ]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.CVE_SCAN_SLACK_WEBHOOK }}
-          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-      - name: Send file to Slack
-        id: slack-file
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          payload-file-path: ${{ steps.scan.outputs.sarif }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CVE_SCAN_SLACK_WEBHOOK }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
