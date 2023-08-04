@@ -78,7 +78,7 @@ jobs:
               ]
             }
       - name: Send file to Slack
-        id: slack
+        id: slack-file
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
         uses: slackapi/slack-github-action@v1.23.0
         with:
