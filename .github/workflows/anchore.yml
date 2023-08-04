@@ -53,10 +53,9 @@ jobs:
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: CVE Description extraction
-        run: |
-          echo "SCAN_RESULTS<<EOF" >> $GITHUB_ENV
-          echo "$(jq -r '.runs[0].tool.driver.rules[].shortDescription.text' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+        run: echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules[].shortDescription.text | join("\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
+      - name: DEBUG
+        run: echo "${{ env.SCAN_RESULTS }}"
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
