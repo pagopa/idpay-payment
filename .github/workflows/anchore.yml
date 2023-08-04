@@ -54,7 +54,7 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Send notification to Slack
         id: slack
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
@@ -81,7 +81,7 @@ jobs:
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
       - name: Send file to Slack
         id: slack-file
-        uses: slackapi/slack-github-action@v1.23.0
+        uses: slackapi/slack-github-action@v1.24.0
         with:
           payload-file-path: ${{ steps.scan.outputs.sarif }}
         env:
