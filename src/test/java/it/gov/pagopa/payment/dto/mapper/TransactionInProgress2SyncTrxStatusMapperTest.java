@@ -1,18 +1,18 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class TransactionInProgress2SyncTrxStatusMapperTest {
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
@@ -49,7 +49,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
             assertEquals(transaction.getReward(), result.getRewardCents());
             assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
             assertEquals(transaction.getStatus(), result.getStatus());
-            TestUtils.checkNotNullFields(result);
+            TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate");
         });
     }
 }

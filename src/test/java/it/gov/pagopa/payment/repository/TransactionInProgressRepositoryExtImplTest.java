@@ -1,28 +1,15 @@
 package it.gov.pagopa.payment.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
+import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.common.utils.TestUtils;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.List;
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -34,6 +21,23 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.http.HttpStatus;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @Slf4j
 class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
@@ -88,7 +92,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "elaborationDateTime",
                 "reward",
                 "rejectionReasons",
-                "rewards");
+                "rewards",
+                "trxChargeDate");
     }
 
     @Test
@@ -97,7 +102,6 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         assertNull(notFoundResult);
 
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        transaction.setTrxChargeDate(null);
         transactionInProgressRepository.save(transaction);
 
         TransactionInProgress result = transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(transaction.getTrxCode(), EXPIRATION_MINUTES);
@@ -106,7 +110,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         assertTrue(result.getTrxChargeDate().isAfter(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES)));
         TestUtils.checkNotNullFields(
-                result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards");
+                result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate");
 
         ClientException exception =
                 assertThrows(
@@ -114,6 +118,28 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                         () -> transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1", EXPIRATION_MINUTES));
 
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
+    }
+
+
+    @Test
+    void findByTrxCodeThrottled_Concurrent() {
+        int N = 10;
+        TransactionInProgress stored =
+                transactionInProgressRepository.save(
+                        TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.IDENTIFIED));
+
+        Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> mongoCommandsByType = executeConcurrentLocks(N,
+                () -> {
+                    try {
+                        transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(stored.getTrxCode(), EXPIRATION_MINUTES);
+                        return true;
+                    } catch (ClientExceptionNoBody e) {
+                        assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+                        return false;
+                    }
+                }
+        );
+        Assertions.assertEquals(N-1, mongoCommandsByType.get("aggregate").get(0).getValue());
     }
 
     @Test
@@ -135,7 +161,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "elaborationDateTime",
                 "reward",
                 "rejectionReasons",
-                "rewards");
+                "rewards",
+                "trxChargeDate");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
         transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
@@ -158,7 +185,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "elaborationDateTime",
                 "reward",
                 "rejectionReasons",
-                "rewards");
+                "rewards",
+                "trxChargeDate");
 
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionInProgress);
@@ -185,14 +213,15 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "elaborationDateTime",
                 "reward",
                 "rejectionReasons",
-                "rewards");
+                "rewards",
+                "trxChargeDate");
 
         transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"), Map.of("ID", new Reward()));
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(
-                resultSecondSave, "authDate", "elaborationDateTime");
+                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -214,14 +243,15 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "elaborationDateTime",
                 "reward",
                 "rejectionReasons",
-                "rewards");
+                "rewards",
+                "trxChargeDate");
 
         transactionInProgressRepository.updateTrxRejected(
                 "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"));
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
-        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards");
+        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate");
         Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -252,6 +282,27 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         } catch (ClientExceptionNoBody e) {
             Assertions.assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
         }
+    }
+
+    @Test
+    void testFindByIdThrottled_Concurrent() {
+        int N = 10;
+        TransactionInProgress stored =
+                transactionInProgressRepository.save(
+                        TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED));
+
+        Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> mongoCommandsByType = executeConcurrentLocks(N,
+                () -> {
+                    try {
+                        transactionInProgressRepository.findByIdThrottled(stored.getId());
+                        return true;
+                    } catch (ClientExceptionNoBody e) {
+                        assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+                        return false;
+                    }
+                }
+        );
+        Assertions.assertEquals(N-1, mongoCommandsByType.get("aggregate").get(0).getValue());
     }
 
     @Test
@@ -322,6 +373,16 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     }
 
     @Test
+    void testFindAuthorizationExpiredTransaction_concurrent() {
+        TransactionInProgress transactionExpired =
+                TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+        transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
+        transactionInProgressRepository.save(transactionExpired);
+
+        executeConcurrentLocks(10, () -> transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES) != null);
+    }
+
+    @Test
     void findCancelExpiredTransaction() {
         LocalDateTime now = LocalDateTime.now();
         // Not expired transaction
@@ -350,10 +411,59 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     }
 
+    @Test
+    void testFindCancelExpiredTransaction_concurrent() {
+        TransactionInProgress transactionExpired =
+                TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
+        transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
+        transactionInProgressRepository.save(transactionExpired);
+
+        executeConcurrentLocks(10, () -> transactionInProgressRepository.findCancelExpiredTransaction(null, EXPIRATION_MINUTES) != null);
+    }
+
     private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
         long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
-        Assertions.assertTrue(minutes <= 1);
+        assertTrue(minutes <= 1);
         trx.setElaborationDateTime(null);
     }
+
+    private Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> executeConcurrentLocks(int attempts, Supplier<Boolean> lockAcquirer){
+        AtomicInteger dropped = new AtomicInteger(0);
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        try {
+            MongoTestUtilitiesService.startMongoCommandListener("lockingQuery_Concurrent");
+            List<Future<Integer>> tasks =
+                    IntStream.range(0, attempts)
+                            .mapToObj(i -> executorService.submit(() -> {
+                                if (lockAcquirer.get()) {
+                                    return 1;
+                                } else {
+                                    dropped.incrementAndGet();
+                                    return 0;
+                                }
+                            }))
+                            .toList();
+            int successfulLocks = tasks.stream().mapToInt(f -> {
+                try {
+                    return f.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    throw new IllegalStateException(e);
+                }
+            }).sum();
+            List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>> commands = MongoTestUtilitiesService.stopAndGetMongoCommands();
+            MongoTestUtilitiesService.printMongoCommands(commands);
+
+            Assertions.assertEquals(1, successfulLocks);
+            Assertions.assertEquals(attempts - 1, dropped.get());
+
+            Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> groupByCommand = commands.stream().collect(Collectors.groupingBy(c -> c.getKey().getType()));
+            Assertions.assertEquals(attempts, groupByCommand.get("findAndModify").get(0).getValue());
+
+            return groupByCommand;
+        } finally {
+            executorService.shutdown();
+        }
+    }
+
 
 }
