@@ -54,7 +54,6 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Send notification to Slack
         id: slack
-        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
         uses: slackapi/slack-github-action@v1.23.0
         with:
           payload: |
@@ -65,7 +64,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed!"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result DEMO IDP-1583"
                   }
                 },
                 {
