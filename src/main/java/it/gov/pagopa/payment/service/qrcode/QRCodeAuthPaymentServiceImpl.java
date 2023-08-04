@@ -4,6 +4,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -29,19 +30,22 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
   private final TransactionNotifierService notifierService;
   private final PaymentErrorNotifierService paymentErrorNotifierService;
   private final AuditUtilities auditUtilities;
+  private final WalletConnector walletConnector;
 
   public QRCodeAuthPaymentServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
           QRCodeAuthorizationExpiredService authorizationExpiredService,
           RewardCalculatorConnector rewardCalculatorConnector,
           TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
-          AuditUtilities auditUtilities) {
+          AuditUtilities auditUtilities,
+          WalletConnector walletConnector) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.authorizationExpiredService = authorizationExpiredService;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.notifierService = notifierService;
     this.paymentErrorNotifierService = paymentErrorNotifierService;
     this.auditUtilities = auditUtilities;
+    this.walletConnector = walletConnector;
   }
 
   @Override
@@ -56,12 +60,9 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
                 "Cannot find transaction with trxCode [%s]".formatted(trxCode));
       }
 
-      if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
-        throw new ClientExceptionWithBody(
-                HttpStatus.FORBIDDEN,
-                PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
-                "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
-      }
+      String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
+
+      checkAuth(trxCode, userId, trx, walletStatus);
       AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
 
       auditUtilities.logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
@@ -146,4 +147,21 @@ public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
       }
     }
   }
+
+  private void checkAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus){
+    if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
+              "User %s has been suspended for initiative %s".formatted(userId, trx.getInitiativeId()));
+    }
+
+    if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
+              "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+    }
+  }
+
 }
