@@ -76,6 +76,9 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.CVE_SCAN_SLACK_WEBHOOK }}
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
       - name: Send file to Slack
         id: slack-file
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
