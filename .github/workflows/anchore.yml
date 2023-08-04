@@ -54,8 +54,6 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: CVE Description escaped extraction
         run: echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
-      - name: DEBUG
-        run: echo "${{ env.SCAN_RESULTS }}"
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
