@@ -52,8 +52,8 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
-      - name: CVE Description extraction
-        run: echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules[].shortDescription.text | join("\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
+      - name: CVE Description escaped extraction
+        run: echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
       - name: DEBUG
         run: echo "${{ env.SCAN_RESULTS }}"
       - name: Send notification to Slack
