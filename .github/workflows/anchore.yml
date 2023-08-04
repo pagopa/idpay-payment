@@ -65,7 +65,7 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.workspace }} - Notification Scan Result"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed!"
                   }
                 },
                 {
