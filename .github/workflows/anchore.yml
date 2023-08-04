@@ -52,11 +52,6 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
-
-      - name: test slack notification
-        if: always()
-        run: echo "$(${{ steps.scan.outputs.sarif }})"
-
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
@@ -82,6 +77,12 @@ jobs:
                 }
               ]
             }
+      - name: Send file to Slack
+        id: slack
+        if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload-file-path: ${{ steps.scan.outputs.sarif }}
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CVE_SCAN_SLACK_WEBHOOK }}
           SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
