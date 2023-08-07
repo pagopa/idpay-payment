@@ -46,10 +46,9 @@ spring:
             spring.cloud.stream:
               kafka:
                 binder:
-                  brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_01:${KAFKA_BROKER:}}
+                  brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_01:}
                   configuration:
-                    sasl:
-                      jaas.config: ${KAFKA_COMMANDS_IN_SASL_JAAS_CONFIG:}
+                    sasl.jaas.config: ${KAFKA_COMMANDS_IN_SASL_JAAS_CONFIG:}
       bindings:
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
