@@ -52,22 +52,20 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
-      - name: CVE Description escaped extraction
+      - name: CVE Description escaped extraction and print
         run: |
           SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
           echo "SCAN_RESULTS=$SCAN_RESULTS" >> $GITHUB_ENV
           echo "CVE_CRITICAL=$(echo $SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
           echo "CVE_HIGH=$(echo $SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
           echo "CVE_MEDIUM=$(echo $SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+          
+          echo -e $SCAN_RESULTS
 
-      - name: Dump GitHub context
+      - name: Dump context
         env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
-      - name: Dump job context
-        env:
-          JOB_CONTEXT: ${{ toJson(job) }}
-        run: echo "$JOB_CONTEXT"
+          CONTEXT: ${{ toJson(steps) }}
+        run: echo "$CONTEXT"
       - name: DEBUG
         run: |
           echo "${{ env.SCAN_RESULTS }}"
@@ -75,6 +73,7 @@ jobs:
           echo "${{ env.CVE_HIGH }}"
           echo "${{ env.CVE_MEDIUM }}"
           echo "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}!"
+          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
       - name: Send notification to Slack
         id: slack
@@ -95,7 +94,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n```\n${{ env.SCAN_RESULTS }}\n```"
+                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n[See execution details](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
                   }
                 }
               ]
