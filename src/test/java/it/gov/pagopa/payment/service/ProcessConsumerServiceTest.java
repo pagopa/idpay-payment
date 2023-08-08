@@ -12,8 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,7 +29,6 @@ class ProcessConsumerServiceTest {
     }
 
     @ParameterizedTest
-    @MockitoSettings(strictness = Strictness.LENIENT)
     @MethodSource("operationTypeAndInvocationTimes")
     void processConsumer_deleteTransactions(String operationType, int times) {
         QueueCommandOperationDTO queueCommandOperationDTO = QueueCommandOperationDTO.builder()
@@ -42,8 +39,10 @@ class ProcessConsumerServiceTest {
         TransactionInProgress transaction = new TransactionInProgress();
         transaction.setInitiativeId("INITIATIVE_ID");
 
-        Mockito.when(transactionInProgressRepository.deleteByInitiativeId(queueCommandOperationDTO.getEntityId()))
-                .thenReturn(Optional.of(List.of(transaction)));
+        if(operationType.equals("DELETE_INITIATIVE")){
+            Mockito.when(transactionInProgressRepository.deleteByInitiativeId(queueCommandOperationDTO.getEntityId()))
+                    .thenReturn(Optional.of(List.of(transaction)));
+        }
 
         processConsumerService.processCommand(queueCommandOperationDTO);
 
