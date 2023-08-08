@@ -52,12 +52,15 @@ jobs:
       - name: Inspect action SARIF report
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
-      - name: CVE Description escaped extraction
+      - name: CVE Description escaped extraction and print
         run: |
-          echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
-          echo "CVE_MEDIUM=$(echo SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
-          echo "CVE_HIGH=$(echo SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
-          echo "CVE_CRITICAL=$(echo SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
+          SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
+          echo "SCAN_RESULTS=$SCAN_RESULTS" >> $GITHUB_ENV
+          echo "CVE_CRITICAL=$(echo $SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
+          echo "CVE_HIGH=$(echo $SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
+          echo "CVE_MEDIUM=$(echo $SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+          
+          echo -e $SCAN_RESULTS
       - name: Send notification to Slack
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
@@ -69,14 +72,14 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on branch ${{ github.ref_name }}! DEMO IDP-1583 DESCRIPTIONS"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}! DEMO IDP-1583 DESCRIPTIONS"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\nCRITICAL:${{ env.CVE_CRITICAL }}\nHIGH:${{ env.CVE_HIGH }}\nMEDIUM:${{ env.CVE_MEDIUM }}\n\n```\n${{ env.SCAN_RESULTS }}\n```"
+                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n[See execution details on GitHub](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
                   }
                 }
               ]
