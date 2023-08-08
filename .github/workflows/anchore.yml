@@ -53,29 +53,30 @@ jobs:
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: CVE Description escaped extraction
-        run: echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
-      - name: DEBUG
-        run: echo "${{ env.SCAN_RESULTS }}"
+        run: |
+          echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
+          echo "CVE_MEDIUM=$(echo SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+          echo "CVE_HIGH=$(echo SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
+          echo "CVE_CRITICAL=$(echo SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
       - name: Send notification to Slack
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ steps.scan.outcome }}",
               "blocks": [
                 {
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} - Notification Scan Result DEMO IDP-1583 DESCRIPTIONS"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on branch ${{ github.ref_name }}! DEMO IDP-1583 DESCRIPTIONS"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\n${{ env.SCAN_RESULTS }}"
+                    "text": "GitHub Action scan results:\nCRITICAL:${{ env.CVE_CRITICAL }}\nHIGH:${{ env.CVE_HIGH }}\nMEDIUM:${{ env.CVE_MEDIUM }}\n\n```\n${{ env.SCAN_RESULTS }}\n```"
                   }
                 }
               ]
