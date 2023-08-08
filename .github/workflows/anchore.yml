@@ -53,7 +53,11 @@ jobs:
         if: always()
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: CVE Description escaped extraction
-        run: echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
+        run: |
+          echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
+          echo "CVE_MEDIUM=$(echo SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+          echo "CVE_HIGH=$(echo SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
+          echo "CVE_CRITICAL=$(echo SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
@@ -61,20 +65,19 @@ jobs:
         with:
           payload: |
             {
-              "text": "GitHub Action scan result: ${{ steps.scan.outcome }}",
               "blocks": [
                 {
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed!"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on branch ${{ github.ref_name }}!"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\n${{ env.SCAN_RESULTS }}"
+                    "text": "GitHub Action scan results:\nCRITICAL:${{ env.CVE_CRITICAL }}\nHIGH:${{ env.CVE_HIGH }}\nMEDIUM:${{ env.CVE_MEDIUM }}\n\n```\n${{ env.SCAN_RESULTS }}\n```"
                   }
                 }
               ]
