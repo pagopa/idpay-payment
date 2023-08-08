@@ -51,7 +51,7 @@ public class TransactionInProgress2TransactionOutcomeDTOMapper implements Functi
         .merchantId(trx.getMerchantId())
         .merchantFiscalCode(trx.getMerchantFiscalCode())
         .vat(trx.getVat())
-        .initiativeId(trx.getInitiativeId())
+        .initiatives(List.of(trx.getInitiativeId()))
         .rewards(trx.getRewards())
         .rejectionReasons(rejectionReasons)
         .initiativeRejectionReasons(initiativeRejectionReasons)
