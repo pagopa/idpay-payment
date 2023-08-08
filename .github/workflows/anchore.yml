@@ -54,10 +54,28 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: CVE Description escaped extraction
         run: |
-          echo "SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})" >> $GITHUB_ENV
-          echo "CVE_MEDIUM=$(echo SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
-          echo "CVE_HIGH=$(echo SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
-          echo "CVE_CRITICAL=$(echo SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
+          SCAN_RESULTS=$(jq -r '.runs[0].tool.driver.rules | map(.shortDescription.text) | join("\\n")' ${{ steps.scan.outputs.sarif }})
+          echo "$SCAN_RESULTS" >> $GITHUB_ENV
+          echo "CVE_CRITICAL=$(echo $SCAN_RESULTS | grep -o critical | wc -l)" >> $GITHUB_ENV
+          echo "CVE_HIGH=$(echo $SCAN_RESULTS | grep -o high | wc -l)" >> $GITHUB_ENV
+          echo "CVE_MEDIUM=$(echo $SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
+
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - name: Dump job context
+        env:
+          JOB_CONTEXT: ${{ toJson(job) }}
+        run: echo "$JOB_CONTEXT"
+      - name: DEBUG
+        run: |
+          echo "${{ env.SCAN_RESULTS }}"
+          echo "${{ env.CVE_CRITICAL }}"
+          echo "${{ env.CVE_HIGH }}"
+          echo "${{ env.CVE_MEDIUM }}"
+          echo "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}!"
+
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
@@ -70,14 +88,14 @@ jobs:
                   "type": "header",
                   "text": {
                     "type": "plain_text",
-                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on branch ${{ github.ref_name }}!"
+                    "text": "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}!"
                   }
                 },
                 {
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\nCRITICAL:${{ env.CVE_CRITICAL }}\nHIGH:${{ env.CVE_HIGH }}\nMEDIUM:${{ env.CVE_MEDIUM }}\n\n```\n${{ env.SCAN_RESULTS }}\n```"
+                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n```\n${{ env.SCAN_RESULTS }}\n```"
                   }
                 }
               ]
