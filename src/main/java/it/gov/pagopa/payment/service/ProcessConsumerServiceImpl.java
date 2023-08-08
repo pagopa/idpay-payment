@@ -27,8 +27,7 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
 
         if (("DELETE_INITIATIVE").equals(queueCommandOperationDTO.getOperationType())) {
             List<TransactionInProgress> deletedTrx = transactionInProgressRepository
-                    .deleteByInitiativeId(queueCommandOperationDTO.getEntityId())
-                    .orElse(Collections.emptyList());
+                    .deleteByInitiativeId(queueCommandOperationDTO.getEntityId());
             List<String> usersId = deletedTrx.stream().map(TransactionInProgress::getUserId).distinct().toList();
 
             log.info("[DELETE OPERATION] Deleted {} transactions in progress for initiative: {}", deletedTrx.size(),

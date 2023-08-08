@@ -9,5 +9,5 @@ import java.util.Optional;
 public interface TransactionInProgressRepository  extends MongoRepository<TransactionInProgress, String>, TransactionInProgressRepositoryExt {
     Optional<TransactionInProgress> findByIdAndMerchantIdAndAcquirerId(String id, String merchantId, String acquirerId);
     Optional<TransactionInProgress> findByTrxCode(String trxCode);
-    Optional<List<TransactionInProgress>> deleteByInitiativeId(String initiativeId);
+    List<TransactionInProgress> deleteByInitiativeId(String initiativeId);
 }

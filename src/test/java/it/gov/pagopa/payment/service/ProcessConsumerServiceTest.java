@@ -14,7 +14,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,7 +40,7 @@ class ProcessConsumerServiceTest {
 
         if(operationType.equals("DELETE_INITIATIVE")){
             Mockito.when(transactionInProgressRepository.deleteByInitiativeId(queueCommandOperationDTO.getEntityId()))
-                    .thenReturn(Optional.of(List.of(transaction)));
+                    .thenReturn(List.of(transaction));
         }
 
         processConsumerService.processCommand(queueCommandOperationDTO);
