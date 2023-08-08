@@ -61,20 +61,6 @@ jobs:
           echo "CVE_MEDIUM=$(echo $SCAN_RESULTS | grep -o medium | wc -l)" >> $GITHUB_ENV
           
           echo -e $SCAN_RESULTS
-
-      - name: Dump context
-        env:
-          CONTEXT: ${{ toJson(steps) }}
-        run: echo "$CONTEXT"
-      - name: DEBUG
-        run: |
-          echo "${{ env.SCAN_RESULTS }}"
-          echo "${{ env.CVE_CRITICAL }}"
-          echo "${{ env.CVE_HIGH }}"
-          echo "${{ env.CVE_MEDIUM }}"
-          echo "${{ github.event.repository.name }} - Notification Scan Result Failed on ${{ github.ref_type }} ${{ github.ref_name }}!"
-          echo "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
       - name: Send notification to Slack
         id: slack
         if: ${{ github.event_name == 'schedule' && steps.scan.outcome == 'failure'}}
@@ -94,7 +80,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n[See execution details](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n[See execution details on GitHub](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
                   }
                 }
               ]
