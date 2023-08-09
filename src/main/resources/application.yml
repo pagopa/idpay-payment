@@ -46,9 +46,9 @@ spring:
             spring.cloud.stream:
               kafka:
                 binder:
-                  brokers: ${KAFKA_BINDER_BROKER_ENDPOINT_LIST_01:}
+                  brokers: ${KAFKA_COMMANDS_BROKER:}
                   configuration:
-                    sasl.jaas.config: ${KAFKA_COMMANDS_IN_SASL_JAAS_CONFIG:}
+                    sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       bindings:
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
@@ -61,8 +61,8 @@ spring:
         consumerCommands-in-0:
           binder: kafka-commands
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
-          destination: ${KAFKA_TOPIC_COMMANDS:idpay-commands}
-          group: ${KAFKA_COMMANDS_GROUP_IN:idpay-commands-payment-consumer-group}
+          destination: ${KAFKA_COMMANDS_TOPIC:idpay-commands}
+          group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-payment-consumer-group}
       kafka:
         binder:
           auto-create-topics: false
