@@ -74,7 +74,7 @@ microservice-chart:
       KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
       KAFKA_COMMANDS_BROKER: kafka_broker
-      KAFKA_COMMANDS_TOPIC: idpay-commands
+      KAFKA_COMMANDS_TOPIC: idpay_commands_topic
 
   envSecret:
     MONGODB_URI: mongodb-connection-string
