@@ -137,7 +137,7 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
     Assertions.assertSame(expected.getMerchantId(), result.getMerchantId());
     Assertions.assertSame(expected.getMerchantFiscalCode(), result.getMerchantFiscalCode());
     Assertions.assertSame(expected.getVat(), result.getVat());
-    Assertions.assertTrue(result.getInitiatives().contains(expected.getInitiativeId()));
+    Assertions.assertEquals(List.of(expected.getInitiativeId()), result.getInitiatives());    Assertions.assertSame(expected.getUserId(), result.getUserId());
     Assertions.assertSame(expected.getUserId(), result.getUserId());
     Assertions.assertSame(expected.getStatus(), result.getStatus());
     Assertions.assertSame(expected.getChannel(), result.getChannel());
