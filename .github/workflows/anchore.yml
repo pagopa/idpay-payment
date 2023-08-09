@@ -79,7 +79,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n[See execution details on GitHub](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+                    "text": "GitHub Action scan results:\n`CRITICAL`:${{ env.CVE_CRITICAL }}\n`HIGH`:${{ env.CVE_HIGH }}\n`MEDIUM`:${{ env.CVE_MEDIUM }}\n\n<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|See execution details on GitHub>"
                   }
                 }
               ]
