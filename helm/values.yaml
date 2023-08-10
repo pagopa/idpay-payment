@@ -55,6 +55,7 @@ microservice-chart:
     APPLICATIONINSIGHTS_INSTRUMENTATION_MICROMETER_ENABLED: "false"
     APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
     ENABLE_AUDIT_APPENDER: "TRUE"
+    KAFKA_COMMANDS_GROUP_ID: "idpay-commands-payment-consumer-group"
 
   externalConfigMapValues:
     idpay-common:
@@ -72,13 +73,14 @@ microservice-chart:
       KAFKA_ERRORS_TOPIC: idpay_error_topic
       KAFKA_TRANSACTION_OUTCOME_BROKER: kafka_broker
       KAFKA_TOPIC_TRANSACTION: idpay_transaction_topic
-      KAFKA_BINDER_BROKER_ENDPOINT_LIST_01: kafka_broker
+      KAFKA_COMMANDS_BROKER: kafka_broker
+      KAFKA_COMMANDS_TOPIC: idpay_commands_topic
 
   envSecret:
     MONGODB_URI: mongodb-connection-string
     KAFKA_ERRORS_SASL_JAAS_CONFIG: evh-idpay-errors-idpay-errors-producer-jaas-config-idpay-01
     KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG: evh-idpay-transaction-idpay-transaction-producer-jaas-config-idpay-01
-    KAFKA_COMMANDS_IN_SASL_JAAS_CONFIG: evh-idpay-commands-idpay-commands-consumer-jaas-config-idpay-01
+    KAFKA_COMMANDS_SASL_JAAS_CONFIG: evh-idpay-commands-idpay-commands-consumer-jaas-config-idpay-01
     PDV_ENCRYPT_API_KEY: pdv-api-key
     PDV_DECRYPT_API_KEY: pdv-api-key
 
