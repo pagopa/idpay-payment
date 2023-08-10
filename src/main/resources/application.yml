@@ -36,7 +36,7 @@ spring:
             spring.cloud.stream:
               kafka:
                 binder:
-                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:}
+                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:${KAFKA_BROKER:}}
                   configuration:
                     sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
                     key.serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -46,7 +46,7 @@ spring:
             spring.cloud.stream:
               kafka:
                 binder:
-                  brokers: ${KAFKA_COMMANDS_BROKER:}
+                  brokers: ${KAFKA_COMMANDS_BROKER:${KAFKA_BROKER:}}
                   configuration:
                     sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       bindings:

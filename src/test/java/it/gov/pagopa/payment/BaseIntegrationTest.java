@@ -28,7 +28,8 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest
 @EmbeddedKafka(topics = {
         "${spring.cloud.stream.bindings.errors-out-0.destination}",
-        "${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}"
+        "${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}",
+        "${spring.cloud.stream.bindings.consumerCommands-in-0.destination}"
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
@@ -61,6 +62,7 @@ import java.util.concurrent.TimeUnit;
                 "spring.cloud.stream.kafka.binder.zkNodes=${spring.embedded.zookeeper.connect}",
                 "spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 "spring.cloud.stream.binders.kafka-errors.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
+                "spring.cloud.stream.binders.kafka-commands.environment.spring.cloud.stream.kafka.binder.brokers=${spring.embedded.kafka.brokers}",
                 //endregion
 
                 //region app
@@ -89,6 +91,8 @@ public abstract class BaseIntegrationTest {
     protected String topicErrors;
     @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}")
     protected String topicConfirmNotification;
+    @Value("${spring.cloud.stream.bindings.consumerCommands-in-0.destination}")
+    protected String topicCommands;
 
     @BeforeAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
