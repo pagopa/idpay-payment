@@ -2,6 +2,7 @@ package it.gov.pagopa.common.web.exception;
 
 import static org.mockito.Mockito.doThrow;
 
+import com.mongodb.MongoQueryException;
 import com.mongodb.MongoWriteException;
 import com.mongodb.ServerAddress;
 import com.mongodb.WriteError;
@@ -52,6 +53,32 @@ class MongoExceptionHandlerTest {
 
 
   @Test
+  void handleUncategorizedMongoDbException() throws Exception {
+
+    String mongoFullErrorResponse = """
+        {"ok": 0.0, "errmsg": "Error=16500, RetryAfterMs=34,\s
+        Details='Response status code does not indicate success: TooManyRequests (429) Substatus: 3200 ActivityId: 46ba3855-bc3b-4670-8609-17e1c2c87778 Reason:\s
+        (\\r\\nErrors : [\\r\\n \\"Request rate is large. More Request Units may be needed, so no changes were made. Please retry this request later. Learn more:
+         http://aka.ms/cosmosdb-error-429\\"\\r\\n]\\r\\n) ", "code": 16500, "codeName": "RequestRateTooLarge"}
+        """;
+
+    final MongoQueryException mongoQueryException = new MongoQueryException(
+        BsonDocument.parse(mongoFullErrorResponse), new ServerAddress());
+    doThrow(
+        new UncategorizedMongoDbException(mongoQueryException.getMessage(), mongoQueryException))
+        .when(testControllerSpy).testEndpoint();
+
+    mockMvc.perform(MockMvcRequestBuilders.get("/test")
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(MockMvcResultMatchers.status().isTooManyRequests())
+        .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("TOO_MANY_REQUESTS"))
+        .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("TOO_MANY_REQUESTS"))
+        .andExpect(MockMvcResultMatchers.header().exists(HttpHeaders.RETRY_AFTER))
+        .andExpect(MockMvcResultMatchers.header().string(HttpHeaders.RETRY_AFTER, "1"))
+        .andExpect(MockMvcResultMatchers.header().string("Retry-After-Ms", "34"));
+  }
+
+  @Test
   void handleTooManyWriteDbException() throws Exception {
 
     String writeErrorMessage = """
@@ -79,7 +106,7 @@ class MongoExceptionHandlerTest {
   }
 
   @Test
-  void handleTooManyWriteDbExceptionNotTooManyRequests() throws Exception {
+  void handleUncategorizedMongoDbExceptionNotRequestRateTooLarge() throws Exception {
 
     doThrow(new UncategorizedMongoDbException("DUMMY", new Exception()))
         .when(testControllerSpy).testEndpoint();
@@ -91,7 +118,7 @@ class MongoExceptionHandlerTest {
   }
 
   @Test
-  void handleTooManyWriteDbRetryExpiredException() throws Exception {
+  void handleMongoRequestRateTooLargeRetryExpiredException() throws Exception {
     doThrow(new MongoRequestRateTooLargeRetryExpiredException(3,3,0,100,34L,new Exception()))
         .when(testControllerSpy).testEndpoint();
 
