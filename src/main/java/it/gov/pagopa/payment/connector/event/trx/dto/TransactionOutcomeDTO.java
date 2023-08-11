@@ -16,4 +16,5 @@ import lombok.experimental.SuperBuilder;
 public class TransactionOutcomeDTO extends TransactionInProgress {
 
   private Map<String, List<String>> initiativeRejectionReasons;
+  private List<String> initiatives;
 }
