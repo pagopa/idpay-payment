@@ -183,4 +183,17 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logDeleteTransactions() {
+        auditUtilities.logDeleteTransactions(USER_ID, INITIATIVE_ID);
+
+
+        assertEquals(
+                CEF + " msg=Delete transactions in progress"
+                        + " suser=%s cs1Label=initiativeId cs1=%s"
+                        .formatted(USER_ID, INITIATIVE_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
 }
