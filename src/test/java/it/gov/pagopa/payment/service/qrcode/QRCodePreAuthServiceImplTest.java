@@ -260,15 +260,19 @@ class QRCodePreAuthServiceImplTest {
             .thenReturn(walletDTO);
 
     // When
-    ClientExceptionWithBody exception = Assertions.assertThrows(ClientExceptionWithBody.class, () -> qrCodePreAuthService.relateUser(trx.getTrxCode(), USER_ID1));
+    try{
+      qrCodePreAuthService.relateUser(trx.getTrxCode(), USER_ID1);
+      Assertions.fail("Expected exception");
+    } catch (ClientExceptionWithBody exception){
+      assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
+      assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, exception.getCode());
+      assertEquals(String.format("User %s has been suspended for initiative %s",USER_ID1, trx.getInitiativeId()), exception.getMessage());
+    }
 
     // Then
-    assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
-    assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, exception.getCode());
-    assertEquals(String.format("User %s has been suspended for initiative %s",USER_ID1, trx.getInitiativeId()), exception.getMessage());
-
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
+
   }
 
   @Test
@@ -283,15 +287,19 @@ class QRCodePreAuthServiceImplTest {
             .thenReturn(walletDTO);
 
     // When
-    ClientExceptionWithBody exception = Assertions.assertThrows(ClientExceptionWithBody.class, () -> qrCodePreAuthService.relateUser(trx.getTrxCode(), USER_ID1));
+    try{
+      qrCodePreAuthService.relateUser(trx.getTrxCode(), USER_ID1);
+      Assertions.fail("Expected exception");
+    } catch (ClientExceptionWithBody exception){
+      assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
+      assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, exception.getCode());
+      assertEquals(String.format("Transaction with trxCode [%s] is already authorized", trx.getTrxCode()), exception.getMessage());
+    }
 
     // Then
-    assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
-    assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, exception.getCode());
-    assertEquals(String.format("Transaction with trxCode [%s] is already authorized", trx.getTrxCode()), exception.getMessage());
-
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
+
   }
 
   @Test
@@ -306,13 +314,16 @@ class QRCodePreAuthServiceImplTest {
             .thenReturn(walletDTO);
 
     // When
-    ClientExceptionWithBody exception = Assertions.assertThrows(ClientExceptionWithBody.class, () -> qrCodePreAuthService.relateUser(trx.getTrxCode(), USER_ID1));
+    try{
+      qrCodePreAuthService.relateUser(trx.getTrxCode(), USER_ID1);
+      Assertions.fail("Expected exception");
+    } catch (ClientExceptionWithBody exception){
+      assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
+      assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
+      assertEquals(String.format("Cannot relate transaction [%s] in status %s", trx.getTrxCode(), trx.getStatus()), exception.getMessage());
+    }
 
     // Then
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getHttpStatus());
-    assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
-    assertEquals(String.format("Cannot relate transaction [%s] in status %s", trx.getTrxCode(), trx.getStatus()), exception.getMessage());
-
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
