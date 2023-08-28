@@ -318,7 +318,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         // useCase 1: userId not onboarded
         useCases.add(i -> {
-            String userIdNotOnboarded = "DUMMYUSERID";
+            String userIdNotOnboarded = "DUMMYUSERIDNOTONBOARDED";
 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
@@ -327,11 +327,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionResponse trxCreated = createTrxSuccess(trxRequest);
 
             // Cannot relate user because not onboarded
-            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
-            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.NOT_FOUND, null);
 
             // Other APIs will fail because status not expected
-            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.NOT_FOUND, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 

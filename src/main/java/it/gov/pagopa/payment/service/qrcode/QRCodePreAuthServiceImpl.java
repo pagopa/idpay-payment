@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.qrcode;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -24,16 +25,19 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   private final AuditUtilities auditUtilities;
+  private final WalletConnector walletConnector;
 
   public QRCodePreAuthServiceImpl(
           @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
-          AuditUtilities auditUtilities) {
+          AuditUtilities auditUtilities,
+          WalletConnector walletConnector) {
     this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.auditUtilities = auditUtilities;
+    this.walletConnector = walletConnector;
   }
 
   @Override
@@ -41,7 +45,16 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
     try {
       TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase()).orElse(null);
 
-      checkPreAuth(trxCode, userId, trx);
+      if (trx == null) {
+        throw new ClientExceptionWithBody(
+                HttpStatus.NOT_FOUND,
+                PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+      }
+
+      String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
+
+      checkPreAuth(trxCode, userId, trx, walletStatus);
 
       trx.setUserId(userId);
       trx.setTrxChargeDate(OffsetDateTime.now());
@@ -88,8 +101,15 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
     }
   }
 
-  private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx) {
-    if (trx == null || trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
+  private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus) {
+    if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
+              "User %s has been suspended for initiative %s".formatted(userId, trx.getInitiativeId()));
+    }
+
+    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
       throw new ClientExceptionWithBody(
               HttpStatus.NOT_FOUND,
               PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
