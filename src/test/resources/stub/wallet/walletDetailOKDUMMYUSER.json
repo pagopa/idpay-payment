@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/idpay/wallet/INITIATIVEID/DUMMYUSERID"
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "familyId": "DUMMYFAMILYID",
+      "initiativeId": "INITIATIVEID",
+      "initiativeName": "INITIATIVENAME",
+      "status": "REFUNDABLE",
+      "iban": "DUMMYIBAN",
+      "businessName": "BUSINESSNAME"
+    }
+  }
+}
