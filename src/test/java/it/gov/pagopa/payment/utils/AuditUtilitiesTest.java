@@ -190,7 +190,7 @@ class AuditUtilitiesTest {
 
 
         assertEquals(
-                CEF + " msg=Delete transactions in progress"
+                CEF + " msg=Transactions in progress deleted"
                         + " suser=%s cs1Label=initiativeId cs1=%s"
                         .formatted(USER_ID, INITIATIVE_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()

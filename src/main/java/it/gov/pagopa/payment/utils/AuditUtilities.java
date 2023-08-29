@@ -135,7 +135,7 @@ public class AuditUtilities {
     // region transaction in progress delete
     public void logDeleteTransactions(String userId, String initiativeId){
         AuditLogger.logAuditString(CEF_PATTERN_USER_INITIATIVE,
-                "Delete transactions in progress", userId, initiativeId);
+                "Transactions in progress deleted", userId, initiativeId);
     }
     // endregion
 }
