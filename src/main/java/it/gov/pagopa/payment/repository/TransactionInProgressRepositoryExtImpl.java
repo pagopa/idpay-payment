@@ -1,16 +1,20 @@
 package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
+import java.time.OffsetDateTime;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -106,8 +110,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         return new Criteria()
                 .orOperator(
                         Criteria.where(Fields.trxChargeDate).is(null),
-                        Criteria.where(Fields.trxChargeDate)
-                                .lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds)));
+                        Criteria.expr(
+                                ComparisonOperators.Lt.valueOf(Fields.trxChargeDate)
+                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000*trxThrottlingSeconds))));
     }
 
     @Override
@@ -147,12 +152,13 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.rewards, trx.getRewards())
+                        .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
 
     @Override
-    public void updateTrxRejected(String id, List<String> rejectionReasons) {
+    public void updateTrxRejected(String id, List<String> rejectionReasons, OffsetDateTime trxChargeDate) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -160,6 +166,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, 0L)
                         .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.trxChargeDate, trxChargeDate)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
@@ -170,7 +177,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 Query.query(criteriaById(trxId)
                         .orOperator(
                                 Criteria.where(Fields.elaborationDateTime).is(null),
-                                Criteria.where(Fields.elaborationDateTime).lt(LocalDateTime.now().minusSeconds(trxThrottlingSeconds)))
+                                Criteria.expr(
+                                        ComparisonOperators.Lt.valueOf(Fields.elaborationDateTime)
+                                                .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * trxThrottlingSeconds))))
                 ),
                 new Update()
                         .currentDate(Fields.elaborationDateTime)
@@ -198,7 +207,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString())
                     .contains(status)) {
                 criteria.orOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
-                    Criteria.where(Fields.status).is(SyncTrxStatus.IDENTIFIED));
+                        Criteria.where(Fields.status).is(SyncTrxStatus.IDENTIFIED));
             } else {
                 criteria.and(TransactionInProgress.Fields.status).is(status);
             }
@@ -207,8 +216,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable){
-        return mongoTemplate.find(Query.query(criteria).with(CommonUtilities.getPageable(pageable)), TransactionInProgress.class);}
+    public List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable) {
+        return mongoTemplate.find(Query.query(criteria).with(CommonUtilities.getPageable(pageable)), TransactionInProgress.class);
+    }
 
     @Override
     public long getCount(Criteria criteria) {
@@ -232,11 +242,12 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 Criteria.where(Fields.status).in(statusList)
                         .orOperator(
                                 Criteria.where(Fields.elaborationDateTime).is(null),
-                                Criteria.where(Fields.elaborationDateTime).lt(now.minusSeconds(trxThrottlingSeconds))
-                        )
+                                Criteria.expr(
+                                        ComparisonOperators.Lt.valueOf(Fields.elaborationDateTime)
+                                                .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * trxThrottlingSeconds))))
         );
 
-        if(initiativeId!=null){
+        if (initiativeId != null) {
             criteria.and(Fields.initiativeId).is(initiativeId);
         }
 

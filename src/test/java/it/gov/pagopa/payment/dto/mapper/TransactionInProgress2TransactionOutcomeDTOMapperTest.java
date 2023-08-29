@@ -137,11 +137,12 @@ class TransactionInProgress2TransactionOutcomeDTOMapperTest {
     Assertions.assertSame(expected.getMerchantId(), result.getMerchantId());
     Assertions.assertSame(expected.getMerchantFiscalCode(), result.getMerchantFiscalCode());
     Assertions.assertSame(expected.getVat(), result.getVat());
-    Assertions.assertSame(expected.getInitiativeId(), result.getInitiativeId());
+    Assertions.assertEquals(List.of(expected.getInitiativeId()), result.getInitiatives());
+    Assertions.assertSame(expected.getUserId(), result.getUserId());
     Assertions.assertSame(expected.getUserId(), result.getUserId());
     Assertions.assertSame(expected.getStatus(), result.getStatus());
     Assertions.assertSame(expected.getChannel(), result.getChannel());
     Assertions.assertSame(expected.getRewards(), result.getRewards());
-    TestUtils.checkNotNullFields(result, TransactionInProgress.Fields.reward, TransactionInProgress.Fields.updateDate);
+    TestUtils.checkNotNullFields(result, TransactionInProgress.Fields.reward, TransactionInProgress.Fields.updateDate, "initiativeId");
   }
 }

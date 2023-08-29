@@ -1,3 +1,14 @@
+mongo:
+  request-rate-too-large:
+    api:
+      enabled: ${MONGO_REQUEST_RATE_TOO_LARGE_API_ENABLED:false}
+      max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_API_MAX_RETRY:0}
+      max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_API_MAX_MILLIS_ELAPSED:200}
+    batch:
+      enabled: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_ENABLED:true}
+      max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_RETRY:5}
+      max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_MILLIS_ELAPSED:0}
+
 spring:
   application:
     name: "@project.artifactId@"
@@ -8,7 +19,7 @@ spring:
       on-profile: default
   cloud:
     function:
-      definition: errors;transactionOutcome
+      definition: errors;transactionOutcome;consumerCommands
     stream:
       binders:
         kafka-errors:
@@ -25,10 +36,19 @@ spring:
             spring.cloud.stream:
               kafka:
                 binder:
-                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:}
+                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:${KAFKA_BROKER:}}
                   configuration:
                     sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
                     key.serializer: org.apache.kafka.common.serialization.StringSerializer
+        kafka-commands:
+          type: kafka
+          environment:
+            spring.cloud.stream:
+              kafka:
+                binder:
+                  brokers: ${KAFKA_COMMANDS_BROKER:${KAFKA_BROKER:}}
+                  configuration:
+                    sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       bindings:
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
@@ -38,6 +58,11 @@ spring:
           binder: transaction-outcome
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_TOPIC_TRANSACTION:idpay-transaction}
+        consumerCommands-in-0:
+          binder: kafka-commands
+          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          destination: ${KAFKA_COMMANDS_TOPIC:idpay-commands}
+          group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-payment-consumer-group}
       kafka:
         binder:
           auto-create-topics: false
@@ -66,6 +91,19 @@ spring:
                 retry.backoff.ms: ${KAFKA_TRANSACTION_OUTCOME_KAFKA_RETRY_MS:${KAFKA_RETRY_MS:10000}}
                 linger.ms: ${KAFKA_TRANSACTION_OUTCOME_LINGER_MS:${KAFKA_LINGER_MS:2}}
                 batch.size: ${KAFKA_TRANSACTION_OUTCOME_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
+          consumerCommands-in-0:
+            consumer:
+              autoCommitOffset: ${KAFKA_COMMANDS_AUTO_COMMIT:${KAFKA_CONSUMER_CONFIG_AUTO_COMMIT:true}}
+              configuration:
+                connections.max.idle.ms: ${KAFKA_COMMANDS_REQUEST_CONNECTIONS_MAX_IDLE_MS:${KAFKA_CONSUMER_CONFIG_CONNECTIONS_MAX_IDLE_MS:180000}}
+                max.poll:
+                  interval.ms: ${KAFKA_COMMANDS_INTERVAL_TIMEOUT_MS:${KAFKA_CONFIG_MAX_POLL_INTERVAL_TIMEOUT_MS:300000}}
+                  records: ${KAFKA_COMMANDS_MAX_POLL_SIZE:${KAFKA_CONSUMER_CONFIG_MAX_POLL_SIZE:500}}
+                socket.connection.setup.timeout:
+                  max.ms: ${KAFKA_COMMANDS_REQUEST_CONNECTION_TIMEOUT_MAX_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MAX_MS:200000}}
+                  ms: ${KAFKA_COMMANDS_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
+              standardHeaders: ${KAFKA_COMMANDS_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
+              startOffset: ${KAFKA_COMMANDS_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
   data:
     mongodb:
       database: ${MONGODB_DBNAME:idpay}
@@ -107,6 +145,8 @@ rest-client:
     baseUrl: ${IDPAY_REWARD_PAYMENT:http://idpay-reward-calculator}
   merchant:
     baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
+  wallet:
+    baseUrl: ${IDPAY_WALLET:http://idpay-wallet}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
@@ -135,8 +175,18 @@ app:
         txt: ${QR_CODE_TXT_URL:https://continua.io.pagopa.it/idpay/auth}
 
 management:
+  health:
+    probes.enabled: true
+    redis.enabled: ${REDIS_CACHE_ENABLED:false}
+    mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
   endpoint:
-    health.logging.slow-indicator-threshold: ${HEALTH_ACTUATOR_LOGGER_TIMEOUT_DURATION:PT1S}
+    health:
+      group:
+        readiness.include: "*"
+        liveness.include: livenessState,diskSpace,ping,binders,streams
+      logging.slow-indicator-threshold: ${HEALTH_ACTUATOR_LOGGER_TIMEOUT_DURATION:PT1S}
   endpoints:
+    jmx:
+      exposure.include: "*"
     web:
       exposure.include: info, health
