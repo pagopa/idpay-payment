@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.event.QueueCommandOperationDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -8,7 +7,6 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 @Service
 @Slf4j
@@ -21,19 +19,23 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
         this.auditUtilities = auditUtilities;
     }
 
-    @PerformanceLog("DELETE_TRANSACTIONS_IN_PROGRESS")
     @Override
     public void processCommand(QueueCommandOperationDTO queueCommandOperationDTO) {
 
         if (("DELETE_INITIATIVE").equals(queueCommandOperationDTO.getOperationType())) {
+            long startTime = System.currentTimeMillis();
+
             List<TransactionInProgress> deletedTrx = transactionInProgressRepository
                     .deleteByInitiativeId(queueCommandOperationDTO.getEntityId());
             List<String> usersId = deletedTrx.stream().map(TransactionInProgress::getUserId).distinct().toList();
 
-            log.info("[DELETE OPERATION] Deleted {} transactions in progress for initiative: {}", deletedTrx.size(),
+            log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transaction_in_progress",
                     queueCommandOperationDTO.getEntityId());
 
             usersId.forEach(userId -> auditUtilities.logDeleteTransactions(userId, queueCommandOperationDTO.getEntityId()));
+            log.info(
+                    "[PERFORMANCE_LOG] [DELETE_INITIATIVE] Time occurred to perform business logic: {} ms",
+                    System.currentTimeMillis() - startTime);
         }
     }
 }
