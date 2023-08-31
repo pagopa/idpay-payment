@@ -3,8 +3,8 @@
 		"_postman_id": "a07862df-14e5-4682-8db0-e252d6142b9a",
 		"name": "IDPay Payment - e2e",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "26036679",
-		"_collection_link": "https://idpay-test-funzionali.postman.co/workspace/IDPay-Test-Funzionali~d5f80577-ab5d-4d50-87c4-a81b6bcba6bc/collection/26036679-a07862df-14e5-4682-8db0-e252d6142b9a?action=share&creator=26036679&source=collection_link"
+		"_exporter_id": "25824330",
+		"_collection_link": "https://idpay-test-funzionali.postman.co/workspace/IDPay-Test-Funzionali~d5f80577-ab5d-4d50-87c4-a81b6bcba6bc/collection/26036679-a07862df-14e5-4682-8db0-e252d6142b9a?action=share&source=collection_link&creator=25824330"
 	},
 	"item": [
 		{
@@ -22,9 +22,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -68,14 +66,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -154,12 +146,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/info",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"info"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["info"]
 										},
 										"description": "Save initiative and first subset of data 'general info'"
 									},
@@ -246,13 +234,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/:initiativeId_exhausted/general",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												":initiativeId_exhausted",
-												"general"
-											],
+											"host": ["{{baseUrlInitiative}}"],
+											"path": [":initiativeId_exhausted", "general"],
 											"variable": [
 												{
 													"key": "initiativeId_exhausted",
@@ -294,7 +277,7 @@
 										"header": [],
 										"body": {
 											"mode": "raw",
-											"raw": "{\r\n    \"automatedCriteria\": [\r\n        {\r\n            \"authority\": \"INPS\",\r\n            \"code\": \"ISEE\",\r\n            \"operator\": \"GT\",\r\n            \"value\": \"1\",\r\n            \"value2\": \"\",\r\n            \"iseeTypes\": [\r\n                \"ORDINARIO\",\r\n                \"MINORENNE\",\r\n                \"UNIVERSITARIO\",\r\n                \"SOCIOSANITARIO\",\r\n                \"DOTTORATO\",\r\n                \"RESIDENZIALE\",\r\n                \"CORRENTE\"\r\n            ]\r\n        }\r\n    ],\r\n    \"selfDeclarationCriteria\": []\r\n}",
+											"raw": "{\r\n    \"automatedCriteria\": [\r\n        {\r\n            \"authority\": \"INPS\",\r\n            \"code\": \"ISEE\",\r\n            \"operator\": \"GT\",\r\n            \"value\": \"1\",\r\n            \"value2\": \"\",\r\n            \"iseeTypes\": [\r\n                \"ORDINARIO\",\r\n                \"MINORENNE\",\r\n                \"UNIVERSITARIO\",\r\n                \"SOCIOSANITARIO\",\r\n                \"DOTTORATO\",\r\n                \"RESIDENZIALE\"\r\n            ]\r\n        }\r\n    ],\r\n    \"selfDeclarationCriteria\": []\r\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -303,13 +286,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/{{initiativeId_exhausted}}/beneficiary",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"{{initiativeId_exhausted}}",
-												"beneficiary"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["{{initiativeId_exhausted}}", "beneficiary"]
 										}
 									},
 									"response": []
@@ -351,8 +329,8 @@
 													"\r",
 													"pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
 													"pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-													"pm.collectionVariables.set('trxThresholdFrom', 10);\r",
-													"pm.collectionVariables.set('trxThresholdTo', 50);\r",
+													"pm.collectionVariables.set('trxThresholdFrom', 50);\r",
+													"pm.collectionVariables.set('trxThresholdTo', 80);\r",
 													"pm.collectionVariables.set('trxCountFrom', 3);\r",
 													"pm.collectionVariables.set('trxCountTo', 11);\r",
 													"pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -386,7 +364,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n  }\n}",
+											"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"from\": {{trxThresholdFrom}},\n      \"fromIncluded\": true,\n      \"to\": {{trxThresholdTo}},\n      \"toIncluded\": true\n    }\n  }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -395,13 +373,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/:initiativeId_exhausted/reward",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												":initiativeId_exhausted",
-												"reward"
-											],
+											"host": ["{{baseUrlInitiative}}"],
+											"path": [":initiativeId_exhausted", "reward"],
 											"variable": [
 												{
 													"key": "initiativeId_exhausted",
@@ -522,13 +495,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/:initiativeId_exhausted/refund",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												":initiativeId_exhausted",
-												"refund"
-											],
+											"host": ["{{baseUrlInitiative}}"],
+											"path": [":initiativeId_exhausted", "refund"],
 											"variable": [
 												{
 													"key": "initiativeId_exhausted",
@@ -550,9 +518,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -598,14 +564,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -658,13 +618,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrlInitiative}}/{{initiativeId_exhausted}}/approved",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"{{initiativeId_exhausted}}",
-												"approved"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["{{initiativeId_exhausted}}", "approved"]
 										}
 									},
 									"response": []
@@ -680,9 +635,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -728,14 +681,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -802,13 +749,8 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrlInitiative}}/{{initiativeId_exhausted}}/published",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"{{initiativeId_exhausted}}",
-												"published"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["{{initiativeId_exhausted}}", "published"]
 										}
 									},
 									"response": []
@@ -824,9 +766,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -870,14 +810,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -927,9 +861,7 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId_exhausted}}/upload",
-											"host": [
-												"{{baseUrlToken}}"
-											],
+											"host": ["{{baseUrlToken}}"],
 											"path": [
 												"merchant",
 												"initiative",
@@ -982,9 +914,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -1004,9 +934,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrlMerchant}}/initiative/{{initiativeId_exhausted}}/merchants",
-											"host": [
-												"{{baseUrlMerchant}}"
-											],
+											"host": ["{{baseUrlMerchant}}"],
 											"path": [
 												"initiative",
 												"{{initiativeId_exhausted}}",
@@ -1043,9 +971,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											""
-										],
+										"exec": [""],
 										"type": "text/javascript"
 									}
 								}
@@ -1069,14 +995,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -1137,14 +1057,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/onboarding/",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"onboarding",
-										""
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "onboarding", ""]
 								}
 							},
 							"response": []
@@ -1199,14 +1113,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/onboarding/initiative",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"onboarding",
-										"initiative"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "onboarding", "initiative"]
 								}
 							},
 							"response": []
@@ -1250,14 +1158,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/onboarding/consent",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"onboarding",
-										"consent"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "onboarding", "consent"]
 								}
 							},
 							"response": []
@@ -1273,9 +1175,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"//setTimeout(() => {}, 10000);"
-										],
+										"exec": ["//setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -1322,21 +1222,31 @@
 								},
 								"url": {
 									"raw": "{{baseUrlToken}}/merchant/token/test",
-									"host": [
-										"{{baseUrlToken}}"
-									],
-									"path": [
-										"merchant",
-										"token",
-										"test"
-									]
+									"host": ["{{baseUrlToken}}"],
+									"path": ["merchant", "token", "test"]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "[ACQUIRER] Create Transaction",
+							"name": "[MERCHANT-PORTAL] Create Transaction",
 							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"let moment = require('moment');\r",
+											"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+											"\r",
+											"pm.collectionVariables.set(\"trxDate\", today);\r",
+											"\r",
+											"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
+											"\r",
+											"setTimeout(() => {}, 120000);"
+										],
+										"type": "text/javascript"
+									}
+								},
 								{
 									"listen": "test",
 									"script": {
@@ -1355,22 +1265,6 @@
 											"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
 											"pm.collectionVariables.set(\"transactionId\", pm.response.json().id);\r",
 											""
-										],
-										"type": "text/javascript"
-									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											"let moment = require('moment');\r",
-											"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
-											"\r",
-											"pm.collectionVariables.set(\"trxDate\", today);\r",
-											"\r",
-											"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-											"\r",
-											"setTimeout(() => {}, 180000);"
 										],
 										"type": "text/javascript"
 									}
@@ -1408,7 +1302,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"651713d5-d567-4993-882a-7e4e3e9e8f4c\",\r\n    \"amountCents\": \"7000\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1417,15 +1311,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"merchant",
-										"portal",
-										"transactions"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "merchant", "portal", "transactions"]
 								}
 							},
 							"response": []
@@ -1436,9 +1323,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -1473,14 +1358,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -1494,6 +1373,13 @@
 						{
 							"name": "[IO] Pre-Authorize Transaction",
 							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": ["setTimeout(() => {}, 10000);"],
+										"type": "text/javascript"
+									}
+								},
 								{
 									"listen": "test",
 									"script": {
@@ -1509,15 +1395,6 @@
 											"    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
 											"    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
 											"});"
-										],
-										"type": "text/javascript"
-									}
-								},
-								{
-									"listen": "prerequest",
-									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
 										],
 										"type": "text/javascript"
 									}
@@ -1538,9 +1415,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -1564,9 +1439,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -1608,9 +1481,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -1645,9 +1516,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -1680,9 +1549,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal/transactions/:transactionId",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"merchant",
@@ -1722,9 +1589,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 13000);"
-										],
+										"exec": ["setTimeout(() => {}, 13000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -1751,9 +1616,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrlMerchant}}/portal/initiatives/{{initiativeId_exhausted}}/transactions",
-									"host": [
-										"{{baseUrlMerchant}}"
-									],
+									"host": ["{{baseUrlMerchant}}"],
 									"path": [
 										"portal",
 										"initiatives",
@@ -1775,9 +1638,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -1824,20 +1685,14 @@
 								},
 								"url": {
 									"raw": "{{baseUrlToken}}/merchant/token/test",
-									"host": [
-										"{{baseUrlToken}}"
-									],
-									"path": [
-										"merchant",
-										"token",
-										"test"
-									]
+									"host": ["{{baseUrlToken}}"],
+									"path": ["merchant", "token", "test"]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "[ACQUIRER] Create Transaction",
+							"name": "[MERCHANT-PORTAL] Create Transaction",
 							"event": [
 								{
 									"listen": "test",
@@ -1904,7 +1759,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"651713d5-d567-4993-882a-7e4e3e9e8f4c\",\r\n    \"amountCents\": \"7000\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -1913,15 +1768,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"merchant",
-										"portal",
-										"transactions"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "merchant", "portal", "transactions"]
 								}
 							},
 							"response": []
@@ -1946,9 +1794,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -1969,14 +1815,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -2025,9 +1865,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -2062,9 +1900,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -2084,15 +1920,8 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"payment",
-										"qr-code",
-										":trxCode"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "payment", "qr-code", ":trxCode"],
 									"variable": [
 										{
 											"key": "trxCode",
@@ -2127,9 +1956,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -2156,9 +1983,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrlMerchant}}/portal/initiatives/{{initiativeId_exhausted}}/transactions",
-									"host": [
-										"{{baseUrlMerchant}}"
-									],
+									"host": ["{{baseUrlMerchant}}"],
 									"path": [
 										"portal",
 										"initiatives",
@@ -2180,9 +2005,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"//setTimeout(() => {}, 10000);"
-										],
+										"exec": ["//setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -2229,20 +2052,14 @@
 								},
 								"url": {
 									"raw": "{{baseUrlToken}}/merchant/token/test",
-									"host": [
-										"{{baseUrlToken}}"
-									],
-									"path": [
-										"merchant",
-										"token",
-										"test"
-									]
+									"host": ["{{baseUrlToken}}"],
+									"path": ["merchant", "token", "test"]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "[ACQUIRER] Create Transaction",
+							"name": "[MERCHANT-PORTAL] Create Transaction",
 							"event": [
 								{
 									"listen": "test",
@@ -2309,7 +2126,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"651713d5-d567-4993-882a-7e4e3e9e8f4c\",\r\n    \"amountCents\": \"7000\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2318,15 +2135,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"merchant",
-										"portal",
-										"transactions"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "merchant", "portal", "transactions"]
 								}
 							},
 							"response": []
@@ -2337,9 +2147,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -2374,14 +2182,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -2430,9 +2232,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -2478,9 +2278,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -2500,9 +2298,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -2548,9 +2344,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -2577,9 +2371,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrlMerchant}}/portal/initiatives/{{initiativeId_exhausted}}/transactions",
-									"host": [
-										"{{baseUrlMerchant}}"
-									],
+									"host": ["{{baseUrlMerchant}}"],
 									"path": [
 										"portal",
 										"initiatives",
@@ -2637,9 +2429,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"merchant",
@@ -2670,9 +2460,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -2719,20 +2507,14 @@
 								},
 								"url": {
 									"raw": "{{baseUrlToken}}/merchant/token/test",
-									"host": [
-										"{{baseUrlToken}}"
-									],
-									"path": [
-										"merchant",
-										"token",
-										"test"
-									]
+									"host": ["{{baseUrlToken}}"],
+									"path": ["merchant", "token", "test"]
 								}
 							},
 							"response": []
 						},
 						{
-							"name": "[ACQUIRER] Create Transaction",
+							"name": "[MERCHANT-PORTAL] Create Transaction",
 							"event": [
 								{
 									"listen": "test",
@@ -2796,7 +2578,7 @@
 								],
 								"body": {
 									"mode": "raw",
-									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+									"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_exhausted}}\",\r\n    \"idTrxAcquirer\": \"651713d5-d567-4993-882a-7e4e3e9e8f4c\",\r\n    \"amountCents\": \"7000\"\r\n}",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -2805,15 +2587,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"merchant",
-										"portal",
-										"transactions"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "merchant", "portal", "transactions"]
 								}
 							},
 							"response": []
@@ -2838,9 +2613,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -2861,14 +2634,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -2917,9 +2684,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -2965,9 +2730,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 7000);"
-										],
+										"exec": ["setTimeout(() => {}, 7000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -2987,9 +2750,7 @@
 								"header": [],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -3032,9 +2793,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -3061,9 +2820,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrlMerchant}}/portal/initiatives/{{initiativeId_exhausted}}/transactions",
-									"host": [
-										"{{baseUrlMerchant}}"
-									],
+									"host": ["{{baseUrlMerchant}}"],
 									"path": [
 										"portal",
 										"initiatives",
@@ -3115,9 +2872,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"merchant",
@@ -3156,9 +2911,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -3202,14 +2955,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -3288,12 +3035,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/info",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"info"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["info"]
 										},
 										"description": "Save initiative and first subset of data 'general info'"
 									},
@@ -3380,13 +3123,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/:initiativeId/general",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												":initiativeId",
-												"general"
-											],
+											"host": ["{{baseUrlInitiative}}"],
+											"path": [":initiativeId", "general"],
 											"variable": [
 												{
 													"key": "initiativeId",
@@ -3438,13 +3176,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/{{initiativeId}}/beneficiary",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"{{initiativeId}}",
-												"beneficiary"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["{{initiativeId}}", "beneficiary"]
 										}
 									},
 									"response": []
@@ -3467,7 +3200,6 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(()=> {}, 10000)\r",
 													"const d = new Date();\r",
 													"dateString = d.toISOString()\r",
 													"let endTime = dateString.split('T');\r",
@@ -3481,13 +3213,13 @@
 													"if (selectedRewardValueType == \"PERCENTAGE\") {\r",
 													"    pm.collectionVariables.set('rewardRuleValue', 100);\r",
 													"} else {\r",
-													"    pm.collectionVariables.set('rewardRuleValue', 50);\r",
+													"    pm.collectionVariables.set('rewardRuleValue',10);\r",
 													"}\r",
 													"\r",
 													"pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
 													"pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-													"pm.collectionVariables.set('trxThresholdFrom', 10);\r",
-													"pm.collectionVariables.set('trxThresholdTo', 50);\r",
+													"pm.collectionVariables.set('trxThresholdFrom', 50);\r",
+													"pm.collectionVariables.set('trxThresholdTo', 80);\r",
 													"pm.collectionVariables.set('trxCountFrom', 3);\r",
 													"pm.collectionVariables.set('trxCountTo', 11);\r",
 													"pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -3521,7 +3253,7 @@
 										],
 										"body": {
 											"mode": "raw",
-											"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n  }\n}",
+											"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"from\": {{trxThresholdFrom}},\n      \"fromIncluded\": true,\n      \"to\": {{trxThresholdTo}},\n      \"toIncluded\": true\n    }\n  }\n}",
 											"options": {
 												"raw": {
 													"language": "json"
@@ -3530,13 +3262,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/:initiativeId/reward",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												":initiativeId",
-												"reward"
-											],
+											"host": ["{{baseUrlInitiative}}"],
+											"path": [":initiativeId", "reward"],
 											"variable": [
 												{
 													"key": "initiativeId",
@@ -3658,13 +3385,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlInitiative}}/:initiativeId/refund",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												":initiativeId",
-												"refund"
-											],
+											"host": ["{{baseUrlInitiative}}"],
+											"path": [":initiativeId", "refund"],
 											"variable": [
 												{
 													"key": "initiativeId",
@@ -3687,9 +3409,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -3735,14 +3455,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -3795,13 +3509,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrlInitiative}}/{{initiativeId}}/approved",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"{{initiativeId}}",
-												"approved"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["{{initiativeId}}", "approved"]
 										}
 									},
 									"response": []
@@ -3817,9 +3526,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -3865,14 +3572,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -3939,13 +3640,8 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrlInitiative}}/{{initiativeId}}/published",
-											"host": [
-												"{{baseUrlInitiative}}"
-											],
-											"path": [
-												"{{initiativeId}}",
-												"published"
-											]
+											"host": ["{{baseUrlInitiative}}"],
+											"path": ["{{initiativeId}}", "published"]
 										}
 									},
 									"response": []
@@ -3961,9 +3657,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										},
@@ -4007,14 +3701,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/welfare/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"welfare",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["welfare", "token", "test"]
 										}
 									},
 									"response": []
@@ -4064,9 +3752,7 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
-											"host": [
-												"{{baseUrlToken}}"
-											],
+											"host": ["{{baseUrlToken}}"],
 											"path": [
 												"merchant",
 												"initiative",
@@ -4119,9 +3805,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -4141,14 +3825,8 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrlMerchant}}/initiative/{{initiativeId}}/merchants",
-											"host": [
-												"{{baseUrlMerchant}}"
-											],
-											"path": [
-												"initiative",
-												"{{initiativeId}}",
-												"merchants"
-											]
+											"host": ["{{baseUrlMerchant}}"],
+											"path": ["initiative", "{{initiativeId}}", "merchants"]
 										}
 									},
 									"response": []
@@ -4178,9 +3856,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										}
@@ -4204,14 +3880,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -4272,14 +3942,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/onboarding/",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"onboarding",
-												""
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "onboarding", ""]
 										}
 									},
 									"response": []
@@ -4334,14 +3998,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/onboarding/initiative",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"onboarding",
-												"initiative"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "onboarding", "initiative"]
 										}
 									},
 									"response": []
@@ -4385,14 +4043,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/onboarding/consent",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"onboarding",
-												"consent"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "onboarding", "consent"]
 										}
 									},
 									"response": []
@@ -4410,9 +4062,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								},
@@ -4459,14 +4109,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrlToken}}/merchant/token/test",
-									"host": [
-										"{{baseUrlToken}}"
-									],
-									"path": [
-										"merchant",
-										"token",
-										"test"
-									]
+									"host": ["{{baseUrlToken}}"],
+									"path": ["merchant", "token", "test"]
 								}
 							},
 							"response": []
@@ -4491,9 +4135,7 @@
 								{
 									"listen": "prerequest",
 									"script": {
-										"exec": [
-											"setTimeout(() => {}, 10000);"
-										],
+										"exec": ["setTimeout(() => {}, 10000);"],
 										"type": "text/javascript"
 									}
 								}
@@ -4514,14 +4156,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -4606,15 +4242,8 @@
 								},
 								"url": {
 									"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"idpay",
-										"merchant",
-										"portal",
-										"transactions"
-									]
+									"host": ["{{baseUrl}}"],
+									"path": ["idpay", "merchant", "portal", "transactions"]
 								}
 							},
 							"response": []
@@ -4653,14 +4282,8 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
-									"host": [
-										"{{baseUrl}}"
-									],
-									"path": [
-										"rtd",
-										"mock-io",
-										"login"
-									],
+									"host": ["{{baseUrl}}"],
+									"path": ["rtd", "mock-io", "login"],
 									"query": [
 										{
 											"key": "fiscalCode",
@@ -4715,9 +4338,7 @@
 								],
 								"url": {
 									"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-									"host": [
-										"{{baseUrl}}"
-									],
+									"host": ["{{baseUrl}}"],
 									"path": [
 										"idpay",
 										"payment",
@@ -4749,9 +4370,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -4798,14 +4417,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -4880,15 +4493,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -4904,9 +4510,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -4953,14 +4557,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -5035,15 +4633,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -5064,9 +4655,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -5113,14 +4702,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -5189,15 +4772,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -5232,9 +4808,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -5263,9 +4837,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -5312,14 +4884,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -5390,15 +4956,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -5437,14 +4996,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -5485,9 +5038,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -5539,14 +5090,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -5593,9 +5138,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -5652,14 +5195,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -5694,9 +5231,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													""
-												],
+												"exec": [""],
 												"type": "text/javascript"
 											}
 										}
@@ -5716,9 +5251,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -5780,14 +5313,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -5828,15 +5355,8 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"payment",
-												"qr-code",
-												":trxCode"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "payment", "qr-code", ":trxCode"],
 											"variable": [
 												{
 													"key": "trxCode",
@@ -5858,9 +5378,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -5907,14 +5425,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -5996,15 +5508,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -6029,9 +5534,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -6052,14 +5555,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -6100,15 +5597,8 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"payment",
-												"qr-code",
-												":trxCode"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "payment", "qr-code", ":trxCode"],
 											"variable": [
 												{
 													"key": "trxCode",
@@ -6130,9 +5620,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -6179,14 +5667,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -6268,15 +5750,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -6301,9 +5776,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -6324,14 +5797,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -6367,9 +5834,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 15000);"
-												],
+												"exec": ["setTimeout(() => {}, 15000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -6389,9 +5854,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -6429,9 +5892,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -6452,14 +5913,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -6500,15 +5955,8 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"payment",
-												"qr-code",
-												":trxCode"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "payment", "qr-code", ":trxCode"],
 											"variable": [
 												{
 													"key": "trxCode",
@@ -6535,9 +5983,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -6584,14 +6030,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -6663,15 +6103,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -6710,14 +6143,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -6763,9 +6190,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -6794,9 +6219,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -6843,14 +6266,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -6921,15 +6338,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -6968,14 +6378,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -7016,9 +6420,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -7070,14 +6472,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_2}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -7124,9 +6520,391 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-											"host": [
-												"{{baseUrl}}"
+											"host": ["{{baseUrl}}"],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
 											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								}
+							]
+						},
+						{
+							"name": "Already authorized  - 403",
+							"item": [
+								{
+									"name": "Generate Merchant Token",
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": ["setTimeout(() => {}, 10000);"],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"let textResponse = pm.response.text()\r",
+													"\r",
+													"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
+													"});\r",
+													"\r",
+													"//response time is less than 2s\r",
+													"tests[\"Response time is less than s\"] = responseTime < 2000;"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2ODcyNTY3OTQsImV4cCI6MTY4NzI4NTU5NCwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMmY5ZDk3MGQtMzFmYi00MzkzLTg3MjEtMmNhOTIxYmIyYmJjIiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX2RldkB0ZXN0LmVtYWlsLml0Iiwib3JnX2lkIjoiMmI0OGJmOTYtZmQ3NC00NzdlLWE3MGEtMjg2YjQxMGYwMjBhIiwib3JnX3ZhdCI6IjMzNDQ0NDMzNDg4Iiwib3JnX25hbWUiOiJFc2VyY2VudGUgZGkgdGVzdCBJZFBheSIsIm9yZ19wYXJ0eV9yb2xlIjoiTUFOQUdFUiIsIm9yZ19yb2xlIjoiYWRtaW4ifQ.s2Iv-nUBUtM6B9-1C_zw6JcwIUR2X0aXY1lVCntNsIbGwOPAz7f0dYfZuRB_4qyz6Zy4P7ImJKF5ANrDUZL0zrT0DizxM6mvWqpvS7K82gVOyB-h01My1V_YEs_eU_-iIIt2NqkpG-UjhRw7mRcz13IECAnuQrUjmyj1eKO81qvSUA1HqyBVS6Tq2pVIZfKFYFKVY-L3Ojx2z2au7xItDVjx5LFArlIK98TMSyZBLqGDaEo-5eGfwjdbHMCUG5Ude-FKieEyyPHDF9n5HQSlXEWTjoVYNikWcwCVtsYsDqIxMC08szgvnb7V6ELSutsVAl4HvEFTwqmAGhdmE4CPXw",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n  \"aud\": \"idpay.merchant.welfare.pagopa.it\",\r\n  \"iss\": \"https://api-io.dev.cstar.pagopa.it\",\r\n  \"uid\": \"{{uid_Merchant}}\",\r\n  \"name\": \"esercente\",\r\n  \"familyName\": \"test\",\r\n  \"email\": \"{{email_Merchant}}\",\r\n  \"acquirerId\": \"PAGOPA\",\r\n  \"merchantId\": \"3a602b17-ac1c-3029-9e78-0a4bbb8693d4\",\r\n  \"orgId\": \"{{orgId_Merchant}}\",\r\n  \"orgVAT\": \"33444433488\",\r\n  \"orgName\": \"Esercente di test IdPay\",\r\n  \"orgPartyRole\": \"MANAGER\",\r\n  \"orgRole\": \"admin\"\r\n}\r\n\r\n\r\n",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrlToken}}/merchant/token/test",
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[ACQUIRER] Create Transaction - Already authorized (201)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
+													"    pm.response.to.have.status(201);\r",
+													"});\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"let moment = require('moment');\r",
+													"let today = String(moment().add(3, 'days').format('YYYY-MM-DDTHH:mm:ss.SSSZ'));\r",
+													"\r",
+													"pm.collectionVariables.set(\"trxDate\", today);\r",
+													"\r",
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{merchantPortalToken}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											},
+											{
+												"key": "x-merchant-id",
+												"value": "{{merchantId}}",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Generate Token IO -Already authorized  (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{genericSubscriptionKey}}",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "{{Ocp-Apim-Trace}}",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction (200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ALREADY_AUTHORIZED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": ["{{baseUrl}}"],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction(200)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: [IO] Authorize transaction [QR-CODE]-[ALREADY_AUTHORIZED]\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": ["{{baseUrl}}"],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"authorize"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Pre-Authorize Transaction - Already authorized (403)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: QR code PreAuthorize transaction - [AUTH_TRX][ALREADY_AUTHORIZED][STEP_5] [IO] PreAuthorize transaction [QR-CODE] - Response status is 403\", function () {\r",
+													"    pm.response.to.have.status(403);\r",
+													"});\r",
+													"\r",
+													"pm.test(\"Payment - Unhappy case: QR code PreAuthorize transaction - [AUTH_TRX][[ALREADY_AUTHORIZED]][STEP_5] [IO] PreAuthorize transaction [QR-CODE] - Response contains info about a rejected transactions\", function () {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    pm.expect(responseJson.code).to.eql('PAYMENT_ALREADY_AUTHORIZED');\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
+											"host": ["{{baseUrl}}"],
+											"path": [
+												"idpay",
+												"payment",
+												"qr-code",
+												":trxCode",
+												"relate-user"
+											],
+											"variable": [
+												{
+													"key": "trxCode",
+													"value": "{{trxCode}}"
+												}
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "[IO] Authorize Transaction - Already authorized (403)",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ALREADY_AUTHORIZED][STEP_5] [IO] Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
+													"    pm.response.to.have.status(403);\r",
+													"});\r",
+													"\r",
+													"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][[ALREADY_AUTHORIZED]][STEP_5] [IO] Authorize transaction [QR-CODE] - Response contains info about a rejected transactions\", function () {\r",
+													"    const responseJson = pm.response.json();\r",
+													"    pm.expect(responseJson.code).to.eql('PAYMENT_ALREADY_AUTHORIZED');\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -7183,14 +6961,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -7237,9 +7009,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -7273,9 +7043,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -7322,14 +7090,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -7401,15 +7163,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -7448,14 +7203,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -7483,9 +7232,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 5000);"
-												],
+												"exec": ["setTimeout(() => {}, 5000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -7511,9 +7258,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -7544,9 +7289,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -7593,14 +7336,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -7672,15 +7409,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -7719,14 +7449,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -7767,9 +7491,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -7817,9 +7539,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -7843,9 +7563,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -7892,14 +7610,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -7940,9 +7652,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -7973,9 +7683,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -8022,14 +7730,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -8070,9 +7772,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -8103,9 +7803,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -8152,14 +7850,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -8231,15 +7923,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -8278,14 +7963,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -8326,9 +8005,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -8376,9 +8053,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/authorize",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -8432,9 +8107,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -8490,9 +8163,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal//transactions/:transactionId/confirm",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -8528,9 +8199,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -8577,14 +8246,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -8663,15 +8326,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -8710,14 +8366,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -8765,9 +8415,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -8809,9 +8457,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 5000);"
-												],
+												"exec": ["setTimeout(() => {}, 5000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -8838,9 +8484,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrlMerchant}}/portal/initiatives/{{initiativeId_exhausted}}/transactions",
-											"host": [
-												"{{baseUrlMerchant}}"
-											],
+											"host": ["{{baseUrlMerchant}}"],
 											"path": [
 												"portal",
 												"initiatives",
@@ -8867,9 +8511,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"//setTimeout(() => {}, 10000);"
-												],
+												"exec": ["//setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -8916,14 +8558,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -8971,9 +8607,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions/:transactionId",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -9002,9 +8636,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"//setTimeout(() => {}, 10000);"
-												],
+												"exec": ["//setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -9051,14 +8683,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -9140,15 +8766,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -9173,9 +8792,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										}
@@ -9196,14 +8813,8 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"rtd",
-												"mock-io",
-												"login"
-											],
+											"host": ["{{baseUrl}}"],
+											"path": ["rtd", "mock-io", "login"],
 											"query": [
 												{
 													"key": "fiscalCode",
@@ -9252,9 +8863,7 @@
 										"header": [],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/payment/qr-code/:trxCode/relate-user",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"payment",
@@ -9278,9 +8887,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"//setTimeout(() => {}, 10000);"
-												],
+												"exec": ["//setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -9327,14 +8934,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -9382,9 +8983,7 @@
 										],
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions/:transactionId",
-											"host": [
-												"{{baseUrl}}"
-											],
+											"host": ["{{baseUrl}}"],
 											"path": [
 												"idpay",
 												"merchant",
@@ -9398,6 +8997,34 @@
 													"value": "{{transactionId}}"
 												}
 											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Delete Initiative initiativeId",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Unhappy Case - Cancel transaction by merchant - Another merchant try to cancel transaction - Delete Initiative initativeId - Status test 204\", function () {\r",
+													"    pm.response.to.have.status(204);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"method": "DELETE",
+										"header": [],
+										"url": {
+											"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId}}",
+											"host": [
+												"{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative"
+											],
+											"path": ["idpay", "initiative", "{{initiativeId}}"]
 										}
 									},
 									"response": []
@@ -9421,9 +9048,7 @@
 												{
 													"listen": "prerequest",
 													"script": {
-														"exec": [
-															""
-														],
+														"exec": [""],
 														"type": "text/javascript"
 													}
 												},
@@ -9467,14 +9092,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlToken}}/welfare/token/test",
-													"host": [
-														"{{baseUrlToken}}"
-													],
-													"path": [
-														"welfare",
-														"token",
-														"test"
-													]
+													"host": ["{{baseUrlToken}}"],
+													"path": ["welfare", "token", "test"]
 												}
 											},
 											"response": []
@@ -9553,12 +9172,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlInitiative}}/info",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														"info"
-													]
+													"host": ["{{baseUrlInitiative}}"],
+													"path": ["info"]
 												},
 												"description": "Save initiative and first subset of data 'general info'"
 											},
@@ -9645,13 +9260,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlInitiative}}/:initiativeId/general",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														":initiativeId",
-														"general"
-													],
+													"host": ["{{baseUrlInitiative}}"],
+													"path": [":initiativeId", "general"],
 													"variable": [
 														{
 															"key": "initiativeId",
@@ -9703,13 +9313,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlInitiative}}/{{initiativeId}}/beneficiary",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														"{{initiativeId}}",
-														"beneficiary"
-													]
+													"host": ["{{baseUrlInitiative}}"],
+													"path": ["{{initiativeId}}", "beneficiary"]
 												}
 											},
 											"response": []
@@ -9751,8 +9356,8 @@
 															"\r",
 															"pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
 															"pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-															"pm.collectionVariables.set('trxThresholdFrom', 10);\r",
-															"pm.collectionVariables.set('trxThresholdTo', 50);\r",
+															"pm.collectionVariables.set('trxThresholdFrom', 50);\r",
+															"pm.collectionVariables.set('trxThresholdTo', 80);\r",
 															"pm.collectionVariables.set('trxCountFrom', 3);\r",
 															"pm.collectionVariables.set('trxCountTo', 11);\r",
 															"pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -9786,7 +9391,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n  }\n}",
+													"raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n    \"threshold\": {\n    \"from\": {{trxThresholdFrom}},\n    \"fromIncluded\": true,\n    \"to\": {{trxThresholdTo}},\n    \"toIncluded\": true\n    }\n  }\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -9795,13 +9400,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlInitiative}}/:initiativeId/reward",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														":initiativeId",
-														"reward"
-													],
+													"host": ["{{baseUrlInitiative}}"],
+													"path": [":initiativeId", "reward"],
 													"variable": [
 														{
 															"key": "initiativeId",
@@ -9923,13 +9523,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlInitiative}}/:initiativeId/refund",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														":initiativeId",
-														"refund"
-													],
+													"host": ["{{baseUrlInitiative}}"],
+													"path": [":initiativeId", "refund"],
 													"variable": [
 														{
 															"key": "initiativeId",
@@ -9952,9 +9547,7 @@
 												{
 													"listen": "prerequest",
 													"script": {
-														"exec": [
-															""
-														],
+														"exec": [""],
 														"type": "text/javascript"
 													}
 												},
@@ -10000,14 +9593,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlToken}}/welfare/token/test",
-													"host": [
-														"{{baseUrlToken}}"
-													],
-													"path": [
-														"welfare",
-														"token",
-														"test"
-													]
+													"host": ["{{baseUrlToken}}"],
+													"path": ["welfare", "token", "test"]
 												}
 											},
 											"response": []
@@ -10060,13 +9647,8 @@
 												],
 												"url": {
 													"raw": "{{baseUrlInitiative}}/{{initiativeId}}/approved",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														"{{initiativeId}}",
-														"approved"
-													]
+													"host": ["{{baseUrlInitiative}}"],
+													"path": ["{{initiativeId}}", "approved"]
 												}
 											},
 											"response": []
@@ -10082,9 +9664,7 @@
 												{
 													"listen": "prerequest",
 													"script": {
-														"exec": [
-															""
-														],
+														"exec": [""],
 														"type": "text/javascript"
 													}
 												},
@@ -10130,14 +9710,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlToken}}/welfare/token/test",
-													"host": [
-														"{{baseUrlToken}}"
-													],
-													"path": [
-														"welfare",
-														"token",
-														"test"
-													]
+													"host": ["{{baseUrlToken}}"],
+													"path": ["welfare", "token", "test"]
 												}
 											},
 											"response": []
@@ -10204,13 +9778,8 @@
 												"header": [],
 												"url": {
 													"raw": "{{baseUrlInitiative}}/{{initiativeId}}/published",
-													"host": [
-														"{{baseUrlInitiative}}"
-													],
-													"path": [
-														"{{initiativeId}}",
-														"published"
-													]
+													"host": ["{{baseUrlInitiative}}"],
+													"path": ["{{initiativeId}}", "published"]
 												}
 											},
 											"response": []
@@ -10226,9 +9795,7 @@
 												{
 													"listen": "prerequest",
 													"script": {
-														"exec": [
-															""
-														],
+														"exec": [""],
 														"type": "text/javascript"
 													}
 												},
@@ -10272,14 +9839,8 @@
 												},
 												"url": {
 													"raw": "{{baseUrlToken}}/welfare/token/test",
-													"host": [
-														"{{baseUrlToken}}"
-													],
-													"path": [
-														"welfare",
-														"token",
-														"test"
-													]
+													"host": ["{{baseUrlToken}}"],
+													"path": ["welfare", "token", "test"]
 												}
 											},
 											"response": []
@@ -10329,9 +9890,7 @@
 												},
 												"url": {
 													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
-													"host": [
-														"{{baseUrlToken}}"
-													],
+													"host": ["{{baseUrlToken}}"],
 													"path": [
 														"merchant",
 														"initiative",
@@ -10384,9 +9943,7 @@
 												{
 													"listen": "prerequest",
 													"script": {
-														"exec": [
-															"setTimeout(() => {}, 10000);"
-														],
+														"exec": ["setTimeout(() => {}, 10000);"],
 														"type": "text/javascript"
 													}
 												}
@@ -10406,9 +9963,7 @@
 												"header": [],
 												"url": {
 													"raw": "{{baseUrlMerchant}}/initiative/{{initiativeId}}/merchants",
-													"host": [
-														"{{baseUrlMerchant}}"
-													],
+													"host": ["{{baseUrlMerchant}}"],
 													"path": [
 														"initiative",
 														"{{initiativeId}}",
@@ -10431,9 +9986,7 @@
 										{
 											"listen": "prerequest",
 											"script": {
-												"exec": [
-													"setTimeout(() => {}, 10000);"
-												],
+												"exec": ["setTimeout(() => {}, 10000);"],
 												"type": "text/javascript"
 											}
 										},
@@ -10480,14 +10033,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrlToken}}/merchant/token/test",
-											"host": [
-												"{{baseUrlToken}}"
-											],
-											"path": [
-												"merchant",
-												"token",
-												"test"
-											]
+											"host": ["{{baseUrlToken}}"],
+											"path": ["merchant", "token", "test"]
 										}
 									},
 									"response": []
@@ -10566,15 +10113,8 @@
 										},
 										"url": {
 											"raw": "{{baseUrl}}/idpay/merchant/portal/transactions",
-											"host": [
-												"{{baseUrl}}"
-											],
-											"path": [
-												"idpay",
-												"merchant",
-												"portal",
-												"transactions"
-											]
+											"host": ["{{baseUrl}}"],
+											"path": ["idpay", "merchant", "portal", "transactions"]
 										}
 									},
 									"response": []
@@ -10582,6 +10122,62 @@
 							]
 						}
 					]
+				},
+				{
+					"name": "Delete Initiative initiativeId",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Payment - Unhappy Case - Delete Initiative - Status test 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId}}",
+							"host": [
+								"{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative"
+							],
+							"path": ["idpay", "initiative", "{{initiativeId}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Initiative initiativeId_exhausted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Payment - Unhappy Case - Delete Initiative initativeId_exhausted - Status test 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId_exhausted}}",
+							"host": [
+								"{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative"
+							],
+							"path": ["idpay", "initiative", "{{initiativeId_exhausted}}"]
+						}
+					},
+					"response": []
 				}
 			]
 		}
@@ -10591,18 +10187,14 @@
 			"listen": "prerequest",
 			"script": {
 				"type": "text/javascript",
-				"exec": [
-					""
-				]
+				"exec": [""]
 			}
 		},
 		{
 			"listen": "test",
 			"script": {
 				"type": "text/javascript",
-				"exec": [
-					""
-				]
+				"exec": [""]
 			}
 		}
 	],
@@ -10778,7 +10370,7 @@
 		},
 		{
 			"key": "initiativeId_exhausted",
-			"value": "649570e23d8a95556915f642"
+			"value": "648b2dd53d8a95556915f578"
 		},
 		{
 			"key": "transactionId_fake",
