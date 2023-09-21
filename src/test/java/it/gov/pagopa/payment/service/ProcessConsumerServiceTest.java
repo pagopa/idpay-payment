@@ -71,13 +71,11 @@ class ProcessConsumerServiceTest {
                     .thenReturn(deletedPage);
         }
 
-
         // When
         if (times == 2){
             Thread.currentThread().interrupt();
         }
         processConsumerService.processCommand(queueCommandOperationDTO);
-
 
         // Then
         Mockito.verify(transactionInProgressRepository, Mockito.times(times)).deletePaged(queueCommandOperationDTO.getEntityId(), Integer.parseInt(queueCommandOperationDTO.getAdditionalParams().get(PAGINATION_KEY)));
