@@ -17,9 +17,9 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final AuditUtilities auditUtilities;
     @Value("${app.delete.paginationSize}")
-    String pagination;
+    private int pageSize;
     @Value("${app.delete.delayTime}")
-    String delay;
+    private long delay;
 
     public ProcessConsumerServiceImpl(TransactionInProgressRepository transactionInProgressRepository, AuditUtilities auditUtilities) {
         this.transactionInProgressRepository = transactionInProgressRepository;
@@ -35,16 +35,15 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
             List<TransactionInProgress> fetchedTrx;
 
             do {
-                fetchedTrx = transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(),
-                        Integer.parseInt(pagination));
+                fetchedTrx = transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize);
                 deletedTrx.addAll(fetchedTrx);
                 try{
-                    Thread.sleep(Long.parseLong(delay));
+                    Thread.sleep(delay);
                 } catch (InterruptedException e){
                     log.error("An error has occurred while waiting {}", e.getMessage());
                     Thread.currentThread().interrupt();
                 }
-            } while (fetchedTrx.size() == (Integer.parseInt(pagination)));
+            } while (fetchedTrx.size() == pageSize);
 
             List<String> usersId = deletedTrx.stream().map(TransactionInProgress::getUserId).distinct().toList();
 

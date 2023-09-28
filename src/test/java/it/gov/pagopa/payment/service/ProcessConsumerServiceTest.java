@@ -43,7 +43,7 @@ class ProcessConsumerServiceTest {
     private static final String TRX_ID = "TRX_ID";
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
     @Value("${app.delete.paginationSize}")
-    String pagination;
+    private int pageSize;
 
     @ParameterizedTest
     @MethodSource("operationTypeAndInvocationTimes")
@@ -61,12 +61,12 @@ class ProcessConsumerServiceTest {
         final List<TransactionInProgress> deletedPage = List.of(trxInProgress);
 
         if(times == 2){
-            final List<TransactionInProgress> trxPage = createTransactionInProgressPage(Integer.parseInt(pagination));
-            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), Integer.parseInt(pagination)))
+            final List<TransactionInProgress> trxPage = createTransactionInProgressPage(pageSize);
+            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize))
                     .thenReturn(trxPage)
                     .thenReturn(deletedPage);
         } else if (times == 1){
-            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), Integer.parseInt(pagination)))
+            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize))
                     .thenReturn(deletedPage);
         }
 
@@ -77,7 +77,7 @@ class ProcessConsumerServiceTest {
         processConsumerService.processCommand(queueCommandOperationDTO);
 
         // Then
-        Mockito.verify(transactionInProgressRepository, Mockito.times(times)).deletePaged(queueCommandOperationDTO.getEntityId(), Integer.parseInt(pagination));
+        Mockito.verify(transactionInProgressRepository, Mockito.times(times)).deletePaged(queueCommandOperationDTO.getEntityId(), pageSize);
     }
 
     private static Stream<Arguments> operationTypeAndInvocationTimes() {
