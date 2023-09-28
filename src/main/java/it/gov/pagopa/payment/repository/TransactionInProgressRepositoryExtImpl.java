@@ -9,7 +9,10 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import java.time.OffsetDateTime;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -25,6 +28,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
 
     private final MongoTemplate mongoTemplate;
@@ -233,6 +237,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     @Override
     public TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId, long authorizationExpirationMinutes) {
         return findExpiredTransaction(initiativeId, authorizationExpirationMinutes, List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED, SyncTrxStatus.REJECTED));
+    }
+
+    @Override
+    public List<TransactionInProgress> deletePaged(String initiativeId, int pageSize) {
+        log.trace("[DELETE_PAGED] Deleting transactions in progress in pages");
+        Pageable pageable = PageRequest.of(0, pageSize);
+        return mongoTemplate.findAllAndRemove(
+                Query.query(Criteria.where(Fields.initiativeId).is(initiativeId)).with(pageable),
+                TransactionInProgress.class
+        );
     }
 
     private TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes, List<SyncTrxStatus> statusList) {
