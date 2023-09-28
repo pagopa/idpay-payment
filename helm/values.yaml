@@ -56,8 +56,8 @@ microservice-chart:
     APPLICATIONINSIGHTS_PREVIEW_PROFILER_ENABLED: "false"
     ENABLE_AUDIT_APPENDER: "TRUE"
     KAFKA_COMMANDS_GROUP_ID: "idpay-commands-payment-consumer-group"
-    DELETE_PAGINATION_SIZE: 100
-    DELETE_DELAY_TIME: 1000
+    DELETE_PAGINATION_SIZE: "100"
+    DELETE_DELAY_TIME: "1000"
 
   externalConfigMapValues:
     idpay-common:
