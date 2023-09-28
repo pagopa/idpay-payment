@@ -67,8 +67,13 @@ import java.util.concurrent.TimeUnit;
 
                 //region app
                 "app.qrCode.expirations.schedule.authorizationExpired=-", // disable schedule
-                "app.qrCode.expirations.schedule.cancelExpired=-" // disable schedule
+                "app.qrCode.expirations.schedule.cancelExpired=-", // disable schedule
                 //endregion
+
+                //region delete
+                "app.delete.paginationSize=100",
+                "app.delete.delayTime=1000"
+                //end region
         })
 @AutoConfigureMockMvc
 @AutoConfigureWireMock(stubs = "classpath:/stub", port = 0)
