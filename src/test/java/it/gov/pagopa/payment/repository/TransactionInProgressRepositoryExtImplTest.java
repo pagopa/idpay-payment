@@ -46,6 +46,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     private static final String MERCHANT_ID = "MERCHANTID1";
     private static final String USER_ID = "USERID1";
     public static final int EXPIRATION_MINUTES = 4350;
+    private static final String TRX_ID = "TRX_ID";
 
     @Autowired
     protected TransactionInProgressRepository transactionInProgressRepository;
@@ -419,6 +420,25 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         transactionInProgressRepository.save(transactionExpired);
 
         executeConcurrentLocks(10, () -> transactionInProgressRepository.findCancelExpiredTransaction(null, EXPIRATION_MINUTES) != null);
+    }
+
+    @Test
+    void deletePaged (){
+        // Given
+        int pageSize = 100;
+        TransactionInProgress transactionInProgress = TransactionInProgress.builder()
+                .id(TRX_ID)
+                .initiativeId(INITIATIVE_ID)
+                .build();
+        mongoTemplate.save(transactionInProgress);
+
+        // When
+        List<TransactionInProgress> result = transactionInProgressRepository.deletePaged(INITIATIVE_ID, pageSize);
+
+        // Then
+        Assertions.assertEquals(1, result.size());
+        Assertions.assertEquals(transactionInProgress.getId(), result.get(0).getId());
+        Assertions.assertEquals(transactionInProgress.getInitiativeId(), result.get(0).getInitiativeId());
     }
 
     private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
