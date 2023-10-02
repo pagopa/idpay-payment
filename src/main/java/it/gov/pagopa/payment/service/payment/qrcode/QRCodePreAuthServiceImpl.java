@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.qrcode;
+package it.gov.pagopa.payment.service.payment.qrcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
