@@ -1,16 +1,17 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.idpaycode.UserRelateResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/idpay/payment/idpay-code")
 public interface IdPayCodePaymentController {
 
-    @PutMapping("/{trxId}/relate-user") //TODO after refactor path
+    @PutMapping("/{transactionId}/minint/relate-user") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)
-    AuthPaymentDTO relateUser(@PathVariable("trxId") String trxId,
-                              @RequestHeader("x-user-id") String userId);
+    UserRelateResponse relateUser(@PathVariable("transactionId") String trxId,
+                                  @RequestHeader("x-user-id") String userId);
 
     @PutMapping("/{trxId}/preview") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)

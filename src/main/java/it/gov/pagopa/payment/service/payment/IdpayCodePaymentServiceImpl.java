@@ -1,15 +1,23 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.idpaycode.UserRelateResponse;
+import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodePreAuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
+    private final IdpayCodePreAuthService idpayCodePreAuthService;
+
+    public IdpayCodePaymentServiceImpl(IdpayCodePreAuthService idpayCodePreAuthService) {
+        this.idpayCodePreAuthService = idpayCodePreAuthService;
+    }
+
     @Override
-    public AuthPaymentDTO relateUser(String trxId, String userId) {
-        return null; //TODO after refactor impl
+    public UserRelateResponse relateUser(String trxId, String userId) {
+        return idpayCodePreAuthService.relateUser(trxId, userId);
     }
 
     @Override

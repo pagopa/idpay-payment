@@ -134,6 +134,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
+    public void updateTrxRelateUser(String id, String userId, SyncTrxStatus status) {
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where(Fields.id).is(id)),
+                new Update()
+                        .set(Fields.status, SyncTrxStatus.IDENTIFIED) //TODO 1921 specific or generic status
+                        .set(Fields.userId, userId)
+                        .currentDate(Fields.updateDate),
+                TransactionInProgress.class);
+    }
+    @Override
     public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),

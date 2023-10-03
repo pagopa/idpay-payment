@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.time.OffsetDateTime;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,7 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes);
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons);
+  void updateTrxRelateUser(String id, String userId, SyncTrxStatus status);
   void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards);
   void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons);
   void updateTrxRejected(String id, List<String> rejectionReasons, OffsetDateTime trxChargeDate);
