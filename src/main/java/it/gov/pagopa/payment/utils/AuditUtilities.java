@@ -58,6 +58,22 @@ public class AuditUtilities {
     }
     // endregion
 
+    // region previewPayment //TODO IDP-1921
+    public void logPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_USER,
+                "User request preview the transaction", initiativeId, trxId, trxCode, userId
+        );
+    }
+
+    public void logErrorPreviewTransaction(String trxCode, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXCODE_USERID,
+                "User request preview the transaction - KO", trxCode, userId
+        );
+    }
+    // endregion
+
     // region authPayment
     public void logAuthorizedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
