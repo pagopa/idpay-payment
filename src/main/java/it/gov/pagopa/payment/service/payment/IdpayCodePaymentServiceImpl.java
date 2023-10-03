@@ -1,10 +1,12 @@
-package it.gov.pagopa.payment.controller;
+package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import org.springframework.web.bind.annotation.RestController;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
-@RestController
-public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentController {
+@Service
+@Slf4j
+public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
     @Override
     public AuthPaymentDTO relateUser(String trxId, String userId) {
         return null; //TODO after refactor impl
@@ -16,7 +18,7 @@ public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentControlle
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, String userId) {
+    public AuthPaymentDTO authPayment(String userId, String trxId) {
         return null; //TODO after refactor impl
     }
 }
