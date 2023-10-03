@@ -1,10 +1,10 @@
-package it.gov.pagopa.payment.controller;
+package it.gov.pagopa.payment.controller.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
+import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
 import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;

@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.controller;
+package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import org.springframework.http.HttpStatus;
@@ -19,6 +19,6 @@ public interface IdPayCodePaymentController {
 
     @PutMapping("/{trxId}/authorize") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)
-    AuthPaymentDTO authPayment(@PathVariable("trxId") String trxCode,
+    AuthPaymentDTO authPayment(@PathVariable("trxId") String trxId,
                                @RequestHeader("x-user-id") String userId);
 }

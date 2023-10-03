@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.controller;
+package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;

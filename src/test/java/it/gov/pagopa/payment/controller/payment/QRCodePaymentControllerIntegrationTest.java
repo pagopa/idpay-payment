@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.controller;
+package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;

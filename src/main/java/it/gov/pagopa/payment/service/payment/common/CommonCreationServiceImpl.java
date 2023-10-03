@@ -23,7 +23,7 @@ import java.time.LocalDate;
 
 @Slf4j
 @Service
-public class CommonCreationServiceImpl implements CommonCreationService {
+public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
