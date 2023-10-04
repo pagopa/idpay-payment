@@ -239,12 +239,7 @@ class QRCodePreAuthServiceImplTest {
     Mockito.when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1"))
             .thenThrow(new RuntimeException());
 
-    try {
-      qrCodePreAuthService.relateUser("trxcode1", USER_ID1);
-      Assertions.fail("Expected exception");
-    } catch (RuntimeException e) {
-      Assertions.assertTrue(true);
-    }
+    Assertions.assertThrows(RuntimeException.class, () -> qrCodePreAuthService.relateUser("trxcode1", USER_ID1));
   }
 
   @Test
