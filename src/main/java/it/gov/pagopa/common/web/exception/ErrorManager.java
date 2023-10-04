@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -16,8 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ErrorManager {
   private final ErrorDTO defaultErrorDTO;
 
-  @Autowired(required = false)
-  public ErrorManager(ErrorDTO defaultErrorDTO) {
+  public ErrorManager(@Nullable ErrorDTO defaultErrorDTO) {
     this.defaultErrorDTO = Optional.ofNullable(defaultErrorDTO)
         .orElse(new ErrorDTO("Error", "Something gone wrong"));
   }
