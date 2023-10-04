@@ -3,12 +3,19 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 public class CommonPaymentControllerImpl implements CommonPaymentController {
+    private final CommonCreationServiceImpl commonCreationService;
+
+    public CommonPaymentControllerImpl( @Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService) {
+        this.commonCreationService = commonCreationService;
+    }
 
     @Override
     @PerformanceLog(
@@ -20,6 +27,6 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
             String acquirerId,
             String idTrxIssuer) {
         log.info("[CREATE_TRANSACTION] The merchant {} through acquirer {} is creating a transaction", merchantId, acquirerId);
-        return null; //TODO common service
+        return commonCreationService.createTransaction(trxCreationRequest,null,merchantId,acquirerId,idTrxIssuer);
     }
 }

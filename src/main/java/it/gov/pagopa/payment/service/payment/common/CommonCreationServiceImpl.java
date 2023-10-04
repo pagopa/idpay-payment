@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 
 @Slf4j
-@Service
+@Service("CommonCreate")
 public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";

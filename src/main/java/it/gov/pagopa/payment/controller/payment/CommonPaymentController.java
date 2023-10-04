@@ -5,10 +5,9 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-@RequestMapping("/idpay/payment/")
+@RequestMapping("/idpay/payment")
 public interface CommonPaymentController {
-    @PostMapping("/merchant")
+    @PostMapping("/create-trx")
     @ResponseStatus(code = HttpStatus.CREATED)
     TransactionResponse createTransaction(
             @RequestBody @Valid TransactionCreationRequest trxCreationRequest,
