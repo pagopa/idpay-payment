@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class UserRelateResponse {
+public class RelateUserResponse {
     @NotBlank
     private String id;
     @NotNull

@@ -5,8 +5,8 @@ import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
-import it.gov.pagopa.payment.dto.idpaycode.UserRelateRequest;
-import it.gov.pagopa.payment.dto.idpaycode.UserRelateResponse;
+import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
+import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -36,7 +36,7 @@ public class IdpayCodePreAuthServiceImpl implements IdpayCodePreAuthService {
     }
 
     @Override
-    public UserRelateResponse relateUser(String trxId, UserRelateRequest request) {
+    public RelateUserResponse relateUser(String trxId, RelateUserRequest request) {
         String userId = retrieveUserId(request.getFiscalCode());
 
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)

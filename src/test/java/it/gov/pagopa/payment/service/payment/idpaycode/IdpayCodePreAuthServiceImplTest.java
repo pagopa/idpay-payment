@@ -5,8 +5,8 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
-import it.gov.pagopa.payment.dto.idpaycode.UserRelateRequest;
-import it.gov.pagopa.payment.dto.idpaycode.UserRelateResponse;
+import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
+import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -65,7 +65,7 @@ class IdpayCodePreAuthServiceImplTest {
         doNothing().when(transactionInProgressRepositoryMock).updateTrxRelateUserIdentified(trx.getId(), USER_ID,IDPAYCODE);
 
         //When
-        UserRelateResponse result = idpayCodePreAuthService.relateUser(trx.getId(), new UserRelateRequest(FISCALCODE));
+        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), new RelateUserRequest(FISCALCODE));
 
         //Then
         Assertions.assertNotNull(result);
@@ -87,7 +87,7 @@ class IdpayCodePreAuthServiceImplTest {
         when(transactionInProgressRepositoryMock.findById(trxId))
                 .thenReturn(Optional.empty());
 
-        UserRelateRequest request = new UserRelateRequest(FISCALCODE);
+        RelateUserRequest request = new RelateUserRequest(FISCALCODE);
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
                 idpayCodePreAuthService.relateUser(trxId, request)
@@ -109,7 +109,7 @@ class IdpayCodePreAuthServiceImplTest {
                 .thenThrow(new RuntimeException());
 
 
-        UserRelateRequest request = new UserRelateRequest(FISCALCODE);
+        RelateUserRequest request = new RelateUserRequest(FISCALCODE);
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
                 idpayCodePreAuthService.relateUser(trxId, request)
