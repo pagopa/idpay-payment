@@ -3,6 +3,7 @@ package it.gov.pagopa.common.mongo.retry;
 import it.gov.pagopa.common.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
 import it.gov.pagopa.common.web.exception.ErrorManager;
 import it.gov.pagopa.common.web.exception.MongoExceptionHandler;
+import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
         MongoRequestRateTooLargeAutomaticRetryAspect.class,
         ErrorManager.class,
         MongoExceptionHandler.class,
-
+        PaymentErrorManagerConfig.class,
         MongoRequestRateTooLargeRetryIntegrationTest.TestController.class,
         MongoRequestRateTooLargeRetryIntegrationTest.TestRepository.class
 })
