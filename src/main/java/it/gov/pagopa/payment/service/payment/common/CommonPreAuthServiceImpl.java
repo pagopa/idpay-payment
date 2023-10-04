@@ -1,12 +1,12 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -53,8 +53,44 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
 
       return trx;
 
-    } catch (RuntimeException e) {
+    } catch (ClientException e) {
       auditUtilities.logErrorRelatedUserToTransaction(trx.getTrxCode(), userId);
+      throw e;
+    }
+  }
+
+  @Override
+  public AuthPaymentDTO previewPayment(TransactionInProgress trx) {
+    try {
+    AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
+
+    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
+      transactionInProgressRepository.updateTrxRejected(
+              trx.getId(), trx.getUserId(), preview.getRejectionReasons());
+      log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
+      if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
+        throw new ClientExceptionWithBody(
+                HttpStatus.FORBIDDEN,
+                PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
+                "Budget exhausted for user [%s] and initiative [%s]".formatted(trx.getUserId(), trx.getInitiativeId()));
+      }
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.REJECTED,
+              "Transaction with trxCode [%s] is rejected".formatted(trx.getTrxCode()));
+    } else {
+      preview.setRejectionReasons(null);
+      preview.setStatus(SyncTrxStatus.IDENTIFIED);
+      transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards());
+    }
+
+      Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+            Long.sum(CommonUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
+    preview.setResidualBudget(residualBudget);
+
+    return preview;
+    } catch (RuntimeException e) {
+      auditUtilities.logErrorPreviewTransaction(trx.getTrxCode(), trx.getUserId());
       if (e.toString().contains("ClientException")){
         throw e;
       } else {
@@ -67,48 +103,8 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
   }
 
   @Override
-  public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId) {
-    try {
-    AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
-
-    if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
-      transactionInProgressRepository.updateTrxRejected(
-              trx.getId(), userId, preview.getRejectionReasons());
-      log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
-      if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
-        throw new ClientExceptionWithBody(
-                HttpStatus.FORBIDDEN,
-                PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                "Budget exhausted for user [%s] and initiative [%s]".formatted(userId, trx.getInitiativeId()));
-      }
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
-              PaymentConstants.ExceptionCode.REJECTED,
-              "Transaction with trxCode [%s] is rejected".formatted(trx.getTrxCode()));
-    } else {
-      preview.setRejectionReasons(null);
-      preview.setStatus(SyncTrxStatus.IDENTIFIED);
-      transactionInProgressRepository.updateTrxIdentified(trx.getId(), userId, preview.getReward(), preview.getRejectionReasons(), preview.getRewards());
-    }
-
-    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
-
-    Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
-            Long.sum(CommonUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
-    preview.setResidualBudget(residualBudget);
-
-    return preview;
-    } catch (RuntimeException e) {
-      auditUtilities.logErrorPreviewTransaction(trx.getTrxCode(), userId);
-      if (e.toString().contains("ClientException")){
-        throw e;
-      } else {
-        throw new ClientExceptionWithBody(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                PaymentConstants.ExceptionCode.GENERIC_ERROR,
-                "A generic error occurred for trxCode: [%s]".formatted(trx.getTrxCode()));
-      }
-    }
+  public void auditLogUserRelate(TransactionInProgress trx) {
+    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
   }
 
   private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus) {
@@ -119,7 +115,7 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
               "User %s has been suspended for initiative %s".formatted(userId, trx.getInitiativeId()));
     }
 
-    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) { //TODO OP for trx
+    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
       throw new ClientExceptionWithBody(
               HttpStatus.NOT_FOUND,
               PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,

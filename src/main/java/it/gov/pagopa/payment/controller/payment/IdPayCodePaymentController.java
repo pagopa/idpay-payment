@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.idpaycode.UserRelateRequest;
 import it.gov.pagopa.payment.dto.idpaycode.UserRelateResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -8,10 +9,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/idpay/payment/idpay-code")
 public interface IdPayCodePaymentController {
 
-    @PutMapping("/{transactionId}/minint/relate-user") //TODO after refactor path
+    @PutMapping("/{transactionId}/minint/relate-user")
     @ResponseStatus(code = HttpStatus.OK)
     UserRelateResponse relateUser(@PathVariable("transactionId") String trxId,
-                                  @RequestHeader("x-user-id") String userId);
+                                  @RequestBody UserRelateRequest request);
 
     @PutMapping("/{trxId}/preview") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)

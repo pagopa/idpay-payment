@@ -32,7 +32,11 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
     commonPreAuthService.relateUser(trx, userId);
-    return commonPreAuthService.previewPayment(trx, userId);
+    AuthPaymentDTO authPaymentDTO = commonPreAuthService.previewPayment(trx);
+
+    commonPreAuthService.auditLogUserRelate(trx);
+
+    return authPaymentDTO;
 
   }
 

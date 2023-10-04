@@ -100,7 +100,7 @@ class CommonPreAuthServiceImplTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     ClientException result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-            commonPreAuthService.previewPayment(trx, USER_ID1)
+            commonPreAuthService.previewPayment(trx)
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
@@ -121,7 +121,7 @@ class CommonPreAuthServiceImplTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-            commonPreAuthService.previewPayment(trx, USER_ID1)
+            commonPreAuthService.previewPayment(trx)
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
@@ -134,6 +134,7 @@ class CommonPreAuthServiceImplTest {
   @Test
   void previewPaymentNotOnboarded() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    trx.setUserId(USER_ID1);
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
     authPaymentDTO.setRejectionReasons(List.of("NO_ACTIVE_INITIATIVES"));
@@ -141,7 +142,7 @@ class CommonPreAuthServiceImplTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     ClientException result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-      commonPreAuthService.previewPayment(trx, USER_ID1)
+      commonPreAuthService.previewPayment(trx)
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
@@ -168,20 +169,6 @@ class CommonPreAuthServiceImplTest {
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), "USERID2");
   }
 
-//  @Test //TODO not owner common
-//  void relateUserTrxNotFound() {
-//
-//    ClientException result = Assertions.assertThrows(ClientException.class, () ->
-//        commonPreAuthService.relateUser("trxcode1", "USERID1")
-//    );
-//
-//    Assertions.assertNotNull(result);
-//    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-//
-//    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
-//    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList());
-//  }
-
   @Test
   void relateUserTrxExpired() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -200,21 +187,6 @@ class CommonPreAuthServiceImplTest {
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
-
-//  @Test //TODO not owner common
-//  void relateUserOtherException() {
-//
-//    Mockito.when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1"))
-//            .thenThrow(new RuntimeException());
-//
-//    try {
-//      commonPreAuthService.relateUser("trxcode1", USER_ID1);
-//      Assertions.fail("Expected exception");
-//    } catch (ClientExceptionWithBody e) {
-//      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
-//      Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, e.getCode());
-//    }
-//  }
 
   @Test
   void relateUser_statusSuspendedException() {
@@ -280,6 +252,24 @@ class CommonPreAuthServiceImplTest {
     assertEquals(String.format("Cannot relate transaction [%s] in status %s", trx.getTrxCode(), trx.getStatus()), exception.getMessage());
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
+  }
+
+
+  void previewOtherException() {
+
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
+
+    when(walletConnectorMock.getWallet(any(), any())).thenThrow(new RuntimeException());
+
+    ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+            commonPreAuthService.previewPayment(trx)
+    );
+
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getHttpStatus());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, result.getCode());
+
   }
 
 }

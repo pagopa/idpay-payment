@@ -1,9 +1,13 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.dto.CFDTO;
+import it.gov.pagopa.payment.dto.EncryptedCfDTO;
+import it.gov.pagopa.payment.dto.idpaycode.UserRelateRequest;
 import it.gov.pagopa.payment.dto.idpaycode.UserRelateResponse;
-import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserRequestMapper;
+import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -15,18 +19,26 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class IdpayCodePreAuthServiceImpl implements IdpayCodePreAuthService {
+    private static final String IDPAYCODE = "IDPAYCODE";
+    private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonPreAuthService commonPreAuthService;
-    private final RelateUserRequestMapper relateUserRequestMapper;
+    private final RelateUserResponseMapper relateUserResponseMapper;
 
-    public IdpayCodePreAuthServiceImpl(TransactionInProgressRepository transactionInProgressRepository, CommonPreAuthService commonPreAuthService, RelateUserRequestMapper relateUserRequestMapper) {
+    public IdpayCodePreAuthServiceImpl(EncryptRestConnector encryptRestConnector,
+                                       TransactionInProgressRepository transactionInProgressRepository,
+                                       CommonPreAuthService commonPreAuthService,
+                                       RelateUserResponseMapper relateUserResponseMapper) {
+        this.encryptRestConnector = encryptRestConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonPreAuthService = commonPreAuthService;
-        this.relateUserRequestMapper = relateUserRequestMapper;
+        this.relateUserResponseMapper = relateUserResponseMapper;
     }
 
     @Override
-    public UserRelateResponse relateUser(String trxId, String userId) {
+    public UserRelateResponse relateUser(String trxId, UserRelateRequest request) {
+        String userId = retrieveUserId(request.getFiscalCode());
+
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
                 .orElseThrow(() -> new ClientExceptionWithBody(
                         HttpStatus.NOT_FOUND,
@@ -35,8 +47,25 @@ public class IdpayCodePreAuthServiceImpl implements IdpayCodePreAuthService {
 
         TransactionInProgress trxInProgress = commonPreAuthService.relateUser(trx, userId);
 
-        transactionInProgressRepository.updateTrxRelateUser(trxId, userId, SyncTrxStatus.IDENTIFIED); //TODO 1921 refactor?
+        transactionInProgressRepository.updateTrxRelateUserIdentified(trxId, userId, IDPAYCODE);
+        trx.setStatus(SyncTrxStatus.IDENTIFIED);
 
-        return relateUserRequestMapper.transactionMapper(trxInProgress);
+        commonPreAuthService.auditLogUserRelate(trx);
+
+        return relateUserResponseMapper.transactionMapper(trxInProgress);
+    }
+
+    private String retrieveUserId(String fiscalCode) {
+        String userId;
+        try {
+            EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
+            userId = encryptedCfDTO.getToken();
+            return userId;
+        } catch (Exception e) {
+            throw new ClientExceptionWithBody(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "INTERNAL SERVER ERROR",
+                    "Error during encryption");
+        }
     }
 }

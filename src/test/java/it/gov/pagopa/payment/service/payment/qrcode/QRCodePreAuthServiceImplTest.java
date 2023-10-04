@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -59,7 +58,7 @@ class QRCodePreAuthServiceImplTest {
             .thenReturn(trx);
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
-    when(commonPreAuthServiceMock.previewPayment(trx,trx.getUserId()))
+    when(commonPreAuthServiceMock.previewPayment(trx))
             .thenReturn(authPaymentDTO);
 
 
@@ -70,7 +69,7 @@ class QRCodePreAuthServiceImplTest {
 
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(anyString());
     verify(commonPreAuthServiceMock, times(1)).relateUser(any(), anyString());
-    verify(commonPreAuthServiceMock, times(1)).previewPayment(any(), anyString());
+    verify(commonPreAuthServiceMock, times(1)).previewPayment(any());
   }
 
 
@@ -86,7 +85,7 @@ class QRCodePreAuthServiceImplTest {
 
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(anyString());
     verify(commonPreAuthServiceMock, times(0)).relateUser(any(), anyString());
-    verify(commonPreAuthServiceMock, times(0)).previewPayment(any(), anyString());
+    verify(commonPreAuthServiceMock, times(0)).previewPayment(any());
   }
 
   @Test
