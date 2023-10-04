@@ -90,14 +90,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
       return preview;
     } catch (RuntimeException e) {
       auditUtilities.logErrorRelatedUserToTransaction(trxCode, userId);
-      if (e.toString().contains("ClientException")){
-        throw e;
-      } else {
-        throw new ClientExceptionWithBody(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                PaymentConstants.ExceptionCode.GENERIC_ERROR,
-                "A generic error occurred for trxCode: [%s]".formatted(trxCode));
-      }
+      throw e;
     }
   }
 
