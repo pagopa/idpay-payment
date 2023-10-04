@@ -14,6 +14,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ErrorManager {
   private final ErrorDTO defaultErrorDTO;
 
+  public ErrorManager() {
+    this.defaultErrorDTO = new ErrorDTO("Error", "Something gone wrong");
+  }
+
   public ErrorManager(ErrorDTO defaultErrorDTO) {
     this.defaultErrorDTO = defaultErrorDTO;
   }
