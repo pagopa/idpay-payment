@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
+import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
 import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeExpirationService;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(QRCodePaymentControllerImpl.class)
-@Import({JsonConfig.class, ValidationExceptionHandler.class})
+@Import({JsonConfig.class, PaymentErrorManagerConfig.class, ValidationExceptionHandler.class})
 class QRCodePaymentControllerTest {
 
   @MockBean

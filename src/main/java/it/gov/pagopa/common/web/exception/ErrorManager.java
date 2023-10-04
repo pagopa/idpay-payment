@@ -12,10 +12,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 @Slf4j
 public class ErrorManager {
-  private static final ErrorDTO defaultErrorDTO;
+  private final ErrorDTO defaultErrorDTO;
 
-  static {
-    defaultErrorDTO = new ErrorDTO("Error", "Something gone wrong");
+  public ErrorManager(ErrorDTO defaultErrorDTO) {
+    this.defaultErrorDTO = defaultErrorDTO;
   }
 
   @ExceptionHandler(RuntimeException.class)
