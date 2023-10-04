@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Slf4j
-public class MerchantTransactionControllerImpl implements MerchantTransactionController{
+public class MerchantTransactionControllerImpl implements MerchantTransactionController {
     private final MerchantTransactionService merchantTransactionService;
     public MerchantTransactionControllerImpl(MerchantTransactionService merchantTransactionService) {
         this.merchantTransactionService = merchantTransactionService;
