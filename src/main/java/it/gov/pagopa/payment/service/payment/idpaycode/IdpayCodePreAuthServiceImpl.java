@@ -12,6 +12,8 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthService;
+import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -19,19 +21,20 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class IdpayCodePreAuthServiceImpl implements IdpayCodePreAuthService {
-    private static final String IDPAYCODE = "IDPAYCODE";
     private final EncryptRestConnector encryptRestConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonPreAuthService commonPreAuthService;
+    private final AuditUtilities auditUtilities;
     private final RelateUserResponseMapper relateUserResponseMapper;
 
     public IdpayCodePreAuthServiceImpl(EncryptRestConnector encryptRestConnector,
                                        TransactionInProgressRepository transactionInProgressRepository,
                                        CommonPreAuthService commonPreAuthService,
-                                       RelateUserResponseMapper relateUserResponseMapper) {
+                                       AuditUtilities auditUtilities, RelateUserResponseMapper relateUserResponseMapper) {
         this.encryptRestConnector = encryptRestConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonPreAuthService = commonPreAuthService;
+        this.auditUtilities = auditUtilities;
         this.relateUserResponseMapper = relateUserResponseMapper;
     }
 
@@ -47,25 +50,16 @@ public class IdpayCodePreAuthServiceImpl implements IdpayCodePreAuthService {
 
         TransactionInProgress trxInProgress = commonPreAuthService.relateUser(trx, userId);
 
-        transactionInProgressRepository.updateTrxRelateUserIdentified(trxId, userId, IDPAYCODE);
+        transactionInProgressRepository.updateTrxRelateUserIdentified(trxId, userId, RewardConstants.TRX_CHANNEL_IDPAYCODE);
         trx.setStatus(SyncTrxStatus.IDENTIFIED);
 
-        commonPreAuthService.auditLogUserRelate(trx);
+        auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
 
         return relateUserResponseMapper.transactionMapper(trxInProgress);
     }
 
     private String retrieveUserId(String fiscalCode) {
-        String userId;
-        try {
-            EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
-            userId = encryptedCfDTO.getToken();
-            return userId;
-        } catch (Exception e) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "INTERNAL SERVER ERROR",
-                    "Error during encryption");
-        }
+        EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
+        return encryptedCfDTO.getToken();
     }
 }

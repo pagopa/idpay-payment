@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ class QRCodePreAuthServiceImplTest {
 
   @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
   @Mock private CommonPreAuthService commonPreAuthServiceMock;
+  @Mock private AuditUtilities auditUtilitiesMock;
 
   private QRCodePreAuthService qrCodePreAuthService;
 
@@ -42,7 +44,7 @@ class QRCodePreAuthServiceImplTest {
     qrCodePreAuthService =
             new QRCodePreAuthServiceImpl(
                     transactionInProgressRepositoryMock,
-                    commonPreAuthServiceMock);
+                    commonPreAuthServiceMock, auditUtilitiesMock);
   }
 
   @Test

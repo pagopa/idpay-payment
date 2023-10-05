@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthService;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,12 +16,14 @@ import org.springframework.stereotype.Service;
 public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final CommonPreAuthService commonPreAuthService;
+  private final AuditUtilities auditUtilities;
 
   public QRCodePreAuthServiceImpl(
           TransactionInProgressRepository transactionInProgressRepository,
-          CommonPreAuthService commonPreAuthService) {
+          CommonPreAuthService commonPreAuthService, AuditUtilities auditUtilities) {
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.commonPreAuthService = commonPreAuthService;
+    this.auditUtilities = auditUtilities;
   }
 
   @Override
@@ -34,8 +37,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
     commonPreAuthService.relateUser(trx, userId);
     AuthPaymentDTO authPaymentDTO = commonPreAuthService.previewPayment(trx);
 
-    commonPreAuthService.auditLogUserRelate(trx);
-
+    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
     return authPaymentDTO;
 
   }

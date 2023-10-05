@@ -198,6 +198,33 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     }
 
     @Test
+    void updateTrxRelateUserIdentified() {
+        // Given
+        TransactionInProgress trx =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgressRepository.save(trx);
+
+        transactionInProgressRepository.updateTrxRelateUserIdentified(trx.getId(),
+                USER_ID, "IDPAYCODE");
+
+        // When
+        TransactionInProgress resultUpdate =
+                transactionInProgressRepository.findById(trx.getId()).orElse(null);
+
+        // Then
+        Assertions.assertNotNull(resultUpdate);
+        TestUtils.checkNotNullFields(resultUpdate,
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+        Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
+        Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
+    }
+
+    @Test
     void updateTrxIdentified() {
 
         TransactionInProgress transactionInProgress =

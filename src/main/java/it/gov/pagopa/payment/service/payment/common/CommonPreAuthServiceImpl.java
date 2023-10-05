@@ -102,11 +102,6 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
     }
   }
 
-  @Override
-  public void auditLogUserRelate(TransactionInProgress trx) {
-    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
-  }
-
   private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus) {
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
       throw new ClientExceptionWithBody(

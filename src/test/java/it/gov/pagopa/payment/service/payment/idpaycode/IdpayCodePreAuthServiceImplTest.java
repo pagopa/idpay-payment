@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ class IdpayCodePreAuthServiceImplTest {
     @Mock private EncryptRestConnector encryptRestConnectorMock;
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private CommonPreAuthService commonPreAuthServiceMock;
+    @Mock private AuditUtilities auditUtilitiesMock;
 
     private IdpayCodePreAuthService idpayCodePreAuthService;
 
@@ -45,6 +47,7 @@ class IdpayCodePreAuthServiceImplTest {
                 encryptRestConnectorMock,
                 transactionInProgressRepositoryMock,
                 commonPreAuthServiceMock,
+                auditUtilitiesMock,
                 new RelateUserResponseMapper());
     }
 
@@ -97,28 +100,6 @@ class IdpayCodePreAuthServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
-
-    }
-
-    @Test
-    void relateUserEncryptError() {
-        //Given
-        String trxId = "trxId";
-
-        when(encryptRestConnectorMock.upsertToken(Mockito.any()))
-                .thenThrow(new RuntimeException());
-
-
-        RelateUserRequest request = new RelateUserRequest(FISCALCODE);
-        //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-                idpayCodePreAuthService.relateUser(trxId, request)
-        );
-
-        //Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getHttpStatus());
-        Assertions.assertEquals("INTERNAL SERVER ERROR", result.getCode());
 
     }
 }
