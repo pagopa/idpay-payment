@@ -79,21 +79,14 @@ public class CommonPreAuthServiceImpl{
       transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards(), channel);
     }
 
-      Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+    Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
             Long.sum(CommonUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
     preview.setResidualBudget(residualBudget);
 
     return preview;
     } catch (RuntimeException e) {
       auditUtilities.logErrorPreviewTransaction(trx.getTrxCode(), trx.getUserId());
-      if (e.toString().contains("ClientException")){
-        throw e;
-      } else {
-        throw new ClientExceptionWithBody(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                PaymentConstants.ExceptionCode.GENERIC_ERROR,
-                "A generic error occurred for trxCode: [%s]".formatted(trx.getTrxCode()));
-      }
+      throw e;
     }
   }
 
