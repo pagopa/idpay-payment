@@ -5,10 +5,10 @@ import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.mapper.BaseTransactionResponse2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
@@ -18,12 +18,8 @@ import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCreationService;
 import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCreationServiceImpl;
-import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
+import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
@@ -67,11 +63,11 @@ class CommonCreationServiceImplTest {
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private MerchantConnector merchantConnectorMock;
 
-  QRCodeCreationService qrCodeCreationService;
+  CommonCreationServiceImpl CommonCreationService;
 
   @BeforeEach
   void setUp() {
-    qrCodeCreationService =
+    CommonCreationService =
         new QRCodeCreationServiceImpl(
                 transactionInProgress2BaseTransactionResponseMapper,
             transactionCreationRequest2TransactionInProgressMapper,
@@ -87,7 +83,7 @@ class CommonCreationServiceImplTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
+    BaseTransactionResponseDTO trxCreated = BaseTransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
@@ -106,8 +102,8 @@ class CommonCreationServiceImplTest {
     when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    TransactionResponse result =
-        qrCodeCreationService.createQRCodeTransaction(
+    BaseTransactionResponseDTO result =
+        CommonCreationService.createTransaction(
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
@@ -163,8 +159,8 @@ class CommonCreationServiceImplTest {
     when(transactionInProgressRepository.createIfExists(trx, "trxcode2"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    TransactionResponse result =
-        qrCodeCreationService.createQRCodeTransaction(
+    BaseTransactionResponseDTO result =
+            CommonCreationService.createTransaction(
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
@@ -186,7 +182,7 @@ class CommonCreationServiceImplTest {
         Assertions.assertThrows(
             ClientException.class,
             () ->
-                qrCodeCreationService.createQRCodeTransaction(
+                    CommonCreationService.createTransaction(
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
@@ -208,7 +204,7 @@ class CommonCreationServiceImplTest {
             Assertions.assertThrows(
                     ClientException.class,
                     () ->
-                            qrCodeCreationService.createQRCodeTransaction(
+                            CommonCreationService.createTransaction(
                                     trxCreationReq,
                                     RewardConstants.TRX_CHANNEL_QRCODE,
                                     "MERCHANTID1",
@@ -229,7 +225,7 @@ class CommonCreationServiceImplTest {
         Assertions.assertThrows(
             ClientException.class,
             () ->
-                qrCodeCreationService.createQRCodeTransaction(
+                    CommonCreationService.createTransaction(
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
@@ -254,7 +250,7 @@ class CommonCreationServiceImplTest {
         Assertions.assertThrows(
             ClientException.class,
             () ->
-                qrCodeCreationService.createQRCodeTransaction(
+                    CommonCreationService.createTransaction(
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
