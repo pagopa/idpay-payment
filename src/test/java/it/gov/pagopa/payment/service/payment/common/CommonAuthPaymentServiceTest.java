@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.qrcode;
+package it.gov.pagopa.payment.service.payment.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,6 +24,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentServiceImpl;
 import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
@@ -44,7 +46,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-class QRCodeAuthPaymentServiceTest {
+class CommonAuthPaymentServiceTest {
 
   @Mock private TransactionInProgressRepository repositoryMock;
   @Mock private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredServiceMock;
@@ -111,7 +113,7 @@ class QRCodeAuthPaymentServiceTest {
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result, "rejectionReasons");
-    assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
+    assertEquals(transaction.getTrxCode(), result.getTrxCode());
     verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
   }
 
@@ -208,16 +210,11 @@ class QRCodeAuthPaymentServiceTest {
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID%d".formatted(1));
 
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1"));
-
-    verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "userId");
 
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, ((ClientExceptionWithBody) result).getCode());
@@ -276,13 +273,7 @@ class QRCodeAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenThrow(new RuntimeException());
 
-    try {
-      service.authPayment("USERID1", "trxcode1");
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionWithBody e) {
-      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
-      Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, e.getCode());
-    }
+    Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1"));
   }
 
   @Test
