@@ -3,10 +3,10 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
@@ -27,8 +27,8 @@ public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  private final TransactionInProgress2TransactionResponseMapper
-      transactionInProgress2TransactionResponseMapper;
+  private final TransactionInProgress2BaseTransactionResponseMapper
+          transactionInProgress2BaseTransactionResponseMapper;
   private final TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
   private final RewardRuleRepository rewardRuleRepository;
@@ -38,16 +38,16 @@ public class CommonCreationServiceImpl {
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public CommonCreationServiceImpl(
-          TransactionInProgress2TransactionResponseMapper
-          transactionInProgress2TransactionResponseMapper,
+          TransactionInProgress2BaseTransactionResponseMapper
+                  transactionInProgress2BaseTransactionResponseMapper,
           TransactionCreationRequest2TransactionInProgressMapper
           transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
           AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
-    this.transactionInProgress2TransactionResponseMapper =
-        transactionInProgress2TransactionResponseMapper;
+    this.transactionInProgress2BaseTransactionResponseMapper =
+            transactionInProgress2BaseTransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
         transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
@@ -57,7 +57,7 @@ public class CommonCreationServiceImpl {
     this.merchantConnector = merchantConnector;
   }
 
-  public TransactionResponse createTransaction(
+  public BaseTransactionResponseDTO createTransaction(
       TransactionCreationRequest trxCreationRequest,
       String channel,
       String merchantId,
@@ -108,7 +108,7 @@ public class CommonCreationServiceImpl {
 
       auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 
-      return transactionInProgress2TransactionResponseMapper.apply(trx);
+      return transactionInProgress2BaseTransactionResponseMapper.apply(trx);
     } catch (RuntimeException e) {
       auditUtilities.logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;
