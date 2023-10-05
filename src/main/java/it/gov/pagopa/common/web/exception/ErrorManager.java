@@ -2,20 +2,24 @@ package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 @Slf4j
 public class ErrorManager {
-  private static final ErrorDTO defaultErrorDTO;
+  private final ErrorDTO defaultErrorDTO;
 
-  static {
-    defaultErrorDTO = new ErrorDTO("Error", "Something gone wrong");
+  public ErrorManager(@Nullable ErrorDTO defaultErrorDTO) {
+    this.defaultErrorDTO = Optional.ofNullable(defaultErrorDTO)
+        .orElse(new ErrorDTO("Error", "Something gone wrong"));
   }
 
   @ExceptionHandler(RuntimeException.class)
