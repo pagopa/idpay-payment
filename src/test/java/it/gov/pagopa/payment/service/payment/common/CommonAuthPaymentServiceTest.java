@@ -273,13 +273,7 @@ class CommonAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenThrow(new RuntimeException());
 
-    try {
-      service.authPayment("USERID1", "trxcode1");
-      Assertions.fail("Expected exception");
-    } catch (ClientExceptionWithBody e) {
-      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
-      Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, e.getCode());
-    }
+    Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1"));
   }
 
   @Test

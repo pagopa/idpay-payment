@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller.payment;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
@@ -24,7 +25,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(QRCodePaymentControllerImpl.class)
-@Import(JsonConfig.class)
+@Import({JsonConfig.class, PaymentErrorManagerConfig.class})
 class QRCodePaymentControllerImplTest {
 
     @Autowired
