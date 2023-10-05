@@ -54,16 +54,10 @@ public abstract class CommonAuthServiceImpl {
         try {
             TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
-            if (trx == null) {
-                throw new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
-                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode));
-            }
-
-            checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
-
             checkAuth(trxCode, userId, trx);
+
+            checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
+
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
@@ -161,6 +155,13 @@ public abstract class CommonAuthServiceImpl {
     }
 
     private void checkAuth(String trxCode, String userId, TransactionInProgress trx){
+        if (trx == null) {
+            throw new ClientExceptionWithBody(
+                    HttpStatus.NOT_FOUND,
+                    PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                    "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+        }
+
         if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
             throw new ClientExceptionWithBody(
                     HttpStatus.FORBIDDEN,
