@@ -107,7 +107,7 @@ class CommonAuthPaymentServiceTest {
         .when(repositoryMock)
         .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
 
-    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1", null);
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -146,7 +146,7 @@ class CommonAuthPaymentServiceTest {
             Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
 
     ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
 
     verify(qrCodeAuthorizationExpiredServiceMock, times(1)).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -184,7 +184,7 @@ class CommonAuthPaymentServiceTest {
                 Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
 
     ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -198,7 +198,7 @@ class CommonAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 
     ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
 
     assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, ((ClientExceptionWithBody) result).getCode());
@@ -214,7 +214,7 @@ class CommonAuthPaymentServiceTest {
         .thenReturn(transaction);
 
     ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1"));
+        assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1", null));
 
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, ((ClientExceptionWithBody) result).getCode());
@@ -235,7 +235,7 @@ class CommonAuthPaymentServiceTest {
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -256,7 +256,7 @@ class CommonAuthPaymentServiceTest {
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
@@ -273,7 +273,7 @@ class CommonAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenThrow(new RuntimeException());
 
-    Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1", null));
   }
 
   @Test
@@ -288,7 +288,7 @@ class CommonAuthPaymentServiceTest {
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     try {
-      service.authPayment("USERID1", "trxcode1");
+      service.authPayment("USERID1", "trxcode1", null);
       Assertions.fail("Expected exception");
     } catch (ClientExceptionWithBody e) {
       assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());

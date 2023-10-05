@@ -50,7 +50,7 @@ public abstract class CommonAuthServiceImpl {
         this.walletConnector = walletConnector;
     }
 
-    public AuthPaymentDTO authPayment(String userId, String trxCode) {
+    public AuthPaymentDTO authPayment(String userId, String trxCode, String merchantId) {
         try {
             TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
@@ -60,19 +60,19 @@ public abstract class CommonAuthServiceImpl {
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
 
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons(), merchantId);
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
             authPaymentDTO.setRejectionReasons(null);
             return authPaymentDTO;
         } catch (RuntimeException e) {
-            logErrorAuthorizedPayment(trxCode, userId);
+            logErrorAuthorizedPayment(trxCode, userId, merchantId);
             throw e;
         }
     }
 
     private AuthPaymentDTO invokeRuleEngine(String userId, String trxCode, TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
-        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
+        if (trx.getStatus().equals(getSyncTrxStatus())) {
             trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
             authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
 
@@ -155,7 +155,7 @@ public abstract class CommonAuthServiceImpl {
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode));
         }
 
-        if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
+        if (evaluateUserId(trx, userId)) {
             throw new ClientExceptionWithBody(
                     HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
@@ -163,11 +163,19 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward,List<String> rejectionReasons) {
+    protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward,List<String> rejectionReasons, String merchantId) {
         auditUtilities.logAuthorizedPayment(initiativeId, id, trxCode, userId, reward, rejectionReasons);
     }
 
-    protected  void logErrorAuthorizedPayment(String trxCode, String userId){
+    protected  void logErrorAuthorizedPayment(String trxCode, String userId, String merchantId){
         auditUtilities.logErrorAuthorizedPayment(trxCode, userId);
+    }
+
+    protected SyncTrxStatus getSyncTrxStatus(){
+        return SyncTrxStatus.IDENTIFIED;
+    }
+
+    protected boolean evaluateUserId(TransactionInProgress trx, String userId){
+        return trx.getUserId()!=null && !userId.equals(trx.getUserId());
     }
 }

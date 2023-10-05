@@ -95,6 +95,18 @@ class AuditUtilitiesTest {
     }
 
     @Test
+    void logBarCodeAuthorizedPayment() {
+        auditUtilities.logBarCodeAuthorizedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID, REWARD, Collections.emptyList());
+
+        assertEquals(
+                CEF + " msg=Merchant authorized the transaction"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s cs4Label=merchantId cs4=%s cs5Label=reward cs5=%s cs6Label=rejectionReasons cs6=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID, REWARD, "[]"),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
     void logErrorAuthorizedPayment() {
         auditUtilities.logErrorAuthorizedPayment(TRX_CODE, USER_ID);
 
@@ -102,6 +114,18 @@ class AuditUtilitiesTest {
                 CEF + " msg=User authorized the transaction - KO"
                         + " cs1Label=trxCode cs1=%s suser=%s"
                         .formatted(TRX_CODE, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logBarCodeErrorAuthorizedPayment() {
+        auditUtilities.logBarCodeErrorAuthorizedPayment(TRX_CODE, MERCHANT_ID);
+
+        assertEquals(
+                CEF + " msg=Merchant authorized the transaction - KO"
+                        + " cs1Label=trxCode cs1=%s cs2Label=merchantId cs2=%s"
+                        .formatted(TRX_CODE, MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
