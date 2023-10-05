@@ -1,0 +1,33 @@
+package it.gov.pagopa.payment.service.payment;
+
+
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
+import it.gov.pagopa.payment.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+@Slf4j
+@Service
+public class BarCodePaymentServiceImpl implements BarCodePaymentService {
+    private final BarCodeCreationService barCodeCreationService;
+
+    public BarCodePaymentServiceImpl(BarCodeCreationService barCodeCreationService) {
+        this.barCodeCreationService = barCodeCreationService;
+    }
+
+    @Override
+    public TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId) {
+        return barCodeCreationService.createTransaction(
+                trxBRCodeCreationRequest,
+                RewardConstants.TRX_CHANNEL_BARCODE,
+                userId);
+    }
+
+    @Override
+    public AuthPaymentDTO authPayment(String trxCode, String merchantId) {
+        return null; //TODO after refactor impl
+    }
+}

@@ -1,19 +1,19 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeResponse;
+import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/idpay/payment/br-code")
-public interface BRCodePaymentController {
+public interface BarCodePaymentController {
 
-    @PostMapping("/citizen") //TODO after refactor path
+    @PostMapping("/citizen")
     @ResponseStatus(code = HttpStatus.CREATED)
-    TransactionBRCodeResponse createTransaction(
-            @RequestBody @Valid TransactionBRCodeCreationRequest trxBRCodeCreationRequest,
+    TransactionBarCodeResponse createTransaction(
+            @RequestBody @Valid TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
             @RequestHeader("x-user-id") String userId
     );
 

@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionBRCodeCreationRequest {
+public class TransactionBarCodeCreationRequest {
 
     @NotBlank
     private String initiativeId;
