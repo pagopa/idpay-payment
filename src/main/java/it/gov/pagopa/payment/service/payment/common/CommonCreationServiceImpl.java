@@ -23,7 +23,7 @@ import java.time.LocalDate;
 
 @Slf4j
 @Service
-public class CommonCreationServiceImpl {
+public abstract class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
@@ -34,7 +34,7 @@ public class CommonCreationServiceImpl {
   private final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TrxCodeGenUtil trxCodeGenUtil;
-  private final AuditUtilities auditUtilities;
+  protected final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public CommonCreationServiceImpl(
@@ -106,19 +106,14 @@ public class CommonCreationServiceImpl {
                       trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer);
       generateTrxCodeAndSave(trx);
 
-      auditUtilities.logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
+      logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 
       return transactionInProgress2TransactionResponseMapper.apply(trx);
     } catch (RuntimeException e) {
-      auditUtilities.logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
+      logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;
     }
   }
-
-  protected String getFlow() {
-    return CREATE_TRANSACTION;
-  }
-
 
   private void generateTrxCodeAndSave(TransactionInProgress trx) {
     long retry = 1;
@@ -129,5 +124,17 @@ public class CommonCreationServiceImpl {
           getFlow(),
           retry);
     }
+  }
+
+  protected String getFlow() {
+    return CREATE_TRANSACTION;
+  }
+
+  protected void logCreatedTransaction(String initiativeId, String id, String trxCode, String merchantId) {
+    auditUtilities.logCreatedTransaction(initiativeId, id, trxCode, merchantId);
+  }
+
+  protected  void logErrorCreatedTransaction(String initiativeId, String merchantId){
+    auditUtilities.logErrorCreatedTransaction(initiativeId, merchantId);
   }
 }
