@@ -39,7 +39,7 @@ public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implement
     relateUser(trx, userId);
     AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_QRCODE);
 
-    auditLogRelateUser(trx);
+    auditLogRelateUser(trx, RewardConstants.TRX_CHANNEL_QRCODE);
     return authPaymentDTO;
 
   }

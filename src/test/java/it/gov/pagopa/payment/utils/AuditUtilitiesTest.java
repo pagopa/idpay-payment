@@ -17,6 +17,7 @@ class AuditUtilitiesTest {
     private static final String INITIATIVE_ID = "TEST_INITIATIVE_ID";
     private static final String TRX_CODE = "TEST_TRX_CODE";
     private static final String USER_ID = "TEST_USER_ID";
+    private static final String CHANNEL = "TEST_CHANNEL";
     private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
     public static final long REWARD = 0L;
     public static final String TRX_ID = "TEST_TRX_ID";
@@ -60,12 +61,12 @@ class AuditUtilitiesTest {
 
     @Test
     void logRelatedUserToTransaction() {
-        auditUtilities.logRelatedUserToTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID);
+        auditUtilities.logRelatedUserToTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL);
 
         assertEquals(
                 CEF + " msg=User related to transaction"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s"
-                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID),
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s cs4Label=channel cs4=%s suser=%s"
+                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -82,6 +83,17 @@ class AuditUtilitiesTest {
         );
     }
 
+    @Test
+    void logErrorPreviewTransaction() {
+        auditUtilities.logErrorPreviewTransaction(TRX_CODE, USER_ID);
+
+        assertEquals(
+                CEF + " msg=User request preview the transaction - KO"
+                        + " cs1Label=trxCode cs1=%s suser=%s"
+                        .formatted(TRX_CODE, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
     @Test
     void logAuthorizedPayment() {
         auditUtilities.logAuthorizedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD, Collections.emptyList());

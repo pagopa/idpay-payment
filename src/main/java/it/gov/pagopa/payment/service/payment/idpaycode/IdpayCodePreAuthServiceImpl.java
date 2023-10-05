@@ -54,7 +54,7 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         transactionInProgressRepository.updateTrxRelateUserIdentified(trxId, userId, RewardConstants.TRX_CHANNEL_IDPAYCODE);
         trx.setStatus(SyncTrxStatus.IDENTIFIED);
 
-        auditLogRelateUser(trxInProgress);
+        auditLogRelateUser(trxInProgress, RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
         return relateUserResponseMapper.transactionMapper(trxInProgress);
     }

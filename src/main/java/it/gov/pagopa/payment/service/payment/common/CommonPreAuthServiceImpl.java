@@ -127,7 +127,7 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  protected void auditLogRelateUser(TransactionInProgress trx){
-    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
+  protected void auditLogRelateUser(TransactionInProgress trx, String channel){
+    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), channel);
   }
 }
