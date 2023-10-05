@@ -17,7 +17,7 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons);
   void updateTrxRelateUserIdentified(String id, String userId, String channel);
-  void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards);
+  void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards, String channel);
   void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons);
   void updateTrxRejected(String id, List<String> rejectionReasons, OffsetDateTime trxChargeDate);
   Criteria getCriteria(String merchantId, String initiativeId, String userId, String status);

@@ -3,6 +3,9 @@ package it.gov.pagopa.payment.service.payment.idpaycode;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
+import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
@@ -11,8 +14,8 @@ import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.common.CommonPreAuthService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,29 +28,38 @@ import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodePreAuthServiceImplTest {
     private static final String USER_ID = "userId";
     private static final String IDPAYCODE = "IDPAYCODE";
     private static final String FISCALCODE = "FISCALCODE";
-    @Mock private EncryptRestConnector encryptRestConnectorMock;
+
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
-    @Mock private CommonPreAuthService commonPreAuthServiceMock;
+    @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
+    @Mock private WalletConnector walletConnectorMock;
+    @Mock private EncryptRestConnector encryptRestConnectorMock;
+
     @Mock private AuditUtilities auditUtilitiesMock;
 
     private IdpayCodePreAuthService idpayCodePreAuthService;
+
+    private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
+    private static final String USER_ID1 = "USERID1";
 
     @BeforeEach
     void setUp() {
         long authorizationExpirationMinutes = 4350;
         idpayCodePreAuthService = new IdpayCodePreAuthServiceImpl(
-                encryptRestConnectorMock,
+                authorizationExpirationMinutes,
                 transactionInProgressRepositoryMock,
-                commonPreAuthServiceMock,
+                rewardCalculatorConnectorMock,
                 auditUtilitiesMock,
+                walletConnectorMock,
+                encryptRestConnectorMock,
                 new RelateUserResponseMapper());
     }
 
@@ -59,24 +71,20 @@ class IdpayCodePreAuthServiceImplTest {
         when(encryptRestConnectorMock.upsertToken(Mockito.any()))
                 .thenReturn(new EncryptedCfDTO(USER_ID));
 
-        when(transactionInProgressRepositoryMock.findById(trx.getId()))
-                .thenReturn(Optional.of(trx));
+        when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
-        when(commonPreAuthServiceMock.relateUser(trx, USER_ID))
-                .thenReturn(trx);
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
-        doNothing().when(transactionInProgressRepositoryMock).updateTrxRelateUserIdentified(trx.getId(), USER_ID,IDPAYCODE);
 
-        //When
-        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), new RelateUserRequest(FISCALCODE));
 
-        //Then
+        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), new RelateUserRequest("FISCAL_CODE"));
+
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
 
-        Mockito.verify(transactionInProgressRepositoryMock, Mockito.times(1)).findById(Mockito.anyString());
-        Mockito.verify(commonPreAuthServiceMock, Mockito.times(1)).relateUser(Mockito.any(), Mockito.anyString());
-        Mockito.verify(transactionInProgressRepositoryMock, Mockito.times(1)).updateTrxRelateUserIdentified(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        verify(transactionInProgressRepositoryMock, times(1)).updateTrxRelateUserIdentified(anyString(), anyString(), any());
+        verify(walletConnectorMock, times(1)).getWallet(anyString(), anyString());
     }
 
     @Test

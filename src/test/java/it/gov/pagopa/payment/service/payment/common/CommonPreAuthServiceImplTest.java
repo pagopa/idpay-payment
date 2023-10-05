@@ -38,9 +38,8 @@ class CommonPreAuthServiceImplTest {
   @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
-  @Mock private CommonPreAuthService commonPreAuthServiceMock;
 
-  private CommonPreAuthService commonPreAuthService;
+  private CommonPreAuthServiceImpl commonPreAuthService;
 
   private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
   private static final String USER_ID1 = "USERID1";
@@ -100,12 +99,12 @@ class CommonPreAuthServiceImplTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     ClientException result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-            commonPreAuthService.previewPayment(trx)
+            commonPreAuthService.previewPayment(trx, "CHANNEL")
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -121,13 +120,13 @@ class CommonPreAuthServiceImplTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-            commonPreAuthService.previewPayment(trx)
+            commonPreAuthService.previewPayment(trx, "CHANNEL")
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -142,12 +141,12 @@ class CommonPreAuthServiceImplTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     ClientException result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-      commonPreAuthService.previewPayment(trx)
+      commonPreAuthService.previewPayment(trx, "CHANNEL")
     );
 
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
   }
 
@@ -263,7 +262,7 @@ class CommonPreAuthServiceImplTest {
     when(walletConnectorMock.getWallet(any(), any())).thenThrow(new RuntimeException());
 
     ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-            commonPreAuthService.previewPayment(trx)
+            commonPreAuthService.previewPayment(trx, "CHANNEL")
     );
 
     Assertions.assertNotNull(result);

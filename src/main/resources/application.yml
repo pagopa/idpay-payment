@@ -173,6 +173,9 @@ app:
       baseUrl:
         img: ${QR_CODE_IMG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
         txt: ${QR_CODE_TXT_URL:https://continua.io.pagopa.it/idpay/auth}
+  idpayCode:
+    expirations:
+      authorizationMinutes: ${IDPAY_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:4320}}
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}

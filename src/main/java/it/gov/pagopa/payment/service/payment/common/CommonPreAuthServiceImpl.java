@@ -13,15 +13,12 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 
-@Service
 @Slf4j
-public class CommonPreAuthServiceImpl implements CommonPreAuthService {
+public class CommonPreAuthServiceImpl{
   private final long authorizationExpirationMinutes;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
@@ -29,7 +26,7 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
   private final WalletConnector walletConnector;
 
   public CommonPreAuthServiceImpl(
-          @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
+          long authorizationExpirationMinutes,
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuditUtilities auditUtilities,
@@ -41,7 +38,6 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
     this.walletConnector = walletConnector;
   }
 
-  @Override
   public TransactionInProgress relateUser(TransactionInProgress trx, String userId) {
     try {
       String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
@@ -59,8 +55,7 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
     }
   }
 
-  @Override
-  public AuthPaymentDTO previewPayment(TransactionInProgress trx) {
+  public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel) {
     try {
     AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
 
@@ -81,7 +76,7 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
     } else {
       preview.setRejectionReasons(null);
       preview.setStatus(SyncTrxStatus.IDENTIFIED);
-      transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards());
+      transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards(), channel);
     }
 
       Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
@@ -137,5 +132,9 @@ public class CommonPreAuthServiceImpl implements CommonPreAuthService {
               PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
               "Cannot relate transaction [%s] in status %s".formatted(trxCode, trx.getStatus()));
     }
+  }
+
+  protected void auditLogRelateUser(TransactionInProgress trx){
+    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
   }
 }

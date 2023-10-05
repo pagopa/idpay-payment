@@ -1,29 +1,31 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.common.CommonPreAuthService;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
+public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements QRCodePreAuthService {
   private final TransactionInProgressRepository transactionInProgressRepository;
-  private final CommonPreAuthService commonPreAuthService;
-  private final AuditUtilities auditUtilities;
-
-  public QRCodePreAuthServiceImpl(
-          TransactionInProgressRepository transactionInProgressRepository,
-          CommonPreAuthService commonPreAuthService, AuditUtilities auditUtilities) {
+  public QRCodePreAuthServiceImpl(@Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
+                                  TransactionInProgressRepository transactionInProgressRepository,
+                                  RewardCalculatorConnector rewardCalculatorConnector,
+                                  AuditUtilities auditUtilities,
+                                  WalletConnector walletConnector) {
+    super(authorizationExpirationMinutes, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
     this.transactionInProgressRepository = transactionInProgressRepository;
-    this.commonPreAuthService = commonPreAuthService;
-    this.auditUtilities = auditUtilities;
   }
 
   @Override
@@ -34,10 +36,10 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
                     PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
-    commonPreAuthService.relateUser(trx, userId);
-    AuthPaymentDTO authPaymentDTO = commonPreAuthService.previewPayment(trx);
+    relateUser(trx, userId);
+    AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_QRCODE);
 
-    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId());
+    auditLogRelateUser(trx);
     return authPaymentDTO;
 
   }

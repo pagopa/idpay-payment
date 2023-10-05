@@ -145,7 +145,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 TransactionInProgress.class);
     }
     @Override
-    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards) {
+    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -154,6 +154,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.rewards, rewards)
+                        .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
