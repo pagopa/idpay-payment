@@ -34,7 +34,7 @@ public abstract class CommonAuthServiceImpl {
     protected final AuditUtilities auditUtilities;
     private final WalletConnector walletConnector;
 
-    public CommonAuthServiceImpl(
+    protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
             QRCodeAuthorizationExpiredService authorizationExpiredService,
             RewardCalculatorConnector rewardCalculatorConnector,

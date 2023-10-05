@@ -37,7 +37,7 @@ public abstract class CommonCreationServiceImpl {
   protected final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-  public CommonCreationServiceImpl(
+  protected CommonCreationServiceImpl(
           TransactionInProgress2TransactionResponseMapper
           transactionInProgress2TransactionResponseMapper,
           TransactionCreationRequest2TransactionInProgressMapper
