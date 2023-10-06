@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -18,7 +17,6 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -44,10 +42,7 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         String userId = retrieveUserId(request.getFiscalCode());
 
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
-                .orElseThrow(() -> new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
-                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                        "Cannot find transaction with transactionId [%s]".formatted(trxId)));
+                .orElseThrow(() -> new IllegalStateException(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED));
 
         TransactionInProgress trxInProgress = relateUser(trx, userId);
 
