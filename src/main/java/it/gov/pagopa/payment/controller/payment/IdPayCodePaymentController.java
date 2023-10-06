@@ -15,10 +15,11 @@ public interface IdPayCodePaymentController {
     RelateUserResponse relateUser(@PathVariable("transactionId") String trxId,
                                   @RequestBody @Valid RelateUserRequest request);
 
-    @PutMapping("/{trxId}/preview") //TODO after refactor path
+    @PutMapping("/{transactionId}/preview")
     @ResponseStatus(code = HttpStatus.OK)
-    AuthPaymentDTO previewPayment(@PathVariable("trxId") String trxId,
-                              @RequestHeader("x-user-id") String userId);
+    AuthPaymentDTO previewPayment(@PathVariable("transactionId") String trxId,
+                                  @RequestHeader("x-acquirer-id") String acquirerId,
+                                  @RequestHeader("x-merchant-fiscal-code") String merchantFiscalCode);
 
     @PutMapping("/{trxId}/authorize") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)

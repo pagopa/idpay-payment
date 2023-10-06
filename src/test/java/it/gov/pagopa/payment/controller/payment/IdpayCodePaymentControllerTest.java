@@ -53,4 +53,24 @@ class IdpayCodePaymentControllerTest {
     expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
 
   }
+
+  @Test
+  void previewPayment_testMandatoryHeaders() throws Exception {
+    String expectedCode = "INVALID_REQUEST";
+
+    MvcResult result = mockMvc.perform(
+                    put("/idpay/payment/idpay-code/{transactionId}/preview",
+                            "INITIATIVE_ID")
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
+            ErrorDTO.class);
+    assertEquals(expectedCode, actual.getCode());
+    assertEquals("Required request header "
+                    + "'x-acquirer-id' for method parameter type String is not present",
+            actual.getMessage());
+
+  }
 }

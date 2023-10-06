@@ -4,10 +4,12 @@ import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
+import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -23,18 +25,25 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements IdpayCodePreAuthService {
     private final TransactionInProgressRepository transactionInProgressRepository;
+    private final AuditUtilities auditUtilities;
     private final EncryptRestConnector encryptRestConnector;
     private final RelateUserResponseMapper relateUserResponseMapper;
+    private final AuthPaymentMapper authPaymentMapper;
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     public IdpayCodePreAuthServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
                                        TransactionInProgressRepository transactionInProgressRepository,
                                        RewardCalculatorConnector rewardCalculatorConnector,
                                        AuditUtilities auditUtilities,
                                        WalletConnector walletConnector,
-                                       EncryptRestConnector encryptRestConnector, RelateUserResponseMapper relateUserResponseMapper) {
+                                       EncryptRestConnector encryptRestConnector,
+                                       RelateUserResponseMapper relateUserResponseMapper,
+                                       AuthPaymentMapper authPaymentMapper) {
         super(authorizationExpirationMinutes, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
         this.transactionInProgressRepository = transactionInProgressRepository;
+        this.auditUtilities = auditUtilities;
         this.encryptRestConnector = encryptRestConnector;
         this.relateUserResponseMapper = relateUserResponseMapper;
+        this.authPaymentMapper = authPaymentMapper;
     }
 
     @Override
@@ -52,6 +61,22 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         auditLogRelateUser(trxInProgress, RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
         return relateUserResponseMapper.transactionMapper(trxInProgress);
+    }
+
+    @Override
+    public AuthPaymentDTO previewPayment(String trxId, String acquirerId, String merchantFiscalCode) {
+        TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
+                .orElseThrow(() -> new IllegalStateException(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED));
+
+        if(trx.getUserId() == null){
+            return authPaymentMapper.transactionMapper(trx);
+        }
+
+        //TODO 1926 checks preAuth(?)
+
+        AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        auditUtilities.logPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        return authPaymentDTO;
     }
 
     private String retrieveUserId(String fiscalCode) {

@@ -120,7 +120,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons) {
+    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -129,6 +129,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, 0L)
                         .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }

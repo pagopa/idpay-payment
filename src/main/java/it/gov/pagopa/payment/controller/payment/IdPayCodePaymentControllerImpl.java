@@ -47,8 +47,8 @@ public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentControlle
     @PerformanceLog(
             value = "IDPAYCODE_PREVIEW_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public AuthPaymentDTO previewPayment(String trxId, String userId) {
-        return idpayCodePaymentService.previewPayment(trxId,userId);
+    public AuthPaymentDTO previewPayment(String trxId, String acquirerId, String merchantFiscalCode) {
+        return idpayCodePaymentService.previewPayment(trxId, acquirerId, merchantFiscalCode);
     }
 
     @Override
