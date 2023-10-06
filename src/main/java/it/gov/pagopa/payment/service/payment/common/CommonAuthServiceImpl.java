@@ -50,17 +50,23 @@ public abstract class CommonAuthServiceImpl {
         this.walletConnector = walletConnector;
     }
 
-    public AuthPaymentDTO authPayment(String userId, String trxCode, String merchantId) {
+    public AuthPaymentDTO authPayment(String userId, String trxCode, String merchantId, Long amountCents) {
         try {
             TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
             checkAuth(trxCode, userId, trx);
 
-            checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
+            String userIdForAuth = trx.getUserId() != null ? trx.getUserId() : userId;
 
-            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
+            checkWalletStatus(trx.getInitiativeId(), userIdForAuth);
 
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons(), merchantId);
+            if(amountCents != null){
+                trx.setAmountCents(amountCents);
+            }
+
+            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userIdForAuth, trxCode, trx);
+
+            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userIdForAuth, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons(), merchantId);
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
             authPaymentDTO.setRejectionReasons(null);
             return authPaymentDTO;

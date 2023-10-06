@@ -20,6 +20,7 @@ class AuditUtilitiesTest {
     private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
     public static final long REWARD = 0L;
     public static final String TRX_ID = "TEST_TRX_ID";
+    private static final String FLOW_CAUSE = "TRANSACTION_AUTHORIZATION_EXPIRED";
     private final AuditUtilities auditUtilities = new AuditUtilities();
     private MemoryAppender memoryAppender;
 
@@ -204,6 +205,32 @@ class AuditUtilitiesTest {
                 CEF + " msg=User unrelated the transaction - KO"
                         + " cs1Label=trxId cs1=%s cs2Label=userId cs2=%s"
                         .formatted(TRX_ID, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logExpiredTransaction() {
+        auditUtilities.logExpiredTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, FLOW_CAUSE);
+
+
+        assertEquals(
+                CEF + " msg=Expire transaction processed"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=flowCause cs4=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, FLOW_CAUSE),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorExpiredTransaction() {
+        auditUtilities.logErrorExpiredTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, FLOW_CAUSE);
+
+
+        assertEquals(
+                CEF + " msg=Expire transaction processed - KO"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=flowCause cs4=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, FLOW_CAUSE),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }

@@ -66,7 +66,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
-    return qrCodeAuthPaymentService.authPayment(userId, trxCode, null);
+    return qrCodeAuthPaymentService.authPayment(userId, trxCode, null, null);
   }
 
   @Override

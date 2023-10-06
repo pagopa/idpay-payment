@@ -6,7 +6,7 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeResponse;
-import it.gov.pagopa.payment.service.payment.BRCodePaymentService;
+import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -27,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class BarCodePaymentControllerTest {
 
     @MockBean
-    private BRCodePaymentService brCodePaymentService;
+    private BarCodePaymentService barCodePaymentService;
 
     @Autowired
     private MockMvc mockMvc;

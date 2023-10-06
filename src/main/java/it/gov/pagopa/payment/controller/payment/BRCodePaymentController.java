@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.brcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeCreationRequest;
 import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeResponse;
 import jakarta.validation.Valid;
@@ -21,6 +22,7 @@ public interface BRCodePaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(
             @PathVariable("trxCode") String trxCode,
+            @RequestBody  @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
             @RequestHeader("x-merchant-id") String merchantId
     );
 

@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.brcode;
+package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;

@@ -24,6 +24,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentServiceImpl;
 import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentServiceImpl;
 import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
@@ -107,7 +108,7 @@ class CommonAuthPaymentServiceTest {
         .when(repositoryMock)
         .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
 
-    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1", null);
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1", null, null);
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -146,7 +147,7 @@ class CommonAuthPaymentServiceTest {
             Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
 
     ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null, null));
 
     verify(qrCodeAuthorizationExpiredServiceMock, times(1)).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -184,7 +185,7 @@ class CommonAuthPaymentServiceTest {
                 Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
 
     ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null, null));
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -198,7 +199,7 @@ class CommonAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 
     ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
+        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null, null));
 
     assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
     assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, ((ClientExceptionWithBody) result).getCode());
@@ -214,7 +215,7 @@ class CommonAuthPaymentServiceTest {
         .thenReturn(transaction);
 
     ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1", null));
+        assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1", null, null));
 
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, ((ClientExceptionWithBody) result).getCode());
@@ -235,7 +236,7 @@ class CommonAuthPaymentServiceTest {
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
+            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null, null));
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
@@ -256,7 +257,7 @@ class CommonAuthPaymentServiceTest {
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null));
+        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1", null, null));
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
@@ -273,7 +274,7 @@ class CommonAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenThrow(new RuntimeException());
 
-    Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1", null));
+    Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1", null, null));
   }
 
   @Test
@@ -288,7 +289,7 @@ class CommonAuthPaymentServiceTest {
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     try {
-      service.authPayment("USERID1", "trxcode1", null);
+      service.authPayment("USERID1", "trxcode1", null, null);
       Assertions.fail("Expected exception");
     } catch (ClientExceptionWithBody e) {
       assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
@@ -298,4 +299,62 @@ class CommonAuthPaymentServiceTest {
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
   }
 
+  @Test
+  void barCodeAuthPayment(){
+    // Given
+    BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
+            repositoryMock,
+            qrCodeAuthorizationExpiredServiceMock,
+            rewardCalculatorConnectorMock,
+            notifierServiceMock,
+            paymentErrorNotifierServiceMock,
+            auditUtilitiesMock,
+            walletConnectorMock);
+    String trxCode = "trxcode1";
+    String merchantId = "MERCHANT_ID";
+    long amountCents = 1000;
+
+    TransactionInProgress transaction =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    transaction.setUserId("USERID1");
+
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+    authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+
+    Reward reward = RewardFaker.mockInstance(1);
+    reward.setCounters(new RewardCounters());
+
+    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
+
+    when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
+            .thenReturn(transaction);
+
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+
+    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
+
+    when(notifierServiceMock.notify(transaction, transaction.getUserId())).thenReturn(true);
+
+    Mockito.doAnswer(
+                    invocationOnMock -> {
+                      transaction.setStatus(SyncTrxStatus.AUTHORIZED);
+                      transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
+                      transaction.setRejectionReasons(List.of());
+                      transaction.setTrxChargeDate(OffsetDateTime.now());
+                      return transaction;
+                    })
+            .when(repositoryMock)
+            .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
+
+    // When
+    AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(null, trxCode, merchantId, amountCents);
+
+    // Then
+    verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
+    verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+    assertEquals(authPaymentDTO, result);
+    TestUtils.checkNotNullFields(result, "rejectionReasons");
+    assertEquals(transaction.getTrxCode(), result.getTrxCode());
+    verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
+  }
 }
