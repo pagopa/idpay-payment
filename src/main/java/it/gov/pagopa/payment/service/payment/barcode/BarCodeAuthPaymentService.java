@@ -4,5 +4,5 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 
 public interface BarCodeAuthPaymentService {
 
-    AuthPaymentDTO authPayment(String userId, String trxCode, String merchantId, Long amountCents);
+    AuthPaymentDTO authPayment(String trxCode, String merchantId, long amountCents);
 }

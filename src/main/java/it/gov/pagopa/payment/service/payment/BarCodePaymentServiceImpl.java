@@ -25,6 +25,6 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
 
     @Override
     public AuthPaymentDTO authPayment(String trxCode, long amountCents, String merchantId) {
-        return barCodeAuthPaymentService.authPayment(null, trxCode, merchantId, amountCents);
+        return barCodeAuthPaymentService.authPayment(trxCode, merchantId, amountCents);
     }
 }

@@ -36,7 +36,7 @@ class BarCodePaymentServiceImplTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-        Mockito.when(barCodeAuthPaymentService.authPayment(null, trxCode, merchantId, amountCents))
+        Mockito.when(barCodeAuthPaymentService.authPayment(trxCode, merchantId, amountCents))
                 .thenReturn(authPaymentDTO);
 
         // When
@@ -45,7 +45,7 @@ class BarCodePaymentServiceImplTest {
         // Then
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
-        Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(null, trxCode, merchantId, amountCents);
+        Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, merchantId, amountCents);
         Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
 }
