@@ -15,8 +15,8 @@ public class TransactionInProgress2BaseTransactionResponseMapper
 
   private final int authorizationExpirationMinutes;
 
-  public TransactionInProgress2BaseTransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes) {
-    this.authorizationExpirationMinutes = authorizationExpirationMinutes; //TODO OP
+  public TransactionInProgress2BaseTransactionResponseMapper(@Value("${app.idpayCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes) {
+    this.authorizationExpirationMinutes = authorizationExpirationMinutes;
   }
 
   @Override
