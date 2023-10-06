@@ -6,10 +6,10 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.test.fakers.BaseTransactionResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +53,7 @@ class CommonPaymentControllerTest {
 
         MvcResult result = mockMvc.perform(
                         post("/idpay/payment/create-trx")
-                                .header("x-merchant-id", "MERCHANT_ID")
+                                .header("x-merchant-id", MERCHANT_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"))
                 .andExpect(status().isBadRequest())
@@ -61,9 +61,9 @@ class CommonPaymentControllerTest {
 
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
+
         assertEquals(expectedCode, actual.getCode());
         expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
-
     }
 
     @Test
@@ -83,12 +83,13 @@ class CommonPaymentControllerTest {
                 ).andExpect(status().isCreated()).andReturn();
 
 
-        TransactionResponse resultResponse = objectMapper.readValue(
+        BaseTransactionResponseDTO resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TransactionResponse.class);
+                BaseTransactionResponseDTO.class);
 
-        System.out.println(result.getResponse());
-        System.out.println(resultResponse);
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(response,resultResponse);
+        Mockito.verify(commonCreationServiceMock).createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER);
     }
 
 }
