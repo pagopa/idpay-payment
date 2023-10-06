@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -24,7 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 
@@ -33,7 +31,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class IdpayCodePreAuthServiceImplTest {
+class IdpayCodePreAuthServiceTest {
     private static final String USER_ID = "userId";
     private static final String IDPAYCODE = "IDPAYCODE";
     private static final String FISCALCODE = "FISCALCODE";

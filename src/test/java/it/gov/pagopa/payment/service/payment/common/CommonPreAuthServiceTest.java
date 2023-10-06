@@ -32,7 +32,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class CommonPreAuthServiceImplTest {
+class CommonPreAuthServiceTest {
 
   @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
   @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
