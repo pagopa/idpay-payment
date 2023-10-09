@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.DetailsDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -29,6 +31,7 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     private final EncryptRestConnector encryptRestConnector;
     private final RelateUserResponseMapper relateUserResponseMapper;
     private final AuthPaymentMapper authPaymentMapper;
+    private final PaymentInstrumentConnector paymentInstrumentConnector;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     public IdpayCodePreAuthServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
                                        TransactionInProgressRepository transactionInProgressRepository,
@@ -37,13 +40,16 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
                                        WalletConnector walletConnector,
                                        EncryptRestConnector encryptRestConnector,
                                        RelateUserResponseMapper relateUserResponseMapper,
-                                       AuthPaymentMapper authPaymentMapper) {
+                                       AuthPaymentMapper authPaymentMapper,
+                                       PaymentInstrumentConnector paymentInstrumentConnector
+    ) {
         super(authorizationExpirationMinutes, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.auditUtilities = auditUtilities;
         this.encryptRestConnector = encryptRestConnector;
         this.relateUserResponseMapper = relateUserResponseMapper;
         this.authPaymentMapper = authPaymentMapper;
+        this.paymentInstrumentConnector = paymentInstrumentConnector;
     }
 
     @Override
@@ -72,9 +78,13 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
             return authPaymentMapper.transactionMapper(trx);
         }
 
-        //TODO 1926 checks preAuth(?)
-
+        checkPreAuth(trx.getTrxCode(), trx.getUserId(), trx);
         AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_IDPAYCODE);
+
+        //TODO IDP-1926 review
+        DetailsDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getInitiativeId(), trx.getUserId());
+        authPaymentDTO.setSecondFactor(secondFactorDetails.getSecondFactor()); //TODO check secondFactor is null(?
+
         auditUtilities.logPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), RewardConstants.TRX_CHANNEL_IDPAYCODE);
         return authPaymentDTO;
     }

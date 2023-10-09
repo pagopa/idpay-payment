@@ -40,9 +40,7 @@ public class CommonPreAuthServiceImpl{
 
   public TransactionInProgress relateUser(TransactionInProgress trx, String userId) {
     try {
-      String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
-
-      checkPreAuth(trx.getTrxCode(), userId, trx, walletStatus);
+      checkPreAuth(trx.getTrxCode(), userId, trx);
 
       trx.setUserId(userId);
       trx.setTrxChargeDate(OffsetDateTime.now());
@@ -90,7 +88,8 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus) {
+  protected void checkPreAuth(String trxCode, String userId, TransactionInProgress trx) {
+    String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
       throw new ClientExceptionWithBody(
               HttpStatus.FORBIDDEN,

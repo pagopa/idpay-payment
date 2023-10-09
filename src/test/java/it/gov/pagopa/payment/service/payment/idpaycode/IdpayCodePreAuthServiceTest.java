@@ -3,6 +3,8 @@ package it.gov.pagopa.payment.service.payment.idpaycode;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.DetailsDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
@@ -40,7 +42,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class IdpayCodePreAuthServiceTest {
     private static final String USER_ID = "userId";
-    private static final String IDPAYCODE = "IDPAYCODE";
     private static final String FISCALCODE = "FISCALCODE";
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
@@ -49,10 +50,12 @@ class IdpayCodePreAuthServiceTest {
     @Mock private EncryptRestConnector encryptRestConnectorMock;
 
     @Mock private AuditUtilities auditUtilitiesMock;
+    @Mock private PaymentInstrumentConnector paymentInstrumentConnectorMock;
 
     private IdpayCodePreAuthService idpayCodePreAuthService;
 
     private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
+    private static final String SECOND_FACTOR = "SECOND_FACTOR";
 
     @BeforeEach
     void setUp() {
@@ -65,7 +68,9 @@ class IdpayCodePreAuthServiceTest {
                 walletConnectorMock,
                 encryptRestConnectorMock,
                 new RelateUserResponseMapper(),
-                new AuthPaymentMapper());
+                new AuthPaymentMapper(),
+                paymentInstrumentConnectorMock
+        );
     }
 
     @Test
@@ -124,6 +129,10 @@ class IdpayCodePreAuthServiceTest {
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
+        WalletDTO wallet = WalletDTOFaker.mockInstance(1,WALLET_STATUS_REFUNDABLE);
+        when(walletConnectorMock.getWallet(trx.getInitiativeId(), trx.getUserId()))
+                .thenReturn(wallet);
+
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
         when(rewardCalculatorConnectorMock.previewTransaction(trx))
                 .thenReturn(authPaymentDTO);
@@ -135,6 +144,9 @@ class IdpayCodePreAuthServiceTest {
                         null,
                         authPaymentDTO.getRewards(),
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
+
+        when(paymentInstrumentConnectorMock.getSecondFactor(trx.getInitiativeId(), trx.getUserId()))
+                .thenReturn(new DetailsDTO(SECOND_FACTOR));
         //When
         AuthPaymentDTO result = idpayCodePreAuthService.previewPayment(trx.getId(), "acquirerId", "merchantFiscalCode");
 
@@ -182,7 +194,8 @@ class IdpayCodePreAuthServiceTest {
         TestUtils.checkNotNullFields(result,
                 "reward",
                 "counters",
-                "residualBudget"
+                "residualBudget",
+                "secondFactor"
         );
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
@@ -198,6 +211,10 @@ class IdpayCodePreAuthServiceTest {
         String trxId = trx.getId();
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
+
+        WalletDTO wallet = WalletDTOFaker.mockInstance(1,WALLET_STATUS_REFUNDABLE);
+        when(walletConnectorMock.getWallet(trx.getInitiativeId(), trx.getUserId()))
+                .thenReturn(wallet);
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
         authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
@@ -237,6 +254,10 @@ class IdpayCodePreAuthServiceTest {
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
+        WalletDTO wallet = WalletDTOFaker.mockInstance(1,WALLET_STATUS_REFUNDABLE);
+        when(walletConnectorMock.getWallet(trx.getInitiativeId(), trx.getUserId()))
+                .thenReturn(wallet);
+
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
         authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
         authPaymentDTO.setRejectionReasons(List.of("REJECTED_REASON_DUMMY", RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
@@ -262,5 +283,36 @@ class IdpayCodePreAuthServiceTest {
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), anyLong(), eq(null), anyMap(),anyString());
         verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(),anyString(), anyList(), anyString());
+    }
+
+    @Test
+    void previewPayment_walletStatusSuspended() {
+        //Given
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        trx.setUserId(USER_ID);
+        trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
+
+        String trxId = trx.getId();
+
+        when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
+
+        WalletDTO wallet = WalletDTOFaker.mockInstance(1,PaymentConstants.WALLET_STATUS_SUSPENDED);
+        when(walletConnectorMock.getWallet(trx.getInitiativeId(), trx.getUserId()))
+                .thenReturn(wallet);
+
+        //When
+        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+                idpayCodePreAuthService.previewPayment(trxId, "acquirerId", "merchantFiscalCode")
+        );
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, result.getCode());
+
+        verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
+        verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), anyLong(), eq(null), anyMap(),anyString());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyString());
     }
 }

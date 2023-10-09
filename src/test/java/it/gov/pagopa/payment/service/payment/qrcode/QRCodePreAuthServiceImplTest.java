@@ -71,7 +71,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons");
+    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor");
 
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
@@ -94,7 +94,7 @@ class QRCodePreAuthServiceImplTest {
     AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons");
+    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor");
 
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());

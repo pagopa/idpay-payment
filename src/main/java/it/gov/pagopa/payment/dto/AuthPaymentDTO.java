@@ -48,4 +48,6 @@ public class AuthPaymentDTO {
   @JsonIgnore
   private Map<String, Reward> rewards;
 
+  private String secondFactor;
+
 }
