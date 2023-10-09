@@ -29,18 +29,15 @@ public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentControlle
         log.info(
                 "[IDPAYCODE_RELATE_USER] Request to relate user to transaction having transactionId {}",
                 trxId);
-        try {
-            return idpayCodePaymentService.relateUser(trxId,request);
-        } catch (Exception e) {
-            if(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED.equals(e.getMessage())){
-                throw new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
-                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                        "Cannot find transaction with transactionId [%s]".formatted(trxId));
-            }
-            throw e;
-        }
 
+        RelateUserResponse relateUserResponse = idpayCodePaymentService.relateUser(trxId, request);
+        if (relateUserResponse == null){
+            throw new ClientExceptionWithBody(
+                    HttpStatus.NOT_FOUND,
+                    PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                    "Cannot find transaction with transactionId [%s]".formatted(trxId));
+        }
+        return relateUserResponse;
     }
 
     @Override

@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.service.payment.idpaycode;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
@@ -42,7 +41,11 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         String userId = retrieveUserId(request.getFiscalCode());
 
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
-                .orElseThrow(() -> new IllegalStateException(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED));
+                .orElse(null);
+
+        if(trx == null){
+            return null;
+        }
 
         TransactionInProgress trxInProgress = relateUser(trx, userId);
 

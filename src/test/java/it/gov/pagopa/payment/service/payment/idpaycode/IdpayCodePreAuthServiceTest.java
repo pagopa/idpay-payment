@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
@@ -98,13 +97,10 @@ class IdpayCodePreAuthServiceTest {
 
         RelateUserRequest request = new RelateUserRequest(FISCALCODE);
         //When
-        IllegalStateException result = Assertions.assertThrows(IllegalStateException.class, () ->
-                idpayCodePreAuthService.relateUser(trxId, request)
-        );
+        RelateUserResponse result = idpayCodePreAuthService.relateUser(trxId, request);
 
         //Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getMessage());
+        Assertions.assertNull(result);
 
     }
 }
