@@ -20,7 +20,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseQRCodeEx
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
 
-    public CommonAuthorizationExpiredServiceImpl(
+    protected CommonAuthorizationExpiredServiceImpl(
             long authorizationExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
