@@ -12,7 +12,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,19 +24,23 @@ import java.util.List;
 @Service
 public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements BarCodeAuthPaymentService {
 
+    private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
+
     public BarCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
-                                         QRCodeAuthorizationExpiredService authorizationExpiredService,
+                                         BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          RewardCalculatorConnector rewardCalculatorConnector,
                                          TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
                                          AuditUtilities auditUtilities,
                                          WalletConnector walletConnector){
-        super(transactionInProgressRepository, authorizationExpiredService, rewardCalculatorConnector, notifierService, paymentErrorNotifierService, auditUtilities, walletConnector);
+        super(transactionInProgressRepository, rewardCalculatorConnector, notifierService,
+                paymentErrorNotifierService, auditUtilities, walletConnector);
+        this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
     }
 
     @Override
     public AuthPaymentDTO authPayment(String trxCode, String merchantId, long amountCents){
         try {
-            TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+            TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
             if (trx == null) {
                 throw new ClientExceptionWithBody(

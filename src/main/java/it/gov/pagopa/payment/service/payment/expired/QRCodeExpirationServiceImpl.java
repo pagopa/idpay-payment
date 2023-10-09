@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.qrcode.expired;
+package it.gov.pagopa.payment.service.payment.expired;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;

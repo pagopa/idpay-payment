@@ -1,27 +1,27 @@
-package it.gov.pagopa.payment.service.payment.qrcode.expired;
+package it.gov.pagopa.payment.service.payment.expired.common;
 
 import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.expired.BaseQRCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-@Service
 @Slf4j
-public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration implements QRCodeAuthorizationExpiredService {
+@Service
+public abstract class CommonAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration {
 
     private final long authorizationExpirationMinutes;
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
 
-    public QRCodeAuthorizationExpiredServiceImpl(
-            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
+    public CommonAuthorizationExpiredServiceImpl(
+            long authorizationExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
@@ -34,12 +34,10 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     }
 
-    @Override
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
         return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, authorizationExpirationMinutes);
     }
 
-    @Override
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
         return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode, authorizationExpirationMinutes);
     }
@@ -73,5 +71,4 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseQRCodeExpiration 
     protected String getFlowName() {
         return "TRANSACTION_AUTHORIZATION_EXPIRED";
     }
-
 }

@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
@@ -11,7 +10,6 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +25,6 @@ import java.util.List;
 public abstract class CommonAuthServiceImpl {
 
     private final TransactionInProgressRepository transactionInProgressRepository;
-    protected final QRCodeAuthorizationExpiredService authorizationExpiredService;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
@@ -36,38 +33,16 @@ public abstract class CommonAuthServiceImpl {
 
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
-            QRCodeAuthorizationExpiredService authorizationExpiredService,
             RewardCalculatorConnector rewardCalculatorConnector,
             TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
             AuditUtilities auditUtilities,
             WalletConnector walletConnector) {
         this.transactionInProgressRepository = transactionInProgressRepository;
-        this.authorizationExpiredService = authorizationExpiredService;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
         this.walletConnector = walletConnector;
-    }
-
-    public AuthPaymentDTO authPayment(String userId, String trxCode) {
-        try {
-            TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
-
-            checkAuth(trxCode, userId, trx);
-
-            checkWalletStatus(trx.getInitiativeId(), userId);
-
-            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
-
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
-            authPaymentDTO.setRejectionReasons(null);
-            return authPaymentDTO;
-        } catch (RuntimeException e) {
-            logErrorAuthorizedPayment(trxCode, userId);
-            throw e;
-        }
     }
 
     protected AuthPaymentDTO invokeRuleEngine(String userId, String trxCode, TransactionInProgress trx){
@@ -147,7 +122,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    private void checkAuth(String trxCode, String userId, TransactionInProgress trx){
+    protected void checkAuth(String trxCode, String userId, TransactionInProgress trx){
         if (trx == null) {
             throw new ClientExceptionWithBody(
                     HttpStatus.NOT_FOUND,

@@ -17,7 +17,7 @@ import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentServiceImpl;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -46,7 +46,7 @@ public class BarCodeAuthPaymentServiceImplTest {
 
     @Mock
     private TransactionInProgressRepository repositoryMock;
-    @Mock private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredServiceMock;
+    @Mock private BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredServiceMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
     @Mock private TransactionNotifierService notifierServiceMock;
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
@@ -59,7 +59,7 @@ public class BarCodeAuthPaymentServiceImplTest {
     void setup(){
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
                 repositoryMock,
-                qrCodeAuthorizationExpiredServiceMock,
+                barCodeAuthorizationExpiredServiceMock,
                 rewardCalculatorConnectorMock,
                 notifierServiceMock,
                 paymentErrorNotifierServiceMock,
@@ -86,7 +86,7 @@ public class BarCodeAuthPaymentServiceImplTest {
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
 
-        when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
                 .thenReturn(transaction);
 
         when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
@@ -110,7 +110,7 @@ public class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(trxCode, merchantId, amountCents);
 
         // Then
-        verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
+        verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
         verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
         assertEquals(authPaymentDTO, result);
         TestUtils.checkNotNullFields(result, "rejectionReasons");
@@ -121,7 +121,7 @@ public class BarCodeAuthPaymentServiceImplTest {
     @Test
     void authPaymentNotFound() {
         // Given
-        when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 
         // When
         ClientException result =
