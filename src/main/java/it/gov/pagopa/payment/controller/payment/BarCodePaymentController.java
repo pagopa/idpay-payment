@@ -10,10 +10,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/idpay/payment")
+@RequestMapping("/idpay/payment/bar-code")
 public interface BarCodePaymentController {
 
-    @PostMapping("/bar-code")
+    @PostMapping
     @ResponseStatus(code = HttpStatus.CREATED)
     TransactionBarCodeResponse createTransaction(
             @RequestBody @Valid TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
