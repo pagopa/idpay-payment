@@ -2,10 +2,13 @@ package it.gov.pagopa.payment.service.payment.barCode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -20,16 +23,19 @@ import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
@@ -47,10 +53,11 @@ public class BarCodeAuthPaymentServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private WalletConnector walletConnectorMock;
 
-    @Test
-    void barCodeAuthPayment(){
-        // Given
-        BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
+    BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
+
+    @BeforeEach
+    void setup(){
+        barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
                 repositoryMock,
                 qrCodeAuthorizationExpiredServiceMock,
                 rewardCalculatorConnectorMock,
@@ -58,6 +65,11 @@ public class BarCodeAuthPaymentServiceImplTest {
                 paymentErrorNotifierServiceMock,
                 auditUtilitiesMock,
                 walletConnectorMock);
+    }
+
+    @Test
+    void barCodeAuthPayment(){
+        // Given
         String trxCode = "trxcode1";
         String merchantId = "MERCHANT_ID";
         long amountCents = 1000;
@@ -104,5 +116,19 @@ public class BarCodeAuthPaymentServiceImplTest {
         TestUtils.checkNotNullFields(result, "rejectionReasons");
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
+    }
+
+    @Test
+    void authPaymentNotFound() {
+        // Given
+        when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
+
+        // When
+        ClientException result =
+                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment("trxcode1", "USERID1", 1000));
+
+        // Then
+        assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, ((ClientExceptionWithBody) result).getCode());
     }
 }
