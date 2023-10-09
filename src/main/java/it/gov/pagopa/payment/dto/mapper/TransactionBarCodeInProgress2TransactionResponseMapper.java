@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

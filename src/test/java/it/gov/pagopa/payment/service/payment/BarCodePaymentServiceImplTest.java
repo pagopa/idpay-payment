@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Test;
@@ -18,13 +19,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class BarCodePaymentServiceImplTest {
 
     @Mock
+    private BarCodeCreationService barCodeCreationService;
+    @Mock
     private BarCodeAuthPaymentService barCodeAuthPaymentService;
 
     private BarCodePaymentService barCodePaymentService;
 
     @BeforeEach
     void setup(){
-        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeAuthPaymentService);
+        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeAuthPaymentService);
     }
 
     @Test

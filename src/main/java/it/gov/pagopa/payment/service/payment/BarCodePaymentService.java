@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 
 public interface BarCodePaymentService {
 

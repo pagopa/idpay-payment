@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.dto.mapper.barcode;
 
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;

@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.performancelogger;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLoggerPayloadBuilder;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import org.springframework.stereotype.Service;
 
 @Service

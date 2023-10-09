@@ -1,11 +1,9 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.brcode.AuthBarCodePaymentDTO;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeResponse;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +22,7 @@ public interface BarCodePaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(
             @PathVariable("trxCode") String trxCode,
-            @RequestBody  @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
+            @RequestBody @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
             @RequestHeader("x-merchant-id") String merchantId
     );
 

@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.test.fakers;
 
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 
 import java.time.OffsetDateTime;

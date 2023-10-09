@@ -2,11 +2,9 @@ package it.gov.pagopa.payment.service.payment;
 
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeResponse;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -19,9 +17,9 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     private final BarCodeAuthPaymentService barCodeAuthPaymentService;
 
     public BarCodePaymentServiceImpl(BarCodeCreationService barCodeCreationService,
-                                     BarCodeAuthPaymentService brCodeAuthPaymentService) {
+                                     BarCodeAuthPaymentService barCodeAuthPaymentService) {
         this.barCodeCreationService = barCodeCreationService;
-        this.barCodeAuthPaymentService = brCodeAuthPaymentService;
+        this.barCodeAuthPaymentService = barCodeAuthPaymentService;
     }
 
     @Override

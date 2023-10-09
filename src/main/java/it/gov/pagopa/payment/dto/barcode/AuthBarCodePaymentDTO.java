@@ -1,10 +1,10 @@
-package it.gov.pagopa.payment.dto.brcode;
+package it.gov.pagopa.payment.dto.barcode;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.codehaus.commons.nullanalysis.NotNull;
 
 @Data
 @AllArgsConstructor
@@ -13,5 +13,5 @@ import org.codehaus.commons.nullanalysis.NotNull;
 public class AuthBarCodePaymentDTO {
 
     @NotNull
-    private long amountCents;
+    private Long amountCents;
 }
