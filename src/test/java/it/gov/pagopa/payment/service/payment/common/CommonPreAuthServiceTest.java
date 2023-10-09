@@ -105,7 +105,7 @@ class CommonPreAuthServiceTest {
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
   }
 
   @Test
@@ -127,7 +127,7 @@ class CommonPreAuthServiceTest {
     assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
   }
 
   @Test
@@ -147,7 +147,7 @@ class CommonPreAuthServiceTest {
     Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
 
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
   }
 
   @Test

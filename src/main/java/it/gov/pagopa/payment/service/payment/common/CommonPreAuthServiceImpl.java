@@ -61,7 +61,7 @@ public class CommonPreAuthServiceImpl{
 
     if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
       transactionInProgressRepository.updateTrxRejected(
-              trx.getId(), trx.getUserId(), preview.getRejectionReasons());
+              trx.getId(), trx.getUserId(), preview.getRejectionReasons(), channel);
       log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
       if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
         throw new ClientExceptionWithBody(
@@ -85,7 +85,7 @@ public class CommonPreAuthServiceImpl{
 
     return preview;
     } catch (RuntimeException e) {
-      auditUtilities.logErrorPreviewTransaction(trx.getTrxCode(), trx.getUserId());
+      auditUtilities.logErrorPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), channel);
       throw e;
     }
   }

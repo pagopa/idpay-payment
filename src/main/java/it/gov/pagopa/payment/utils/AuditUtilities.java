@@ -60,10 +60,10 @@ public class AuditUtilities {
     // endregion
 
     // region previewPayment
-    public void logErrorPreviewTransaction(String trxCode, String userId) {
+    public void logErrorPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_TRXCODE_USERID,
-                "User request preview the transaction - KO", trxCode, userId
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User request preview the transaction - KO", initiativeId, trxId, trxCode, userId, channel
         );
     }
     // endregion
