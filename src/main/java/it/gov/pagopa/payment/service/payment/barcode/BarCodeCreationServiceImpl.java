@@ -32,7 +32,8 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                                          TrxCodeGenUtil trxCodeGenUtil,
                                          AuditUtilities auditUtilities,
                                          MerchantConnector merchantConnector,
-                                         TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper, TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
+                                         TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
+                                         TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
         super(transactionInProgress2TransactionResponseMapper,
                 transactionCreationRequest2TransactionInProgressMapper,
                 rewardRuleRepository,
