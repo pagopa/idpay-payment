@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;

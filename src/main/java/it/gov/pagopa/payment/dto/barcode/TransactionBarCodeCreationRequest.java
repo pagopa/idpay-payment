@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.dto.brcode;
+package it.gov.pagopa.payment.dto.barcode;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;

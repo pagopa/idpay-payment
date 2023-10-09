@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.common;
+package it.gov.pagopa.payment.service.payment.qrcode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -24,9 +24,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentService;
-import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentServiceImpl;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -46,7 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
-class CommonAuthPaymentServiceTest {
+class QRCodeAuthPaymentServiceTest {
 
   @Mock private TransactionInProgressRepository repositoryMock;
   @Mock private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredServiceMock;
@@ -297,5 +295,4 @@ class CommonAuthPaymentServiceTest {
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
   }
-
 }
