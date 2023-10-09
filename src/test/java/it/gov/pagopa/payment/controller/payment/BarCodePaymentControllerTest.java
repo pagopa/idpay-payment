@@ -5,7 +5,7 @@ import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import org.junit.jupiter.api.Test;
@@ -95,12 +95,12 @@ class BarCodePaymentControllerTest {
 
     @Test
     void authorizeTransaction_testMandatoryHeaders() throws Exception {
-        AuthPaymentDTO body = AuthPaymentDTO.builder().initiativeId("INITIATIVE_ID").build();
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(1000L).build();
 
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/trxCode/authorize")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(body)))
+                                .content(objectMapper.writeValueAsString(authBarCodePaymentDTO)))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
