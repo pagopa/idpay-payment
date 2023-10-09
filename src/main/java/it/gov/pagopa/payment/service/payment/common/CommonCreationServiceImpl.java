@@ -27,11 +27,11 @@ public abstract class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  private final TransactionInProgress2TransactionResponseMapper
+  protected final TransactionInProgress2TransactionResponseMapper
       transactionInProgress2TransactionResponseMapper;
-  private final TransactionCreationRequest2TransactionInProgressMapper
+  protected final TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
-  private final RewardRuleRepository rewardRuleRepository;
+  protected final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TrxCodeGenUtil trxCodeGenUtil;
   protected final AuditUtilities auditUtilities;
@@ -77,27 +77,10 @@ public abstract class CommonCreationServiceImpl {
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
               .map(RewardRule::getInitiativeConfig)
               .orElse(null);
-      if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
-        log.info(
-                "[{}] Cannot find initiative with ID: [{}]",
-                getFlow(),
-                trxCreationRequest.getInitiativeId());
-        throw new ClientExceptionWithBody(
-                HttpStatus.NOT_FOUND,
-                "NOT FOUND",
-                "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
-      }
 
-      if (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate())) {
-        log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
-                getFlow(),
-                initiative.getStartDate(), initiative.getEndDate());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                "INVALID DATE",
-                "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
-                        .formatted(initiative.getStartDate(), initiative.getEndDate()));
-      }
+      checkInitiativeType(trxCreationRequest.getInitiativeId(), initiative);
+
+      checkInitiativeValidPeriod(today, initiative);
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
 
@@ -115,7 +98,33 @@ public abstract class CommonCreationServiceImpl {
     }
   }
 
-  private void generateTrxCodeAndSave(TransactionInProgress trx) {
+  protected void checkInitiativeType(String initiativeId, InitiativeConfig initiative) {
+    if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
+      log.info(
+              "[{}] Cannot find initiative with ID: [{}]",
+              getFlow(),
+              initiativeId);
+      throw new ClientExceptionWithBody(
+              HttpStatus.NOT_FOUND,
+              "NOT FOUND",
+              "Cannot find initiative with ID: [%s]".formatted(initiativeId));
+    }
+  }
+
+  protected void checkInitiativeValidPeriod(LocalDate today, InitiativeConfig initiative) {
+    if (initiative != null && (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate()))) {
+        log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
+                getFlow(),
+                initiative.getStartDate(), initiative.getEndDate());
+        throw new ClientExceptionWithBody(
+                HttpStatus.BAD_REQUEST,
+                "INVALID DATE",
+                "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
+                        .formatted(initiative.getStartDate(), initiative.getEndDate()));
+    }
+  }
+
+  protected void generateTrxCodeAndSave(TransactionInProgress trx) {
     long retry = 1;
     while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId()
         == null) {

@@ -1,11 +1,11 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeCreationRequest;
-import it.gov.pagopa.payment.dto.brcode.TransactionBRCodeResponse;
+import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.brcode.TransactionBarCodeResponse;
 
 public interface BarCodePaymentService {
 
-    TransactionBRCodeResponse createTransaction(TransactionBRCodeCreationRequest trxBRCodeCreationRequest, String userId);
+    TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
     AuthPaymentDTO authPayment(String trxCode, long amountCents, String merchantId);
 }

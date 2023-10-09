@@ -62,7 +62,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 TransactionInProgress.class);
     }
 
-    @Test
+   @Test
     void createIfExists() {
 
         TransactionInProgress transactionInProgress =
@@ -89,6 +89,57 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TestUtils.checkNotNullFields(
                 result,
                 "userId",
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+    }
+
+    @Test
+    void createIfExists_BarCode() {
+
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgress.setChannel("BARCODE");
+        transactionInProgress.setUserId("USERID");
+        TransactionInProgress transactionInProgressSecond =
+                TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+        transactionInProgressSecond.setChannel("BARCODE");
+        transactionInProgress.setUserId("USERID");
+        transactionInProgressSecond.setTrxCode(transactionInProgress.getTrxCode());
+
+        UpdateResult updatedFirst =
+                transactionInProgressRepository.createIfExists(
+                        transactionInProgress, transactionInProgress.getTrxCode());
+        assertNotNull(updatedFirst.getUpsertedId());
+        assertEquals(0L, updatedFirst.getMatchedCount());
+
+        UpdateResult updatedSecond =
+                transactionInProgressRepository.createIfExists(
+                        transactionInProgressSecond, transactionInProgress.getTrxCode());
+        assertNull(updatedSecond.getUpsertedId());
+        assertEquals(1L, updatedSecond.getMatchedCount());
+
+        TransactionInProgress result =
+                mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
+        assertNotNull(result);
+        TestUtils.checkNotNullFields(
+                result,
+                "idTrxAcquirer",
+                "idTrxIssuer",
+                "acquirerId",
+                "amountCents",
+                "effectiveAmount",
+                "amountCurrency",
+                "merchantFiscalCode",
+                "merchantId",
+                "mcc",
+                "vat",
+                "initiativeName",
+                "businessName",
+                "updateDate",
                 "authDate",
                 "elaborationDateTime",
                 "reward",
