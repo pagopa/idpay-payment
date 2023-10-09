@@ -1,12 +1,20 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PinBlockDTO;
+import it.gov.pagopa.payment.service.payment.idpayCode.IdpayCodeAuthPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
+    private final IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
+
+    public IdpayCodePaymentServiceImpl(IdpayCodeAuthPaymentService idpayCodeAuthPaymentService) {
+        this.idpayCodeAuthPaymentService = idpayCodeAuthPaymentService;
+    }
+
     @Override
     public AuthPaymentDTO relateUser(String trxId, String userId) {
         return null; //TODO after refactor impl
@@ -18,7 +26,7 @@ public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String userId, String trxId) {
-        return null; //TODO after refactor impl
+    public AuthPaymentDTO authPayment(String trxId, String acquirerId, String merchantFiscalCode, PinBlockDTO pinBlockBody) {
+        return idpayCodeAuthPaymentService.authPayment(trxId, acquirerId, merchantFiscalCode, pinBlockBody);
     }
 }

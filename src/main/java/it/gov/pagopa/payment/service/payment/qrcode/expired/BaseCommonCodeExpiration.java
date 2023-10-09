@@ -6,14 +6,15 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public abstract class BaseQRCodeExpiration {
+public abstract class BaseCommonCodeExpiration {
 
     protected final AuditUtilities auditUtilities;
 
-    protected static final String EXPIRED_QR_CODE = "EXPIRED_QR_CODE";
+    private final String expiredCode;
 
-    protected BaseQRCodeExpiration(AuditUtilities auditUtilities) {
+    protected BaseCommonCodeExpiration(AuditUtilities auditUtilities, String expiredCode) {
         this.auditUtilities = auditUtilities;
+        this.expiredCode = expiredCode;
     }
 
     public Long forceExpiration(String initiativeId) {
@@ -29,19 +30,19 @@ public abstract class BaseQRCodeExpiration {
          TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
          while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
              log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
-                     EXPIRED_QR_CODE,
+                     expiredCode,
                      getFlowName(),
                      expiredTransaction[0].getId(),
                      expiredTransaction[0].getStatus(),
                      expiredTransaction[0].getTrxDate());
              try{
-                PerformanceLogger.execute(EXPIRED_QR_CODE,
+                PerformanceLogger.execute(expiredCode,
                         () -> handleExpiredTransaction(expiredTransaction[0]),
                         t -> "Evaluated transaction with ID %s due to %s ". formatted(t.getId(), getFlowName()));
                 count++;
                 auditUtilities.logExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
              } catch (Exception e){
-                 log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", EXPIRED_QR_CODE, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
+                 log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", expiredCode, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
                  auditUtilities.logErrorExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
              }
          }

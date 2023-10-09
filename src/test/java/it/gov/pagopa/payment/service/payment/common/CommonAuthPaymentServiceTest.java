@@ -65,12 +65,12 @@ class CommonAuthPaymentServiceTest {
     service =
             new QRCodeAuthPaymentServiceImpl(
                     repositoryMock,
-                    qrCodeAuthorizationExpiredServiceMock,
                     rewardCalculatorConnectorMock,
                     notifierServiceMock,
                     paymentErrorNotifierServiceMock,
                     auditUtilitiesMock,
-                    walletConnectorMock);
+                    walletConnectorMock,
+                    qrCodeAuthorizationExpiredServiceMock);
   }
 
   @Test

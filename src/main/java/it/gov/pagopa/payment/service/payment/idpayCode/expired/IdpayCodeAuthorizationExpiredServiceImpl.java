@@ -1,47 +1,36 @@
-package it.gov.pagopa.payment.service.payment.qrcode.expired;
+package it.gov.pagopa.payment.service.payment.idpayCode.expired;
 
 import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.qrcode.expired.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
-public class QRCodeAuthorizationExpiredServiceImpl extends BaseCommonCodeExpiration implements QRCodeAuthorizationExpiredService {
-
+public class IdpayCodeAuthorizationExpiredServiceImpl extends BaseCommonCodeExpiration implements IdpayCodeAuthorizationExpiredService {
     private final long authorizationExpirationMinutes;
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
-    private static String expiredQRCodeCode = "EXPIRED_QR_CODE";
-
-    public QRCodeAuthorizationExpiredServiceImpl(
-            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
-
-            TransactionInProgressRepository transactionInProgressRepository,
-            RewardCalculatorConnector rewardCalculatorConnector,
-            AuditUtilities auditUtilities) {
-        super(auditUtilities, expiredQRCodeCode);
-
+    private static String expirationIdpayCode = "EXPIRATION_IDPAY_CODE";
+    public IdpayCodeAuthorizationExpiredServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes:5}") long authorizationExpirationMinutes,
+                                                    TransactionInProgressRepository transactionInProgressRepository,
+                                                    AuditUtilities auditUtilities,
+                                                    RewardCalculatorConnector rewardCalculatorConnector) {
+        super(auditUtilities, expirationIdpayCode);
+        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
-        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     }
 
     @Override
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, authorizationExpirationMinutes);
-    }
-
-    @Override
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode, authorizationExpirationMinutes);
+    public TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId) {
+        return transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(trxId,authorizationExpirationMinutes);
     }
 
     @Override
@@ -73,5 +62,4 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseCommonCodeExpirat
     protected String getFlowName() {
         return "TRANSACTION_AUTHORIZATION_EXPIRED";
     }
-
 }

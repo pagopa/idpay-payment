@@ -82,6 +82,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
+    public TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId, long authorizationExpirationMinutes) {
+        return mongoTemplate.findOne(
+                Query.query(
+                        criteriaByTrxIdAndDateGreaterThan(trxId, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
+                        TransactionInProgress.class);
+    }
+
+    @Override
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes) {
         LocalDateTime minTrxDate = LocalDateTime.now().minusMinutes(authorizationExpirationMinutes);
         TransactionInProgress transaction =
@@ -108,6 +116,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     private Criteria criteriaByTrxCodeAndDateGreaterThan(String trxCode, LocalDateTime trxDate) {
         return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxDate).gte(trxDate);
+    }
+    private Criteria criteriaByTrxIdAndDateGreaterThan(String trxId, LocalDateTime trxDate) {
+        return Criteria.where(Fields.id).is(trxId).and(Fields.trxDate).gte(trxDate);
     }
 
     private Criteria criteriaByTrxChargeDateThrottled() {

@@ -10,20 +10,22 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodeCancelExpiredServiceImpl extends BaseQRCodeExpiration implements QRCodeCancelExpiredService {
+public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration implements QRCodeCancelExpiredService {
 
     private final long cancelExpirationMinutes;
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final QRCodeConfirmationService qrCodeConfirmationService;
+    private static String expiredCode = "EXPIRED_QR_CODE";
 
     public QRCodeCancelExpiredServiceImpl(
             @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
             QRCodeConfirmationService qrCodeConfirmationService,
-            AuditUtilities auditUtilities) {
-        super(auditUtilities);
+            AuditUtilities auditUtilities
+            ) {
+        super(auditUtilities, expiredCode);
 
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.qrCodeConfirmationService = qrCodeConfirmationService;

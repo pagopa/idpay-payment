@@ -11,23 +11,19 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
-@Service
 public abstract class CommonAuthServiceImpl {
 
     private final TransactionInProgressRepository transactionInProgressRepository;
-    private final QRCodeAuthorizationExpiredService authorizationExpiredService;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
@@ -36,13 +32,11 @@ public abstract class CommonAuthServiceImpl {
 
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
-            QRCodeAuthorizationExpiredService authorizationExpiredService,
             RewardCalculatorConnector rewardCalculatorConnector,
             TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
             AuditUtilities auditUtilities,
             WalletConnector walletConnector) {
         this.transactionInProgressRepository = transactionInProgressRepository;
-        this.authorizationExpiredService = authorizationExpiredService;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
@@ -50,10 +44,8 @@ public abstract class CommonAuthServiceImpl {
         this.walletConnector = walletConnector;
     }
 
-    public AuthPaymentDTO authPayment(String userId, String trxCode) {
+    protected AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
         try {
-            TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
-
             checkAuth(trxCode, userId, trx);
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
