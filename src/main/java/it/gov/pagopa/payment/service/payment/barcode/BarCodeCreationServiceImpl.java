@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
@@ -16,8 +18,10 @@ import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 @Slf4j
 @Service
@@ -25,6 +29,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
 
     private final TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
+    private final WalletConnector walletConnector;
     protected BarCodeCreationServiceImpl(TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
                                          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
                                          RewardRuleRepository rewardRuleRepository,
@@ -33,7 +38,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                                          AuditUtilities auditUtilities,
                                          MerchantConnector merchantConnector,
                                          TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
-                                         TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
+                                         TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper, WalletConnector walletConnector) {
         super(transactionInProgress2TransactionResponseMapper,
                 transactionCreationRequest2TransactionInProgressMapper,
                 rewardRuleRepository,
@@ -43,6 +48,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                 merchantConnector);
         this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
+        this.walletConnector = walletConnector;
     }
     @Override
     public TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
@@ -52,7 +58,12 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         LocalDate today = LocalDate.now();
 
         try {
-
+            BigDecimal walletAmount = walletConnector.getWallet(trxBarCodeCreationRequest.getInitiativeId(), userId).getAmount();
+            if (walletAmount.compareTo(BigDecimal.ZERO) == 0) {
+                throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
+                        "WALLET",
+                        String.format("The budget related to the user %s with initiativeId %s was exhausted.", userId, trxBarCodeCreationRequest.getInitiativeId()));
+            }
             InitiativeConfig initiative = rewardRuleRepository.findById(trxBarCodeCreationRequest.getInitiativeId())
                     .map(RewardRule::getInitiativeConfig)
                     .orElse(null);
