@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PinBlockDTO {
-    private String encryptedPinBlock;
+    @NotBlank
+    private String pinBlock;
+    @NotBlank
     private String encryptedKey;
 }
