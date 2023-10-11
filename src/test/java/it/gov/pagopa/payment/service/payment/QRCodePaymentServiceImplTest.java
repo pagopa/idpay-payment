@@ -1,15 +1,25 @@
 package it.gov.pagopa.payment.service.payment;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
+
+import it.gov.pagopa.common.web.exception.CustomExceptions.NotFoundException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.qrcode.*;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCancelService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeConfirmationService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCreationService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodePreAuthService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeUnrelateService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,13 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodePaymentServiceImplTest {
@@ -92,9 +95,9 @@ class QRCodePaymentServiceImplTest {
                 .findByIdAndMerchantIdAndAcquirerId("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1");
         //when
         //then
-        ClientExceptionNoBody clientExceptionNoBody= assertThrows(ClientExceptionNoBody.class,
+        NotFoundException clientExceptionNoBody= assertThrows(NotFoundException.class,
                 ()-> qrCodePaymentService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, clientExceptionNoBody.getHttpStatus());
+        Assertions.assertEquals("Transaction not found", clientExceptionNoBody.getCode());
         Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
     }
 }

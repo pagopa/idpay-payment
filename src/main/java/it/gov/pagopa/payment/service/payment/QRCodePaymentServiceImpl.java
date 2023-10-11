@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.CustomExceptions.NotFoundException;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
@@ -8,9 +8,13 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.qrcode.*;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCancelService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeConfirmationService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCreationService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodePreAuthService;
+import it.gov.pagopa.payment.service.payment.qrcode.QRCodeUnrelateService;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -77,7 +81,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
     TransactionInProgress transactionInProgress= transactionInProgressRepository.findByIdAndMerchantIdAndAcquirerId(transactionId, merchantId, acquirerId)
-            .orElseThrow(() -> new ClientExceptionNoBody(HttpStatus.NOT_FOUND,"Transaction does not exist"));
+            .orElseThrow(() -> new NotFoundException("Transaction not found", "Transaction does not exist"));
 
     return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);
   }

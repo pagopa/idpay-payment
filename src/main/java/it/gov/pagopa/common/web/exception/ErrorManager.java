@@ -1,10 +1,12 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
+import it.gov.pagopa.common.web.exception.CustomExceptions.BadRequestException;
+import it.gov.pagopa.common.web.exception.CustomExceptions.ForbiddenException;
+import it.gov.pagopa.common.web.exception.CustomExceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +56,29 @@ public class ErrorManager {
           .body(errorDTO);
     }
   }
+
+  @ExceptionHandler(BadRequestException.class)
+  protected ResponseEntity<ErrorDTO> handleBadRequestException(BadRequestException ex, HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(new ErrorDTO(ex.getCode(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(ForbiddenException.class)
+  protected ResponseEntity<ErrorDTO> handleForbiddenException(ForbiddenException ex, HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(new ErrorDTO(ex.getCode(), ex.getMessage()));
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  protected ResponseEntity<ErrorDTO> handleNotFoundException(NotFoundException ex, HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(new ErrorDTO(ex.getCode(), ex.getMessage()));
+  }
+
+
 
   public static String getRequestDetails(HttpServletRequest request) {
     return "%s %s".formatted(request.getMethod(), request.getRequestURI());
