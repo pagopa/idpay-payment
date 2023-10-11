@@ -147,15 +147,14 @@ rest-client:
     baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
   wallet:
     baseUrl: ${IDPAY_WALLET:http://idpay-wallet}
+  payment-instrument:
+    baseUrl: ${IDPAY_PAYMENT_INSTRUMENT:http://idpay-payment-instrument}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
   decryptpdv:
     baseUrl: ${PDV_DECRYPT_BASE_URL:}
     cf: ${PDV_DECRYPT_SERVICE_CODE:pdv-ms-tokenizer}
-  payment-instrument:
-    serviceCode: ${IDPAY_PAYMENT_INSTRUMENT:}
-    baseUrl: ${IDPAY_PAYMENT_INSTRUMENT_BASE_URL:}
 
 api.key.encrypt: ${PDV_ENCRYPT_API_KEY:}
 api.key.decrypt: ${PDV_DECRYPT_API_KEY:}

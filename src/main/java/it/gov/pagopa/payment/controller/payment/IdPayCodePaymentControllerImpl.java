@@ -36,7 +36,7 @@ public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentControlle
             value = "IDPAYCODE_AUTHORIZE_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class
     )
-    public AuthPaymentDTO authPayment(String trxId, String acquirerId, String merchantFiscalCode, PinBlockDTO pinBlockbody) {
-        return idpayCodePaymentService.authPayment(trxId,acquirerId,merchantFiscalCode,pinBlockbody);
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockbody) {
+        return idpayCodePaymentService.authPayment(trxId,merchantId,pinBlockbody);
     }
 }

@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.connector;
+package it.gov.pagopa.payment.connector.rest.paymentInstrument;
 
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.dto.VerifyPinBlockDTO;
@@ -9,7 +9,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-@FeignClient(name = "${rest-client.payment-instrument.serviceCode}", url = "${rest-client.payment-instrument.baseUrl}")
+@FeignClient(name = "payment-instrument",
+        url = "${rest-client.payment-instrument.baseUrl}")
 public interface PaymentInstrumentRest {
     @GetMapping(value = "/code/verify/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody

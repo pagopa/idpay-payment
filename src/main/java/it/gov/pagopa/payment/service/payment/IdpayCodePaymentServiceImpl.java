@@ -26,7 +26,7 @@ public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxId, String acquirerId, String merchantFiscalCode, PinBlockDTO pinBlockBody) {
-        return idpayCodeAuthPaymentService.authPayment(trxId, acquirerId, merchantFiscalCode, pinBlockBody);
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
+        return idpayCodeAuthPaymentService.authPayment(trxId, merchantId, pinBlockBody);
     }
 }

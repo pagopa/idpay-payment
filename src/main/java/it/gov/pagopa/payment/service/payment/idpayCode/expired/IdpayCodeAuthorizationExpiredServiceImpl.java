@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.qrcode.expired.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,12 @@ public class IdpayCodeAuthorizationExpiredServiceImpl extends BaseCommonCodeExpi
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
-    private static String expirationIdpayCode = "EXPIRATION_IDPAY_CODE";
+
     public IdpayCodeAuthorizationExpiredServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes:5}") long authorizationExpirationMinutes,
                                                     TransactionInProgressRepository transactionInProgressRepository,
                                                     AuditUtilities auditUtilities,
                                                     RewardCalculatorConnector rewardCalculatorConnector) {
-        super(auditUtilities, expirationIdpayCode);
+        super(auditUtilities, RewardConstants.TRX_CHANNEL_IDPAYCODE);
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;

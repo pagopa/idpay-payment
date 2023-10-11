@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.qrcode.QRCodeConfirmationService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,6 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final QRCodeConfirmationService qrCodeConfirmationService;
-    private static String expiredCode = "EXPIRED_QR_CODE";
 
     public QRCodeCancelExpiredServiceImpl(
             @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes,
@@ -25,7 +25,7 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
             QRCodeConfirmationService qrCodeConfirmationService,
             AuditUtilities auditUtilities
             ) {
-        super(auditUtilities, expiredCode);
+        super(auditUtilities, RewardConstants.TRX_CHANNEL_QRCODE);
 
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.qrCodeConfirmationService = qrCodeConfirmationService;

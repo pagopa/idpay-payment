@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -19,15 +20,13 @@ public class QRCodeAuthorizationExpiredServiceImpl extends BaseCommonCodeExpirat
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
-    private static String expiredQRCodeCode = "EXPIRED_QR_CODE";
-
     public QRCodeAuthorizationExpiredServiceImpl(
             @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities) {
-        super(auditUtilities, expiredQRCodeCode);
+        super(auditUtilities, RewardConstants.TRX_CHANNEL_QRCODE);
 
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;

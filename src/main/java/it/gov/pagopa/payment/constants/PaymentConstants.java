@@ -8,6 +8,8 @@ public class PaymentConstants {
   public static final String AUTH_PAYMENT = "AUTH_PAYMENT";
 
   public static final String WALLET_STATUS_SUSPENDED = "SUSPENDED";
+
+
   public static final class ExceptionCode {
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_EXPIRED";
     public static final String TRX_ANOTHER_USER = "PAYMENT_USER_NOT_VALID";
@@ -18,6 +20,7 @@ public class PaymentConstants {
     public static final String TOO_MANY_REQUESTS = "PAYMENT_TOO_MANY_REQUESTS";
     public static final String GENERIC_ERROR = "PAYMENT_GENERIC_ERROR";
     public static final String USER_SUSPENDED_ERROR = "PAYMENT_USER_SUSPENDED";
+    public static final String INVALID_PIN = "INVALID_PIN";
     private ExceptionCode() {}
   }
 

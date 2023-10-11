@@ -9,12 +9,12 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BaseCommonCodeExpiration {
 
     protected final AuditUtilities auditUtilities;
+    private final String channel;
 
-    private final String expiredCode;
-
-    protected BaseCommonCodeExpiration(AuditUtilities auditUtilities, String expiredCode) {
+    protected BaseCommonCodeExpiration(AuditUtilities auditUtilities, String channel) {
         this.auditUtilities = auditUtilities;
-        this.expiredCode = expiredCode;
+        this.channel = channel;
+
     }
 
     public Long forceExpiration(String initiativeId) {
@@ -27,7 +27,8 @@ public abstract class BaseCommonCodeExpiration {
 
     public final Long execute(String initiativeId, long expirationMinutes){
         long count = 0L;
-         TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
+        String expiredCode = "EXPIRED_"+channel;
+        TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
          while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
              log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
                      expiredCode,

@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.connector;
+package it.gov.pagopa.payment.connector.rest.paymentInstrument;
 
 import feign.FeignException;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
@@ -10,10 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnector {
+public class PaymentInstrumentRestConnectorImpl implements PaymentInstrumentRestConnector {
     private final PaymentInstrumentRest paymentInstrumentRest;
 
-    public PaymentInstrumentConnectorImpl(PaymentInstrumentRest paymentInstrumentRest) {
+    public PaymentInstrumentRestConnectorImpl(PaymentInstrumentRest paymentInstrumentRest) {
         this.paymentInstrumentRest = paymentInstrumentRest;
     }
 

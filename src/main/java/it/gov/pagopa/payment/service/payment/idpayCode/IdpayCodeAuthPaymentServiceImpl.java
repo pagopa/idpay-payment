@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.payment.idpayCode;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.connector.rest.paymentInstrument.PaymentInstrumentRestConnectorImpl;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -19,25 +20,24 @@ import org.springframework.stereotype.Service;
 @Service
 public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements IdpayCodeAuthPaymentService {
     private final IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
-    protected IdpayCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector, TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities, WalletConnector walletConnector, IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService) {
+    private final PaymentInstrumentRestConnectorImpl paymentInstrumentConnector;
+    protected IdpayCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector, TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities, WalletConnector walletConnector, IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService, PaymentInstrumentRestConnectorImpl paymentInstrumentConnector) {
         super(transactionInProgressRepository, rewardCalculatorConnector, notifierService, paymentErrorNotifierService, auditUtilities, walletConnector);
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
+        this.paymentInstrumentConnector = paymentInstrumentConnector;
     }
         @Override
-    public AuthPaymentDTO authPayment(String trxId, String acquirerId, String merchantFiscalCode, PinBlockDTO pinBlockBody) {
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
         TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId.toLowerCase());
-        boolean pinBlock = checkIfthePinBlockIsCorrect(pinBlockBody);
-        if (!pinBlock){
-            throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
+       // payment-instrument call to check pinBlock
+        paymentInstrumentConnector.checkPinBlock(pinBlockBody,trx.getUserId());
+
+        if (!merchantId.equals(trx.getMerchantId())){
+            throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
                     PaymentConstants.ExceptionCode.REJECTED,
-                    "The Pinblock is incorrect");
-        }else {
-            return super.authPayment(trx,trx.getUserId(), trxId);
+                    "The merchant id [%s] of the trx , is not equals to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
+        return super.authPayment(trx,trx.getUserId(), trxId);
 
-    }
-
-    private boolean checkIfthePinBlockIsCorrect(PinBlockDTO pinBlockBody) {
-        return pinBlockBody.getEncryptedPinBlock().equals("21341");//TODO gestire pinblock
     }
 }
