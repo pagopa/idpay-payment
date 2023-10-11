@@ -1,0 +1,15 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/idpay/wallet/[^\\s]+/USERID_KO"
+  },
+  "response": {
+    "status": "404",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+    }
+  }
+}

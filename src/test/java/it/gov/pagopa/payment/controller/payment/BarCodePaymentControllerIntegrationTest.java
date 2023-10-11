@@ -2,14 +2,20 @@ package it.gov.pagopa.payment.controller.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
+import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.RewardConstants;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,19 +31,36 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private RewardRuleRepository rewardRuleRepository;
-    @Autowired
-    private TransactionInProgressRepository transactionInProgressRepository;
+    protected String getChannel() {
+        return RewardConstants.TRX_CHANNEL_BARCODE;
+    }
 
-    private final String USERID = "USERID";
-    private final String MERCHANTID = "MERCHANTID";
+    public final String USERID = "USERID";
+    public final String MERCHANTID = "MERCHANTID";
     public static final String INITIATIVEID = "INITIATIVEID";
     public static final String BARCODE_INITIATIVEID_REWARDED = "BARCODE_INITIATIVEID_REWARDED";
     public static final String BARCODE_INITIATIVEID_NO_BUDGET = "BARCODE_INITIATIVEID_NO_BUDGET";
+    public static final String BARCODE_INITIATIVEID_TOOMANYREQUEST = "BARCODE_INITIATIVEID_TOOMANYREQUEST";
     public static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";
     public static final LocalDate TODAY = LocalDate.now();
 
+    @Autowired
+    private TransactionInProgressRepository transactionInProgressRepository;
+    @Autowired
+    private RewardRuleRepository rewardRuleRepository;
+    @Autowired
+    private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
+    @BeforeEach
+    void saveInitiative() {
+    rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID)
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(INITIATIVEID)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.minusDays(1))
+            .endDate(TODAY.plusDays(1))
+            .build())
+            .build());
+    }
 
     protected MvcResult createTrx(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {
         return mockMvc
@@ -59,21 +82,52 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                                 .content(objectMapper.writeValueAsString(paymentDTO)))
                 .andReturn();
     }
+    private TransactionInProgress checkIfStored(String trxId) {
+        TransactionInProgress stored = transactionInProgressRepository.findById(trxId).orElse(null);
+        Assertions.assertNotNull(stored);
+        return stored;
+    }
 
-    /*
     @Test
-    void createTransaction_InitiativeNotExist() throws Exception {
-        // useCase 0: initiative not existent
+    void useCase0_InitiativeNotExistent() throws Exception {
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("DUMMYINITIATIVEID").build();
+        String trxCode = "trxcode1";
         extractResponse(createTrx(trxRequest, USERID), HttpStatus.NOT_FOUND, null);
 
-        // Other APIs cannot be invoked because we have not a valid trxId
-        TransactionBarCodeResponse dummyTrx = TransactionBarCodeResponse.builder().id("DUMMYTRXID").trxCode("dummytrxcode").trxDate(OffsetDateTime.now()).build();
-        extractResponse(authTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
+        AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+        extractResponse(authTrx(trxCode, authPaymentDTO, MERCHANTID), HttpStatus.NOT_FOUND, null);
     }
-     */
+    @Test
+    void useCase1_UserNotOnboarded() throws Exception {
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId("INITIATIVEID").build();
 
+        // Creating transaction
+        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.NOT_FOUND, TransactionBarCodeResponse.class);
+
+    }
+    @Test
+    void useCase3_TooManyRequestThrownByRewardCalculator() throws Exception {
+        rewardRuleRepository.save(RewardRule.builder().id(BARCODE_INITIATIVEID_TOOMANYREQUEST)
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.minusDays(1))
+                        .endDate(TODAY.plusDays(1))
+                        .build())
+                .build());
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST).build();
+
+        AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+
+        // Creating transaction
+        TransactionBarCodeResponse trxCreated = extractResponse(createTrx(trxRequest, USERID), HttpStatus.CREATED, TransactionBarCodeResponse.class);
+        // Authorizing transaction but obtaining Too Many requests by reward-calculator
+        extractResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+
+    }
     @Test
     void authorizeTransaction_budgetExhausted() throws Exception{
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
@@ -170,5 +224,4 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
             return null;
         }
     }
-
 }
