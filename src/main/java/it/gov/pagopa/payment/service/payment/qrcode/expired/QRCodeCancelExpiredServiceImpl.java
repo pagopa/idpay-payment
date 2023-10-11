@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment.qrcode.expired;
 
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.service.payment.qrcode.QRCodeConfirmationService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;

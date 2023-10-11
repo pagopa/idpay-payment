@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.qrcode.expired;
+package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLogger;
 import it.gov.pagopa.payment.model.TransactionInProgress;
