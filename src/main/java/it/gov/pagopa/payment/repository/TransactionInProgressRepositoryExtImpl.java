@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -163,6 +164,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.rewards, trx.getRewards())
                         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
+                        .set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }

@@ -1,0 +1,35 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/reward/initiative/BARCODE_INITIATIVEID_NO_BUDGET"
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
+      "channel":  "{{jsonPath request.body '$.channel'}}",
+      "initiativeId": "INITIATIVEID",
+      "userId": "USERID",
+      "status": "REJECTED",
+      "effectiveAmount": "0.10",
+      "amount": "0.10",
+      "amountCents": "10",
+      "reward": {
+        "initiativeId": "INITIATIVEID",
+        "organizationId": "ORGANIZATIONID",
+        "providedReward": 2.00,
+        "accruedReward": 2.00,
+        "capped": false,
+        "dailyCapped": false,
+        "monthlyCapped": false,
+        "yearlyCapped": false,
+        "weeklyCapped": false
+      },
+      "rejectionReasons": ["BUDGET_EXHAUSTED"]
+    }
+  }
+}

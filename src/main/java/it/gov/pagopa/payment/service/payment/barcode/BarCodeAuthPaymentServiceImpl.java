@@ -53,6 +53,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             trx.setAmountCents(amountCents);
             trx.setMerchantId(merchantId);
+            trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx.getUserId(), trxCode, trx);
 
