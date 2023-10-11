@@ -8,5 +8,5 @@ public interface IdpayCodePreAuthService {
 
   RelateUserResponse relateUser(String trxId, RelateUserRequest request);
 
-    AuthPaymentDTO previewPayment(String trxId, String merchantId);
+  AuthPaymentDTO previewPayment(String trxId, String merchantId);
 }

@@ -1,15 +1,12 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -29,18 +26,8 @@ public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentControlle
         log.info(
                 "[IDPAYCODE_RELATE_USER] Request to relate user to transaction having transactionId {}",
                 trxId);
-        try {
-            return idpayCodePaymentService.relateUser(trxId,request);
-        } catch (Exception e) {
-            if(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED.equals(e.getMessage())){
-                throw new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
-                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                        "Cannot find transaction with transactionId [%s]".formatted(trxId));
-            }
-            throw e;
-        }
 
+        return idpayCodePaymentService.relateUser(trxId,request);
     }
 
     @Override

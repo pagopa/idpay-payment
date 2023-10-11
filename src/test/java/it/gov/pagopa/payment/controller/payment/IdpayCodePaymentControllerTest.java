@@ -35,7 +35,7 @@ class IdpayCodePaymentControllerTest {
   private ObjectMapper objectMapper;
 
   @Test
-  void createTransaction_testMandatoryFields() throws Exception {
+  void relateUser_testMandatoryFields() throws Exception {
     String expectedCode = "INVALID_REQUEST";
     List<String> expectedInvalidFields = List.of("fiscalCode");
 

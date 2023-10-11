@@ -110,14 +110,17 @@ class IdpayCodePreAuthServiceTest {
                 .thenReturn(Optional.empty());
 
         RelateUserRequest request = new RelateUserRequest(FISCALCODE);
+
+
         //When
-        IllegalStateException result = Assertions.assertThrows(IllegalStateException.class, () ->
+        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
                 idpayCodePreAuthService.relateUser(trxId, request)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getMessage());
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
 
     }
 

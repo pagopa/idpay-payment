@@ -54,8 +54,12 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     public RelateUserResponse relateUser(String trxId, RelateUserRequest request) {
         String userId = retrieveUserId(request.getFiscalCode());
 
+
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
-                .orElseThrow(() -> new IllegalStateException(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED));
+                .orElseThrow(() -> new ClientExceptionWithBody(
+                        HttpStatus.NOT_FOUND,
+                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                        "Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
         TransactionInProgress trxInProgress = relateUser(trx, userId);
 

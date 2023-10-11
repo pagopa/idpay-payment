@@ -18,12 +18,14 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements QRCodePreAuthService {
+  private final TransactionInProgressRepository transactionInProgressRepository;
   public QRCodePreAuthServiceImpl(@Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
                                   TransactionInProgressRepository transactionInProgressRepository,
                                   RewardCalculatorConnector rewardCalculatorConnector,
                                   AuditUtilities auditUtilities,
                                   WalletConnector walletConnector) {
     super(authorizationExpirationMinutes, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
+    this.transactionInProgressRepository = transactionInProgressRepository;
   }
 
   @Override
