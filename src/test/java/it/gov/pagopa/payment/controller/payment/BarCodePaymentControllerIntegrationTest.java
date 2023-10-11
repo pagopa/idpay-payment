@@ -10,7 +10,6 @@ import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
-    @Autowired
-    private TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
 
