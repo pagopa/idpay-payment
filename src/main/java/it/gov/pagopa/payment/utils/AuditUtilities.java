@@ -16,6 +16,7 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_TRXID_TRXCODE = CEF_PATTERN_INITIATIVE + " cs2Label=trxId cs2={} cs3Label=trxCode cs3={}";
     private static final String CEF_PATTERN_TRXID_TRXCODE_MERCHANTID = CEF_PATTERN_TRXID_TRXCODE + " cs4Label=merchantId cs4={}";
     private static final String CEF_PATTERN_USER = CEF_PATTERN_TRXID_TRXCODE + " suser={}";
+    private static final String CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER = CEF_PATTERN_TRXID_TRXCODE + " cs4Label=channel cs4={} suser={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={}";
     private static final String CEF_PATTERN_MERCHANT_REWARD_REJECTIONS = CEF_PATTERN_TRXID_TRXCODE_MERCHANTID + " cs5Label=reward cs5={} cs6Label=rejectionReasons cs6={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={} cs6Label=merchantId cs6={}";
@@ -45,10 +46,10 @@ public class AuditUtilities {
     // endregion
 
     // region relateUser
-    public void logRelatedUserToTransaction(String initiativeId, String trxId, String trxCode, String userId) {
+    public void logRelatedUserToTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_USER,
-                "User related to transaction", initiativeId, trxId, trxCode, userId
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User related to transaction", initiativeId, trxId, trxCode, userId, channel
         );
     }
 
@@ -56,6 +57,15 @@ public class AuditUtilities {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXCODE_USERID,
                 "User related to transaction - KO", trxCode, userId
+        );
+    }
+    // endregion
+
+    // region previewPayment
+    public void logErrorPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User request preview the transaction - KO", initiativeId, trxId, trxCode, userId, channel
         );
     }
     // endregion

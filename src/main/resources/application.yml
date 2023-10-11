@@ -176,6 +176,9 @@ app:
   barCode:
     expirations:
       authorizationMinutes: ${BAR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
+  idpayCode:
+    expirations:
+      authorizationMinutes: ${IDPAY_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}

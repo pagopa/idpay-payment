@@ -1,11 +1,11 @@
 package it.gov.pagopa.payment.utils;
 
 public final class RewardConstants {
-
     private RewardConstants(){}
 
     //region transactions' channels
     public static final String TRX_CHANNEL_QRCODE = "QRCODE";
+    public static final String TRX_CHANNEL_IDPAYCODE = "IDPAYCODE";
     public static final String TRX_CHANNEL_BARCODE = "BARCODE";
 
     //endregion

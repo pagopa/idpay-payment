@@ -249,6 +249,33 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     }
 
     @Test
+    void updateTrxRelateUserIdentified() {
+        // Given
+        TransactionInProgress trx =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgressRepository.save(trx);
+
+        transactionInProgressRepository.updateTrxRelateUserIdentified(trx.getId(),
+                USER_ID, "IDPAYCODE");
+
+        // When
+        TransactionInProgress resultUpdate =
+                transactionInProgressRepository.findById(trx.getId()).orElse(null);
+
+        // Then
+        Assertions.assertNotNull(resultUpdate);
+        TestUtils.checkNotNullFields(resultUpdate,
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+        Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
+        Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
+    }
+
+    @Test
     void updateTrxIdentified() {
 
         TransactionInProgress transactionInProgress =
@@ -268,7 +295,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "rewards",
                 "trxChargeDate");
 
-        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"), Map.of("ID", new Reward()));
+        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"), Map.of("ID", new Reward()), "CHANNEL" );
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
@@ -299,7 +326,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "trxChargeDate");
 
         transactionInProgressRepository.updateTrxRejected(
-                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"));
+                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"), "CHANNEL");
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
