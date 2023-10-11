@@ -131,7 +131,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons) {
+    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -140,12 +140,24 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, 0L)
                         .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
 
     @Override
-    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards) {
+    public void updateTrxRelateUserIdentified(String id, String userId, String channel) {
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where(Fields.id).is(id)),
+                new Update()
+                        .set(Fields.userId, userId)
+                        .set(Fields.status, SyncTrxStatus.IDENTIFIED)
+                        .set(Fields.channel, channel)
+                        .currentDate(Fields.updateDate),
+                TransactionInProgress.class);
+    }
+    @Override
+    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -154,6 +166,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.rewards, rewards)
+                        .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
