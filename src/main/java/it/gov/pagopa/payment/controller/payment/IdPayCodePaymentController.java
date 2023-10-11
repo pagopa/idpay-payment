@@ -1,10 +1,9 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
-import jakarta.validation.Valid;
-import it.gov.pagopa.payment.dto.PinBlockDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -26,5 +25,5 @@ public interface IdPayCodePaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(@PathVariable("transactionId") String trxId,
                                @RequestHeader("x-merchant-id") String merchantId,
-                               @Valid @RequestBody PinBlockDTO pinBlockbody);
+                               @RequestBody @Valid PinBlockDTO pinBlockbody);
 }

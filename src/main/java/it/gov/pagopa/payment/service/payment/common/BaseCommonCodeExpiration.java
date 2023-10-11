@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BaseCommonCodeExpiration {
 
     protected final AuditUtilities auditUtilities;
-    private final String expiredCode;
+    private final String flowName;
 
     protected BaseCommonCodeExpiration(AuditUtilities auditUtilities, String channel) {
         this.auditUtilities = auditUtilities;
-        this.expiredCode = "EXPIRED_"+channel;
+        this.flowName = "EXPIRED_"+channel;
 
     }
 
@@ -30,19 +30,19 @@ public abstract class BaseCommonCodeExpiration {
         TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
          while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
              log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
-                     expiredCode,
+                     flowName,
                      getFlowName(),
                      expiredTransaction[0].getId(),
                      expiredTransaction[0].getStatus(),
                      expiredTransaction[0].getTrxDate());
              try{
-                PerformanceLogger.execute(expiredCode,
+                PerformanceLogger.execute(flowName,
                         () -> handleExpiredTransaction(expiredTransaction[0]),
                         t -> "Evaluated transaction with ID %s due to %s ". formatted(t.getId(), getFlowName()));
                 count++;
                 auditUtilities.logExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
              } catch (Exception e){
-                 log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", expiredCode, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
+                 log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", flowName, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
                  auditUtilities.logErrorExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
              }
          }

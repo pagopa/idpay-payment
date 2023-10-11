@@ -38,7 +38,7 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
                     PaymentConstants.ExceptionCode.REJECTED,
                     "The merchant id [%s] of the trx , is not equal to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
-        return super.invokeRuleEngine(trx.getTrxCode(),trx);
+        return super.authPayment(trx,trx.getUserId(),trx.getTrxCode());
 
     }
 }

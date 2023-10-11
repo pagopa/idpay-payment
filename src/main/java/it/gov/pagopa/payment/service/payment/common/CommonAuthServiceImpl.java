@@ -46,7 +46,7 @@ public abstract class CommonAuthServiceImpl {
 
     protected AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
         try {
-            checkAuth(trxCode, userId, trx);
+            checkAuth(trxCode,trx);
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
 
@@ -62,7 +62,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
+    private AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
         if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
@@ -139,19 +139,12 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    private void checkAuth(String trxCode, String userId, TransactionInProgress trx){
+    private void checkAuth(String trxCode, TransactionInProgress trx){
         if (trx == null) {
             throw new ClientExceptionWithBody(
                     HttpStatus.NOT_FOUND,
                     PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode));
-        }
-
-        if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.FORBIDDEN,
-                    PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
-                    "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
         }
     }
 

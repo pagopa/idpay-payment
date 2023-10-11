@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
 class IdpayCodePaymentControllerTest {
 
+
   @MockBean
   private IdpayCodePaymentService idpayCodePaymentServiceMock;
 
@@ -33,7 +34,8 @@ class IdpayCodePaymentControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
-
+  private static final String MERCHANT_ID = "MERCHANTID1";
+  private static final Object TRANSACTION_ID = "TRANSACTIONID1";
   @Test
   void relateUser_testMandatoryFields() throws Exception {
     String expectedCode = "INVALID_REQUEST";
@@ -51,6 +53,43 @@ class IdpayCodePaymentControllerTest {
             ErrorDTO.class);
     assertEquals(expectedCode, actual.getCode());
     expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
+
+  }
+  @Test
+  void auth_testMandatoryFields() throws Exception {
+    String expectedCode = "INVALID_REQUEST";
+    List<String> expectedInvalidFields = List.of("pinBlock","encryptedKey");
+
+    MvcResult result = mockMvc.perform(
+                    put("/idpay/payment/idpay-code/{transactionId}/authorize",TRANSACTION_ID)
+                            .header("x-merchant-id", MERCHANT_ID)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}"))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
+            ErrorDTO.class);
+
+    assertEquals(expectedCode, actual.getCode());
+    expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
+  }
+  @Test
+  void authPayment_testMandatoryHeaders() throws Exception {
+    String expectedCode = "INVALID_REQUEST";
+
+    MvcResult result = mockMvc.perform(
+                    put("/idpay/payment/idpay-code/{transactionId}/authorize",TRANSACTION_ID)
+                            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isBadRequest())
+            .andReturn();
+
+    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
+            ErrorDTO.class);
+    assertEquals(expectedCode, actual.getCode());
+    assertEquals("Required request header "
+                    + "'x-merchant-id' for method parameter type String is not present",
+            actual.getMessage());
 
   }
 }

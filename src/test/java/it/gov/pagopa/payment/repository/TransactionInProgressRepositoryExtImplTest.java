@@ -46,6 +46,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     private static final String MERCHANT_ID = "MERCHANTID1";
     private static final String USER_ID = "USERID1";
     public static final int EXPIRATION_MINUTES = 4350;
+    public static final int EXPIRATION_MINUTES_IDPAY_CODE= 5;
     private static final String TRX_ID = "TRX_ID";
 
     @Autowired
@@ -194,6 +195,34 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1", EXPIRATION_MINUTES);
+        Assertions.assertNull(resultSecondSave);
+    }
+
+    @Test
+    void findByTrxId() {
+
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED).id("MOCKEDTRANSACTION_idpay-code_1").build();
+
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired("MOCKEDTRANSACTION_idpay-code_1",EXPIRATION_MINUTES_IDPAY_CODE);
+        Assertions.assertNotNull(resultFirstSave);
+        TestUtils.checkNotNullFields(
+                resultFirstSave,
+                "userId",
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+
+        transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultSecondSave =
+                transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired("MOCKEDTRANSACTION_idpay-code_1", EXPIRATION_MINUTES_IDPAY_CODE);
         Assertions.assertNull(resultSecondSave);
     }
 
