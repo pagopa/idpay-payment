@@ -5,6 +5,7 @@ public final class RewardConstants {
 
     //region transactions' channels
     public static final String TRX_CHANNEL_QRCODE = "QRCODE";
+    public static final String TRX_CHANNEL_IDPAYCODE = "IDPAYCODE";
     //endregion
 
     //region reward evaluation rejection reasons
