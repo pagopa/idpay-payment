@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.idpayCode;
+package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;

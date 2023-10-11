@@ -9,9 +9,9 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.springframework.http.HttpStatus;
 
 public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
-    private final long authorizationExpirationMinutes;
-    private final TransactionInProgressRepository transactionInProgressRepository;
-    private final RewardCalculatorConnector rewardCalculatorConnector;
+    protected final long authorizationExpirationMinutes;
+    protected final TransactionInProgressRepository transactionInProgressRepository;
+    protected final RewardCalculatorConnector rewardCalculatorConnector;
     protected CommonAuthCodeExpiration(AuditUtilities auditUtilities,
                                        String channel,
                                        long authorizationExpirationMinutes,
@@ -35,7 +35,7 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
 
     @Override
     protected TransactionInProgress handleExpiredTransaction(TransactionInProgress trx) {
-        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
+        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) { //TODO BRCODE controllare stato CREATED
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ClientException e) {

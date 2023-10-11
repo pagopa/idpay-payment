@@ -1,7 +1,7 @@
-package it.gov.pagopa.payment.service.payment.idpayCode;
+package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
-import it.gov.pagopa.payment.connector.rest.paymentInstrument.PaymentInstrumentRestConnectorImpl;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentRestConnectorImpl;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -12,11 +12,12 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.service.payment.idpayCode.expired.IdpayCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
+@Slf4j
 @Service
 public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements IdpayCodeAuthPaymentService {
     private final IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
@@ -33,11 +34,11 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
         paymentInstrumentConnector.checkPinBlock(pinBlockBody,trx.getUserId());
 
         if (!merchantId.equals(trx.getMerchantId())){
-            throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
+            throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.REJECTED,
-                    "The merchant id [%s] of the trx , is not equals to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
+                    "The merchant id [%s] of the trx , is not equal to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
-        return super.authPayment(trx,trx.getUserId(), trxId);
+        return super.invokeRuleEngine(trx.getTrxCode(),trx);
 
     }
 }

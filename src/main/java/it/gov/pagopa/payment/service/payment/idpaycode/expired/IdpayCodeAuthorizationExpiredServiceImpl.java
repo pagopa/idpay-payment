@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.idpayCode.expired;
+package it.gov.pagopa.payment.service.payment.idpaycode.expired;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -11,19 +11,18 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpiration implements IdpayCodeAuthorizationExpiredService {
-    private final long authorizationExpirationMinutes;
-
-    private final TransactionInProgressRepository transactionInProgressRepository;
-    private final RewardCalculatorConnector rewardCalculatorConnector;
 
     public IdpayCodeAuthorizationExpiredServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes:5}") long authorizationExpirationMinutes,
                                                     TransactionInProgressRepository transactionInProgressRepository,
                                                     AuditUtilities auditUtilities,
                                                     RewardCalculatorConnector rewardCalculatorConnector) {
-        super(auditUtilities, RewardConstants.TRX_CHANNEL_IDPAYCODE,authorizationExpirationMinutes,transactionInProgressRepository,rewardCalculatorConnector);
-        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
-        this.transactionInProgressRepository = transactionInProgressRepository;
-        this.rewardCalculatorConnector = rewardCalculatorConnector;
+        super(
+                auditUtilities,
+                RewardConstants.TRX_CHANNEL_IDPAYCODE,
+                authorizationExpirationMinutes,
+                transactionInProgressRepository,
+                rewardCalculatorConnector);
+
     }
 
     @Override

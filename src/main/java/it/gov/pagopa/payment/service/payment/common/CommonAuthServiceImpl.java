@@ -50,7 +50,7 @@ public abstract class CommonAuthServiceImpl {
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
 
-            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
+            AuthPaymentDTO authPaymentDTO = invokeRuleEngine( trxCode, trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
@@ -62,7 +62,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    private AuthPaymentDTO invokeRuleEngine(String userId, String trxCode, TransactionInProgress trx){
+    protected AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
         if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
@@ -84,7 +84,7 @@ public abstract class CommonAuthServiceImpl {
                     throw new ClientExceptionWithBody(
                             HttpStatus.FORBIDDEN,
                             PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                            "Budget exhausted for user [%s] and initiative [%s]".formatted(userId, trx.getInitiativeId()));
+                            "Budget exhausted for user [%s] and initiative [%s]".formatted(trx.getUserId(), trx.getInitiativeId()));
                 }
                 throw new ClientExceptionWithBody(
                         HttpStatus.FORBIDDEN,

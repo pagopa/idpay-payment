@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
-import it.gov.pagopa.payment.service.payment.idpayCode.IdpayCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodeAuthPaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
