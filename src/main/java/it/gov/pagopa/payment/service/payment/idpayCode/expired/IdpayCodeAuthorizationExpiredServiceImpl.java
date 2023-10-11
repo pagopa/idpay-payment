@@ -14,14 +14,16 @@ public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpi
     private final long authorizationExpirationMinutes;
 
     private final TransactionInProgressRepository transactionInProgressRepository;
-    private static RewardCalculatorConnector rewardCalculatorConnector;
+    private final RewardCalculatorConnector rewardCalculatorConnector;
 
     public IdpayCodeAuthorizationExpiredServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes:5}") long authorizationExpirationMinutes,
                                                     TransactionInProgressRepository transactionInProgressRepository,
-                                                    AuditUtilities auditUtilities) {
+                                                    AuditUtilities auditUtilities,
+                                                    RewardCalculatorConnector rewardCalculatorConnector) {
         super(auditUtilities, RewardConstants.TRX_CHANNEL_IDPAYCODE,authorizationExpirationMinutes,transactionInProgressRepository,rewardCalculatorConnector);
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.transactionInProgressRepository = transactionInProgressRepository;
+        this.rewardCalculatorConnector = rewardCalculatorConnector;
     }
 
     @Override
