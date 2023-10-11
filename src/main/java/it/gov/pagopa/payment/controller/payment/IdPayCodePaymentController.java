@@ -18,8 +18,7 @@ public interface IdPayCodePaymentController {
     @PutMapping("/{transactionId}/preview")
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO previewPayment(@PathVariable("transactionId") String trxId,
-                                  @RequestHeader("x-acquirer-id") String acquirerId,
-                                  @RequestHeader("x-merchant-fiscal-code") String merchantFiscalCode);
+                                  @RequestHeader("x-merchant-id") String merchantId);
 
     @PutMapping("/{trxId}/authorize") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)

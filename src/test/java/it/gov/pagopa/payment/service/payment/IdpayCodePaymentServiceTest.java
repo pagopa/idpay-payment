@@ -17,8 +17,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodePaymentServiceTest {
-    private static final String ACQUIRERID = "ACQUIRERID";
-    private static final String MERCHANT_FISCALCODE = "MERCHANT_FISCALCODE";
+    private static final String MERCHANTID = "MERCHANTID";
 
     @Mock private IdpayCodePreAuthService idpayCodePreAuthServiceMock;
     private IdpayCodePaymentService idpayCodePaymentService;
@@ -33,10 +32,10 @@ class IdpayCodePaymentServiceTest {
         //Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1,trx);
-        when(idpayCodePreAuthServiceMock.previewPayment(trx.getId(), ACQUIRERID, MERCHANT_FISCALCODE))
+        when(idpayCodePreAuthServiceMock.previewPayment(trx.getId(), MERCHANTID))
                 .thenReturn(preview);
         //When
-        AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), ACQUIRERID, MERCHANT_FISCALCODE);
+        AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);

@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class DetailsDTO {//TODO IDP-1926 check really response
-    String secondFactor;
+public class SecondFactorDTO {
+    private String secondFactor;
 }

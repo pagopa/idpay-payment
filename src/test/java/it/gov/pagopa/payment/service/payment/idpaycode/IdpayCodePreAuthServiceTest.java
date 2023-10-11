@@ -4,7 +4,7 @@ import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
-import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.DetailsDTO;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
@@ -43,6 +43,7 @@ import static org.mockito.Mockito.*;
 class IdpayCodePreAuthServiceTest {
     private static final String USER_ID = "userId";
     private static final String FISCALCODE = "FISCALCODE";
+    private static final String MERCHANTID = "MERCHANTID";
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
@@ -126,6 +127,7 @@ class IdpayCodePreAuthServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        trx.setMerchantId(MERCHANTID);
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
@@ -145,10 +147,10 @@ class IdpayCodePreAuthServiceTest {
                         authPaymentDTO.getRewards(),
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
-        when(paymentInstrumentConnectorMock.getSecondFactor(trx.getInitiativeId(), trx.getUserId()))
-                .thenReturn(new DetailsDTO(SECOND_FACTOR));
+        when(paymentInstrumentConnectorMock.getSecondFactor(trx.getUserId()))
+                .thenReturn(new SecondFactorDTO(SECOND_FACTOR));
         //When
-        AuthPaymentDTO result = idpayCodePreAuthService.previewPayment(trx.getId(), "acquirerId", "merchantFiscalCode");
+        AuthPaymentDTO result = idpayCodePreAuthService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
@@ -169,13 +171,14 @@ class IdpayCodePreAuthServiceTest {
                 .thenReturn(Optional.empty());
 
         //When
-        IllegalStateException result = Assertions.assertThrows(IllegalStateException.class, () ->
-                idpayCodePreAuthService.previewPayment(trxId, "acquirerId", "merchantFiscalCode")
+        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+                idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getMessage());
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
 
     }
 
@@ -183,11 +186,12 @@ class IdpayCodePreAuthServiceTest {
     void previewPayment_notRelateUser() {
         //Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        trx.setMerchantId(MERCHANTID);
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
         //When
-        AuthPaymentDTO result = idpayCodePreAuthService.previewPayment(trx.getId(), "acquirerId", "merchantFiscalCode");
+        AuthPaymentDTO result = idpayCodePreAuthService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
@@ -207,6 +211,7 @@ class IdpayCodePreAuthServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        trx.setMerchantId(MERCHANTID);
 
         String trxId = trx.getId();
 
@@ -229,7 +234,7 @@ class IdpayCodePreAuthServiceTest {
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-                idpayCodePreAuthService.previewPayment(trxId, "acquirerId", "merchantFiscalCode")
+                idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
@@ -249,6 +254,7 @@ class IdpayCodePreAuthServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        trx.setMerchantId(MERCHANTID);
 
         String trxId = trx.getId();
 
@@ -271,7 +277,7 @@ class IdpayCodePreAuthServiceTest {
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-                idpayCodePreAuthService.previewPayment(trxId, "acquirerId", "merchantFiscalCode")
+                idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
@@ -291,6 +297,7 @@ class IdpayCodePreAuthServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        trx.setMerchantId(MERCHANTID);
 
         String trxId = trx.getId();
 
@@ -302,13 +309,40 @@ class IdpayCodePreAuthServiceTest {
 
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-                idpayCodePreAuthService.previewPayment(trxId, "acquirerId", "merchantFiscalCode")
+                idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, result.getCode());
+
+        verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
+        verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), anyLong(), eq(null), anyMap(),anyString());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyString());
+    }
+
+    @Test
+    void previewPayment_differentMerchantId() {
+        //Given
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        trx.setUserId(USER_ID);
+        trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
+        trx.setMerchantId(MERCHANTID);
+
+        String trxId = trx.getId();
+        when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
+
+        //When
+        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+                idpayCodePreAuthService.previewPayment(trxId, "DUMMYMERCHANT")
+        );
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());

@@ -20,9 +20,9 @@ import java.time.OffsetDateTime;
 @Slf4j
 public class CommonPreAuthServiceImpl{
   private final long authorizationExpirationMinutes;
-  private final TransactionInProgressRepository transactionInProgressRepository;
+  protected final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
-  private final AuditUtilities auditUtilities;
+  protected final AuditUtilities auditUtilities;
   private final WalletConnector walletConnector;
 
   public CommonPreAuthServiceImpl(

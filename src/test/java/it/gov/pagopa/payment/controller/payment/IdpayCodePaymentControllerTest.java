@@ -69,7 +69,7 @@ class IdpayCodePaymentControllerTest {
             ErrorDTO.class);
     assertEquals(expectedCode, actual.getCode());
     assertEquals("Required request header "
-                    + "'x-acquirer-id' for method parameter type String is not present",
+                    + "'x-merchant-id' for method parameter type String is not present",
             actual.getMessage());
 
   }

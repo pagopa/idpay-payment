@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.connector.rest.paymentinstrument;
 import feign.FeignException;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
-import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.DetailsDTO;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +17,14 @@ public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnecto
     }
 
     @Override
-    public DetailsDTO getSecondFactor(String initiativeId, String userId){
+    public SecondFactorDTO getSecondFactor(String userId){
         try{
-            return restClient.getSecondFactor(initiativeId, userId); //TODO IDP-1926 check respponse
-        } catch (FeignException e){ //TODO IDP-1926 check error from request
+            return restClient.getSecondFactor(userId);
+        } catch (FeignException e){
             if (e.status() == 404) {
                 throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
                         "PAYMENT_INSTRUMENT",
-                        String.format("Payment instrument related to the user %s with initiativeId %s was not found.", userId, initiativeId));
+                        String.format("There is not a idpaycode for the userId %s .", userId));
             }
 
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
