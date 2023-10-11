@@ -17,17 +17,14 @@ public class QRCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpirat
     private final long authorizationExpirationMinutes;
 
     private final TransactionInProgressRepository transactionInProgressRepository;
-    private final RewardCalculatorConnector rewardCalculatorConnector;
+    private static RewardCalculatorConnector rewardCalculatorConnector;
     public QRCodeAuthorizationExpiredServiceImpl(
             @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
-            RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities) {
         super(auditUtilities, RewardConstants.TRX_CHANNEL_QRCODE,authorizationExpirationMinutes,transactionInProgressRepository,rewardCalculatorConnector);
-
         this.transactionInProgressRepository = transactionInProgressRepository;
-        this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     }
 
