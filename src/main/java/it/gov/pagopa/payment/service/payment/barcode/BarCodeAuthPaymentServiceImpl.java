@@ -52,6 +52,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
             trx.setAmountCents(amountCents);
+            trx.setMerchantId(merchantId);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx.getUserId(), trxCode, trx);
 
