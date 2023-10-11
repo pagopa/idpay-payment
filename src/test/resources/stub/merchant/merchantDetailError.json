@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/idpay/merchant/portal/initiatives/INITIATIVEID",
+    "urlPathPattern": "/idpay/merchant/portal/initiatives/(INITIATIVEID|BARCODE_INITIATIVEID_REWARDED)",
     "headers": {
         "x-merchant-id": {
           "equalTo": "ERRORMERCHANTID"

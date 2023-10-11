@@ -5,6 +5,8 @@ import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
@@ -51,6 +53,7 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private WalletConnector walletConnectorMock;
+    @Mock private MerchantConnector merchantConnector;
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
 
@@ -63,7 +66,8 @@ class BarCodeAuthPaymentServiceImplTest {
                 notifierServiceMock,
                 paymentErrorNotifierServiceMock,
                 auditUtilitiesMock,
-                walletConnectorMock);
+                walletConnectorMock,
+                merchantConnector);
     }
 
     @Test
@@ -87,6 +91,9 @@ class BarCodeAuthPaymentServiceImplTest {
 
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
                 .thenReturn(transaction);
+
+        when(merchantConnector.merchantDetail(merchantId, transaction.getInitiativeId()))
+                .thenReturn(MerchantDetailDTO.builder().build());
 
         when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
@@ -118,7 +125,7 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
-    void authPaymentNotFound() {
+    void barCodeauthPayment_trxNotFound() {
         // Given
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 

@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.barcode;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -25,16 +26,19 @@ import java.util.List;
 public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements BarCodeAuthPaymentService {
 
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
+    private final MerchantConnector merchantConnector;
 
     public BarCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                          BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          RewardCalculatorConnector rewardCalculatorConnector,
                                          TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
                                          AuditUtilities auditUtilities,
-                                         WalletConnector walletConnector){
+                                         WalletConnector walletConnector,
+                                         MerchantConnector merchantConnector){
         super(transactionInProgressRepository, rewardCalculatorConnector, notifierService,
                 paymentErrorNotifierService, auditUtilities, walletConnector);
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
+        this.merchantConnector = merchantConnector;
     }
 
     @Override
@@ -48,6 +52,8 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
                         PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode));
             }
+
+            merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
