@@ -1,8 +1,10 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
@@ -16,6 +18,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -40,12 +43,12 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     public RelateUserResponse relateUser(String trxId, RelateUserRequest request) {
         String userId = retrieveUserId(request.getFiscalCode());
 
-        TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
-                .orElse(null);
 
-        if(trx == null){
-            return null;
-        }
+        TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
+                .orElseThrow(() -> new ClientExceptionWithBody(
+                        HttpStatus.NOT_FOUND,
+                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                        "Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
         TransactionInProgress trxInProgress = relateUser(trx, userId);
 

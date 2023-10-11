@@ -1,10 +1,12 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 
 import java.util.Optional;
 
@@ -96,11 +99,17 @@ class IdpayCodePreAuthServiceTest {
                 .thenReturn(Optional.empty());
 
         RelateUserRequest request = new RelateUserRequest(FISCALCODE);
+
+
         //When
-        RelateUserResponse result = idpayCodePreAuthService.relateUser(trxId, request);
+        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+                idpayCodePreAuthService.relateUser(trxId, request)
+        );
 
         //Then
-        Assertions.assertNull(result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
 
     }
 }
