@@ -75,7 +75,7 @@ class PaymentInstrumentConnectorImplTest {
     }
 
     @Test
-    void getWallet_feignException(){
+    void getSecondFactor_feignException(){
         // Given
         Request request = Request.create(Request.HttpMethod.GET, "url",
                 new HashMap<>(), null, new RequestTemplate());
