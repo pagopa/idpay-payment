@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.dto.brcode;
+package it.gov.pagopa.payment.dto.barcode;
 
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.constraints.NotBlank;
@@ -14,7 +14,7 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionBRCodeResponse {
+public class TransactionBarCodeResponse {
 
     @NotBlank
     private String id;

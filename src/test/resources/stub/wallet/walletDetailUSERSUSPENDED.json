@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/idpay/wallet/[^\\s]+/USERID"
+    "urlPathPattern": "/idpay/wallet/[^\\s]+/USERID_SUSPENDED"
   },
   "response": {
     "status": "200",
@@ -13,7 +13,7 @@
       "familyId": "FAMILYID",
       "initiativeId": "INITIATIVEID",
       "initiativeName": "INITIATIVENAME",
-      "status": "REFUNDABLE",
+      "status": "SUSPENDED",
       "iban": "IBAN",
       "businessName": "BUSINESSNAME",
       "amount": 1000

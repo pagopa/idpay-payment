@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -62,7 +63,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 TransactionInProgress.class);
     }
 
-    @Test
+   @Test
     void createIfExists() {
 
         TransactionInProgress transactionInProgress =
@@ -149,6 +150,33 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transaction.setUserId("USERID%d".formatted(1));
+        transactionInProgressRepository.save(transaction);
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        TransactionInProgress result =
+                transactionInProgressRepository.findById(transaction.getId()).orElse(null);
+
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(
+                result,
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+        Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+    }
+
+    @Test
+    void updateTrxAuthorized_barCode() {
+        Long reward = 200L;
+        TransactionInProgress transaction =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        transaction.setUserId("USERID%d".formatted(1));
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);
 
         transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
