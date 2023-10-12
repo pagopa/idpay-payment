@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodePreAuthService;
 import lombok.extern.slf4j.Slf4j;
@@ -17,8 +16,8 @@ public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
     }
 
     @Override
-    public RelateUserResponse relateUser(String trxId, RelateUserRequest request) {
-        return idpayCodePreAuthService.relateUser(trxId, request);
+    public RelateUserResponse relateUser(String trxId, String fiscalCode) {
+        return idpayCodePreAuthService.relateUser(trxId, fiscalCode);
     }
 
     @Override

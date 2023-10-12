@@ -5,10 +5,7 @@ import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.*;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -30,7 +27,8 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
     private final TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
     private final WalletConnector walletConnector;
-    protected BarCodeCreationServiceImpl(TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
+    protected BarCodeCreationServiceImpl(TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
                                          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
                                          RewardRuleRepository rewardRuleRepository,
                                          TransactionInProgressRepository transactionInProgressRepository,
@@ -39,7 +37,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                                          MerchantConnector merchantConnector,
                                          TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
                                          TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper, WalletConnector walletConnector) {
-        super(transactionInProgress2TransactionResponseMapper,
+        super(transactionInProgress2BaseTransactionResponseMapper,
                 transactionCreationRequest2TransactionInProgressMapper,
                 rewardRuleRepository,
                 transactionInProgressRepository,

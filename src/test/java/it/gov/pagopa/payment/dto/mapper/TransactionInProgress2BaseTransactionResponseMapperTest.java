@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -9,16 +9,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class TransactionInProgress2TransactionResponseMapperTest {
+class TransactionInProgress2BaseTransactionResponseMapperTest {
 
-    private TransactionInProgress2TransactionResponseMapper mapper;
-
-    private static final String QRCODE_IMG_BASEURL = "QRCODE_IMG_BASEURL";
-    private static final String QRCODE_TXT_BASEURL = "QRCODE_TXT_BASEURL";
+    private TransactionInProgress2BaseTransactionResponseMapper mapper;
 
     @BeforeEach
     void setUp() {
-        mapper = new TransactionInProgress2TransactionResponseMapper(4300, QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
+        mapper = new TransactionInProgress2BaseTransactionResponseMapper(4300);
     }
 
     @Test
@@ -26,15 +23,14 @@ class TransactionInProgress2TransactionResponseMapperTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
                 .reward(1000L)
                 .build();
-        TransactionResponse result = mapper.apply(trx);
-       result.setTrxPngUrl("");
-       result.setTrxTxtUrl("");
+        BaseTransactionResponseDTO result = mapper.apply(trx);
+        result.setTrxPngUrl("");
+        result.setTrxTxtUrl("");
 
         Assertions.assertAll(() -> {
             assertionCommons(trx, result);
             Assertions.assertFalse(result.getSplitPayment());
         });
-
         TestUtils.checkNotNullFields(result);
     }
 
@@ -43,7 +39,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
                 .reward(200L)
                 .build();
-        TransactionResponse result = mapper.apply(trx);
+        BaseTransactionResponseDTO result = mapper.apply(trx);
         result.setTrxPngUrl("");
         result.setTrxTxtUrl("");
 
@@ -51,11 +47,10 @@ class TransactionInProgress2TransactionResponseMapperTest {
             assertionCommons(trx, result);
             Assertions.assertTrue(result.getSplitPayment());
         });
-
         TestUtils.checkNotNullFields(result);
     }
 
-    private static void assertionCommons(TransactionInProgress trx, TransactionResponse result) {
+    private static void assertionCommons(TransactionInProgress trx, BaseTransactionResponseDTO result) {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trx.getId(), result.getId());
         Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
@@ -72,9 +67,6 @@ class TransactionInProgress2TransactionResponseMapperTest {
         Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
         Assertions.assertEquals(trx.getVat(), result.getVat());
         Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
-        Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
-        Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
-        Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
         Assertions.assertEquals(4300, result.getTrxExpirationMinutes());
     }
 

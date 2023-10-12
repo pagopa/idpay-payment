@@ -23,7 +23,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
           MerchantDetailDTO merchantDetail,
           String idTrxIssuer) {
     String id =
-        "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
+        "%s_%d".formatted(UUID.randomUUID().toString(), System.currentTimeMillis());
 
     OffsetDateTime now = OffsetDateTime.now();
 

@@ -7,7 +7,6 @@ import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
-import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -40,9 +39,8 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     }
 
     @Override
-    public RelateUserResponse relateUser(String trxId, RelateUserRequest request) {
-        String userId = retrieveUserId(request.getFiscalCode());
-
+    public RelateUserResponse relateUser(String trxId, String fiscalCode) {
+        String userId = retrieveUserId(fiscalCode);
 
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
                 .orElseThrow(() -> new ClientExceptionWithBody(
