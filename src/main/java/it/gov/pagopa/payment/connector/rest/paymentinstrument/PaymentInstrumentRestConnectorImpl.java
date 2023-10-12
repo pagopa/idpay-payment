@@ -31,7 +31,7 @@ public class PaymentInstrumentRestConnectorImpl implements PaymentInstrumentRest
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
                     "An error occurred in the microservice payment-instrument", e);
         }
-        log.info("[VERIFY_PIN_BLOCK] The PinBlock has been verified, for the user with userId{}",userId);
+        log.info("[VERIFY_PIN_BLOCK] The PinBlock has been verified, for the user with userId {}",userId);
         return verifyPinBlockDTO;
     }
 }
