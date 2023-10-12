@@ -20,7 +20,7 @@ public class PaymentConstants {
     public static final String TOO_MANY_REQUESTS = "PAYMENT_TOO_MANY_REQUESTS";
     public static final String GENERIC_ERROR = "PAYMENT_GENERIC_ERROR";
     public static final String USER_SUSPENDED_ERROR = "PAYMENT_USER_SUSPENDED";
-    public static final String INVALID_PIN = "INVALID_PIN";
+    public static final String INVALID_PIN = "PAYMENT_INVALID_PINBLOCK";
     private ExceptionCode() {}
   }
 
