@@ -23,11 +23,11 @@ public class PaymentInstrumentRestConnectorImpl implements PaymentInstrumentRest
         VerifyPinBlockDTO verifyPinBlockDTO;
         try {
             verifyPinBlockDTO =  paymentInstrumentRestClient.verifyPinBlock(pinBlockDTO,userId);
-        }catch (FeignException e){
-            if(e.status()== 403){
+            if(!verifyPinBlockDTO.isPinBlockVerified()){
                 throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, PaymentConstants.ExceptionCode.INVALID_PIN,
                         "The Pinblock is incorrect");
             }
+        }catch (FeignException e){
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
                     "An error occurred in the microservice payment-instrument", e);
         }
