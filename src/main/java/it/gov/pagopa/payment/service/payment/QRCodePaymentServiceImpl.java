@@ -51,7 +51,7 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
       String merchantId,
       String acquirerId,
       String idTrxIssuer) {
-    return qrCodeCreationService.createTransaction(
+    return qrCodeCreationService.createQRCodeTransaction(
         trxCreationRequest,
         RewardConstants.TRX_CHANNEL_QRCODE,
         merchantId,

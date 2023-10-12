@@ -11,7 +11,6 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
-import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.AuthPaymentIdpayCodeMapper;
@@ -90,7 +89,7 @@ class IdpayCodePreAuthServiceTest {
 
 
 
-        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), new RelateUserRequest("FISCAL_CODE"));
+        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), FISCALCODE);
 
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
@@ -110,12 +109,10 @@ class IdpayCodePreAuthServiceTest {
         when(transactionInProgressRepositoryMock.findById(trxId))
                 .thenReturn(Optional.empty());
 
-        RelateUserRequest request = new RelateUserRequest(FISCALCODE);
-
 
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-                idpayCodePreAuthService.relateUser(trxId, request)
+                idpayCodePreAuthService.relateUser(trxId, FISCALCODE)
         );
 
         //Then

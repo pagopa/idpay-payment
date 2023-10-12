@@ -3,10 +3,10 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
@@ -22,34 +22,31 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 
 @Slf4j
-@Service
-public abstract class CommonCreationServiceImpl {
+@Service("CommonCreate")
+public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  private final TransactionInProgress2TransactionResponseMapper
-      transactionInProgress2TransactionResponseMapper;
-  private final TransactionCreationRequest2TransactionInProgressMapper
-      transactionCreationRequest2TransactionInProgressMapper;
-  private final RewardRuleRepository rewardRuleRepository;
+  protected final TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+  protected final TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
+  protected final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TrxCodeGenUtil trxCodeGenUtil;
   protected final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-  protected CommonCreationServiceImpl(
-          TransactionInProgress2TransactionResponseMapper
-          transactionInProgress2TransactionResponseMapper,
-          TransactionCreationRequest2TransactionInProgressMapper
-          transactionCreationRequest2TransactionInProgressMapper,
+  public CommonCreationServiceImpl(
+          TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
+          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
-          AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
-    this.transactionInProgress2TransactionResponseMapper =
-        transactionInProgress2TransactionResponseMapper;
+          AuditUtilities auditUtilities,
+          MerchantConnector merchantConnector) {
+    this.transactionInProgress2BaseTransactionResponseMapper =
+            transactionInProgress2BaseTransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
-        transactionCreationRequest2TransactionInProgressMapper;
+            transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.trxCodeGenUtil = trxCodeGenUtil;
@@ -57,12 +54,12 @@ public abstract class CommonCreationServiceImpl {
     this.merchantConnector = merchantConnector;
   }
 
-  public TransactionResponse createTransaction(
-      TransactionCreationRequest trxCreationRequest,
-      String channel,
-      String merchantId,
-      String acquirerId,
-      String idTrxIssuer) {
+  public BaseTransactionResponseDTO createTransaction(
+          TransactionCreationRequest trxCreationRequest,
+          String channel,
+          String merchantId,
+          String acquirerId,
+          String idTrxIssuer) {
 
     LocalDate today = LocalDate.now();
     try {
@@ -77,27 +74,10 @@ public abstract class CommonCreationServiceImpl {
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
               .map(RewardRule::getInitiativeConfig)
               .orElse(null);
-      if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
-        log.info(
-                "[{}] Cannot find initiative with ID: [{}]",
-                getFlow(),
-                trxCreationRequest.getInitiativeId());
-        throw new ClientExceptionWithBody(
-                HttpStatus.NOT_FOUND,
-                "NOT FOUND",
-                "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
-      }
 
-      if (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate())) {
-        log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
-                getFlow(),
-                initiative.getStartDate(), initiative.getEndDate());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                "INVALID DATE",
-                "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
-                        .formatted(initiative.getStartDate(), initiative.getEndDate()));
-      }
+      checkInitiativeType(trxCreationRequest.getInitiativeId(), initiative);
+
+      checkInitiativeValidPeriod(today, initiative);
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
 
@@ -108,21 +88,47 @@ public abstract class CommonCreationServiceImpl {
 
       logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 
-      return transactionInProgress2TransactionResponseMapper.apply(trx);
+      return transactionInProgress2BaseTransactionResponseMapper.apply(trx);
     } catch (RuntimeException e) {
       logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;
     }
   }
 
-  private void generateTrxCodeAndSave(TransactionInProgress trx) {
+  protected void checkInitiativeType(String initiativeId, InitiativeConfig initiative) {
+    if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
+      log.info(
+              "[{}] Cannot find initiative with ID: [{}]",
+              getFlow(),
+              initiativeId);
+      throw new ClientExceptionWithBody(
+              HttpStatus.NOT_FOUND,
+              "NOT FOUND",
+              "Cannot find initiative with ID: [%s]".formatted(initiativeId));
+    }
+  }
+
+  protected void checkInitiativeValidPeriod(LocalDate today, InitiativeConfig initiative) {
+    if (initiative != null && (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate()))) {
+      log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
+              getFlow(),
+              initiative.getStartDate(), initiative.getEndDate());
+      throw new ClientExceptionWithBody(
+              HttpStatus.BAD_REQUEST,
+              "INVALID DATE",
+              "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
+                      .formatted(initiative.getStartDate(), initiative.getEndDate()));
+    }
+  }
+
+  protected void generateTrxCodeAndSave(TransactionInProgress trx) {
     long retry = 1;
     while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId()
-        == null) {
+            == null) {
       log.info(
-          "[{}] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
-          getFlow(),
-          retry);
+              "[{}] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
+              getFlow(),
+              retry);
     }
   }
 
