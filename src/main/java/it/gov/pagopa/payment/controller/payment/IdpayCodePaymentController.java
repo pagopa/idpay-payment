@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/idpay/payment/idpay-code")
-public interface IdpayCodePaymentGenericController {
+public interface IdpayCodePaymentController {
     @PutMapping("/{transactionId}/relate-user")
     @ResponseStatus(code = HttpStatus.OK)
     RelateUserResponse relateUser(@PathVariable("transactionId") String trxId,

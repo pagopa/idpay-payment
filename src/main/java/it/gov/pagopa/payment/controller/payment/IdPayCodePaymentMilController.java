@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/idpay/mil/payment/idpay-code")
-public interface IdPayCodePaymentController {
+public interface IdPayCodePaymentMilController {
 
     @PutMapping("/{trxId}/preview") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)

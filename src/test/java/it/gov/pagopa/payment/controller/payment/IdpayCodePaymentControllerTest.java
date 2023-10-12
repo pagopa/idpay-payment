@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(IdPayCodePaymentControllerImpl.class)
+@WebMvcTest(IdPayCodePaymentMilControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
 class IdpayCodePaymentControllerTest {
 
