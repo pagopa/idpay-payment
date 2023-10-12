@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public interface PaymentInstrumentRestClient {
 
     @GetMapping(
-            value = "/code/secondFactor/{userId}",
+            value = "/idpay/instrument/code/secondFactor/{userId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     SecondFactorDTO getSecondFactor(@PathVariable("userId") String userId);

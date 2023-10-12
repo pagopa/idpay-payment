@@ -66,7 +66,7 @@ class CommonPreAuthServiceTest {
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate");
 
     verify(walletConnectorMock, times(1)).getWallet("INITIATIVEID1", USER_ID1);
   }
@@ -83,7 +83,7 @@ class CommonPreAuthServiceTest {
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate");
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
