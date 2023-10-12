@@ -5,7 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-@RequestMapping("/idpay/mil/test/payment")
+@RequestMapping("/idpay/mil/payment/test")
 public interface CommonPaymentController {
     @PostMapping("/")
     @ResponseStatus(code = HttpStatus.CREATED)
