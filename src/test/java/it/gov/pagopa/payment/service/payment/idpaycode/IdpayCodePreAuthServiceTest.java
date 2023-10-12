@@ -8,7 +8,6 @@ import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
-import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -35,7 +34,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class IdpayCodePreAuthServiceTest {
     private static final String USER_ID = "userId";
-    private static final String IDPAYCODE = "IDPAYCODE";
     private static final String FISCALCODE = "FISCALCODE";
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
@@ -78,7 +76,7 @@ class IdpayCodePreAuthServiceTest {
 
 
 
-        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), new RelateUserRequest("FISCAL_CODE"));
+        RelateUserResponse result = idpayCodePreAuthService.relateUser(trx.getId(), FISCALCODE);
 
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result);
@@ -98,12 +96,10 @@ class IdpayCodePreAuthServiceTest {
         when(transactionInProgressRepositoryMock.findById(trxId))
                 .thenReturn(Optional.empty());
 
-        RelateUserRequest request = new RelateUserRequest(FISCALCODE);
-
 
         //When
         ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
-                idpayCodePreAuthService.relateUser(trxId, request)
+                idpayCodePreAuthService.relateUser(trxId, FISCALCODE)
         );
 
         //Then

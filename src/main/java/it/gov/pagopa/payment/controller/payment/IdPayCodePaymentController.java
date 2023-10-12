@@ -1,9 +1,7 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +11,7 @@ public interface IdPayCodePaymentController {
     @PutMapping("/{transactionId}/relate-user")
     @ResponseStatus(code = HttpStatus.OK)
     RelateUserResponse relateUser(@PathVariable("transactionId") String trxId,
-                                  @RequestBody @Valid RelateUserRequest request);
+                                  @RequestHeader("Fiscal-Code") String fiscalCode);
 
     @PutMapping("/{trxId}/preview") //TODO after refactor path
     @ResponseStatus(code = HttpStatus.OK)
