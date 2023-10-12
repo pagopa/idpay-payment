@@ -52,7 +52,7 @@ class CommonPaymentControllerTest {
         List<String> expectedInvalidFields = Arrays.asList("initiativeId", "amountCents", "idTrxAcquirer");
 
         MvcResult result = mockMvc.perform(
-                        post("/idpay/payment/create-trx")
+                        post("/idpay/mil/payment/")
                                 .header("x-merchant-id", MERCHANT_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"))
@@ -73,7 +73,7 @@ class CommonPaymentControllerTest {
         Mockito.when(commonCreationServiceMock.createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER)).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .post("/idpay/payment/create-trx")
+                        .post("/idpay/mil/payment/")
                         .content(objectMapper.writeValueAsString(body))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
