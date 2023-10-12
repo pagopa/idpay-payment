@@ -42,7 +42,6 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     public RelateUserResponse relateUser(String trxId, String fiscalCode) {
         String userId = retrieveUserId(fiscalCode);
 
-
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
                 .orElseThrow(() -> new ClientExceptionWithBody(
                         HttpStatus.NOT_FOUND,

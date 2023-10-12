@@ -7,7 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 @RequestMapping("/idpay/payment")
 public interface CommonPaymentController {
-    @PostMapping("/trx")
+    @PostMapping("/")
     @ResponseStatus(code = HttpStatus.CREATED)
     BaseTransactionResponseDTO createTransaction(
             @RequestBody @Valid TransactionCreationRequest trxCreationRequest,

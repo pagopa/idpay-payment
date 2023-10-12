@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Slf4j
-public class IdpayCodePaymentControllerImpl implements IdpayCodePaymentController {
+public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentController {
     private final IdpayCodePaymentService idpayCodePaymentService;
 
-    public IdpayCodePaymentControllerImpl(IdpayCodePaymentService idpayCodePaymentService) {
+    public IdPayCodePaymentControllerImpl(IdpayCodePaymentService idpayCodePaymentService) {
         this.idpayCodePaymentService = idpayCodePaymentService;
     }
 

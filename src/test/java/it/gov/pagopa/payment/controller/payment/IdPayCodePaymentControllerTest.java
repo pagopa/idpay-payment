@@ -2,10 +2,10 @@ package it.gov.pagopa.payment.controller.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
-import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
+import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
-import org.junit.jupiter.api.Disabled;
+import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -15,16 +15,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.List;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(IdPayCodePaymentMilControllerImpl.class)
+@WebMvcTest(IdPayCodePaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
-class IdpayCodePaymentControllerTest {
+class IdPayCodePaymentControllerTest {
 
   @MockBean
   private IdpayCodePaymentService idpayCodePaymentServiceMock;
@@ -34,12 +32,10 @@ class IdpayCodePaymentControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
-
   @Test
-  @Disabled
-  void relateUser_testMandatoryFields() throws Exception {
-    String expectedCode = "INVALID_REQUEST";
-    List<String> expectedInvalidFields = List.of("fiscalCode");
+  void relateUser_testMandatoryHeaders() throws Exception {
+
+    TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/payment/idpay-code/{transactionId}/relate-user",
@@ -49,10 +45,10 @@ class IdpayCodePaymentControllerTest {
             .andExpect(status().isBadRequest())
             .andReturn();
 
-    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
-            ErrorDTO.class);
-    assertEquals(expectedCode, actual.getCode());
-    expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
+    assertNotNull(result.getResponse().getContentAsString());
 
+    String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+            + "'Fiscal-Code' for method parameter type String is not present\"}";
+    assertEquals(actual, result.getResponse().getContentAsString());
   }
 }

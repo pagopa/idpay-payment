@@ -25,8 +25,6 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,7 +50,7 @@ class CommonPaymentControllerTest {
         List<String> expectedInvalidFields = Arrays.asList("initiativeId", "amountCents", "idTrxAcquirer");
 
         MvcResult result = mockMvc.perform(
-                        post("/idpay/payment/trx")
+                        post("/idpay/payment/")
                                 .header("x-merchant-id", MERCHANT_ID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"))
@@ -62,8 +60,8 @@ class CommonPaymentControllerTest {
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
 
-        assertEquals(expectedCode, actual.getCode());
-        expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
+        Assertions.assertEquals(expectedCode, actual.getCode());
+        expectedInvalidFields.forEach(field -> Assertions.assertTrue(actual.getMessage().contains(field)));
     }
 
     @Test
@@ -73,7 +71,7 @@ class CommonPaymentControllerTest {
         Mockito.when(commonCreationServiceMock.createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER)).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .post("/idpay/payment/trx")
+                        .post("/idpay/payment/")
                         .content(objectMapper.writeValueAsString(body))
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
