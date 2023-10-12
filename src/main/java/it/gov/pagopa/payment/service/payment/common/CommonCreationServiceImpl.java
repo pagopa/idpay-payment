@@ -27,11 +27,9 @@ public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  private final TransactionInProgress2BaseTransactionResponseMapper
-          transactionInProgress2BaseTransactionResponseMapper;
-  private final TransactionCreationRequest2TransactionInProgressMapper
-      transactionCreationRequest2TransactionInProgressMapper;
-  private final RewardRuleRepository rewardRuleRepository;
+  protected final TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+  protected final TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
+  protected final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
   private final TrxCodeGenUtil trxCodeGenUtil;
   protected final AuditUtilities auditUtilities;
@@ -41,7 +39,7 @@ public class CommonCreationServiceImpl {
           TransactionInProgress2BaseTransactionResponseMapper
                   transactionInProgress2BaseTransactionResponseMapper,
           TransactionCreationRequest2TransactionInProgressMapper
-          transactionCreationRequest2TransactionInProgressMapper,
+                  transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
@@ -49,7 +47,7 @@ public class CommonCreationServiceImpl {
     this.transactionInProgress2BaseTransactionResponseMapper =
             transactionInProgress2BaseTransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
-        transactionCreationRequest2TransactionInProgressMapper;
+            transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.trxCodeGenUtil = trxCodeGenUtil;
@@ -58,11 +56,11 @@ public class CommonCreationServiceImpl {
   }
 
   public BaseTransactionResponseDTO createTransaction(
-      TransactionCreationRequest trxCreationRequest,
-      String channel,
-      String merchantId,
-      String acquirerId,
-      String idTrxIssuer) {
+          TransactionCreationRequest trxCreationRequest,
+          String channel,
+          String merchantId,
+          String acquirerId,
+          String idTrxIssuer) {
 
     LocalDate today = LocalDate.now();
     try {
@@ -77,27 +75,10 @@ public class CommonCreationServiceImpl {
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
               .map(RewardRule::getInitiativeConfig)
               .orElse(null);
-      if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
-        log.info(
-                "[{}] Cannot find initiative with ID: [{}]",
-                getFlow(),
-                trxCreationRequest.getInitiativeId());
-        throw new ClientExceptionWithBody(
-                HttpStatus.NOT_FOUND,
-                "NOT FOUND",
-                "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
-      }
 
-      if (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate())) {
-        log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
-                getFlow(),
-                initiative.getStartDate(), initiative.getEndDate());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                "INVALID DATE",
-                "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
-                        .formatted(initiative.getStartDate(), initiative.getEndDate()));
-      }
+      checkInitiativeType(trxCreationRequest.getInitiativeId(), initiative);
+
+      checkInitiativeValidPeriod(today, initiative);
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
 
@@ -115,14 +96,40 @@ public class CommonCreationServiceImpl {
     }
   }
 
-  private void generateTrxCodeAndSave(TransactionInProgress trx) {
+  protected void checkInitiativeType(String initiativeId, InitiativeConfig initiative) {
+    if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
+      log.info(
+              "[{}] Cannot find initiative with ID: [{}]",
+              getFlow(),
+              initiativeId);
+      throw new ClientExceptionWithBody(
+              HttpStatus.NOT_FOUND,
+              "NOT FOUND",
+              "Cannot find initiative with ID: [%s]".formatted(initiativeId));
+    }
+  }
+
+  protected void checkInitiativeValidPeriod(LocalDate today, InitiativeConfig initiative) {
+    if (initiative != null && (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate()))) {
+      log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
+              getFlow(),
+              initiative.getStartDate(), initiative.getEndDate());
+      throw new ClientExceptionWithBody(
+              HttpStatus.BAD_REQUEST,
+              "INVALID DATE",
+              "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
+                      .formatted(initiative.getStartDate(), initiative.getEndDate()));
+    }
+  }
+
+  protected void generateTrxCodeAndSave(TransactionInProgress trx) {
     long retry = 1;
     while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId()
-        == null) {
+            == null) {
       log.info(
-          "[{}] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
-          getFlow(),
-          retry);
+              "[{}] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
+              getFlow(),
+              retry);
     }
   }
 
