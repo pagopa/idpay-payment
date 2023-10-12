@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeExpirationService;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;

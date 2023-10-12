@@ -35,7 +35,7 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
 
     @Override
     protected TransactionInProgress handleExpiredTransaction(TransactionInProgress trx) {
-        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) { //TODO BRCODE controllare stato CREATED
+        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ClientException e) {

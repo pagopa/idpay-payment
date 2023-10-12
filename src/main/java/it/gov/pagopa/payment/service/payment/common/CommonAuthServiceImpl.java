@@ -62,9 +62,9 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    private AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
+    protected AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
-        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
+        if (trx.getStatus().equals(getSyncTrxStatus())) {
             trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
             authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
 
@@ -128,7 +128,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    private void checkWalletStatus(String initiativeId, String userId){
+    protected void checkWalletStatus(String initiativeId, String userId){
         String walletStatus = walletConnector.getWallet(initiativeId, userId).getStatus();
 
         if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
@@ -139,20 +139,25 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    private void checkAuth(String trxCode, TransactionInProgress trx){
+    protected void checkAuth(String trxCode, TransactionInProgress trx){
         if (trx == null) {
             throw new ClientExceptionWithBody(
                     HttpStatus.NOT_FOUND,
                     PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode));
         }
+
     }
 
-    protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward,List<String> rejectionReasons) {
+    protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         auditUtilities.logAuthorizedPayment(initiativeId, id, trxCode, userId, reward, rejectionReasons);
     }
 
     protected  void logErrorAuthorizedPayment(String trxCode, String userId){
         auditUtilities.logErrorAuthorizedPayment(trxCode, userId);
+    }
+
+    protected SyncTrxStatus getSyncTrxStatus(){
+        return SyncTrxStatus.IDENTIFIED;
     }
 }

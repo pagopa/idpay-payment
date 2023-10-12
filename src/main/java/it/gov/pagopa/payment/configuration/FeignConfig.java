@@ -10,7 +10,12 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableFeignClients(clients = {RewardCalculatorRestClient.class, MerchantRestClient.class, EncryptRest.class, DecryptRest.class, WalletRestClient.class, PaymentInstrumentRestClient.class})
+@EnableFeignClients(clients = {RewardCalculatorRestClient.class,
+        MerchantRestClient.class,
+        EncryptRest.class,
+        DecryptRest.class,
+        WalletRestClient.class,
+        PaymentInstrumentRestClient.class})
 public class FeignConfig {
 
 }

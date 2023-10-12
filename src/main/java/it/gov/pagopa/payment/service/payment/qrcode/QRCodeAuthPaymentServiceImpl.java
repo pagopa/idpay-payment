@@ -10,7 +10,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,20 +19,28 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements QRCodeAuthPaymentService {
-private final QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService;
+
+  private final QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService;
+
   public QRCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
+                                      QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService,
                                       RewardCalculatorConnector rewardCalculatorConnector,
                                       TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
                                       AuditUtilities auditUtilities,
-                                      WalletConnector walletConnector,
-                                      QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService){
-    super(transactionInProgressRepository, rewardCalculatorConnector, notifierService, paymentErrorNotifierService, auditUtilities, walletConnector);
+                                      WalletConnector walletConnector){
+    super(transactionInProgressRepository, rewardCalculatorConnector, notifierService,
+            paymentErrorNotifierService, auditUtilities, walletConnector);
     this.qrCodeAuthorizationExpiredService = qrCodeAuthorizationExpiredService;
   }
 
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     TransactionInProgress trx = qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+    if(trx == null){
+      throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
+              PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+              "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+    }
     checkUser(trxCode,userId,trx);
     return super.authPayment(trx,userId,trxCode);
   }

@@ -60,13 +60,12 @@ class PaymentInstrumentRestConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, () ->   paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
+        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () ->   paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
-        assertEquals("INVALID_PIN", exception.getCode());
-        assertEquals(("The Pinblock is incorrect"), exception.getMessage());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
+        assertEquals("An error occurred in the microservice payment-instrument", exception.getMessage());
 
         verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
     }

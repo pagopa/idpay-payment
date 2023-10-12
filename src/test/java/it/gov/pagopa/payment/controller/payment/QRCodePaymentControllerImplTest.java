@@ -7,7 +7,7 @@ import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeExpirationService;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

@@ -18,9 +18,11 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_USER = CEF_PATTERN_TRXID_TRXCODE + " suser={}";
     private static final String CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER = CEF_PATTERN_TRXID_TRXCODE + " cs4Label=channel cs4={} suser={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={}";
+    private static final String CEF_PATTERN_MERCHANT_REWARD_REJECTIONS = CEF_PATTERN_TRXID_TRXCODE_MERCHANTID + " cs5Label=reward cs5={} cs6Label=rejectionReasons cs6={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={} cs6Label=merchantId cs6={}";
     private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
+    private static final String CEF_PATTERN_TRXCODE_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_USERID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=userId cs2={}";
     private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}" ;
@@ -43,7 +45,7 @@ public class AuditUtilities {
     }
     // endregion
 
-    // region relateUser
+    // region preAuthPayment relateUser
     public void logRelatedUserToTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
@@ -59,7 +61,13 @@ public class AuditUtilities {
     }
     // endregion
 
-    // region previewPayment
+    // region preAuthPayment previewPayment
+    public void logPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User request preview the transaction", initiativeId, trxId, trxCode, userId, channel
+        );
+    }
     public void logErrorPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
@@ -76,10 +84,24 @@ public class AuditUtilities {
         );
     }
 
+    public void logBarCodeAuthorizedPayment(String initiativeId, String trxId, String trxCode, String merchantId, Long reward, List<String> rejectionReasons) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_MERCHANT_REWARD_REJECTIONS,
+                "Merchant authorized the transaction", initiativeId, trxId, trxCode, merchantId, reward.toString(), rejectionReasons.toString()
+        );
+    }
+
     public void logErrorAuthorizedPayment(String trxCode, String userId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXCODE_USERID,
                 "User authorized the transaction - KO", trxCode, userId
+        );
+    }
+
+    public void logBarCodeErrorAuthorizedPayment(String trxCode, String merchantId){
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXCODE_MERCHANTID,
+                "Merchant authorized the transaction - KO", trxCode, merchantId
         );
     }
     // endregion

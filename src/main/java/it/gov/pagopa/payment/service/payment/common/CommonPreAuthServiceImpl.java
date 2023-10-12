@@ -20,9 +20,9 @@ import java.time.OffsetDateTime;
 @Slf4j
 public class CommonPreAuthServiceImpl{
   private final long authorizationExpirationMinutes;
-  private final TransactionInProgressRepository transactionInProgressRepository;
+  protected final TransactionInProgressRepository transactionInProgressRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
-  private final AuditUtilities auditUtilities;
+  protected final AuditUtilities auditUtilities;
   private final WalletConnector walletConnector;
 
   public CommonPreAuthServiceImpl(
@@ -40,12 +40,9 @@ public class CommonPreAuthServiceImpl{
 
   public TransactionInProgress relateUser(TransactionInProgress trx, String userId) {
     try {
-      String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
-
-      checkPreAuth(trx.getTrxCode(), userId, trx, walletStatus);
+      checkPreAuth(trx.getTrxCode(), userId, trx);
 
       trx.setUserId(userId);
-      trx.setTrxChargeDate(OffsetDateTime.now());
 
       return trx;
 
@@ -57,6 +54,7 @@ public class CommonPreAuthServiceImpl{
 
   public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel) {
     try {
+    trx.setTrxChargeDate(OffsetDateTime.now());
     AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
 
     if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
@@ -90,7 +88,8 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus) {
+  protected void checkPreAuth(String trxCode, String userId, TransactionInProgress trx) {
+    String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
       throw new ClientExceptionWithBody(
               HttpStatus.FORBIDDEN,
