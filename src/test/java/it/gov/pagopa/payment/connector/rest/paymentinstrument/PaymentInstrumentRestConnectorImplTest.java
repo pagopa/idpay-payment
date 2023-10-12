@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.connector.rest.paymentinstrument;
 import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.dto.VerifyPinBlockDTO;
@@ -25,9 +26,9 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PaymentInstrumentRestConnectorImplTest {
     @InjectMocks
-    PaymentInstrumentRestConnectorImpl paymentInstrumentRestConnectorImpl;
+    PaymentInstrumentRestConnectorImpl paymentInstrumentRestConnectorImplMock;
     @Mock
-    private PaymentInstrumentRestClient paymentInstrumentRestClient;
+    private PaymentInstrumentRestClient paymentInstrumentRestClientMock;
     private static final String USER_ID = "USERID1";
     private static PinBlockDTO  pinBlockDTO;
     @Test
@@ -36,16 +37,16 @@ class PaymentInstrumentRestConnectorImplTest {
         VerifyPinBlockDTO verifyPinBlockDTO = new VerifyPinBlockDTO(true);
         pinBlockDTO = PinBlockDTOFaker.mockInstanceBuilder().build();
 
-        Mockito.when(paymentInstrumentRestClient.verifyPinBlock(pinBlockDTO,USER_ID)).thenReturn(verifyPinBlockDTO);
+        Mockito.when(paymentInstrumentRestClientMock.verifyPinBlock(pinBlockDTO,USER_ID)).thenReturn(verifyPinBlockDTO);
 
         //when
-        VerifyPinBlockDTO result= paymentInstrumentRestConnectorImpl.checkPinBlock(pinBlockDTO,USER_ID);
+        VerifyPinBlockDTO result= paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID);
 
         //Then
         Assertions.assertNotNull(result);
         assertEquals(verifyPinBlockDTO.isPinBlockVerified(), result.isPinBlockVerified());
 
-        Mockito.verify(paymentInstrumentRestClient).verifyPinBlock(pinBlockDTO,USER_ID);
+        Mockito.verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
     }
 
     @Test
@@ -55,11 +56,11 @@ class PaymentInstrumentRestConnectorImplTest {
                 new HashMap<>(), null, new RequestTemplate());
         FeignException feignExceptionMock = new FeignException.Forbidden("", request, null, null);
 
-        when(paymentInstrumentRestClient.verifyPinBlock(pinBlockDTO,USER_ID))
+        when(paymentInstrumentRestClientMock.verifyPinBlock(pinBlockDTO,USER_ID))
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, () ->   paymentInstrumentRestConnectorImpl.checkPinBlock(pinBlockDTO,USER_ID));
+        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, () ->   paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
@@ -67,6 +68,26 @@ class PaymentInstrumentRestConnectorImplTest {
         assertEquals("INVALID_PIN", exception.getCode());
         assertEquals(("The Pinblock is incorrect"), exception.getMessage());
 
-        verify(paymentInstrumentRestClient).verifyPinBlock(pinBlockDTO,USER_ID);
+        verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
+    }
+
+    @Test
+    void checkPinBlock_feignException(){
+        // Given
+        Request request = Request.create(Request.HttpMethod.GET, "url",
+                new HashMap<>(), null, new RequestTemplate());
+        FeignException feignExceptionMock = new FeignException.BadRequest("", request, null, null);
+
+        when(paymentInstrumentRestClientMock.verifyPinBlock(pinBlockDTO,USER_ID))
+                .thenThrow(feignExceptionMock);
+
+        // When
+        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () -> paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
+
+        // Then
+        Assertions.assertNotNull(exception);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
+
+        verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
     }
 }
