@@ -14,6 +14,7 @@ import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserRequest;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
+import it.gov.pagopa.payment.dto.mapper.idpaycode.AuthPaymentIdpayCodeMapper;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -70,8 +71,8 @@ class IdpayCodePreAuthServiceTest {
                 encryptRestConnectorMock,
                 new RelateUserResponseMapper(),
                 new AuthPaymentMapper(),
-                paymentInstrumentConnectorMock
-        );
+                paymentInstrumentConnectorMock,
+                new AuthPaymentIdpayCodeMapper());
     }
 
     @Test
