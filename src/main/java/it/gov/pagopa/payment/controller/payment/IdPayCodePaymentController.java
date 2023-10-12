@@ -7,7 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/idpay/payment/idpay-code")
+@RequestMapping("/idpay/mil/payment/idpay-code")
 public interface IdPayCodePaymentController {
 
     @PutMapping("/{transactionId}/relate-user")
