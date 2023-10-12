@@ -36,14 +36,13 @@ public class CommonCreationServiceImpl {
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public CommonCreationServiceImpl(
-          TransactionInProgress2BaseTransactionResponseMapper
-                  transactionInProgress2BaseTransactionResponseMapper,
-          TransactionCreationRequest2TransactionInProgressMapper
-                  transactionCreationRequest2TransactionInProgressMapper,
+          TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
+          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
-          AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
+          AuditUtilities auditUtilities,
+          MerchantConnector merchantConnector) {
     this.transactionInProgress2BaseTransactionResponseMapper =
             transactionInProgress2BaseTransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
