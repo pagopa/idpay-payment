@@ -20,8 +20,11 @@ public class IdPayCodePaymentMilControllerImpl implements IdPayCodePaymentMilCon
     @PerformanceLog(
             value = "IDPAYCODE_PREVIEW_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public AuthPaymentDTO previewPayment(String trxId, String userId) {
-        return idpayCodePaymentService.previewPayment(trxId,userId);
+    public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
+        log.info(
+                "[IDPAYCODE_PREVIEW_TRANSACTION] The merchant {} request preview for transaction having transactionId {}",
+                merchantId, trxId);
+        return idpayCodePaymentService.previewPayment(trxId, merchantId);
     }
 
     @Override

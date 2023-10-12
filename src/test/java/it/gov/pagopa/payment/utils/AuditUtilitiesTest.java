@@ -85,6 +85,17 @@ class AuditUtilitiesTest {
     }
 
     @Test
+    void logPreviewTransaction() {
+        auditUtilities.logPreviewTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL);
+
+        assertEquals(
+                CEF + " msg=User request preview the transaction"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s cs4Label=channel cs4=%s suser=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+    @Test
     void logErrorPreviewTransaction() {
         auditUtilities.logErrorPreviewTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL);
 

@@ -21,8 +21,8 @@ public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
     }
 
     @Override
-    public AuthPaymentDTO previewPayment(String trxId, String userId) {
-        return null; //TODO after refactor impl
+    public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
+        return idpayCodePreAuthService.previewPayment(trxId, merchantId);
     }
 
     @Override

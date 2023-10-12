@@ -45,7 +45,7 @@ public class AuditUtilities {
     }
     // endregion
 
-    // region relateUser
+    // region preAuthPayment relateUser
     public void logRelatedUserToTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
@@ -61,7 +61,13 @@ public class AuditUtilities {
     }
     // endregion
 
-    // region previewPayment
+    // region preAuthPayment previewPayment
+    public void logPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User request preview the transaction", initiativeId, trxId, trxCode, userId, channel
+        );
+    }
     public void logErrorPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,

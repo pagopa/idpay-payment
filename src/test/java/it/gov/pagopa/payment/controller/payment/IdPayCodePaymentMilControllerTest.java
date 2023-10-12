@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller.payment;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
@@ -20,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(IdPayCodePaymentControllerImpl.class)
+@WebMvcTest(IdPayCodePaymentMilControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
-class IdPayCodePaymentControllerTest {
+class IdPayCodePaymentMilControllerTest {
 
   @MockBean
   private IdpayCodePaymentService idpayCodePaymentServiceMock;
@@ -32,24 +33,25 @@ class IdPayCodePaymentControllerTest {
 
   @Autowired
   private ObjectMapper objectMapper;
-  @Test
-  void relateUser_testMandatoryHeaders() throws Exception {
 
-    TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
+
+  @Test
+  void previewPayment_testMandatoryHeaders() throws Exception {
+    String expectedCode = "INVALID_REQUEST";
 
     MvcResult result = mockMvc.perform(
-                    put("/idpay/payment/idpay-code/{transactionId}/relate-user",
+                    put("/idpay/mil/payment/idpay-code/{transactionId}/preview",
                             "INITIATIVE_ID")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{}"))
+                            .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isBadRequest())
             .andReturn();
 
-    assertNotNull(result.getResponse().getContentAsString());
+    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
+            ErrorDTO.class);
+    assertEquals(expectedCode, actual.getCode());
+    assertEquals("Required request header "
+                    + "'x-merchant-id' for method parameter type String is not present",
+            actual.getMessage());
 
-    String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
-            + "'Fiscal-Code' for method parameter type String is not present\"}";
-    assertEquals(actual, result.getResponse().getContentAsString());
   }
-
 }

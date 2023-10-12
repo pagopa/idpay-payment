@@ -147,6 +147,8 @@ rest-client:
     baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
   wallet:
     baseUrl: ${IDPAY_WALLET:http://idpay-wallet}
+  payment-instrument:
+    baseUrl: ${IDPAY_PAYMENT_INSTRUMENT:http://idpay-payment-instrument}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
