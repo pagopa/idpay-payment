@@ -2,14 +2,21 @@ package it.gov.pagopa.payment.controller.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
+import it.gov.pagopa.payment.enums.OperationType;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
+import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
+import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.utils.RewardConstants;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +25,8 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -27,6 +36,10 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
+    @Autowired
+    private TransactionInProgressRepository transactionInProgressRepository;
+    @Autowired
+    private TransactionBarCodeInProgress2TransactionResponseMapper transactionResponseMapper;
 
     public final String USERID = "USERID";
     public final String MERCHANTID = "MERCHANTID";
@@ -83,7 +96,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         // Creating transaction
         extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.NOT_FOUND, TransactionBarCodeResponse.class);
-
     }
 
     @Test
@@ -102,7 +114,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
-        TransactionBarCodeResponse trxCreated = extractResponse(createTrx(trxRequest, USERID), HttpStatus.CREATED, TransactionBarCodeResponse.class);
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
         // Authorizing transaction but obtaining Too Many requests by reward-calculator
         extractResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
     }
@@ -123,7 +135,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .build());
 
         // Creating transaction
-        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, USERID), HttpStatus.CREATED, TransactionResponse.class);
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
+        //TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID), HttpStatus.CREATED, TransactionResponse.class);
 
         // Cannot invoke other APIs if REJECTED
         extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
@@ -146,13 +159,15 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
-        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, USERID), HttpStatus.CREATED, TransactionResponse.class);
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
         // Trying to authorize the bar code with a merchant not onboarded on the initiative
         extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, DUMMYMERCHANTID), HttpStatus.FORBIDDEN, null);
 
         // Authroizing the bar code with a merchant onboarded on the initiative
-        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, null);
+        AuthPaymentDTO authPayment = extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+        assertEquals(SyncTrxStatus.AUTHORIZED, authPayment.getStatus());
+        assertAuthData(authPayment);
     }
 
     @Test
@@ -172,7 +187,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
-        TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, USERID_SUSPENDED), HttpStatus.CREATED, TransactionResponse.class);
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID_SUSPENDED);
 
         extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
     }
@@ -196,7 +211,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         extractResponse(createTrx(trxRequest, USERID), HttpStatus.BAD_REQUEST, null);
     }
 
-    protected <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
+    private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
         assertEquals(expectedHttpStatusCode.value(), response.getResponse().getStatus());
         if (expectedBodyClass != null) {
             try {
@@ -207,5 +222,80 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         } else {
             return null;
         }
+    }
+
+    private TransactionBarCodeResponse createTrxSuccess(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {
+        TransactionBarCodeResponse trxCreated = extractResponse(createTrx(trxRequest, userId), HttpStatus.CREATED, TransactionBarCodeResponse.class);
+        assertEquals(SyncTrxStatus.CREATED, trxCreated.getStatus());
+        checkTransactionStored(trxCreated);
+        assertTrxCreatedData(trxRequest, trxCreated, userId);
+        return trxCreated;
+    }
+
+    private void checkTransactionStored(TransactionBarCodeResponse trxCreated){
+        TransactionInProgress stored = checkIfStored(trxCreated.getId());
+
+        assertEquals(RewardConstants.TRX_CHANNEL_BARCODE, stored.getChannel());
+        trxCreated.setTrxDate(OffsetDateTime.parse(
+                trxCreated.getTrxDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"))));
+        assertEquals(trxCreated, transactionResponseMapper.apply(stored));
+    }
+
+    private TransactionInProgress checkIfStored(String trxId) {
+        TransactionInProgress stored = transactionInProgressRepository.findById(trxId).orElse(null);
+        Assertions.assertNotNull(stored);
+        return stored;
+    }
+
+    private void assertTrxCreatedData(TransactionBarCodeCreationRequest trxRequest, TransactionBarCodeResponse trxCreated, String userId) {
+        assertCommonFields(trxRequest, trxCreated);
+
+        TransactionInProgress stored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
+        Assertions.assertNotNull(stored);
+        assertCommonFields(trxCreated, stored, userId);
+    }
+
+    private void assertCommonFields(TransactionBarCodeCreationRequest trxRequest, TransactionBarCodeResponse trxResponse) {
+        OffsetDateTime now = OffsetDateTime.now();
+        Assertions.assertNotNull(trxResponse.getId());
+        Assertions.assertNotNull(trxResponse.getTrxCode());
+        Assertions.assertEquals(trxRequest.getInitiativeId(), trxResponse.getInitiativeId());
+        Assertions.assertFalse(trxResponse.getTrxDate().isAfter(now.plusMinutes(1L)));
+        Assertions.assertFalse(trxResponse.getTrxDate().isBefore(now.minusMinutes(1L)));
+        Assertions.assertEquals(SyncTrxStatus.CREATED, trxResponse.getStatus());
+    }
+
+    private void assertCommonFields(TransactionBarCodeResponse trxResponse, TransactionInProgress trxStored, String userId) {
+        Assertions.assertEquals(trxResponse.getId(), trxStored.getId());
+        Assertions.assertEquals(trxResponse.getTrxCode(), trxStored.getTrxCode());
+        Assertions.assertEquals(trxResponse.getTrxDate(), trxStored.getTrxDate());
+        Assertions.assertEquals("00", trxStored.getOperationType());
+        Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
+        Assertions.assertEquals(trxResponse.getId(), trxStored.getCorrelationId());
+        Assertions.assertEquals(trxResponse.getInitiativeId(), trxStored.getInitiativeId());
+        Assertions.assertEquals(userId, trxStored.getUserId());
+        Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
+        Assertions.assertEquals(RewardConstants.TRX_CHANNEL_BARCODE, trxStored.getChannel());
+    }
+
+    private void assertAuthData(AuthPaymentDTO authResult) {
+        TransactionInProgress stored = transactionInProgressRepository.findById(authResult.getId()).orElse(null);
+        Assertions.assertNotNull(stored);
+        assertCommonFields(authResult, stored);
+    }
+
+    private void assertCommonFields(AuthPaymentDTO authPaymentDTO, TransactionInProgress trxStored) {
+        Assertions.assertEquals(authPaymentDTO.getId(), trxStored.getId());
+        Assertions.assertEquals(authPaymentDTO.getTrxCode(), trxStored.getTrxCode());
+        Assertions.assertEquals(authPaymentDTO.getTrxDate(), trxStored.getTrxDate());
+        Assertions.assertEquals("00", trxStored.getOperationType());
+        Assertions.assertEquals(OperationType.CHARGE, trxStored.getOperationTypeTranscoded());
+        Assertions.assertEquals("EUR", trxStored.getAmountCurrency());
+        Assertions.assertEquals(MERCHANTID, trxStored.getMerchantId());
+        Assertions.assertEquals(authPaymentDTO.getInitiativeId(), trxStored.getInitiativeId());
+        Assertions.assertEquals(USERID, trxStored.getUserId());
+        Assertions.assertEquals(authPaymentDTO.getStatus(), trxStored.getStatus());
+        Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, trxStored.getStatus());
+        Assertions.assertEquals(RewardConstants.TRX_CHANNEL_BARCODE, trxStored.getChannel());
     }
 }

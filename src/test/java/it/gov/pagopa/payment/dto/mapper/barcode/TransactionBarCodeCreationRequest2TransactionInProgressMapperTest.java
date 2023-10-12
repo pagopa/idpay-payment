@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper.barcode;
 
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
@@ -32,6 +33,10 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 mapper.apply(
                         trxCreationReq, "CHANNEL", "USERID");
 
+        TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
+                "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmount", "amountCurrency",
+                "mcc", "acquirerId", "merchantId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
+                "reward", "rejectionReasons", "rewards");
         assertResponse(trxCreationReq, now, result);
     }
     void assertResponse(TransactionBarCodeCreationRequest trxCreationReq, OffsetDateTime now, TransactionInProgress result){

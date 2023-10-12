@@ -46,38 +46,34 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     @Override
     public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
         trx.setTrxCode(trxCode);
-        Update update = new Update()
-                .setOnInsert(Fields.id, trx.getId())
-                .setOnInsert(Fields.correlationId, trx.getCorrelationId())
-                .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
-                .setOnInsert(Fields.trxDate, trx.getTrxDate())
-                .setOnInsert(Fields.status, trx.getStatus())
-                .setOnInsert(Fields.operationType, trx.getOperationType())
-                .setOnInsert(Fields.operationTypeTranscoded, trx.getOperationTypeTranscoded())
-                .setOnInsert(Fields.channel, trx.getChannel())
-                .setOnInsert(Fields.trxCode, trxCode);
-
-        if (!RewardConstants.TRX_CHANNEL_BARCODE.equalsIgnoreCase(trx.getChannel())) {
-            update.setOnInsert(Fields.acquirerId, trx.getAcquirerId())
-                    .setOnInsert(Fields.amountCents, trx.getAmountCents())
-                    .setOnInsert(Fields.effectiveAmount, CommonUtilities.centsToEuro(trx.getAmountCents()))
-                    .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
-                    .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
-                    .setOnInsert(Fields.merchantId, trx.getMerchantId())
-                    .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
-                    .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
-                    .setOnInsert(Fields.mcc, trx.getMcc())
-                    .setOnInsert(Fields.vat, trx.getVat())
-                    .setOnInsert(Fields.trxChargeDate, trx.getTrxChargeDate())
-                    .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
-                    .setOnInsert(Fields.businessName, trx.getBusinessName())
-                    .setOnInsert(Fields.updateDate, trx.getUpdateDate());
-        } else {
-            update.setOnInsert(Fields.userId, trx.getUserId());
-        }
         return mongoTemplate.upsert(
-                Query.query(Criteria.where(Fields.trxCode).is(trx.getTrxCode())), update, TransactionInProgress.class);
-
+                Query.query(Criteria.where(Fields.trxCode).is(trx.getTrxCode())),
+                new Update()
+                        .setOnInsert(Fields.id, trx.getId())
+                        .setOnInsert(Fields.correlationId, trx.getCorrelationId())
+                        .setOnInsert(Fields.acquirerId, trx.getAcquirerId())
+                        .setOnInsert(Fields.amountCents, trx.getAmountCents())
+                        .setOnInsert(Fields.effectiveAmount, trx.getAmountCents() != null ? CommonUtilities.centsToEuro(trx.getAmountCents()) : null)
+                        .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
+                        .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
+                        .setOnInsert(Fields.merchantId, trx.getMerchantId())
+                        .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
+                        .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
+                        .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
+                        .setOnInsert(Fields.mcc, trx.getMcc())
+                        .setOnInsert(Fields.vat, trx.getVat())
+                        .setOnInsert(Fields.trxDate, trx.getTrxDate())
+                        .setOnInsert(Fields.trxChargeDate, trx.getTrxChargeDate())
+                        .setOnInsert(Fields.status, trx.getStatus())
+                        .setOnInsert(Fields.operationType, trx.getOperationType())
+                        .setOnInsert(Fields.operationTypeTranscoded, trx.getOperationTypeTranscoded())
+                        .setOnInsert(Fields.channel, trx.getChannel())
+                        .setOnInsert(Fields.trxCode, trxCode)
+                        .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
+                        .setOnInsert(Fields.businessName, trx.getBusinessName())
+                        .setOnInsert(Fields.updateDate, trx.getUpdateDate())
+                        .setOnInsert(Fields.userId, trx.getUserId()),
+                TransactionInProgress.class);
     }
 
     @Override
@@ -169,16 +165,22 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     @Override
     public void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons) {
+        Update update = new Update()
+                .set(Fields.status, SyncTrxStatus.AUTHORIZED)
+                .set(Fields.reward, reward)
+                .set(Fields.rejectionReasons, rejectionReasons)
+                .set(Fields.rewards, trx.getRewards())
+                .set(Fields.trxChargeDate, trx.getTrxChargeDate())
+                .currentDate(Fields.updateDate);
+
+        if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
+            update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
+                    .set(Fields.merchantId, trx.getMerchantId());
+        }
+
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(trx.getId())),
-                new Update()
-                        .set(Fields.status, SyncTrxStatus.AUTHORIZED)
-                        .set(Fields.reward, reward)
-                        .set(Fields.rejectionReasons, rejectionReasons)
-                        .set(Fields.rewards, trx.getRewards())
-                        .set(Fields.trxChargeDate, trx.getTrxChargeDate())
-                        .set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
-                        .currentDate(Fields.updateDate),
+                update,
                 TransactionInProgress.class);
     }
 

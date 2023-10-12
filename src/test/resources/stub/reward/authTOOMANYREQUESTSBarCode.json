@@ -14,7 +14,7 @@
     "jsonBody": {
       "transactionId": "{{jsonPath request.body '$.transactionId'}}",
       "channel": "{{jsonPath request.body '$.channel'}}",
-      "initiativeId": "INITIATIVEIDrandom",
+      "initiativeId": "BARCODE_INITIATIVEID_TOOMANYREQUEST",
       "userId": "USERID",
       "status": "REWARDED",
       "effectiveAmount": "0.10",

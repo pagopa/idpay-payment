@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -98,57 +99,6 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     }
 
     @Test
-    void createIfExists_BarCode() {
-
-        TransactionInProgress transactionInProgress =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        transactionInProgress.setChannel("BARCODE");
-        transactionInProgress.setUserId("USERID");
-        TransactionInProgress transactionInProgressSecond =
-                TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
-        transactionInProgressSecond.setChannel("BARCODE");
-        transactionInProgress.setUserId("USERID");
-        transactionInProgressSecond.setTrxCode(transactionInProgress.getTrxCode());
-
-        UpdateResult updatedFirst =
-                transactionInProgressRepository.createIfExists(
-                        transactionInProgress, transactionInProgress.getTrxCode());
-        assertNotNull(updatedFirst.getUpsertedId());
-        assertEquals(0L, updatedFirst.getMatchedCount());
-
-        UpdateResult updatedSecond =
-                transactionInProgressRepository.createIfExists(
-                        transactionInProgressSecond, transactionInProgress.getTrxCode());
-        assertNull(updatedSecond.getUpsertedId());
-        assertEquals(1L, updatedSecond.getMatchedCount());
-
-        TransactionInProgress result =
-                mongoTemplate.findById(transactionInProgress.getId(), TransactionInProgress.class);
-        assertNotNull(result);
-        TestUtils.checkNotNullFields(
-                result,
-                "idTrxAcquirer",
-                "idTrxIssuer",
-                "acquirerId",
-                "amountCents",
-                "effectiveAmount",
-                "amountCurrency",
-                "merchantFiscalCode",
-                "merchantId",
-                "mcc",
-                "vat",
-                "initiativeName",
-                "businessName",
-                "updateDate",
-                "authDate",
-                "elaborationDateTime",
-                "reward",
-                "rejectionReasons",
-                "rewards",
-                "trxChargeDate");
-    }
-
-    @Test
     void findByTrxCodeThrottled() {
         TransactionInProgress notFoundResult = transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled("DUMMYID", EXPIRATION_MINUTES);
         assertNull(notFoundResult);
@@ -200,6 +150,33 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transaction.setUserId("USERID%d".formatted(1));
+        transactionInProgressRepository.save(transaction);
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        TransactionInProgress result =
+                transactionInProgressRepository.findById(transaction.getId()).orElse(null);
+
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(
+                result,
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+        Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+    }
+
+    @Test
+    void updateTrxAuthorized_barCode() {
+        Long reward = 200L;
+        TransactionInProgress transaction =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        transaction.setUserId("USERID%d".formatted(1));
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);
 
         transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());

@@ -58,6 +58,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
             trx.setAmountCents(amountCents);
+            trx.setEffectiveAmount(CommonUtilities.centsToEuro(amountCents));
             trx.setMerchantId(merchantId);
             trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
 
