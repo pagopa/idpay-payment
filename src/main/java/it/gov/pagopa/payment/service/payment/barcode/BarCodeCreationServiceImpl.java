@@ -17,6 +17,7 @@ import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -56,12 +57,6 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         LocalDate today = LocalDate.now();
 
         try {
-            BigDecimal walletAmount = walletConnector.getWallet(trxBarCodeCreationRequest.getInitiativeId(), userId).getAmount();
-            if (walletAmount.compareTo(BigDecimal.ZERO) == 0) {
-                throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
-                        "WALLET",
-                        String.format("The budget related to the user %s with initiativeId %s was exhausted.", userId, trxBarCodeCreationRequest.getInitiativeId()));
-            }
             InitiativeConfig initiative = rewardRuleRepository.findById(trxBarCodeCreationRequest.getInitiativeId())
                     .map(RewardRule::getInitiativeConfig)
                     .orElse(null);
@@ -69,6 +64,8 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
             checkInitiativeType(trxBarCodeCreationRequest.getInitiativeId(), initiative);
 
             checkInitiativeValidPeriod(today, initiative);
+
+            checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
@@ -98,5 +95,15 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
     @Override
     public String getFlow(){
         return "BAR_CODE_CREATE_TRANSACTION";
+    }
+
+    private void checkWallet(String initiativeId, String userId){
+        BigDecimal walletAmount = walletConnector.getWallet(initiativeId, userId).getAmount();
+
+        if (walletAmount.compareTo(BigDecimal.ZERO) == 0) {
+            throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
+                    PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
+                    String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
+        }
     }
 }

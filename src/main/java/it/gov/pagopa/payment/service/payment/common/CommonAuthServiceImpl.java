@@ -118,7 +118,7 @@ public abstract class CommonAuthServiceImpl {
             throw new ClientExceptionWithBody(
                     HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
-                    "User %s has been suspended for initiative %s".formatted(userId, initiativeId));
+                    "The user has been suspended for initiative [%s]".formatted(initiativeId));
         }
     }
 

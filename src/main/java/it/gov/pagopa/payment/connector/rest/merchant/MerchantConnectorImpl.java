@@ -4,6 +4,7 @@ import feign.FeignException;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +25,8 @@ public class MerchantConnectorImpl implements MerchantConnector{
         } catch (FeignException e) {
             if (e.status() == 404) {
                 throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
-                        "MERCHANT",
-                        String.format("The merchant %s is not related with initiative %s", merchantId, initiativeId));
+                        PaymentConstants.ExceptionCode.MERCHANT_NOT_FOUND,
+                        String.format("The merchant is not related to the initiative [%s]", initiativeId));
             }
 
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,

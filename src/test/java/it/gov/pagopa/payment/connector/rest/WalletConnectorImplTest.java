@@ -8,6 +8,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletRestClient;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -70,9 +71,9 @@ class WalletConnectorImplTest {
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
-        assertEquals("WALLET", exception.getCode());
-        assertEquals(String.format("A wallet related to the user %s with initiativeId %s was not found.", USER_ID, INITIATIVE_ID), exception.getMessage());
+        assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
+        assertEquals(PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED, exception.getCode());
+        assertEquals(String.format("The user is not onboarded on initiative [%s].", INITIATIVE_ID), exception.getMessage());
 
         verify(walletRestClient, times(1)).getWallet(INITIATIVE_ID, USER_ID);
     }

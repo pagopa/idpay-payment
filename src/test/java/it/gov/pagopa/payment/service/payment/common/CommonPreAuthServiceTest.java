@@ -192,7 +192,6 @@ class CommonPreAuthServiceTest {
     // Given
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, "SUSPENDED");
-    String trxCode = trx.getTrxCode();
 
     when(walletConnectorMock.getWallet(trx.getInitiativeId(), USER_ID1))
             .thenReturn(walletDTO);
@@ -204,7 +203,7 @@ class CommonPreAuthServiceTest {
     // Then
     assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
     assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, exception.getCode());
-    assertEquals(String.format("User %s has been suspended for initiative %s",USER_ID1, trx.getInitiativeId()), exception.getMessage());
+    assertEquals(String.format("The user has been suspended for initiative [%s]", trx.getInitiativeId()), exception.getMessage());
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
 

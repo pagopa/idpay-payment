@@ -18,6 +18,8 @@ public class PaymentConstants {
     public static final String TOO_MANY_REQUESTS = "PAYMENT_TOO_MANY_REQUESTS";
     public static final String GENERIC_ERROR = "PAYMENT_GENERIC_ERROR";
     public static final String USER_SUSPENDED_ERROR = "PAYMENT_USER_SUSPENDED";
+    public static final String USER_NOT_ONBOARDED = "PAYMENT_USER_NOT_ONBOARDED";
+    public static final String MERCHANT_NOT_FOUND = "PAYMENT_MERCHANT_NOT_FOUND";
     private ExceptionCode() {}
   }
 

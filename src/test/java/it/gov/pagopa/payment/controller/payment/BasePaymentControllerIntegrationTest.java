@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.controller.payment;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
@@ -26,7 +25,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import java.io.UnsupportedEncodingException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -327,10 +325,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionResponse trxCreated = createTrxSuccess(trxRequest);
 
             // Cannot relate user because not onboarded
-            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
 
             // Other APIs will fail because status not expected
-            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 

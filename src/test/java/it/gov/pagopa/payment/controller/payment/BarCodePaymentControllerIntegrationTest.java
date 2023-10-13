@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -24,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -96,7 +94,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .initiativeId("INITIATIVEID").build();
 
         // Creating transaction
-        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.NOT_FOUND, TransactionBarCodeResponse.class);
+        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.FORBIDDEN, TransactionBarCodeResponse.class);
     }
 
     @Test
@@ -137,7 +135,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
-        //TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID), HttpStatus.CREATED, TransactionResponse.class);
 
         // Cannot invoke other APIs if REJECTED
         extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
