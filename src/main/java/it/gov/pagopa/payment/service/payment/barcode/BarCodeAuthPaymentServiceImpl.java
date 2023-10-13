@@ -57,11 +57,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
-            trx.setAmountCents(amountCents);
-            trx.setEffectiveAmount(CommonUtilities.centsToEuro(amountCents));
-            trx.setMerchantId(merchantId);
-            trx.setBusinessName(merchantBusinessName);
-            trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
+            seTrxFields(merchantId, amountCents, trx, merchantBusinessName);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx.getUserId(), trxCode, trx);
 
@@ -88,5 +84,13 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
     @Override
     public SyncTrxStatus getSyncTrxStatus(){
         return SyncTrxStatus.CREATED;
+    }
+
+    private static void seTrxFields(String merchantId, long amountCents, TransactionInProgress trx, String merchantBusinessName) {
+        trx.setAmountCents(amountCents);
+        trx.setEffectiveAmount(CommonUtilities.centsToEuro(amountCents));
+        trx.setMerchantId(merchantId);
+        trx.setBusinessName(merchantBusinessName);
+        trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
     }
 }
