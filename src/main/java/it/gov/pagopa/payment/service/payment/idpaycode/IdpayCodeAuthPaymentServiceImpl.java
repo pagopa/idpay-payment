@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
@@ -8,6 +9,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements IdpayCodeAuthPaymentService {
     private final IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
     private final PaymentInstrumentConnectorImpl paymentInstrumentConnector;
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     protected IdpayCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                               RewardCalculatorConnector rewardCalculatorConnector,
                                               TransactionNotifierService notifierService,
@@ -37,7 +40,19 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
         @Override
     public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
         TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId.toLowerCase());
-       // payment-instrument call to check pinBlock
+
+        if(trx == null){
+            throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
+                    PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+                    "Cannot find transaction with transactionId [%s]".formatted(trxId));
+        }
+
+        if(!SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
+            throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND,
+                    "Unexpected status for transaction with transactionId [%s]".formatted(trxId));
+        }
+
+        // payment-instrument call to check pinBlock
         paymentInstrumentConnector.checkPinBlock(pinBlockBody,trx.getUserId());
 
         if (!merchantId.equals(trx.getMerchantId())){
