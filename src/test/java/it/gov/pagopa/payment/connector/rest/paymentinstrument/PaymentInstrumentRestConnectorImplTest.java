@@ -4,7 +4,6 @@ import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.dto.VerifyPinBlockDTO;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
@@ -26,7 +25,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class PaymentInstrumentRestConnectorImplTest {
     @InjectMocks
-    PaymentInstrumentRestConnectorImpl paymentInstrumentRestConnectorImplMock;
+    PaymentInstrumentConnectorImpl paymentInstrumentConnectorImplMock;
     @Mock
     private PaymentInstrumentRestClient paymentInstrumentRestClientMock;
     private static final String USER_ID = "USERID1";
@@ -40,7 +39,7 @@ class PaymentInstrumentRestConnectorImplTest {
         Mockito.when(paymentInstrumentRestClientMock.verifyPinBlock(pinBlockDTO,USER_ID)).thenReturn(verifyPinBlockDTO);
 
         //when
-        VerifyPinBlockDTO result= paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID);
+        VerifyPinBlockDTO result= paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID);
 
         //Then
         Assertions.assertNotNull(result);
@@ -60,7 +59,7 @@ class PaymentInstrumentRestConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () ->   paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
+        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () ->   paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
@@ -81,7 +80,7 @@ class PaymentInstrumentRestConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () -> paymentInstrumentRestConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
+        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () -> paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);

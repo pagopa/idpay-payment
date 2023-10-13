@@ -4,10 +4,15 @@ import feign.FeignException;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.dto.PinBlockDTO;
+import it.gov.pagopa.payment.dto.VerifyPinBlockDTO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
+@Slf4j
 public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnector {
 
     private final PaymentInstrumentRestClient restClient;
@@ -30,6 +35,23 @@ public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnecto
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
                     "An error occurred in the microservice payment-instrument.", e);
         }
+    }
+
+    @Override
+    public VerifyPinBlockDTO checkPinBlock(PinBlockDTO pinBlockDTO, String userId) {
+        VerifyPinBlockDTO verifyPinBlockDTO;
+        try {
+            verifyPinBlockDTO =  restClient.verifyPinBlock(pinBlockDTO,userId);
+            if(!verifyPinBlockDTO.isPinBlockVerified()){
+                throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN, PaymentConstants.ExceptionCode.INVALID_PIN,
+                        "The Pinblock is incorrect");
+            }
+        }catch (FeignException e){
+            throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "An error occurred in the microservice payment-instrument", e);
+        }
+        log.info("[VERIFY_PIN_BLOCK] The PinBlock has been verified, for the user with userId {}",userId);
+        return verifyPinBlockDTO;
     }
 
 }

@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
-import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentRestConnectorImpl;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -21,8 +21,15 @@ import org.springframework.stereotype.Service;
 @Service
 public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements IdpayCodeAuthPaymentService {
     private final IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
-    private final PaymentInstrumentRestConnectorImpl paymentInstrumentConnector;
-    protected IdpayCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository, RewardCalculatorConnector rewardCalculatorConnector, TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities, WalletConnector walletConnector, IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService, PaymentInstrumentRestConnectorImpl paymentInstrumentConnector) {
+    private final PaymentInstrumentConnectorImpl paymentInstrumentConnector;
+    protected IdpayCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
+                                              RewardCalculatorConnector rewardCalculatorConnector,
+                                              TransactionNotifierService notifierService,
+                                              PaymentErrorNotifierService paymentErrorNotifierService,
+                                              AuditUtilities auditUtilities,
+                                              WalletConnector walletConnector,
+                                              IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService,
+                                              PaymentInstrumentConnectorImpl paymentInstrumentConnector) {
         super(transactionInProgressRepository, rewardCalculatorConnector, notifierService, paymentErrorNotifierService, auditUtilities, walletConnector);
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
