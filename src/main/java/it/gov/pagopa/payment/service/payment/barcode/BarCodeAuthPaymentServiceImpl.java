@@ -53,13 +53,14 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode));
             }
 
-            merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
+            String merchantBusinessName = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId()).getBusinessName();
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
             trx.setAmountCents(amountCents);
             trx.setEffectiveAmount(CommonUtilities.centsToEuro(amountCents));
             trx.setMerchantId(merchantId);
+            trx.setBusinessName(merchantBusinessName);
             trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx.getUserId(), trxCode, trx);
