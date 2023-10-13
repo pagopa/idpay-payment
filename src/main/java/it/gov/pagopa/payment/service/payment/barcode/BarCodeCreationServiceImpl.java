@@ -75,7 +75,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                             trxBarCodeCreationRequest, channel, userId);
             generateTrxCodeAndSave(trx);
 
-            logCreatedBarCodeTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
+            logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
 
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
@@ -85,9 +85,16 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         }
     }
 
-    protected void logCreatedBarCodeTransaction(String initiativeId, String id, String trxCode, String userId) {
-        auditUtilities.logCreatedTransaction(initiativeId, id, trxCode, userId);
+    @Override
+    protected void logCreatedTransaction(String initiativeId, String id, String trxCode, String userId) {
+        auditUtilities.logBarCodeCreatedTransaction(initiativeId, id, trxCode, userId);
     }
+
+    @Override
+    protected  void logErrorCreatedTransaction(String initiativeId,String userId){
+        auditUtilities.logBarCodeErrorCreatedTransaction(initiativeId,userId);
+    }
+
     @Override
     public String getFlow(){
         return "BAR_CODE_CREATE_TRANSACTION";

@@ -21,11 +21,12 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_MERCHANT_REWARD_REJECTIONS = CEF_PATTERN_TRXID_TRXCODE_MERCHANTID + " cs5Label=reward cs5={} cs6Label=rejectionReasons cs6={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={} cs6Label=merchantId cs6={}";
     private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
+    private static final String CEF_PATTERN_INITIATIVE_USERID = CEF_PATTERN_INITIATIVE + " suser={}";
     private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
     private static final String CEF_PATTERN_TRXCODE_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_USERID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=userId cs2={}";
-    private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}" ;
+    private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}";
     private static final String CEF_PATTERN_USER_INITIATIVE = CEF_BASE_PATTERN + " suser={} cs1Label=initiativeId cs1={}";
 
 
@@ -37,10 +38,24 @@ public class AuditUtilities {
         );
     }
 
+    public void logBarCodeCreatedTransaction(String initiativeId, String trxId, String trxCode, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_USER,
+                "BARCODE transaction created", initiativeId, trxId, trxCode, userId
+        );
+    }
+
     public void logErrorCreatedTransaction(String initiativeId, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_INITIATIVE_MERCHANTID,
                 "Transaction created - KO", initiativeId, merchantId
+        );
+    }
+
+    public void logBarCodeErrorCreatedTransaction(String initiativeId, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_INITIATIVE_USERID,
+                "BARCODE transaction created - KO", initiativeId, userId
         );
     }
     // endregion
@@ -98,7 +113,7 @@ public class AuditUtilities {
         );
     }
 
-    public void logBarCodeErrorAuthorizedPayment(String trxCode, String merchantId){
+    public void logBarCodeErrorAuthorizedPayment(String trxCode, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXCODE_MERCHANTID,
                 "Merchant authorized the transaction - KO", trxCode, merchantId
@@ -153,19 +168,19 @@ public class AuditUtilities {
     // endregion
 
     // region expired transaction
-    public void logExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause){
+    public void logExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause) {
         AuditLogger.logAuditString(CEF_PATTERN_EXPIRED_TRX,
                 "Expire transaction processed", initiativeId, trxId, trxCode, userId, flowCause);
     }
 
-    public void logErrorExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause){
+    public void logErrorExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause) {
         AuditLogger.logAuditString(CEF_PATTERN_EXPIRED_TRX,
                 "Expire transaction processed - KO", initiativeId, trxId, trxCode, userId, flowCause);
     }
     // endregion
 
     // region transaction in progress delete
-    public void logDeleteTransactions(String userId, String initiativeId){
+    public void logDeleteTransactions(String userId, String initiativeId) {
         AuditLogger.logAuditString(CEF_PATTERN_USER_INITIATIVE,
                 "Transactions in progress deleted", userId, initiativeId);
     }
