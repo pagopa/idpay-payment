@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
@@ -212,16 +213,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
-        assertEquals(expectedHttpStatusCode.value(), response.getResponse().getStatus());
-        if (expectedBodyClass != null) {
-            try {
-                return objectMapper.readValue(response.getResponse().getContentAsString(), expectedBodyClass);
-            } catch (JsonProcessingException | UnsupportedEncodingException e) {
-                throw new IllegalStateException("Cannot read body response!", e);
-            }
-        } else {
-            return null;
-        }
+        return TestUtils.extractResponse(response,expectedHttpStatusCode,expectedBodyClass);
     }
 
     private TransactionBarCodeResponse createTrxSuccess(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {

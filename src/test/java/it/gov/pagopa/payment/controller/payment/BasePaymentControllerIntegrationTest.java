@@ -740,17 +740,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         transactionInProgressRepository.save(stored);
     }
 
-    protected <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
-        assertEquals(expectedHttpStatusCode.value(), response.getResponse().getStatus());
-        if (expectedBodyClass != null) {
-            try {
-                return objectMapper.readValue(response.getResponse().getContentAsString(), expectedBodyClass);
-            } catch (JsonProcessingException | UnsupportedEncodingException e) {
-                throw new IllegalStateException("Cannot read body response!", e);
-            }
-        } else {
-            return null;
-        }
+    private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
+        return TestUtils.extractResponse(response,expectedHttpStatusCode,expectedBodyClass);
     }
 
     private void checkNotificationEventsOnTransactionQueue() {
