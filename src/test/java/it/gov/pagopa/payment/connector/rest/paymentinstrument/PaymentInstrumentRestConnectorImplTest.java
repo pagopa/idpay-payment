@@ -51,7 +51,7 @@ class PaymentInstrumentRestConnectorImplTest {
     @Test
     void checkPinBlock_feignException403(){
         // Given
-        Request request = Request.create(Request.HttpMethod.GET, "url",
+        Request request = Request.create(Request.HttpMethod.PUT, "url",
                 new HashMap<>(), null, new RequestTemplate());
         FeignException feignExceptionMock = new FeignException.Forbidden("", request, null, null);
 
@@ -72,7 +72,7 @@ class PaymentInstrumentRestConnectorImplTest {
     @Test
     void checkPinBlock_feignException(){
         // Given
-        Request request = Request.create(Request.HttpMethod.GET, "url",
+        Request request = Request.create(Request.HttpMethod.PUT, "url",
                 new HashMap<>(), null, new RequestTemplate());
         FeignException feignExceptionMock = new FeignException.BadRequest("", request, null, null);
 
