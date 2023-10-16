@@ -104,6 +104,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
         PinBlockDTO pinBlockDTO = new PinBlockDTO("PINBLOCK", "KEY");
 
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        trx.setUserId("USERID");
         trx.setMerchantId("MERCHANTID");
 
         when(idpayCodeAuthorizationExpiredServiceMock.findByTrxIdAndAuthorizationNotExpired(trxId))

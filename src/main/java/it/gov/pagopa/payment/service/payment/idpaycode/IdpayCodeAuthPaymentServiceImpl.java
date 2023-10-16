@@ -2,14 +2,13 @@ package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
-import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -47,10 +46,10 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
                     "Cannot find transaction with transactionId [%s]".formatted(trxId));
         }
 
-        if(!SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-            throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND,
-                    "Unexpected status for transaction with transactionId [%s]".formatted(trxId));
-        }
+            if(trx.getUserId() == null){
+                throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND,
+                        "Unexpected status for transaction with transactionId [%s]".formatted(trxId));
+            }
 
         // payment-instrument call to check pinBlock
         paymentInstrumentConnector.checkPinBlock(pinBlockBody,trx.getUserId());
