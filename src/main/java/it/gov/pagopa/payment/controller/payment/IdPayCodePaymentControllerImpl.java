@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
-import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.service.performancelogger.RelateUserResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +19,7 @@ public class IdPayCodePaymentControllerImpl implements IdPayCodePaymentControlle
     @Override
     @PerformanceLog(
             value = "IDPAYCODE_RELATE_USER",
-            payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
+            payloadBuilderBeanClass = RelateUserResponsePerfLoggerPayloadBuilder.class)
     public RelateUserResponse relateUser(String trxId, String fiscalCode) {
         log.info(
                 "[IDPAYCODE_RELATE_USER] Request to relate user to transaction having transactionId {}",

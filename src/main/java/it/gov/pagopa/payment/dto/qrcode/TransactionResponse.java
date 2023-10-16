@@ -2,12 +2,12 @@ package it.gov.pagopa.payment.dto.qrcode;
 
 import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import jakarta.validation.constraints.NotBlank;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder

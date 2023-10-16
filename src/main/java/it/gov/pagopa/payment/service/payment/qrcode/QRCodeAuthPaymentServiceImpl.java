@@ -1,9 +1,10 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -12,6 +13,7 @@ import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,22 +35,22 @@ public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implemen
 
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
-    try {
-      TransactionInProgress trx = qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+    TransactionInProgress trx = qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+    if(trx == null){
+      throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
+              PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
+              "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+    }
+    checkUser(trxCode,userId,trx);
+    return super.authPayment(trx,userId,trxCode);
+  }
 
-      checkAuth(trxCode, userId, trx);
-
-      checkWalletStatus(trx.getInitiativeId(), userId);
-
-      AuthPaymentDTO authPaymentDTO = invokeRuleEngine(userId, trxCode, trx);
-
-      logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-      authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
-      authPaymentDTO.setRejectionReasons(null);
-      return authPaymentDTO;
-    } catch (RuntimeException e) {
-      logErrorAuthorizedPayment(trxCode, userId);
-      throw e;
+  private void checkUser(String trxCode,String userId, TransactionInProgress trx){
+    if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
+              "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
   }
 }
