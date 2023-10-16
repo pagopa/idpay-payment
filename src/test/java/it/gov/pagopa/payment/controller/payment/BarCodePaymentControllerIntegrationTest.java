@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
@@ -23,7 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -95,7 +94,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .initiativeId("INITIATIVEID").build();
 
         // Creating transaction
-        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.NOT_FOUND, TransactionBarCodeResponse.class);
+        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.FORBIDDEN, TransactionBarCodeResponse.class);
     }
 
     @Test
@@ -136,7 +135,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
-        //TransactionResponse trxCreated = extractResponse(createTrx(trxRequest, MERCHANTID), HttpStatus.CREATED, TransactionResponse.class);
 
         // Cannot invoke other APIs if REJECTED
         extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
@@ -212,16 +210,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
-        assertEquals(expectedHttpStatusCode.value(), response.getResponse().getStatus());
-        if (expectedBodyClass != null) {
-            try {
-                return objectMapper.readValue(response.getResponse().getContentAsString(), expectedBodyClass);
-            } catch (JsonProcessingException | UnsupportedEncodingException e) {
-                throw new IllegalStateException("Cannot read body response!", e);
-            }
-        } else {
-            return null;
-        }
+        return TestUtils.extractResponse(response,expectedHttpStatusCode,expectedBodyClass);
     }
 
     private TransactionBarCodeResponse createTrxSuccess(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {

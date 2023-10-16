@@ -49,6 +49,18 @@ class AuditUtilitiesTest {
     }
 
     @Test
+    void logBarCodeCreateTransaction() {
+        auditUtilities.logBarCodeCreatedTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID);
+
+        assertEquals(
+                CEF + " msg=BARCODE transaction created"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
     void logErrorCreateTransaction() {
         auditUtilities.logErrorCreatedTransaction(INITIATIVE_ID, MERCHANT_ID);
 
@@ -56,6 +68,18 @@ class AuditUtilitiesTest {
                 CEF + " msg=Transaction created - KO"
                         + " cs1Label=initiativeId cs1=%s cs2Label=merchantId cs2=%s"
                         .formatted(INITIATIVE_ID, MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logBarCodeErrorCreateTransaction() {
+        auditUtilities.logBarCodeErrorCreatedTransaction(INITIATIVE_ID, USER_ID);
+
+        assertEquals(
+                CEF + " msg=BARCODE transaction created - KO"
+                        + " cs1Label=initiativeId cs1=%s suser=%s"
+                        .formatted(INITIATIVE_ID, USER_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }

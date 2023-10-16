@@ -266,7 +266,7 @@ class QRCodePreAuthServiceImplTest {
     // Then
     assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
     assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, exception.getCode());
-    assertEquals(String.format("User %s has been suspended for initiative %s",USER_ID1, trx.getInitiativeId()), exception.getMessage());
+    assertEquals(String.format("The user has been suspended for initiative [%s]", trx.getInitiativeId()), exception.getMessage());
 
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);

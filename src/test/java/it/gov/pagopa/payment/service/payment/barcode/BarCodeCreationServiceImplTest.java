@@ -79,6 +79,7 @@ class BarCodeCreationServiceImplTest {
                         transactionBarCodeInProgress2TransactionResponseMapper,
                         walletConnector);
     }
+
     @Test
     void createTransaction() {
 
@@ -123,6 +124,7 @@ class BarCodeCreationServiceImplTest {
                         .build())
                 .build();
     }
+
     @Test
     void createTransactionTrxCodeHit() {
 
@@ -168,6 +170,7 @@ class BarCodeCreationServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trxCreated, result);
     }
+
     @Test
     void createTransaction_InitiativeNotFound() {
 
@@ -177,8 +180,6 @@ class BarCodeCreationServiceImplTest {
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmount(BigDecimal.TEN);
-
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.empty());
 
@@ -202,10 +203,6 @@ class BarCodeCreationServiceImplTest {
                 .initiativeId("INITIATIVEID")
                 .build();
 
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.TEN);
-
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.REFUND)));
 
         ClientException result =
@@ -220,6 +217,7 @@ class BarCodeCreationServiceImplTest {
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
         Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
     }
+
     @Test
     void createTransaction_UserBudgetExhausted() {
 
@@ -230,6 +228,7 @@ class BarCodeCreationServiceImplTest {
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmount(BigDecimal.ZERO);
 
+        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         ClientException result =
@@ -241,9 +240,10 @@ class BarCodeCreationServiceImplTest {
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals("The budget related to the user USERID with initiativeId INITIATIVEID was exhausted.", result.getMessage());
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+        Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted.", trxCreationReq.getInitiativeId()), result.getMessage());
     }
+
     @ParameterizedTest
     @MethodSource("dateArguments")
     void createTransaction_InvalidDate(LocalDate invalidDate) {
@@ -251,11 +251,6 @@ class BarCodeCreationServiceImplTest {
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.TEN);
-
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         RewardRule rule = buildRuleWithInvalidDate(trxCreationReq, invalidDate);
         when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))

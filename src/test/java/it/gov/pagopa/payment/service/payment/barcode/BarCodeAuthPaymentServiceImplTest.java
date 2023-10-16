@@ -27,6 +27,8 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -124,8 +126,20 @@ class BarCodeAuthPaymentServiceImplTest {
         verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
     }
 
+    @ParameterizedTest
+    @ValueSource(longs = {-100, 0})
+    void barCodeAuthPayment_invalidAmount(long amountCents) {
+        // When
+        ClientException result =
+                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment("trxcode1", "USERID1", amountCents));
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
+        assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
+    }
+
     @Test
-    void barCodeauthPayment_trxNotFound() {
+    void barCodeAuthPayment_trxNotFound() {
         // Given
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 

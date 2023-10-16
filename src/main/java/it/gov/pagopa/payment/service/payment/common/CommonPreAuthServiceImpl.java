@@ -94,7 +94,7 @@ public class CommonPreAuthServiceImpl{
       throw new ClientExceptionWithBody(
               HttpStatus.FORBIDDEN,
               PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
-              "User %s has been suspended for initiative %s".formatted(userId, trx.getInitiativeId()));
+              "The user has been suspended for initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
     if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
