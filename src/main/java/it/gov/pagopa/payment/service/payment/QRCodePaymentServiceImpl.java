@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment;
 
-import it.gov.pagopa.common.web.exception.CustomExceptions.NotFoundException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;

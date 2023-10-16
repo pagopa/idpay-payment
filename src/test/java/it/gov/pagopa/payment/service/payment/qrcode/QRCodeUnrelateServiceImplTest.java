@@ -1,6 +1,10 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import static org.mockito.Mockito.when;
+
+import it.gov.pagopa.common.web.exception.custom.BadRequestException;
+import it.gov.pagopa.common.web.exception.custom.ForbiddenException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -16,9 +20,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeUnrelateServiceImplTest {
@@ -49,8 +50,8 @@ class QRCodeUnrelateServiceImplTest {
         try {
             invokeService();
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
+        } catch (NotFoundException e) {
+            Assertions.assertEquals("NOT FOUND", e.getCode());
         }
     }
 
@@ -65,8 +66,8 @@ class QRCodeUnrelateServiceImplTest {
         try {
             invokeService();
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        } catch (ForbiddenException e) {
+            Assertions.assertEquals("FORBIDDEN", e.getCode());
         }
     }
 
@@ -79,8 +80,8 @@ class QRCodeUnrelateServiceImplTest {
         try {
             invokeService();
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
+        } catch (BadRequestException e) {
+            Assertions.assertEquals("BAD REQUEST", e.getCode());
         }
     }
 
@@ -107,7 +108,7 @@ class QRCodeUnrelateServiceImplTest {
                 .build();
         when(repositoryMockFindInvocation()).thenReturn(trx);
 
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "msg"));
+        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ForbiddenException("FORBIDDEN", "msg"));
 
         invokeService();
 
@@ -123,7 +124,7 @@ class QRCodeUnrelateServiceImplTest {
                 .build();
         when(repositoryMockFindInvocation()).thenReturn(trx);
 
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "msg"));
+        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new NotFoundException("NOT FOUND", "msg"));
 
         invokeService();
 

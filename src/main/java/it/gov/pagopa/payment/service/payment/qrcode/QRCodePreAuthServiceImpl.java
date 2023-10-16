@@ -1,7 +1,9 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.BadRequestException;
+import it.gov.pagopa.common.web.exception.custom.ForbiddenException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -11,12 +13,10 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.time.OffsetDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.time.OffsetDateTime;
 
 @Service
 @Slf4j
@@ -46,8 +46,7 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
       TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase()).orElse(null);
 
       if (trx == null) {
-        throw new ClientExceptionWithBody(
-                HttpStatus.NOT_FOUND,
+        throw new NotFoundException(
                 PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                 "Cannot find transaction with trxCode [%s]".formatted(trxCode));
       }
@@ -66,13 +65,11 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
                 trx.getId(), userId, preview.getRejectionReasons());
         log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
         if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
-          throw new ClientExceptionWithBody(
-                  HttpStatus.FORBIDDEN,
+          throw new ForbiddenException(
                   PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
                   "Budget exhausted for user [%s] and initiative [%s]".formatted(userId, trx.getInitiativeId()));
         }
-        throw new ClientExceptionWithBody(
-                HttpStatus.FORBIDDEN,
+        throw new ForbiddenException(
                 PaymentConstants.ExceptionCode.REJECTED,
                 "Transaction with trxCode [%s] is rejected".formatted(trxCode));
       } else {
@@ -96,36 +93,31 @@ public class QRCodePreAuthServiceImpl implements QRCodePreAuthService {
 
   private void checkPreAuth(String trxCode, String userId, TransactionInProgress trx, String walletStatus) {
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new ForbiddenException(
               PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
               "User %s has been suspended for initiative %s".formatted(userId, trx.getInitiativeId()));
     }
 
     if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
-      throw new ClientExceptionWithBody(
-              HttpStatus.NOT_FOUND,
+      throw new NotFoundException(
               PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
               "Cannot find transaction with trxCode [%s]".formatted(trxCode));
     }
 
     if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new ForbiddenException(
               PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
               "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
 
     if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new ForbiddenException(
               PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED,
               "Transaction with trxCode [%s] is already authorized".formatted(trxCode));
     }
 
     if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-      throw new ClientExceptionWithBody(
-              HttpStatus.BAD_REQUEST,
+      throw new BadRequestException(
               PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
               "Cannot relate transaction [%s] in status %s".formatted(trxCode, trx.getStatus()));
     }

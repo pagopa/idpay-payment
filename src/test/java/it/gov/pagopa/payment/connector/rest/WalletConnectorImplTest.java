@@ -1,27 +1,27 @@
 package it.gov.pagopa.payment.connector.rest;
 
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletRestClient;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
+import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.HashMap;
-
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class WalletConnectorImplTest {
@@ -66,11 +66,11 @@ class WalletConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, () -> walletConnectorImpl.getWallet(INITIATIVE_ID, USER_ID));
+        NotFoundException exception = assertThrows(
+            NotFoundException.class, () -> walletConnectorImpl.getWallet(INITIATIVE_ID, USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("WALLET", exception.getCode());
         assertEquals(String.format("A wallet related to the user %s with initiativeId %s was not found.", USER_ID, INITIATIVE_ID), exception.getMessage());
 
@@ -88,11 +88,10 @@ class WalletConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () -> walletConnectorImpl.getWallet(INITIATIVE_ID, USER_ID));
+        InternalServerErrorException exception = assertThrows(InternalServerErrorException.class, () -> walletConnectorImpl.getWallet(INITIATIVE_ID, USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
 
         verify(walletRestClient, times(1)).getWallet(INITIATIVE_ID, USER_ID);
     }

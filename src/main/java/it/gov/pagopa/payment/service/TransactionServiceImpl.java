@@ -1,11 +1,11 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.common.web.exception.custom.ForbiddenException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -26,15 +26,11 @@ public class TransactionServiceImpl implements TransactionService {
         .orElse(null);
 
     if (transactionInProgress == null) {
-      throw new ClientExceptionNoBody(
-          HttpStatus.NOT_FOUND,
-          "NOT FOUND");
+      throw new NotFoundException("NOT FOUND", "Transaction not found");
     }
 
     if (!userId.equals(transactionInProgress.getUserId())) {
-      throw new ClientExceptionNoBody(
-          HttpStatus.FORBIDDEN,
-          "FORBIDDEN");
+      throw new ForbiddenException("FORBIDDEN", "User does not exist");
     }
 
     return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);

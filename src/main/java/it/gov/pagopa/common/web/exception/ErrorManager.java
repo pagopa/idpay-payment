@@ -1,9 +1,6 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.common.web.exception.CustomExceptions.BadRequestException;
-import it.gov.pagopa.common.web.exception.CustomExceptions.ForbiddenException;
-import it.gov.pagopa.common.web.exception.CustomExceptions.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +22,7 @@ public class ErrorManager {
   }
 
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
+  public ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
     if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){
       log.error("Something went wrong handling request {}", getRequestDetails(request), error);
     } else {
@@ -56,29 +53,6 @@ public class ErrorManager {
           .body(errorDTO);
     }
   }
-
-  @ExceptionHandler(BadRequestException.class)
-  protected ResponseEntity<ErrorDTO> handleBadRequestException(BadRequestException ex, HttpServletRequest request) {
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(new ErrorDTO(ex.getCode(), ex.getMessage()));
-  }
-
-  @ExceptionHandler(ForbiddenException.class)
-  protected ResponseEntity<ErrorDTO> handleForbiddenException(ForbiddenException ex, HttpServletRequest request) {
-    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(new ErrorDTO(ex.getCode(), ex.getMessage()));
-  }
-
-  @ExceptionHandler(NotFoundException.class)
-  protected ResponseEntity<ErrorDTO> handleNotFoundException(NotFoundException ex, HttpServletRequest request) {
-    return ResponseEntity.status(HttpStatus.NOT_FOUND)
-        .contentType(MediaType.APPLICATION_JSON)
-        .body(new ErrorDTO(ex.getCode(), ex.getMessage()));
-  }
-
-
 
   public static String getRequestDetails(HttpServletRequest request) {
     return "%s %s".formatted(request.getMethod(), request.getRequestURI());

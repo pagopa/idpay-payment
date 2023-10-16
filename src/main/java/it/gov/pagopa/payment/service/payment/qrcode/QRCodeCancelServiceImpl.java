@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.custom.BadRequestException;
+import it.gov.pagopa.common.web.exception.custom.ForbiddenException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -9,15 +11,13 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -54,17 +54,17 @@ public class QRCodeCancelServiceImpl implements QRCodeCancelService {
             TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
             if (trx == null) {
-                throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
+                throw new NotFoundException("NOT FOUND", "[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
             }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
-                throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
+                throw new ForbiddenException("FORBIDDEN", "[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
             }
 
             if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
-                throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
+                throw new BadRequestException("BAD REQUEST", "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
             }
             if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
-                throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
+                throw new BadRequestException("BAD REQUEST", "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
             }
 
             if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){

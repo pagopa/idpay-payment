@@ -1,6 +1,9 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.common.web.exception.ClientException;
+import static org.mockito.Mockito.when;
+
+import it.gov.pagopa.common.web.exception.custom.ForbiddenException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
@@ -8,6 +11,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,11 +19,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.Optional;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceTest {
@@ -60,12 +59,12 @@ class TransactionServiceTest {
   void getTransactionNotFound() {
     when(transactionInProgressRepository.findById(Mockito.anyString())).thenReturn(Optional.empty());
 
-    ClientException result = Assertions.assertThrows(ClientException.class, () ->
+    NotFoundException result = Assertions.assertThrows(NotFoundException.class, () ->
         transactionService.getTransaction(TRANSACTION_ID, USER_ID)
     );
 
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", result.getMessage());
+    Assertions.assertEquals("NOT FOUND", result.getCode());
+    Assertions.assertEquals("Transaction not found", result.getMessage());
   }
 
   @Test
@@ -76,11 +75,11 @@ class TransactionServiceTest {
 
     when(transactionInProgressRepository.findById(Mockito.anyString())).thenReturn(Optional.of(trx));
 
-    ClientException result = Assertions.assertThrows(ClientException.class, () ->
+    ForbiddenException result = Assertions.assertThrows(ForbiddenException.class, () ->
         transactionService.getTransaction(TRANSACTION_ID, USER_ID)
     );
 
-    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals("FORBIDDEN", result.getMessage());
+    Assertions.assertEquals("User does not exist", result.getMessage());
+    Assertions.assertEquals("FORBIDDEN", result.getCode());
   }
 }

@@ -4,19 +4,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
+import it.gov.pagopa.common.web.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+import org.springframework.stereotype.Service;
 
 @Service
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
@@ -47,15 +46,13 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
     @Override
     @PerformanceLog("CANCEL_TRANSACTION_REWARD_CALCULATOR")
     public AuthPaymentDTO cancelTransaction(TransactionInProgress trx) {
+        AuthPaymentDTO result;
         try {
-            return performRequest(trx, () -> restClient.cancelTransaction(trx.getId()));
-        } catch (ClientExceptionNoBody e){
-            if(HttpStatus.NOT_FOUND.equals(e.getHttpStatus())){
-                return null;
-            } else {
-                throw e;
-            }
+            result = performRequest(trx, () -> restClient.cancelTransaction(trx.getId()));
+        } catch (NotFoundException ex) {
+            result = null;
         }
+        return result;
     }
 
     private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
@@ -72,15 +69,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                     try {
                         responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
                     } catch (JsonProcessingException ex) {
-                        throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", ex);
+                        throw new InternalServerErrorException("INTERNAL SERVER ERROR", "Something went wrong", false, ex);
                     }
                 }
-                case 429 -> throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS,
-                        "Too many request on the ms reward");
-                case 404 -> throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND,
-                        "Resource not found on reward-calculator", e);
-                default -> throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
-                        "An error occurred in the microservice reward-calculator", e);
+                case 429 -> throw new TooManyRequestsException(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS,
+                    "Too many request on the ms reward");
+                case 404 -> throw new NotFoundException("NOT FOUND", "Resource not found on reward-calculator", false, e);
+                default -> throw new InternalServerErrorException("INTERNAL SERVER ERROR",
+                    "An error occurred in the microservice reward-calculator", false, e);
             }
         }
         return requestMapper.rewardResponseMap(responseDTO, trx);

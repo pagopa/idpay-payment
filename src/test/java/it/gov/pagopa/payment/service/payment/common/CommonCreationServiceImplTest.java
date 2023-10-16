@@ -1,8 +1,13 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.BadRequestException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
@@ -25,6 +30,9 @@ import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.bson.BsonString;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
@@ -38,14 +46,6 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
-import org.springframework.http.HttpStatus;
-
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCreationServiceImplTest {
@@ -178,9 +178,9 @@ class CommonCreationServiceImplTest {
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.empty());
 
-    ClientException result =
+    NotFoundException result =
         Assertions.assertThrows(
-            ClientException.class,
+            NotFoundException.class,
             () ->
                 qrCodeCreationService.createTransaction(
                     trxCreationReq,
@@ -189,8 +189,8 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertTrue(result.getMessage().contains("Cannot find initiative with ID"));
+    Assertions.assertEquals("NOT FOUND", result.getCode());
   }
 
   @Test
@@ -200,9 +200,9 @@ class CommonCreationServiceImplTest {
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.REFUND)));
 
-    ClientException result =
+    NotFoundException result =
             Assertions.assertThrows(
-                    ClientException.class,
+                NotFoundException.class,
                     () ->
                             qrCodeCreationService.createTransaction(
                                     trxCreationReq,
@@ -211,8 +211,8 @@ class CommonCreationServiceImplTest {
                                     "ACQUIRERID1",
                                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertTrue(result.getMessage().contains("Cannot find initiative with ID"));
+    Assertions.assertEquals("NOT FOUND", result.getCode());
   }
 
   @Test
@@ -221,9 +221,9 @@ class CommonCreationServiceImplTest {
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     trxCreationReq.setAmountCents(0L);
 
-    ClientException result =
+    BadRequestException result =
         Assertions.assertThrows(
-            ClientException.class,
+            BadRequestException.class,
             () ->
                 qrCodeCreationService.createTransaction(
                     trxCreationReq,
@@ -232,8 +232,8 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("INVALID AMOUNT", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertTrue(result.getMessage().contains("Cannot create transaction with invalid amount"));
+    Assertions.assertEquals("INVALID AMOUNT", result.getCode());
   }
 
   @ParameterizedTest
@@ -246,9 +246,9 @@ class CommonCreationServiceImplTest {
     when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
             .thenReturn(Optional.of(rule));
 
-    ClientException result =
+    BadRequestException result =
         Assertions.assertThrows(
-            ClientException.class,
+            BadRequestException.class,
             () ->
                 qrCodeCreationService.createTransaction(
                     trxCreationReq,
@@ -257,8 +257,7 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("INVALID DATE", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals("INVALID DATE", result.getCode());
   }
 
   private static Stream<Arguments> dateArguments() {

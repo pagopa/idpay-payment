@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.BadRequestException;
+import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
@@ -15,11 +16,9 @@ import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -68,10 +67,8 @@ public abstract class CommonCreationServiceImpl {
     try {
       if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[{}] Cannot create transaction with invalid amount: [{}]", getFlow(), trxCreationRequest.getAmountCents());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                "INVALID AMOUNT",
-                "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
+        throw new BadRequestException("INVALID AMOUNT",
+            "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
       }
 
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
@@ -82,21 +79,17 @@ public abstract class CommonCreationServiceImpl {
                 "[{}] Cannot find initiative with ID: [{}]",
                 getFlow(),
                 trxCreationRequest.getInitiativeId());
-        throw new ClientExceptionWithBody(
-                HttpStatus.NOT_FOUND,
-                "NOT FOUND",
-                "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
+        throw new NotFoundException("NOT FOUND",
+            "Cannot find initiative with ID: [%s]".formatted(trxCreationRequest.getInitiativeId()));
       }
 
       if (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate())) {
         log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
                 getFlow(),
                 initiative.getStartDate(), initiative.getEndDate());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                "INVALID DATE",
-                "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
-                        .formatted(initiative.getStartDate(), initiative.getEndDate()));
+        throw new BadRequestException("INVALID DATE",
+            "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
+                .formatted(initiative.getStartDate(), initiative.getEndDate()));
       }
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());

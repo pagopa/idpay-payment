@@ -3,13 +3,16 @@ package it.gov.pagopa.payment.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -21,12 +24,6 @@ import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
@@ -99,8 +96,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 && mongoTemplate.exists(
                 Query.query(criteriaByTrxCodeAndDateGreaterThan(trxCode, minTrxDate)),
                 TransactionInProgress.class)) {
-            throw new ClientExceptionNoBody(
-                    HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having trCode: " + trxCode);
+            throw new TooManyRequestsException("TOO MANY REQUESTS", "Too many requests on trx having trCode: " + trxCode);
         }
 
         return transaction;
@@ -191,7 +187,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
         if (trx == null && mongoTemplate.exists(Query.query(criteriaById(trxId)), TransactionInProgress.class)) {
-            throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having id: " + trxId);
+            throw new TooManyRequestsException("TOO MANY REQUESTS", "Too many requests on trx having id: " + trxId);
         }
 
         return trx;
