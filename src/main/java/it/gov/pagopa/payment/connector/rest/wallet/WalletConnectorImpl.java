@@ -4,6 +4,7 @@ import feign.FeignException;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +22,9 @@ public class WalletConnectorImpl implements WalletConnector{
             walletDTO = restClient.getWallet(initiativeId, userId);
         } catch (FeignException e){
             if (e.status() == 404) {
-                throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
-                        "WALLET",
-                        String.format("A wallet related to the user %s with initiativeId %s was not found.", userId, initiativeId));
+                throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
+                        PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED,
+                        String.format("The user is not onboarded on initiative [%s].", initiativeId));
             }
 
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,

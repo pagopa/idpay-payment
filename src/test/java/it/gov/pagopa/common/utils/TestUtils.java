@@ -8,7 +8,10 @@ import org.apache.kafka.common.header.Header;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.web.servlet.MvcResult;
 
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -138,5 +141,19 @@ public final class TestUtils {
     /** It will truncate timestamp value to MINUTES multiple of 10 */
     public static LocalDateTime truncateTimestamp(LocalDateTime timestamp) {
         return timestamp.truncatedTo(ChronoUnit.MINUTES).withMinute(timestamp.getMinute() / 10 * 10);
+    }
+
+    /** It will extract the response body and verify the HTTP status code */
+    public static <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
+        assertEquals(expectedHttpStatusCode.value(), response.getResponse().getStatus());
+        if (expectedBodyClass != null) {
+            try {
+                return objectMapper.readValue(response.getResponse().getContentAsString(), expectedBodyClass);
+            } catch (JsonProcessingException | UnsupportedEncodingException e) {
+                throw new IllegalStateException("Cannot read body response!", e);
+            }
+        } else {
+            return null;
+        }
     }
 }

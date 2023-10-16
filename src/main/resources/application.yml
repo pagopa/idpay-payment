@@ -147,6 +147,8 @@ rest-client:
     baseUrl: ${IDPAY_MERCHANT:http://idpay-merchant}
   wallet:
     baseUrl: ${IDPAY_WALLET:http://idpay-wallet}
+  payment-instrument:
+    baseUrl: ${IDPAY_PAYMENT_INSTRUMENT:http://idpay-payment-instrument}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
@@ -173,6 +175,12 @@ app:
       baseUrl:
         img: ${QR_CODE_IMG_URL:https://continua.io.pagopa.it/qrcode.png?feat=idpay}
         txt: ${QR_CODE_TXT_URL:https://continua.io.pagopa.it/idpay/auth}
+  barCode:
+    expirations:
+      authorizationMinutes: ${BAR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
+  idpayCode:
+    expirations:
+      authorizationMinutes: ${IDPAY_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}

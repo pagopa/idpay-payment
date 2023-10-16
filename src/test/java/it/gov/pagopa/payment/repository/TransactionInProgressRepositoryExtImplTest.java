@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
@@ -46,6 +47,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     private static final String MERCHANT_ID = "MERCHANTID1";
     private static final String USER_ID = "USERID1";
     public static final int EXPIRATION_MINUTES = 4350;
+    public static final int EXPIRATION_MINUTES_IDPAY_CODE= 5;
     private static final String TRX_ID = "TRX_ID";
 
     @Autowired
@@ -62,7 +64,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 TransactionInProgress.class);
     }
 
-    @Test
+   @Test
     void createIfExists() {
 
         TransactionInProgress transactionInProgress =
@@ -170,6 +172,33 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     }
 
     @Test
+    void updateTrxAuthorized_barCode() {
+        Long reward = 200L;
+        TransactionInProgress transaction =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        transaction.setUserId("USERID%d".formatted(1));
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
+        transactionInProgressRepository.save(transaction);
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        TransactionInProgress result =
+                transactionInProgressRepository.findById(transaction.getId()).orElse(null);
+
+        Assertions.assertNotNull(result);
+        TestUtils.checkNotNullFields(
+                result,
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+        Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+    }
+
+    @Test
     void findByTrxCode() {
 
         TransactionInProgress transactionInProgress =
@@ -198,6 +227,61 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     }
 
     @Test
+    void findByTrxId() {
+
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(transactionInProgress.getId(),EXPIRATION_MINUTES_IDPAY_CODE);
+        Assertions.assertNotNull(resultFirstSave);
+        TestUtils.checkNotNullFields(
+                resultFirstSave,
+                "userId",
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+
+        transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultSecondSave =
+                transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(transactionInProgress.getId(), EXPIRATION_MINUTES_IDPAY_CODE);
+        Assertions.assertNull(resultSecondSave);
+    }
+
+    @Test
+    void updateTrxRelateUserIdentified() {
+        // Given
+        TransactionInProgress trx =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgressRepository.save(trx);
+
+        transactionInProgressRepository.updateTrxRelateUserIdentified(trx.getId(),
+                USER_ID, "IDPAYCODE");
+
+        // When
+        TransactionInProgress resultUpdate =
+                transactionInProgressRepository.findById(trx.getId()).orElse(null);
+
+        // Then
+        Assertions.assertNotNull(resultUpdate);
+        TestUtils.checkNotNullFields(resultUpdate,
+                "authDate",
+                "elaborationDateTime",
+                "reward",
+                "rejectionReasons",
+                "rewards",
+                "trxChargeDate");
+        Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
+        Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
+    }
+
+    @Test
     void updateTrxIdentified() {
 
         TransactionInProgress transactionInProgress =
@@ -217,7 +301,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "rewards",
                 "trxChargeDate");
 
-        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"), Map.of("ID", new Reward()));
+        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"), Map.of("ID", new Reward()), "CHANNEL" );
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
@@ -248,7 +332,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "trxChargeDate");
 
         transactionInProgressRepository.updateTrxRejected(
-                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"));
+                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"), "CHANNEL");
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);

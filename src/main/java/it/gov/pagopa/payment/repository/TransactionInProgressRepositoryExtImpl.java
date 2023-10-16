@@ -4,12 +4,14 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import java.time.OffsetDateTime;
 
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -51,7 +53,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.correlationId, trx.getCorrelationId())
                         .setOnInsert(Fields.acquirerId, trx.getAcquirerId())
                         .setOnInsert(Fields.amountCents, trx.getAmountCents())
-                        .setOnInsert(Fields.effectiveAmount, CommonUtilities.centsToEuro(trx.getAmountCents()))
+                        .setOnInsert(Fields.effectiveAmount, trx.getAmountCents() != null ? CommonUtilities.centsToEuro(trx.getAmountCents()) : null)
                         .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
                         .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
                         .setOnInsert(Fields.merchantId, trx.getMerchantId())
@@ -69,7 +71,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.trxCode, trxCode)
                         .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
                         .setOnInsert(Fields.businessName, trx.getBusinessName())
-                        .setOnInsert(Fields.updateDate, trx.getUpdateDate()),
+                        .setOnInsert(Fields.updateDate, trx.getUpdateDate())
+                        .setOnInsert(Fields.userId, trx.getUserId()),
                 TransactionInProgress.class);
     }
 
@@ -79,6 +82,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 Query.query(
                         criteriaByTrxCodeAndDateGreaterThan(trxCode, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
                 TransactionInProgress.class);
+    }
+
+    @Override
+    public TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId, long authorizationExpirationMinutes) {
+        return mongoTemplate.findOne(
+                Query.query(
+                        criteriaByTrxIdAndDateGreaterThan(trxId, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
+                        TransactionInProgress.class);
     }
 
     @Override
@@ -109,6 +120,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     private Criteria criteriaByTrxCodeAndDateGreaterThan(String trxCode, LocalDateTime trxDate) {
         return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxDate).gte(trxDate);
     }
+    private Criteria criteriaByTrxIdAndDateGreaterThan(String trxId, LocalDateTime trxDate) {
+        return Criteria.where(Fields.id).is(trxId).and(Fields.trxDate).gte(trxDate);
+    }
 
     private Criteria criteriaByTrxChargeDateThrottled() {
         return new Criteria()
@@ -120,7 +134,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons) {
+    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -129,12 +143,24 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, 0L)
                         .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
 
     @Override
-    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards) {
+    public void updateTrxRelateUserIdentified(String id, String userId, String channel) {
+        mongoTemplate.updateFirst(
+                Query.query(Criteria.where(Fields.id).is(id)),
+                new Update()
+                        .set(Fields.userId, userId)
+                        .set(Fields.status, SyncTrxStatus.IDENTIFIED)
+                        .set(Fields.channel, channel)
+                        .currentDate(Fields.updateDate),
+                TransactionInProgress.class);
+    }
+    @Override
+    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -143,21 +169,29 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.rewards, rewards)
+                        .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
 
     @Override
     public void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons) {
+        Update update = new Update()
+                .set(Fields.status, SyncTrxStatus.AUTHORIZED)
+                .set(Fields.reward, reward)
+                .set(Fields.rejectionReasons, rejectionReasons)
+                .set(Fields.rewards, trx.getRewards())
+                .set(Fields.trxChargeDate, trx.getTrxChargeDate())
+                .currentDate(Fields.updateDate);
+
+        if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
+            update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
+                    .set(Fields.merchantId, trx.getMerchantId());
+        }
+
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(trx.getId())),
-                new Update()
-                        .set(Fields.status, SyncTrxStatus.AUTHORIZED)
-                        .set(Fields.reward, reward)
-                        .set(Fields.rejectionReasons, rejectionReasons)
-                        .set(Fields.rewards, trx.getRewards())
-                        .set(Fields.trxChargeDate, trx.getTrxChargeDate())
-                        .currentDate(Fields.updateDate),
+                update,
                 TransactionInProgress.class);
     }
 

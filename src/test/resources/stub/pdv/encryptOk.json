@@ -1,0 +1,23 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/tokens",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "pii": "${json-unit.any-string}"
+        }
+      }
+      ]
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "token": "{{jsonPath request.body '$.pii'}}"
+    }
+  }
+}

@@ -24,7 +24,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.qrcode.expired.QRCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -110,8 +110,8 @@ class QRCodeAuthPaymentServiceTest {
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
     assertEquals(authPaymentDTO, result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons");
-    assertEquals(transaction.getTrxCode(), transaction.getTrxCode());
+    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor");
+    assertEquals(transaction.getTrxCode(), result.getTrxCode());
     verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
   }
 
@@ -208,16 +208,11 @@ class QRCodeAuthPaymentServiceTest {
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID%d".formatted(1));
 
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     ClientException result =
         assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1"));
-
-    verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "userId");
 
     assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, ((ClientExceptionWithBody) result).getCode());
@@ -300,5 +295,4 @@ class QRCodeAuthPaymentServiceTest {
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
   }
-
 }

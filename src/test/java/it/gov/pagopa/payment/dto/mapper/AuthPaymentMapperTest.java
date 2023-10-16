@@ -41,7 +41,7 @@ class AuthPaymentMapperTest {
      assertEquals(transaction.getStatus(), result.getStatus());
      assertEquals(transaction.getTrxCode(), result.getTrxCode());
      assertEquals(transaction.getAmountCents(), result.getAmountCents());
-       TestUtils.checkNotNullFields(result, "residualBudget");
+       TestUtils.checkNotNullFields(result, "residualBudget", "secondFactor");
    });
 
  }
