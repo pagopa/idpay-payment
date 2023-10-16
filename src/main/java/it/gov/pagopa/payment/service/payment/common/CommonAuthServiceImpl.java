@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
@@ -14,14 +15,12 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Slf4j
-@Service
 public abstract class CommonAuthServiceImpl {
 
     private final TransactionInProgressRepository transactionInProgressRepository;
@@ -45,7 +44,25 @@ public abstract class CommonAuthServiceImpl {
         this.walletConnector = walletConnector;
     }
 
-    protected AuthPaymentDTO invokeRuleEngine(String userId, String trxCode, TransactionInProgress trx){
+    protected AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
+        try {
+            checkAuth(trxCode,trx);
+
+            checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
+
+            AuthPaymentDTO authPaymentDTO = invokeRuleEngine( trxCode, trx);
+
+            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+            authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
+            authPaymentDTO.setRejectionReasons(null);
+            return authPaymentDTO;
+        } catch (RuntimeException e) {
+            logErrorAuthorizedPayment(trxCode, userId);
+            throw e;
+        }
+    }
+
+    protected AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
         if (trx.getStatus().equals(getSyncTrxStatus())) {
             trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
@@ -67,7 +84,7 @@ public abstract class CommonAuthServiceImpl {
                     throw new ClientExceptionWithBody(
                             HttpStatus.FORBIDDEN,
                             PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                            "Budget exhausted for user [%s] and initiative [%s]".formatted(userId, trx.getInitiativeId()));
+                            "Budget exhausted for user [%s] and initiative [%s]".formatted(trx.getUserId(), trx.getInitiativeId()));
                 }
                 throw new ClientExceptionWithBody(
                         HttpStatus.FORBIDDEN,
@@ -122,7 +139,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected void checkAuth(String trxCode, String userId, TransactionInProgress trx){
+    protected void checkAuth(String trxCode, TransactionInProgress trx){
         if (trx == null) {
             throw new ClientExceptionWithBody(
                     HttpStatus.NOT_FOUND,
@@ -130,12 +147,6 @@ public abstract class CommonAuthServiceImpl {
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode));
         }
 
-        if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.FORBIDDEN,
-                    PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
-                    "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
-        }
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {

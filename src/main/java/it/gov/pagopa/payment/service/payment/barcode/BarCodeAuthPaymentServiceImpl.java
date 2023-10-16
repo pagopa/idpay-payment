@@ -27,7 +27,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
-
+    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     public BarCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                          BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          RewardCalculatorConnector rewardCalculatorConnector,
@@ -67,7 +67,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             setTrxFields(merchantId, amountCents, trx, merchantBusinessName);
 
-            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx.getUserId(), trxCode, trx);
+            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trxCode, trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));

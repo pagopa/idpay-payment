@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +33,8 @@ public class IdPayCodePaymentMilControllerImpl implements IdPayCodePaymentMilCon
             value = "IDPAYCODE_AUTHORIZE_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class
     )
-    public AuthPaymentDTO authPayment(String trxId, String userId) {
-        return idpayCodePaymentService.authPayment(userId, trxId);
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockbody) {
+        log.info("[IDPAYCODE_AUTHORIZE_TRANSACTION] Request to authorize transaction with transactionId {}, by merchant having merchantId {}",trxId,merchantId);
+        return idpayCodePaymentService.authPayment(trxId,merchantId,pinBlockbody);
     }
 }

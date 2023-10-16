@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodePreAuthService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -20,11 +21,12 @@ class IdpayCodePaymentServiceTest {
     private static final String MERCHANTID = "MERCHANTID";
 
     @Mock private IdpayCodePreAuthService idpayCodePreAuthServiceMock;
+    @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
     private IdpayCodePaymentService idpayCodePaymentService;
 
     @BeforeEach
     void setUp(){
-        idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodePreAuthServiceMock);
+        idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodePreAuthServiceMock, idpayCodeAuthPaymentServiceMock);
     }
 
     @Test
@@ -41,4 +43,6 @@ class IdpayCodePaymentServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(preview, result);
     }
+
+
 }

@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/idpay/instrument/code/verify/.*USERID.*",
+    "headers": {
+        "x-merchant-id": {
+          "equalTo": "MERCHANTID"
+        }
+    }
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "pinBlockVerified": true
+    }
+  }
+}

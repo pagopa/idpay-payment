@@ -1,46 +1,26 @@
-package it.gov.pagopa.payment.service.payment.expired.common;
+package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
 
-@Slf4j
-@Service
-public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCodeExpiration {
-
-    private final long authorizationExpirationMinutes;
-
-    private final TransactionInProgressRepository transactionInProgressRepository;
-    private final RewardCalculatorConnector rewardCalculatorConnector;
-
-    protected CommonAuthorizationExpiredServiceImpl(
-            long authorizationExpirationMinutes,
-
-            TransactionInProgressRepository transactionInProgressRepository,
-            RewardCalculatorConnector rewardCalculatorConnector,
-            AuditUtilities auditUtilities,
-            String channel) {
+public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
+    protected final long authorizationExpirationMinutes;
+    protected final TransactionInProgressRepository transactionInProgressRepository;
+    protected final RewardCalculatorConnector rewardCalculatorConnector;
+    protected CommonAuthCodeExpiration(AuditUtilities auditUtilities,
+                                       String channel,
+                                       long authorizationExpirationMinutes,
+                                       TransactionInProgressRepository transactionInProgressRepository,
+                                       RewardCalculatorConnector rewardCalculatorConnector) {
         super(auditUtilities, channel);
-
+        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
-
-        this.authorizationExpirationMinutes = authorizationExpirationMinutes;
-    }
-
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, authorizationExpirationMinutes);
-    }
-
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode, authorizationExpirationMinutes);
     }
 
     @Override
