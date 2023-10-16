@@ -44,6 +44,14 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
     @Override
     public AuthPaymentDTO authPayment(String trxCode, String merchantId, long amountCents){
         try {
+            if (amountCents <= 0L) {
+                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", amountCents);
+                throw new ClientExceptionWithBody(
+                        HttpStatus.BAD_REQUEST,
+                        PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID,
+                        "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
+            }
+
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
 
             if (trx == null) {
@@ -57,7 +65,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
-            seTrxFields(merchantId, amountCents, trx, merchantBusinessName);
+            setTrxFields(merchantId, amountCents, trx, merchantBusinessName);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx.getUserId(), trxCode, trx);
 
@@ -86,7 +94,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
         return SyncTrxStatus.CREATED;
     }
 
-    private static void seTrxFields(String merchantId, long amountCents, TransactionInProgress trx, String merchantBusinessName) {
+    private static void setTrxFields(String merchantId, long amountCents, TransactionInProgress trx, String merchantBusinessName) {
         trx.setAmountCents(amountCents);
         trx.setEffectiveAmount(CommonUtilities.centsToEuro(amountCents));
         trx.setMerchantId(merchantId);
