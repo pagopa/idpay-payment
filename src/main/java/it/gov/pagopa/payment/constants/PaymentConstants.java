@@ -8,6 +8,7 @@ public class PaymentConstants {
   public static final String AUTH_PAYMENT = "AUTH_PAYMENT";
 
   public static final String WALLET_STATUS_SUSPENDED = "SUSPENDED";
+  public static final String WALLET_STATUS_UNSUBSCRIBED = "UNSUBSCRIBED";
 
 
   public static final class ExceptionCode {
@@ -24,6 +25,7 @@ public class PaymentConstants {
     public static final String USER_NOT_ONBOARDED = "PAYMENT_USER_NOT_ONBOARDED";
     public static final String MERCHANT_NOT_FOUND = "PAYMENT_MERCHANT_NOT_FOUND";
     public static final String AMOUNT_NOT_VALID = "PAYMENT_AMOUNT_NOT_VALID";
+    public static final String USER_UNSUBSCRIBED = "PAYMENT_USER_UNSUBSCRIBED";
     private ExceptionCode() {}
   }
 

@@ -137,6 +137,13 @@ public abstract class CommonAuthServiceImpl {
                     PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
                     "The user has been suspended for initiative [%s]".formatted(initiativeId));
         }
+
+        if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(walletStatus)){
+            throw new ClientExceptionWithBody(
+                    HttpStatus.FORBIDDEN,
+                    PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
+                    "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
+        }
     }
 
     protected void checkAuth(String trxCode, TransactionInProgress trx){

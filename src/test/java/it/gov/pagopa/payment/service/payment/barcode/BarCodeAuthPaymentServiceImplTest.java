@@ -18,7 +18,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.expired.BarCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -57,6 +57,10 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock private WalletConnector walletConnectorMock;
     @Mock private MerchantConnector merchantConnector;
 
+    private static final String USER_ID = "USERID1";
+    private static final String MERCHANT_ID = "MERCHANT_ID";
+    private static final String TRX_CODE1 = "trxcode1";
+
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
 
     @BeforeEach
@@ -75,13 +79,11 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment(){
         // Given
-        String trxCode = "trxcode1";
-        String merchantId = "MERCHANT_ID";
         long amountCents = 1000;
 
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        transaction.setUserId("USERID1");
+        transaction.setUserId(USER_ID);
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
@@ -94,7 +96,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
                 .thenReturn(transaction);
 
-        when(merchantConnector.merchantDetail(merchantId, transaction.getInitiativeId()))
+        when(merchantConnector.merchantDetail(MERCHANT_ID, transaction.getInitiativeId()))
                 .thenReturn(MerchantDetailDTO.builder().build());
 
         when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
@@ -115,11 +117,11 @@ class BarCodeAuthPaymentServiceImplTest {
                 .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
 
         // When
-        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(trxCode, merchantId, amountCents);
+        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, amountCents);
 
         // Then
-        verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+        verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
+        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USER_ID);
         assertEquals(authPaymentDTO, result);
         TestUtils.checkNotNullFields(result, "rejectionReasons");
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
@@ -131,7 +133,7 @@ class BarCodeAuthPaymentServiceImplTest {
     void barCodeAuthPayment_invalidAmount(long amountCents) {
         // When
         ClientException result =
-                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment("trxcode1", "USERID1", amountCents));
+                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, amountCents));
 
         // Then
         assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
@@ -141,11 +143,11 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment_trxNotFound() {
         // Given
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(null);
 
         // When
         ClientException result =
-                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment("trxcode1", "USERID1", 1000));
+                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, 1000));
 
         // Then
         assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());

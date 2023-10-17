@@ -1,7 +1,10 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
+import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
@@ -16,6 +19,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +30,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,15 +45,19 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     private TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     private TransactionBarCodeInProgress2TransactionResponseMapper transactionResponseMapper;
+    @Autowired
+    private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
 
-    public final String USERID = "USERID";
-    public final String MERCHANTID = "MERCHANTID";
-    public static final String INITIATIVEID = "INITIATIVEID";
-    public static final String BARCODE_INITIATIVEID_REWARDED = "BARCODE_INITIATIVEID_REWARDED";
-    public static final String BARCODE_INITIATIVEID_NO_BUDGET = "BARCODE_INITIATIVEID_NO_BUDGET";
-    public static final String BARCODE_INITIATIVEID_TOOMANYREQUEST = "BARCODE_INITIATIVEID_TOOMANYREQUEST";
-    public static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";
-    public static final LocalDate TODAY = LocalDate.now();
+    private static final String USERID = "USERID";
+    private static final String USERID_UNSUBSCRIBED = "USERID_UNSUBSCRIBED";
+    private static final String MERCHANTID = "MERCHANTID";
+    private static final String INITIATIVEID = "INITIATIVEID";
+    private static final String BARCODE_INITIATIVEID_REWARDED = "BARCODE_INITIATIVEID_REWARDED";
+    private static final String BARCODE_INITIATIVEID_NO_BUDGET = "BARCODE_INITIATIVEID_NO_BUDGET";
+    private static final String BARCODE_INITIATIVEID_TOOMANYREQUEST = "BARCODE_INITIATIVEID_TOOMANYREQUEST";
+    private static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";
+    private static final LocalDate TODAY = LocalDate.now();
+    private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
 
     protected MvcResult createTrx(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {
         return mockMvc
@@ -81,116 +91,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     }
 
     @Test
-    void createTransaction_userNotOnboarded() throws Exception {
-        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID)
-                .initiativeConfig(InitiativeConfig.builder()
-                        .initiativeId(INITIATIVEID)
-                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
-                        .startDate(TODAY.minusDays(1))
-                        .endDate(TODAY.plusDays(1))
-                        .build())
-                .build());
-        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
-                .initiativeId("INITIATIVEID").build();
-
-        // Creating transaction
-        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.FORBIDDEN, TransactionBarCodeResponse.class);
-    }
-
-    @Test
-    void authorizeTransaction_TooManyRequestThrownByRewardCalculator() throws Exception {
-        rewardRuleRepository.save(RewardRule.builder().id(BARCODE_INITIATIVEID_TOOMANYREQUEST)
-                .initiativeConfig(InitiativeConfig.builder()
-                        .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST)
-                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
-                        .startDate(TODAY.minusDays(1))
-                        .endDate(TODAY.plusDays(1))
-                        .build())
-                .build());
-        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
-                .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST).build();
-
-        AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
-
-        // Creating transaction
-        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
-        // Authorizing transaction but obtaining Too Many requests by reward-calculator
-        extractResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
-    }
-
-    @Test
-    void authorizeTransaction_budgetExhausted() throws Exception{
-        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
-                .initiativeId(BARCODE_INITIATIVEID_NO_BUDGET)
-                .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
-        rewardRuleRepository.save(RewardRule.builder().id(BARCODE_INITIATIVEID_NO_BUDGET)
-                .initiativeConfig(InitiativeConfig.builder()
-                        .initiativeId(BARCODE_INITIATIVEID_NO_BUDGET)
-                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
-                        .startDate(TODAY.minusDays(1))
-                        .endDate(TODAY.plusDays(1))
-                        .build())
-                .build());
-
-        // Creating transaction
-        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
-
-        // Cannot invoke other APIs if REJECTED
-        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
-    }
-
-    @Test
-    void authorizeTransaction() throws Exception{
-        final String DUMMYMERCHANTID = "DUMMYMERCHANTID";
-        rewardRuleRepository.save(RewardRule.builder().id(BARCODE_INITIATIVEID_REWARDED)
-                .initiativeConfig(InitiativeConfig.builder()
-                        .initiativeId(BARCODE_INITIATIVEID_REWARDED)
-                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
-                        .startDate(TODAY.minusDays(1))
-                        .endDate(TODAY.plusDays(1))
-                        .build())
-                .build());
-        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
-                .initiativeId(BARCODE_INITIATIVEID_REWARDED)
-                .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
-
-        // Creating transaction
-        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
-
-        // Trying to authorize the bar code with a merchant not onboarded on the initiative
-        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, DUMMYMERCHANTID), HttpStatus.FORBIDDEN, null);
-
-        // Authroizing the bar code with a merchant onboarded on the initiative
-        AuthPaymentDTO authPayment = extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-        assertEquals(SyncTrxStatus.AUTHORIZED, authPayment.getStatus());
-        assertAuthData(authPayment);
-    }
-
-    @Test
-    void authorizeTransaction_userStatusSuspended() throws Exception{
-        final String USERID_SUSPENDED = "USERID_SUSPENDED";
-        rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID)
-                .initiativeConfig(InitiativeConfig.builder()
-                        .initiativeId(INITIATIVEID)
-                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
-                        .startDate(TODAY.minusDays(1))
-                        .endDate(TODAY.plusDays(1))
-                        .build())
-                .build());
-        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
-                .initiativeId(INITIATIVEID)
-                .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
-
-        // Creating transaction
-        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID_SUSPENDED);
-
-        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
-    }
-
-    @Test
     void createTransaction_invalidInitiativePeriod() throws Exception{
         rewardRuleRepository.save(RewardRule.builder().id(INITIATIVEID_NOT_STARTED)
                 .initiativeConfig(InitiativeConfig.builder()
@@ -207,6 +107,118 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         // Creating transaction
         extractResponse(createTrx(trxRequest, USERID), HttpStatus.BAD_REQUEST, null);
+    }
+
+    @Test
+    void createTransaction_userNotOnboarded() throws Exception {
+        saveInitiativeRewardRule(INITIATIVEID);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(INITIATIVEID).build();
+
+        // Creating transaction
+        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.FORBIDDEN, TransactionBarCodeResponse.class);
+    }
+
+    @Test
+    void createTransaction_userStatusUnsubscribed() throws Exception{
+        saveInitiativeRewardRule(INITIATIVEID);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(INITIATIVEID)
+                .build();
+
+        // Creating transaction
+        extractResponse(createTrx(trxRequest, USERID_UNSUBSCRIBED), HttpStatus.FORBIDDEN, null);
+    }
+
+    @Test
+    void authorizeTransaction_TooManyRequestThrownByRewardCalculator() throws Exception {
+        saveInitiativeRewardRule(BARCODE_INITIATIVEID_TOOMANYREQUEST);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST).build();
+        AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+
+        // Creating transaction
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
+
+        // Authorizing transaction but obtaining Too Many requests by reward-calculator
+        extractResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+    }
+
+    @Test
+    void authorizeTransaction_budgetExhausted() throws Exception{
+        saveInitiativeRewardRule(BARCODE_INITIATIVEID_NO_BUDGET);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(BARCODE_INITIATIVEID_NO_BUDGET)
+                .build();
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+
+        // Creating transaction
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
+
+        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
+    }
+
+    @Test
+    void authorizeTransaction_userStatusSuspended() throws Exception{
+        saveInitiativeRewardRule(INITIATIVEID);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(INITIATIVEID)
+                .build();
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+
+        // Creating transaction
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, "USERID_SUSPENDED");
+
+        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
+    }
+
+    @Test
+    void authorizeTransaction_userStatusUnsubscribed() throws Exception{
+        saveInitiativeRewardRule(INITIATIVEID);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(INITIATIVEID)
+                .build();
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+
+        // Creating transaction
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
+
+        //Assigning the bar code to another user so that the auth throws the unsubscribed exception (through the proper stub)
+        TransactionInProgress trxInProgress = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
+        trxInProgress.setUserId(USERID_UNSUBSCRIBED);
+        transactionInProgressRepository.save(trxInProgress);
+
+        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
+    }
+
+    @Test
+    void authorizeTransaction() throws Exception{
+        saveInitiativeRewardRule(BARCODE_INITIATIVEID_REWARDED);
+
+        TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
+                .initiativeId(BARCODE_INITIATIVEID_REWARDED)
+                .build();
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
+
+        // Creating transaction
+        TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
+
+        // Trying to authorize the bar code with a merchant not onboarded on the initiative
+        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
+
+        // Authroizing the bar code with a merchant onboarded on the initiative
+        AuthPaymentDTO authPayment = extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+        assertEquals(SyncTrxStatus.AUTHORIZED, authPayment.getStatus());
+        assertAuthData(authPayment);
+
+        addExpectedAuthorizationEvent(authPayment);
+        checkNotificationEventsOnTransactionQueue();
     }
 
     private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
@@ -286,5 +298,61 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         Assertions.assertEquals(authPaymentDTO.getStatus(), trxStored.getStatus());
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, trxStored.getStatus());
         Assertions.assertEquals(RewardConstants.TRX_CHANNEL_BARCODE, trxStored.getChannel());
+    }
+
+    private void addExpectedAuthorizationEvent(AuthPaymentDTO authPaymentDTO) {
+        TransactionInProgress trxAuth = checkIfStored(authPaymentDTO.getId());
+        trxAuth.setAmountCents(authPaymentDTO.getAmountCents());
+        trxAuth.setEffectiveAmount(CommonUtilities.centsToEuro(authPaymentDTO.getAmountCents()));
+        trxAuth.setBusinessName("BUSINESSNAME");
+        Assertions.assertNotEquals(Collections.emptyMap(), trxAuth.getRewards());
+        expectedAuthorizationNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxAuth));
+    }
+
+    private void checkNotificationEventsOnTransactionQueue() {
+        int numExpectedNotification =
+                expectedAuthorizationNotificationEvents.size();
+        List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, numExpectedNotification, 15000);
+
+        Map<SyncTrxStatus, Set<TransactionOutcomeDTO>> eventsResult = consumerRecords.stream()
+                .map(r -> {
+                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    System.out.printf("OUTCOME DTO: " + out);
+                    return out;
+                })
+                .collect(Collectors.groupingBy(TransactionOutcomeDTO::getStatus, Collectors.toSet()));
+
+        checkAuthorizationNotificationEvents(eventsResult.get(SyncTrxStatus.AUTHORIZED));
+    }
+
+    private void checkAuthorizationNotificationEvents(Set<TransactionOutcomeDTO> authorizationNotificationDTOS) {
+        assertNotifications(expectedAuthorizationNotificationEvents, authorizationNotificationDTOS);
+    }
+
+    private void assertNotifications(Set<TransactionOutcomeDTO> expectedNotificationEvents, Set<TransactionOutcomeDTO> notificationDTOS) {
+        expectedNotificationEvents.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
+        notificationDTOS.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
+        assertEquals(expectedNotificationEvents.size(), notificationDTOS.size());
+        assertEquals(
+                sortEvents(expectedNotificationEvents),
+                sortEvents(notificationDTOS)
+        );
+    }
+
+    private List<TransactionOutcomeDTO> sortEvents(Set<TransactionOutcomeDTO> list) {
+        return list.stream()
+                .sorted(Comparator.comparing(TransactionOutcomeDTO::getId))
+                .toList();
+    }
+
+    private void saveInitiativeRewardRule(String initiativeId){
+        rewardRuleRepository.save(RewardRule.builder().id(initiativeId)
+                .initiativeConfig(InitiativeConfig.builder()
+                        .initiativeId(initiativeId)
+                        .initiativeRewardType(InitiativeRewardType.DISCOUNT)
+                        .startDate(TODAY.minusDays(1))
+                        .endDate(TODAY.plusDays(1))
+                        .build())
+                .build());
     }
 }

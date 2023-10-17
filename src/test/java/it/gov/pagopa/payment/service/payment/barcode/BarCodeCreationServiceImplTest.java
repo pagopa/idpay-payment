@@ -6,6 +6,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.*;
@@ -242,6 +243,28 @@ class BarCodeCreationServiceImplTest {
 
         Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted.", trxCreationReq.getInitiativeId()), result.getMessage());
+    }
+
+    @Test
+    void createTransaction_walletStatusUnsubscribed() {
+        // Given
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
+                .initiativeId("INITIATIVEID")
+                .build();
+
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
+        walletDTO.setAmount(BigDecimal.TEN);
+
+        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
+
+        // When
+        ClientException result = Assertions.assertThrows(ClientException.class,
+                () -> barCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
+
+        // Then
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, ((ClientExceptionWithBody) result).getCode());
     }
 
     @ParameterizedTest
