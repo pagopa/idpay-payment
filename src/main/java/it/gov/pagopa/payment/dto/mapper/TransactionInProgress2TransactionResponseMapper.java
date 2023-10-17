@@ -30,9 +30,15 @@ public class TransactionInProgress2TransactionResponseMapper
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
     Long residualAmountCents = null;
     Boolean splitPayment = null;
+    String qrcodePngUrl = null;
+    String qrcodeTxtUrl= null;
     if (transactionInProgress.getAmountCents() != null && transactionInProgress.getReward() != null) {
       residualAmountCents = transactionInProgress.getAmountCents() - transactionInProgress.getReward();
       splitPayment = residualAmountCents > 0L;
+    }
+    if(transactionInProgress.getChannel().equals("QRCODE")){
+      qrcodePngUrl = generateTrxCodeImgUrl(transactionInProgress.getTrxCode());
+      qrcodeTxtUrl = generateTrxCodeTxtUrl(transactionInProgress.getTrxCode());
     }
     return TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())
@@ -52,8 +58,8 @@ public class TransactionInProgress2TransactionResponseMapper
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
             .trxExpirationMinutes(authorizationExpirationMinutes)
-            .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
-            .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
+            .qrcodePngUrl(qrcodePngUrl)
+            .qrcodeTxtUrl(qrcodeTxtUrl)
             .build();
   }
 
