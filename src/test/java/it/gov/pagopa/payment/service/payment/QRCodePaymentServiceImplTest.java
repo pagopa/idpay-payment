@@ -1,15 +1,10 @@
 package it.gov.pagopa.payment.service.payment;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.service.payment.qrcode.*;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.utils.RewardConstants;
+import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,18 +13,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodePaymentServiceImplTest {
-    @Mock
-    private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock
     private QRCodeCreationService qrCodeCreationServiceMock;
     @Mock
@@ -42,9 +30,8 @@ class QRCodePaymentServiceImplTest {
     private QRCodeCancelService qrCodeCancelServiceMock;
     @Mock
     private QRCodeUnrelateService qrCodeUnrelateService;
-
-    private final TransactionInProgress2SyncTrxStatusMapper transactionMapper= new TransactionInProgress2SyncTrxStatusMapper();
-
+    @Mock
+    private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
     private QRCodePaymentServiceImpl qrCodePaymentService;
 
     @BeforeEach
@@ -55,14 +42,12 @@ class QRCodePaymentServiceImplTest {
                 qrCodeConfirmationServiceMock,
                 qrCodeCancelServiceMock,
                 qrCodeUnrelateService,
-                transactionInProgressRepositoryMock,
-                transactionMapper);
+                commonStatusTransactionServiceMock);
     }
 
     @AfterEach
     void verifyNoMoreMockInteractions() {
         Mockito.verifyNoMoreInteractions(
-                transactionInProgressRepositoryMock,
                 qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
@@ -72,29 +57,14 @@ class QRCodePaymentServiceImplTest {
     @Test
     void getStatusTransaction() {
         //given
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .reward(0L)
-                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                .build();
+        SyncTrxStatusDTO trxStatus = SyncTrxStatusFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findByIdAndMerchantIdAndAcquirerId(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        when(commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId(), trxStatus.getMerchantId(), trxStatus.getAcquirerId()))
+                .thenReturn(trxStatus);
         //when
-        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(trxStatus.getId(), trxStatus.getMerchantId(), trxStatus.getAcquirerId());
         //then
         Assertions.assertNotNull(result);
-        TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
-    }
-
-    @Test
-    void getStatusTransaction_NotFoundException(){
-        //given
-        doReturn(Optional.empty()).when(transactionInProgressRepositoryMock)
-                .findByIdAndMerchantIdAndAcquirerId("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1");
-        //when
-        //then
-        ClientExceptionNoBody clientExceptionNoBody= assertThrows(ClientExceptionNoBody.class,
-                ()-> qrCodePaymentService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, clientExceptionNoBody.getHttpStatus());
-        Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
+        Assertions.assertEquals(trxStatus, result);
     }
 }

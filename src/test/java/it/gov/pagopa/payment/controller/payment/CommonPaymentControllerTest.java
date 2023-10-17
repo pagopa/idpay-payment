@@ -7,6 +7,7 @@ import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.test.fakers.BaseTransactionResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import org.junit.jupiter.api.Assertions;
@@ -25,7 +26,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommonPaymentControllerImpl.class)
@@ -34,6 +36,8 @@ class CommonPaymentControllerTest {
     @MockBean
     @Qualifier("CommonCreate")
     private CommonCreationServiceImpl commonCreationServiceMock;
+    @MockBean
+    private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
     @Autowired
     private MockMvc mockMvc;
 
@@ -43,6 +47,7 @@ class CommonPaymentControllerTest {
     private static final String ACQUIRER_ID = "ACQUIRERID1";
     private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
     private static final String MERCHANT_ID = "MERCHANTID1";
+    private static final String TRX_ID = "TRXID";
 
     @Test
     void createCommonTransaction_testMandatoryFields() throws Exception {
@@ -88,6 +93,26 @@ class CommonPaymentControllerTest {
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(response,resultResponse);
         Mockito.verify(commonCreationServiceMock).createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER);
+    }
+
+    @Test
+    void getStatusTransaction_testMandatoryHeaders() throws Exception {
+        String expectedCode = "INVALID_REQUEST";
+
+        MvcResult result = mockMvc.perform(
+                        get("/idpay/payment/{transactionId}/status",
+                                TRX_ID)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
+                ErrorDTO.class);
+        assertEquals(expectedCode, actual.getCode());
+        assertEquals("Required request header "
+                        + "'x-merchant-id' for method parameter type String is not present",
+                actual.getMessage());
+
     }
 
 }
