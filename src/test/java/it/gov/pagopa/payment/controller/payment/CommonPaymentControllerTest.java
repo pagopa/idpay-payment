@@ -26,8 +26,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,6 +49,7 @@ class CommonPaymentControllerTest {
     private static final String ACQUIRER_ID = "ACQUIRERID1";
     private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
     private static final String MERCHANT_ID = "MERCHANTID1";
+    private static final String TRX_ID = "TRXID";
 
     @Test
     void createCommonTransaction_testMandatoryFields() throws Exception {
@@ -98,13 +98,26 @@ class CommonPaymentControllerTest {
     }
 
     @Test
-    void cancelTransaction_testMandatoryHeaders() throws Exception {
-
-        TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
+    void cancelTransaction() throws Exception {
 
         MvcResult result = mockMvc.perform(
                         delete("/idpay/payment/merchant/{transactionId}",
-                                "TRXID")
+                                TRX_ID)
+                                .header("x-merchant-id",MERCHANT_ID)
+                                .header("x-acquirer-id" ,ACQUIRER_ID))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("", result.getResponse().getContentAsString());
+        Mockito.verify(commonCancelServiceMock).cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+
+    }
+    @Test
+    void cancelTransaction_testMandatoryHeaders() throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        delete("/idpay/payment/merchant/{transactionId}",
+                                TRX_ID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andReturn();
