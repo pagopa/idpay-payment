@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.mapper.BaseTransactionResponse2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
@@ -50,7 +51,7 @@ class CommonCreationServiceImplTest {
 
   public static final LocalDate TODAY = LocalDate.now();
   @Mock
-  private TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+  private TransactionInProgress2TransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
   @Mock
   private BaseTransactionResponse2TransactionResponseMapper baseTransactionResponse2TransactionResponseMapper;
   @Mock
@@ -83,7 +84,8 @@ class CommonCreationServiceImplTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    BaseTransactionResponseDTO trxCreated = BaseTransactionResponseFaker.mockInstance(1);
+    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
+//    BaseTransactionResponseDTO trxCreated = BaseTransactionResponseFaker.mockInstance(1); todo delete
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));

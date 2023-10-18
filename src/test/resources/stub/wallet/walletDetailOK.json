@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/idpay/wallet/[^\\s]+/USERID"
+    "urlPathPattern": "/idpay/wallet/[^\\s]+/.*USERID"
   },
   "response": {
     "status": "200",

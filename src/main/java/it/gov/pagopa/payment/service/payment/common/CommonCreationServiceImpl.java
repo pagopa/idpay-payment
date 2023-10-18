@@ -6,7 +6,9 @@ import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
@@ -27,7 +29,7 @@ public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  protected final TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+  protected final TransactionInProgress2TransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
   protected final TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
   protected final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
@@ -36,7 +38,7 @@ public class CommonCreationServiceImpl {
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public CommonCreationServiceImpl(
-          TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
+          TransactionInProgress2TransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
           TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
@@ -54,7 +56,7 @@ public class CommonCreationServiceImpl {
     this.merchantConnector = merchantConnector;
   }
 
-  public BaseTransactionResponseDTO createTransaction(
+  public TransactionResponse createTransaction(
           TransactionCreationRequest trxCreationRequest,
           String channel,
           String merchantId,

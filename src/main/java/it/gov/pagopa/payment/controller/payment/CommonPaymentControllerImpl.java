@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.performancelogger.BaseTransactionResponseDTOPerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +22,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @PerformanceLog(
             value = "CREATE_TRANSACTION",
             payloadBuilderBeanClass = BaseTransactionResponseDTOPerfLoggerPayloadBuilder.class)
-    public BaseTransactionResponseDTO createTransaction(
+    public TransactionResponse createTransaction(
             TransactionCreationRequest trxCreationRequest,
             String merchantId,
             String acquirerId,

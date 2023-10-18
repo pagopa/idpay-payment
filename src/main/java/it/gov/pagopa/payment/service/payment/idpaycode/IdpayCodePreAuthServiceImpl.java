@@ -92,10 +92,10 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
             return authPaymentMapper.transactionMapper(trx);
         }
 
+        SecondFactorDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getUserId());
+
         checkPreAuth(trx.getTrxCode(), trx.getUserId(), trx);
         AuthPaymentDTO authPaymentDTO = super.previewPayment(trx, RewardConstants.TRX_CHANNEL_IDPAYCODE);
-
-        SecondFactorDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getUserId());
 
         auditUtilities.logPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), RewardConstants.TRX_CHANNEL_IDPAYCODE);
         return authPaymentIdpayCodeMapper.authPaymentMapper(authPaymentDTO, secondFactorDetails.getSecondFactor());

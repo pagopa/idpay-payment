@@ -29,7 +29,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
     private final WalletConnector walletConnector;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-    protected BarCodeCreationServiceImpl(TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
+    protected BarCodeCreationServiceImpl(TransactionInProgress2TransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
                                          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
                                          RewardRuleRepository rewardRuleRepository,
                                          TransactionInProgressRepository transactionInProgressRepository,

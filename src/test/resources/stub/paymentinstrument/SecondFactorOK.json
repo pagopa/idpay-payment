@@ -1,12 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/idpay/instrument/code/secondFactor/.*USERID.*",
-    "headers": {
-        "x-merchant-id": {
-          "equalTo": "MERCHANTID"
-        }
-    }
+    "urlPathPattern": "/idpay/instrument/code/secondFactor/^(?!NOTSECONDFACTOR).*USERID.*"
   },
   "response": {
     "status": "200",
@@ -15,7 +10,7 @@
     },
     "transformers": ["response-template"],
     "jsonBody": {
-      "pinBlockVerified": true
+      "secondFactor": true
     }
   }
 }
