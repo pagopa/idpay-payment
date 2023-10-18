@@ -17,7 +17,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
     private final CommonConfirmServiceImpl commonConfirmService;
 
-    public CommonPaymentControllerImpl(@Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService, CommonConfirmServiceImpl commonConfirmService) {
+    public CommonPaymentControllerImpl(@Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService,@Qualifier("CommonConfirm") CommonConfirmServiceImpl commonConfirmService) {
         this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
     }
