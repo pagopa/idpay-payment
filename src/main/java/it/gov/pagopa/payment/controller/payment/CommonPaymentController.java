@@ -15,7 +15,7 @@ public interface CommonPaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId,
             @RequestHeader("x-apim-request-id") String idTrxIssuer);
 
-    @DeleteMapping("/merchant/{transactionId}")
+    @DeleteMapping("/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
     void cancelTransaction(
             @PathVariable("transactionId") String transactionId,
