@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
-import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
-import it.gov.pagopa.payment.test.fakers.BaseTransactionResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -67,7 +67,7 @@ class CommonPaymentControllerTest {
     @Test
     void createCommonTransaction() throws Exception {
         TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
-        BaseTransactionResponseDTO response = BaseTransactionResponseFaker.mockInstance(1);
+        TransactionResponse response = TransactionResponseFaker.mockInstance(1);
         Mockito.when(commonCreationServiceMock.createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER)).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -81,9 +81,9 @@ class CommonPaymentControllerTest {
                 ).andExpect(status().isCreated()).andReturn();
 
 
-        BaseTransactionResponseDTO resultResponse = objectMapper.readValue(
+        TransactionResponse resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                BaseTransactionResponseDTO.class);
+                TransactionResponse.class);
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(response,resultResponse);
