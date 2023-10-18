@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService {
+
     private final TransactionInProgressRepository repository;
     private final TransactionInProgress2TransactionResponseMapper mapper;
     private final TransactionNotifierService notifierService;
