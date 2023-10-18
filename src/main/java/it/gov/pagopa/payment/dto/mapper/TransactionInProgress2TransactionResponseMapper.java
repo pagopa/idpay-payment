@@ -12,16 +12,19 @@ import java.util.function.Function;
 @Service
 @Slf4j
 public class TransactionInProgress2TransactionResponseMapper
-    implements Function<TransactionInProgress, TransactionResponse> {
+    implements Function<TransactionInProgress,TransactionResponse> {
 
-  private final int authorizationExpirationMinutes;
+  private final int qrcodeAuthorizationExpirationMinutes;
+  private final int idpayCodeAuthorizationExpirationMinutes;
   private final String imgBaseUrl;
   private final String txtBaseUrl;
 
-  public TransactionInProgress2TransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+  public TransactionInProgress2TransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int qrcodeAuthorizationExpirationMinutes,
+                                                         @Value("${app.idpayCode.expirations.authorizationMinutes}") int idpayCodeAuthorizationExpirationMinutes,
                                                          @Value("${app.qrCode.trxCode.baseUrl.img}") String imgBaseUrl,
                                                          @Value("${app.qrCode.trxCode.baseUrl.txt}") String txtBaseUrl) {
-    this.authorizationExpirationMinutes = authorizationExpirationMinutes;
+    this.qrcodeAuthorizationExpirationMinutes =qrcodeAuthorizationExpirationMinutes;
+    this.idpayCodeAuthorizationExpirationMinutes = idpayCodeAuthorizationExpirationMinutes;
     this.imgBaseUrl = imgBaseUrl;
     this.txtBaseUrl = txtBaseUrl;
   }
@@ -32,6 +35,8 @@ public class TransactionInProgress2TransactionResponseMapper
     Boolean splitPayment = null;
     String qrcodePngUrl = null;
     String qrcodeTxtUrl= null;
+    int authorizationExpirationMinutes = idpayCodeAuthorizationExpirationMinutes;
+
     if (transactionInProgress.getAmountCents() != null && transactionInProgress.getReward() != null) {
       residualAmountCents = transactionInProgress.getAmountCents() - transactionInProgress.getReward();
       splitPayment = residualAmountCents > 0L;
@@ -39,6 +44,7 @@ public class TransactionInProgress2TransactionResponseMapper
     if(transactionInProgress.getChannel().equals("QRCODE")){
       qrcodePngUrl = generateTrxCodeImgUrl(transactionInProgress.getTrxCode());
       qrcodeTxtUrl = generateTrxCodeTxtUrl(transactionInProgress.getTrxCode());
+      authorizationExpirationMinutes = qrcodeAuthorizationExpirationMinutes;
     }
     return TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())

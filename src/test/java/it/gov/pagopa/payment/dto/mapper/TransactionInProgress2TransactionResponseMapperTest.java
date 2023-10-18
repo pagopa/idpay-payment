@@ -12,13 +12,12 @@ import org.junit.jupiter.api.Test;
 class TransactionInProgress2TransactionResponseMapperTest {
 
     private TransactionInProgress2TransactionResponseMapper mapper;
-    private static final int QRCODE_AUTHORIZATION_MINUTES = 4320;
     private static final String QRCODE_IMG_BASEURL = "QRCODE_IMG_BASEURL";
     private static final String QRCODE_TXT_BASEURL = "QRCODE_TXT_BASEURL";
 
     @BeforeEach
     void setUp() {
-        mapper = new TransactionInProgress2TransactionResponseMapper(QRCODE_AUTHORIZATION_MINUTES,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
+        mapper = new TransactionInProgress2TransactionResponseMapper(4320,5,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
     }
 
     @Test
@@ -84,11 +83,11 @@ class TransactionInProgress2TransactionResponseMapperTest {
         Assertions.assertEquals(trx.getVat(), result.getVat());
         Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
         Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
-        Assertions.assertEquals(4320, result.getTrxExpirationMinutes());
 
         if (trx.getChannel().equals("QRCODE")){
             Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
             Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
+            Assertions.assertEquals(4320, result.getTrxExpirationMinutes());
         }
     }
 
