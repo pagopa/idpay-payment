@@ -53,13 +53,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
-
-            if (trx == null) {
-                throw new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
-                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode));
-            }
+            checkAuth(trxCode, trx);
 
             String merchantBusinessName = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId()).getBusinessName();
 

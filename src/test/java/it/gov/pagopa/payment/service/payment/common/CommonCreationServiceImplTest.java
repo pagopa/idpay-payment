@@ -5,6 +5,7 @@ import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.mapper.BaseTransactionResponse2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
@@ -190,7 +191,7 @@ class CommonCreationServiceImplTest {
                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -212,7 +213,7 @@ class CommonCreationServiceImplTest {
                                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -233,7 +234,7 @@ class CommonCreationServiceImplTest {
                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("INVALID AMOUNT", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
   }
 
   @ParameterizedTest
@@ -258,7 +259,7 @@ class CommonCreationServiceImplTest {
                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("INVALID DATE", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
   }
 
   private static Stream<Arguments> dateArguments() {

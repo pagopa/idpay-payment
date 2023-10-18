@@ -194,7 +194,7 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, ((ClientExceptionWithBody) result).getCode());
     }
 
     @Test
@@ -216,7 +216,7 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, ((ClientExceptionWithBody) result).getCode());
     }
 
     @Test
@@ -289,7 +289,7 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-        Assertions.assertEquals("INVALID DATE", ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
     }
 
     private static Stream<Arguments> dateArguments() {
