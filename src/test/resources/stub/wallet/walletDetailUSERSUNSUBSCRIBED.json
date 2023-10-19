@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/idpay/wallet/[^\\s]+/USERID_UNSUBSCRIBED"
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "familyId": "FAMILYID",
+      "initiativeId": "INITIATIVEID",
+      "initiativeName": "INITIATIVENAME",
+      "status": "UNSUBSCRIBED",
+      "iban": "IBAN",
+      "businessName": "BUSINESSNAME",
+      "amount": 1000
+    }
+  }
+}

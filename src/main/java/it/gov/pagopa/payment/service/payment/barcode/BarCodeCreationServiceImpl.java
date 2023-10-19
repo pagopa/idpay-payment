@@ -3,9 +3,14 @@ package it.gov.pagopa.payment.service.payment.barcode;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.mapper.*;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -17,7 +22,6 @@ import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,7 +33,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
     private final WalletConnector walletConnector;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-    protected BarCodeCreationServiceImpl(TransactionInProgress2TransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
+    protected BarCodeCreationServiceImpl(TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
                                          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
                                          RewardRuleRepository rewardRuleRepository,
                                          TransactionInProgressRepository transactionInProgressRepository,
@@ -38,7 +42,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                                          MerchantConnector merchantConnector,
                                          TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
                                          TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper, WalletConnector walletConnector) {
-        super(transactionInProgress2BaseTransactionResponseMapper,
+        super(transactionInProgress2TransactionResponseMapper,
                 transactionCreationRequest2TransactionInProgressMapper,
                 rewardRuleRepository,
                 transactionInProgressRepository,
@@ -98,12 +102,19 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
     }
 
     private void checkWallet(String initiativeId, String userId){
-        BigDecimal walletAmount = walletConnector.getWallet(initiativeId, userId).getAmount();
+        WalletDTO wallet = walletConnector.getWallet(initiativeId, userId);
 
-        if (walletAmount.compareTo(BigDecimal.ZERO) == 0) {
+        if (wallet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
             throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
                     String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
+        }
+
+        if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(wallet.getStatus())){
+            throw new ClientExceptionWithBody(
+                    HttpStatus.FORBIDDEN,
+                    PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
+                    "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
     }
 }
