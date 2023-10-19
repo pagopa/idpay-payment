@@ -49,7 +49,7 @@ import static org.mockito.Mockito.when;
 class BarCodeCreationServiceImplTest {
     public static final LocalDate TODAY = LocalDate.now();
     @Mock
-    private TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+    private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
     @Mock
     private TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     @Mock
@@ -68,7 +68,7 @@ class BarCodeCreationServiceImplTest {
     @BeforeEach
     void setUp() {
         barCodeCreationService =
-                new BarCodeCreationServiceImpl(transactionInProgress2BaseTransactionResponseMapper,
+                new BarCodeCreationServiceImpl(transactionInProgress2TransactionResponseMapper,
                         transactionCreationRequest2TransactionInProgressMapper,
                         rewardRuleRepository,
                         transactionInProgressRepository,
