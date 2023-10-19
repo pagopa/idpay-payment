@@ -25,7 +25,7 @@ public class MerchantConnectorImpl implements MerchantConnector{
         } catch (FeignException e) {
             if (e.status() == 404) {
                 throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
-                        PaymentConstants.ExceptionCode.MERCHANT_NOT_FOUND,
+                        PaymentConstants.ExceptionCode.MERCHANT_NOT_ONBOARDED,
                         String.format("The merchant is not related with initiative [%s]", initiativeId));
             }
 
