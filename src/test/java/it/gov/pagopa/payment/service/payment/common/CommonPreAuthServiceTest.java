@@ -210,6 +210,28 @@ class CommonPreAuthServiceTest {
   }
 
   @Test
+  void relateUser_statusUnsubscribedException() {
+    // Given
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
+
+    when(walletConnectorMock.getWallet(trx.getInitiativeId(), USER_ID1))
+            .thenReturn(walletDTO);
+
+    // When
+    ClientExceptionWithBody exception = Assertions.assertThrows(ClientExceptionWithBody.class,
+            () -> commonPreAuthService.relateUser(trx, USER_ID1));
+
+    // Then
+    assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
+    assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, exception.getCode());
+    assertEquals(String.format("The user has unsubscribed from initiative [%s]", trx.getInitiativeId()), exception.getMessage());
+
+    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
+
+  }
+
+  @Test
   void relateUser_trxAlreadyAuthorizedException() {
     // Given
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
@@ -253,20 +275,24 @@ class CommonPreAuthServiceTest {
   }
 
 
-  void previewOtherException() {
+  @Test
+  void preview_GenericRejected() {
 
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
 
-    when(walletConnectorMock.getWallet(any(), any())).thenThrow(new RuntimeException());
+    AuthPaymentDTO responseRE = AuthPaymentDTOFaker.mockInstance(1, trx);
+    responseRE.setStatus(SyncTrxStatus.REJECTED);
+    responseRE.setRejectionReasons(List.of("ANY_REASON_REJECTED"));
+    when(rewardCalculatorConnectorMock.previewTransaction(any())).thenReturn(responseRE);
 
     ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
             commonPreAuthService.previewPayment(trx, "CHANNEL")
     );
 
     Assertions.assertNotNull(result);
-    Assertions.assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, result.getCode());
+    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
 
   }
 

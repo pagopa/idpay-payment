@@ -38,7 +38,7 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
     }
         @Override
     public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
-        TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId.toLowerCase());
+        TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId);
 
         if(trx == null){
             throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
@@ -46,10 +46,10 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
                     "Cannot find transaction with transactionId [%s]".formatted(trxId));
         }
 
-            if(trx.getUserId() == null){
-                throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND,
-                        "Unexpected status for transaction with transactionId [%s]".formatted(trxId));
-            }
+        if(trx.getUserId() == null){
+            throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST,
+                    "Unexpected status for transaction with transactionId [%s]".formatted(trxId));
+        }
 
         // payment-instrument call to check pinBlock
         paymentInstrumentConnector.checkPinBlock(pinBlockBody,trx.getUserId());
