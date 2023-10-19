@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class TransactionInProgress2TransactionResponseMapper
       residualAmountCents = transactionInProgress.getAmountCents() - transactionInProgress.getReward();
       splitPayment = residualAmountCents > 0L;
     }
-    if(transactionInProgress.getChannel().equals("QRCODE")){
+    if(RewardConstants.TRX_CHANNEL_QRCODE.equals(transactionInProgress.getChannel())){
       qrcodePngUrl = generateTrxCodeImgUrl(transactionInProgress.getTrxCode());
       qrcodeTxtUrl = generateTrxCodeTxtUrl(transactionInProgress.getTrxCode());
       authorizationExpirationMinutes = qrcodeAuthorizationExpirationMinutes;
