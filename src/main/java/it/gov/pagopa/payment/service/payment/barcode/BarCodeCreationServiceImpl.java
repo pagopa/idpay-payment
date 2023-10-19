@@ -4,6 +4,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
@@ -101,12 +102,19 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
     }
 
     private void checkWallet(String initiativeId, String userId){
-        BigDecimal walletAmount = walletConnector.getWallet(initiativeId, userId).getAmount();
+        WalletDTO wallet = walletConnector.getWallet(initiativeId, userId);
 
-        if (walletAmount.compareTo(BigDecimal.ZERO) == 0) {
+        if (wallet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
             throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
                     String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
+        }
+
+        if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(wallet.getStatus())){
+            throw new ClientExceptionWithBody(
+                    HttpStatus.FORBIDDEN,
+                    PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
+                    "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
     }
 }

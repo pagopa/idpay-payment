@@ -15,9 +15,9 @@
       "initiativeId": "BARCODE_INITIATIVEID_REWARDED",
       "userId": "USERID",
       "status": "REWARDED",
-      "effectiveAmount": "0.10",
+      "effectiveAmount": "100",
       "amount": "0.10",
-      "amountCents": "10",
+      "amountCents": "10000",
       "reward": {
         "initiativeId": "INITIATIVEID",
         "organizationId": "ORGANIZATIONID",

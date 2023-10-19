@@ -84,7 +84,7 @@ public abstract class CommonAuthServiceImpl {
                     throw new ClientExceptionWithBody(
                             HttpStatus.FORBIDDEN,
                             PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                            "Budget exhausted for user [%s] and initiative [%s]".formatted(trx.getUserId(), trx.getInitiativeId()));
+                            "The budget related to the user on initiativeId [%s] was exhausted.".formatted(trx.getInitiativeId()));
                 }
                 throw new ClientExceptionWithBody(
                         HttpStatus.FORBIDDEN,
@@ -136,6 +136,13 @@ public abstract class CommonAuthServiceImpl {
                     HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
                     "The user has been suspended for initiative [%s]".formatted(initiativeId));
+        }
+
+        if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(walletStatus)){
+            throw new ClientExceptionWithBody(
+                    HttpStatus.FORBIDDEN,
+                    PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
+                    "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
     }
 
