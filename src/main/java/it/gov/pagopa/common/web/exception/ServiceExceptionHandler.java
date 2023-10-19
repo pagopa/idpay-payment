@@ -1,12 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.common.web.exception.custom.BadRequestException;
-import it.gov.pagopa.common.web.exception.custom.ForbiddenException;
-import it.gov.pagopa.common.web.exception.custom.InternalServerErrorException;
-import it.gov.pagopa.common.web.exception.custom.NotFoundException;
 import it.gov.pagopa.common.web.exception.custom.ServiceException;
-import it.gov.pagopa.common.web.exception.custom.TooManyRequestsException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -22,16 +17,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ServiceExceptionHandler {
   private final ErrorManager errorManager;
-  private final Map<Class<? extends ServiceException>, HttpStatus> transcodeMap = Map.of(
-      BadRequestException.class, HttpStatus.BAD_REQUEST,
-      NotFoundException.class, HttpStatus.NOT_FOUND,
-      ForbiddenException.class, HttpStatus.FORBIDDEN,
-      InternalServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR,
-      TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS
-  );
+  private final Map<Class<? extends ServiceException>, HttpStatus> transcodeMap;
 
-  public ServiceExceptionHandler(ErrorManager errorManager) {
+  public ServiceExceptionHandler(ErrorManager errorManager, Map<Class<? extends ServiceException>, HttpStatus> transcodeMap) {
     this.errorManager = errorManager;
+    this.transcodeMap = transcodeMap;
   }
 
   @ExceptionHandler(ServiceException.class)
