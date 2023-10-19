@@ -288,7 +288,7 @@ class BarCodeCreationServiceImplTest {
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
     }
 

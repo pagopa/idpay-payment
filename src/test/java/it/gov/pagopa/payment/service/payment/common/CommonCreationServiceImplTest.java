@@ -258,7 +258,7 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
+    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
     Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
   }
 
