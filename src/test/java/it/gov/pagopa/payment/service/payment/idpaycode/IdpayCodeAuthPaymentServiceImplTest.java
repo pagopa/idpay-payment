@@ -93,7 +93,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
 
     }
 

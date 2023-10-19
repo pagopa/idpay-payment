@@ -4,12 +4,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
-import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
-import it.gov.pagopa.payment.test.fakers.BaseTransactionResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -26,7 +27,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -36,8 +37,14 @@ class CommonPaymentControllerTest {
     @MockBean
     @Qualifier("CommonCreate")
     private CommonCreationServiceImpl commonCreationServiceMock;
+
+    @MockBean
+    @Qualifier("CommonCancel")
+    private CommonCancelServiceImpl commonCancelServiceMock;
+
     @MockBean
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -72,7 +79,7 @@ class CommonPaymentControllerTest {
     @Test
     void createCommonTransaction() throws Exception {
         TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
-        BaseTransactionResponseDTO response = BaseTransactionResponseFaker.mockInstance(1);
+        TransactionResponse response = TransactionResponseFaker.mockInstance(1);
         Mockito.when(commonCreationServiceMock.createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER)).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -86,13 +93,45 @@ class CommonPaymentControllerTest {
                 ).andExpect(status().isCreated()).andReturn();
 
 
-        BaseTransactionResponseDTO resultResponse = objectMapper.readValue(
+        TransactionResponse resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                BaseTransactionResponseDTO.class);
+                TransactionResponse.class);
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(response,resultResponse);
         Mockito.verify(commonCreationServiceMock).createTransaction(body,null,MERCHANT_ID,ACQUIRER_ID,ID_TRX_ISSUER);
+    }
+
+    @Test
+    void cancelTransaction() throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        delete("/idpay/payment/{transactionId}",
+                                TRX_ID)
+                                .header("x-merchant-id",MERCHANT_ID)
+                                .header("x-acquirer-id" ,ACQUIRER_ID))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals("", result.getResponse().getContentAsString());
+        Mockito.verify(commonCancelServiceMock).cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+
+    }
+    @Test
+    void cancelTransaction_testMandatoryHeaders() throws Exception {
+
+        MvcResult result = mockMvc.perform(
+                        delete("/idpay/payment/{transactionId}",
+                                TRX_ID)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        assertNotNull(result.getResponse().getContentAsString());
+
+        String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+                + "'x-merchant-id' for method parameter type String is not present\"}";
+        assertEquals(actual, result.getResponse().getContentAsString());
     }
 
     @Test
@@ -114,5 +153,4 @@ class CommonPaymentControllerTest {
                 actual.getMessage());
 
     }
-
 }

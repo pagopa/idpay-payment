@@ -97,6 +97,13 @@ public class CommonPreAuthServiceImpl{
               "The user has been suspended for initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
+    if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(walletStatus)){
+      throw new ClientExceptionWithBody(
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
+              "The user has unsubscribed from initiative [%s]".formatted(trx.getInitiativeId()));
+    }
+
     if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
       throw new ClientExceptionWithBody(
               HttpStatus.NOT_FOUND,
