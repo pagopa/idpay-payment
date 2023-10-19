@@ -26,7 +26,6 @@ public class PaymentConstants {
     public static final String USER_NOT_ONBOARDED = "PAYMENT_USER_NOT_ONBOARDED";
     public static final String MERCHANT_NOT_ONBOARDED = "PAYMENT_MERCHANT_NOT_ONBOARDED";
     public static final String AMOUNT_NOT_VALID = "PAYMENT_AMOUNT_NOT_VALID";
-    public static final String USER_UNSUBSCRIBED = "PAYMENT_USER_UNSUBSCRIBED";
     public static final String INITIATIVE_NOT_FOUND = "PAYMENT_INITIATIVE_NOT_FOUND";
     public static final String INITIATIVE_NOT_DISCOUNT = "PAYMENT_INITIATIVE_NOT_DISCOUNT";
     public static final String INITIATIVE_INVALID_DATE = "PAYMENT_INITIATIVE_INVALID_DATE";
