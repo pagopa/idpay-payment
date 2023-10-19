@@ -129,9 +129,9 @@ class CommonPaymentControllerTest {
     @Test
     void cancelTransaction() throws Exception {
 
-        MvcResult result = mockMvc.perform(
-                        delete("/idpay/payment/{transactionId}",
-                                TRX_ID)
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .delete("/idpay/payment/{transactionId}",
+                                TRANSACTION_ID)
                                 .header("x-merchant-id",MERCHANT_ID)
                                 .header("x-acquirer-id" ,ACQUIRER_ID))
                 .andExpect(status().isOk())
@@ -144,9 +144,9 @@ class CommonPaymentControllerTest {
     @Test
     void cancelTransaction_testMandatoryHeaders() throws Exception {
 
-        MvcResult result = mockMvc.perform(
-                        delete("/idpay/payment/{transactionId}",
-                                TRX_ID)
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .delete("/idpay/payment/{transactionId}",
+                                TRANSACTION_ID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andReturn();
@@ -162,9 +162,9 @@ class CommonPaymentControllerTest {
     void getStatusTransaction_testMandatoryHeaders() throws Exception {
         String expectedCode = "INVALID_REQUEST";
 
-        MvcResult result = mockMvc.perform(
-                        get("/idpay/payment/{transactionId}/status",
-                                TRX_ID)
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .get("/idpay/payment/{transactionId}/status",
+                                TRANSACTION_ID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andReturn();

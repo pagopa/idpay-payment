@@ -27,8 +27,9 @@ class CommonConfirmServiceImplTest {
     @Mock private TransactionNotifierService notifierServiceMock;
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock
-    private TransactionInProgress2TransactionResponseMapper mapper;
+
+
+    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(4320,5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
 
     CommonConfirmServiceImpl service;
 
@@ -112,6 +113,7 @@ class CommonConfirmServiceImplTest {
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setReward(1000L);
+
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);

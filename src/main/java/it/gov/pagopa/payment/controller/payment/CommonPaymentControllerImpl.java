@@ -5,12 +5,10 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
+    private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
-    private final CommonConfirmServiceImpl commonConfirmService;
 
     public CommonPaymentControllerImpl(@Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService,
                                        @Qualifier("CommonConfirm") CommonConfirmServiceImpl commonConfirmService,
