@@ -163,6 +163,9 @@ app:
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
+  common:
+    expirations:
+      cancelMinutes: ${COMMON_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     expirations:
