@@ -126,7 +126,7 @@ public class CommonCreationServiceImpl {
               getFlow(),
               initiative.getStartDate(), initiative.getEndDate());
       throw new ClientExceptionWithBody(
-              HttpStatus.BAD_REQUEST,
+              HttpStatus.FORBIDDEN,
               PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE,
               "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
                       .formatted(initiative.getStartDate(), initiative.getEndDate()));

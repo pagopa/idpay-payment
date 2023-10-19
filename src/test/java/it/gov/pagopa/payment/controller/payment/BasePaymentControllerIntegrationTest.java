@@ -614,7 +614,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
 
             // Creating transaction
-            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
         });
 
         useCases.addAll(getExtraUseCases());

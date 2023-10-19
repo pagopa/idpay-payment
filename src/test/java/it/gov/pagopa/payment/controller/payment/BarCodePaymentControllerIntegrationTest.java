@@ -106,7 +106,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // Creating transaction
-        extractResponse(createTrx(trxRequest, USERID), HttpStatus.BAD_REQUEST, null);
+        extractResponse(createTrx(trxRequest, USERID), HttpStatus.FORBIDDEN, null);
     }
 
     @Test
