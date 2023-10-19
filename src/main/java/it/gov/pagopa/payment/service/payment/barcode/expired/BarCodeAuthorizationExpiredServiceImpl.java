@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.expired;
+package it.gov.pagopa.payment.service.payment.barcode.expired;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
