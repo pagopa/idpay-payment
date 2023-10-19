@@ -14,6 +14,7 @@ public class PaymentConstants {
   public static final class ExceptionCode {
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_EXPIRED";
     public static final String TRX_ANOTHER_USER = "PAYMENT_USER_NOT_VALID";
+    public static final String USER_UNSUBSCRIBED = "PAYMENT_USER_UNSUBSCRIBED";
     public static final String TRX_ALREADY_AUTHORIZED = "PAYMENT_ALREADY_AUTHORIZED";
     public static final String TRX_STATUS_NOT_VALID = "PAYMENT_STATUS_NOT_VALID";
     public static final String BUDGET_EXHAUSTED = "PAYMENT_BUDGET_EXHAUSTED";
