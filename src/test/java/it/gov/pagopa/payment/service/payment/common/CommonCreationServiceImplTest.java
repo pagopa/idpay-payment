@@ -5,10 +5,9 @@ import it.gov.pagopa.common.web.exception.ClientException;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
-import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
-import it.gov.pagopa.payment.dto.mapper.BaseTransactionResponse2TransactionResponseMapper;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
@@ -19,7 +18,10 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCreationServiceImpl;
-import it.gov.pagopa.payment.test.fakers.*;
+import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
@@ -50,9 +52,8 @@ class CommonCreationServiceImplTest {
 
   public static final LocalDate TODAY = LocalDate.now();
   @Mock
-  private TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
-  @Mock
-  private BaseTransactionResponse2TransactionResponseMapper baseTransactionResponse2TransactionResponseMapper;
+  private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
+
   @Mock
   private TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
@@ -69,13 +70,13 @@ class CommonCreationServiceImplTest {
   void setUp() {
     CommonCreationService =
         new QRCodeCreationServiceImpl(
-                transactionInProgress2BaseTransactionResponseMapper,
+                transactionInProgress2TransactionResponseMapper,
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,
             transactionInProgressRepository,
             trxCodeGenUtil,
             auditUtilitiesMock,
-            merchantConnectorMock,baseTransactionResponse2TransactionResponseMapper );
+            merchantConnectorMock);
   }
 
   @Test
@@ -83,7 +84,7 @@ class CommonCreationServiceImplTest {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    BaseTransactionResponseDTO trxCreated = BaseTransactionResponseFaker.mockInstance(1);
+    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
@@ -96,13 +97,13 @@ class CommonCreationServiceImplTest {
             any(MerchantDetailDTO.class),
             anyString()))
         .thenReturn(trx);
-    when(transactionInProgress2BaseTransactionResponseMapper.apply(any(TransactionInProgress.class)))
+    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get()).thenReturn("trxcode1");
     when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    BaseTransactionResponseDTO result =
+    TransactionResponse result =
         CommonCreationService.createTransaction(
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
@@ -143,7 +144,7 @@ class CommonCreationServiceImplTest {
             any(MerchantDetailDTO.class),
             anyString()))
         .thenReturn(trx);
-    when(transactionInProgress2BaseTransactionResponseMapper.apply(any(TransactionInProgress.class)))
+    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
     when(trxCodeGenUtil.get())
         .thenAnswer(
@@ -159,7 +160,7 @@ class CommonCreationServiceImplTest {
     when(transactionInProgressRepository.createIfExists(trx, "trxcode2"))
         .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
-    BaseTransactionResponseDTO result =
+    TransactionResponse result =
             CommonCreationService.createTransaction(
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
@@ -190,7 +191,7 @@ class CommonCreationServiceImplTest {
                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -212,7 +213,7 @@ class CommonCreationServiceImplTest {
                                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, ((ClientExceptionWithBody) result).getCode());
   }
 
   @Test
@@ -233,7 +234,7 @@ class CommonCreationServiceImplTest {
                     "IDTRXISSUER1"));
 
     Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("INVALID AMOUNT", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
   }
 
   @ParameterizedTest
@@ -257,8 +258,8 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals("INVALID DATE", ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
   }
 
   private static Stream<Arguments> dateArguments() {

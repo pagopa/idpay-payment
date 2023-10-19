@@ -38,6 +38,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -274,12 +276,13 @@ class QRCodeAuthPaymentServiceTest {
     Assertions.assertThrows(RuntimeException.class, () -> service.authPayment("USERID1", "trxcode1"));
   }
 
-  @Test
-  void authPayment_walletStatusSuspended() {
+  @ParameterizedTest
+  @ValueSource(strings = {"SUSPENDED", "UNSUBSCRIBED"})
+  void authPayment_walletStatusSuspended(String walletStatus) {
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID1");
 
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "SUSPENDED");
+    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, walletStatus);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenReturn(transaction);
@@ -290,7 +293,11 @@ class QRCodeAuthPaymentServiceTest {
       Assertions.fail("Expected exception");
     } catch (ClientExceptionWithBody e) {
       assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
-      Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, e.getCode());
+      if(PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, e.getCode());
+      } else {
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, e.getCode());
+      }
     }
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");

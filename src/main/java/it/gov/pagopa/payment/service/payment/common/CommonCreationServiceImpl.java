@@ -3,10 +3,11 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
-import it.gov.pagopa.payment.dto.common.BaseTransactionResponseDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2BaseTransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
@@ -27,7 +28,7 @@ public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  protected final TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+  protected final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
   protected final TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
   protected final RewardRuleRepository rewardRuleRepository;
   private final TransactionInProgressRepository transactionInProgressRepository;
@@ -36,15 +37,15 @@ public class CommonCreationServiceImpl {
   private final MerchantConnector merchantConnector;
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public CommonCreationServiceImpl(
-          TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper,
+          TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
           TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           TransactionInProgressRepository transactionInProgressRepository,
           TrxCodeGenUtil trxCodeGenUtil,
           AuditUtilities auditUtilities,
           MerchantConnector merchantConnector) {
-    this.transactionInProgress2BaseTransactionResponseMapper =
-            transactionInProgress2BaseTransactionResponseMapper;
+    this.transactionInProgress2TransactionResponseMapper =
+            transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper =
             transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
@@ -54,7 +55,7 @@ public class CommonCreationServiceImpl {
     this.merchantConnector = merchantConnector;
   }
 
-  public BaseTransactionResponseDTO createTransaction(
+  public TransactionResponse createTransaction(
           TransactionCreationRequest trxCreationRequest,
           String channel,
           String merchantId,
@@ -67,7 +68,7 @@ public class CommonCreationServiceImpl {
         log.info("[{}] Cannot create transaction with invalid amount: [{}]", getFlow(), trxCreationRequest.getAmountCents());
         throw new ClientExceptionWithBody(
                 HttpStatus.BAD_REQUEST,
-                "INVALID AMOUNT",
+                PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID,
                 "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
       }
 
@@ -88,7 +89,7 @@ public class CommonCreationServiceImpl {
 
       logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 
-      return transactionInProgress2BaseTransactionResponseMapper.apply(trx);
+      return transactionInProgress2TransactionResponseMapper.apply(trx);
     } catch (RuntimeException e) {
       logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;
@@ -96,14 +97,25 @@ public class CommonCreationServiceImpl {
   }
 
   protected void checkInitiativeType(String initiativeId, InitiativeConfig initiative) {
-    if (initiative == null || !InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
+    if (initiative == null) {
       log.info(
               "[{}] Cannot find initiative with ID: [{}]",
               getFlow(),
               initiativeId);
       throw new ClientExceptionWithBody(
               HttpStatus.NOT_FOUND,
-              "NOT FOUND",
+              PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND,
+              "Cannot find initiative with ID: [%s]".formatted(initiativeId));
+    }
+
+    if (!InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
+      log.info(
+              "[{}] Initiative with ID: [{}] is not DISCOUNT type",
+              getFlow(),
+              initiativeId);
+      throw new ClientExceptionWithBody(
+              HttpStatus.NOT_FOUND,
+              PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT,
               "Cannot find initiative with ID: [%s]".formatted(initiativeId));
     }
   }
@@ -114,8 +126,8 @@ public class CommonCreationServiceImpl {
               getFlow(),
               initiative.getStartDate(), initiative.getEndDate());
       throw new ClientExceptionWithBody(
-              HttpStatus.BAD_REQUEST,
-              "INVALID DATE",
+              HttpStatus.FORBIDDEN,
+              PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE,
               "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
                       .formatted(initiative.getStartDate(), initiative.getEndDate()));
     }

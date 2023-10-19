@@ -6,6 +6,7 @@ import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.*;
@@ -49,7 +50,7 @@ import static org.mockito.Mockito.when;
 class BarCodeCreationServiceImplTest {
     public static final LocalDate TODAY = LocalDate.now();
     @Mock
-    private TransactionInProgress2BaseTransactionResponseMapper transactionInProgress2BaseTransactionResponseMapper;
+    private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
     @Mock
     private TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     @Mock
@@ -68,7 +69,7 @@ class BarCodeCreationServiceImplTest {
     @BeforeEach
     void setUp() {
         barCodeCreationService =
-                new BarCodeCreationServiceImpl(transactionInProgress2BaseTransactionResponseMapper,
+                new BarCodeCreationServiceImpl(transactionInProgress2TransactionResponseMapper,
                         transactionCreationRequest2TransactionInProgressMapper,
                         rewardRuleRepository,
                         transactionInProgressRepository,
@@ -193,7 +194,7 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, ((ClientExceptionWithBody) result).getCode());
     }
 
     @Test
@@ -215,7 +216,7 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals("NOT FOUND", ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, ((ClientExceptionWithBody) result).getCode());
     }
 
     @Test
@@ -244,6 +245,28 @@ class BarCodeCreationServiceImplTest {
         Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted.", trxCreationReq.getInitiativeId()), result.getMessage());
     }
 
+    @Test
+    void createTransaction_walletStatusUnsubscribed() {
+        // Given
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
+                .initiativeId("INITIATIVEID")
+                .build();
+
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
+        walletDTO.setAmount(BigDecimal.TEN);
+
+        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
+
+        // When
+        ClientException result = Assertions.assertThrows(ClientException.class,
+                () -> barCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
+
+        // Then
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, ((ClientExceptionWithBody) result).getCode());
+    }
+
     @ParameterizedTest
     @MethodSource("dateArguments")
     void createTransaction_InvalidDate(LocalDate invalidDate) {
@@ -265,8 +288,8 @@ class BarCodeCreationServiceImplTest {
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-        Assertions.assertEquals("INVALID DATE", ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
     }
 
     private static Stream<Arguments> dateArguments() {

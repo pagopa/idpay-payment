@@ -13,7 +13,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.service.payment.expired.BarCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -53,13 +53,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
-
-            if (trx == null) {
-                throw new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
-                        PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode));
-            }
+            checkAuth(trxCode, trx);
 
             String merchantBusinessName = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId()).getBusinessName();
 

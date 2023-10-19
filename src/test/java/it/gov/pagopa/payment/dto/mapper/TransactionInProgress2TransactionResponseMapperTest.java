@@ -12,23 +12,21 @@ import org.junit.jupiter.api.Test;
 class TransactionInProgress2TransactionResponseMapperTest {
 
     private TransactionInProgress2TransactionResponseMapper mapper;
-
     private static final String QRCODE_IMG_BASEURL = "QRCODE_IMG_BASEURL";
     private static final String QRCODE_TXT_BASEURL = "QRCODE_TXT_BASEURL";
 
     @BeforeEach
     void setUp() {
-        mapper = new TransactionInProgress2TransactionResponseMapper(4300, QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
+        mapper = new TransactionInProgress2TransactionResponseMapper(4320,5,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
     }
 
     @Test
     void applyTest() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
+                .channel("QRCODE")
                 .reward(1000L)
                 .build();
         TransactionResponse result = mapper.apply(trx);
-       result.setTrxPngUrl("");
-       result.setTrxTxtUrl("");
 
         Assertions.assertAll(() -> {
             assertionCommons(trx, result);
@@ -41,11 +39,10 @@ class TransactionInProgress2TransactionResponseMapperTest {
     @Test
     void splitPaymentTrueTest() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
+                .channel("QRCODE")
                 .reward(200L)
                 .build();
         TransactionResponse result = mapper.apply(trx);
-        result.setTrxPngUrl("");
-        result.setTrxTxtUrl("");
 
         Assertions.assertAll(() -> {
             assertionCommons(trx, result);
@@ -53,6 +50,19 @@ class TransactionInProgress2TransactionResponseMapperTest {
         });
 
         TestUtils.checkNotNullFields(result);
+    }
+
+    @Test
+    void applyCommonTest(){
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
+                .reward(1000L)
+                .build();
+        TransactionResponse result = mapper.apply(trx);
+
+        Assertions.assertAll(() -> {
+            assertionCommons(trx, result);
+            Assertions.assertFalse(result.getSplitPayment());
+        });
     }
 
     private static void assertionCommons(TransactionInProgress trx, TransactionResponse result) {
@@ -73,9 +83,12 @@ class TransactionInProgress2TransactionResponseMapperTest {
         Assertions.assertEquals(trx.getVat(), result.getVat());
         Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
         Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
-        Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
-        Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
-        Assertions.assertEquals(4300, result.getTrxExpirationMinutes());
+
+        if (trx.getChannel().equals("QRCODE")){
+            Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
+            Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
+            Assertions.assertEquals(4320, result.getTrxExpirationMinutes());
+        }
     }
 
 }
