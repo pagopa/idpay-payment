@@ -1,11 +1,14 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,11 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
     private final CommonCancelServiceImpl commonCancelService;
+    private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
 
     public CommonPaymentControllerImpl(@Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService,
-                                       @Qualifier("CommonCancel")CommonCancelServiceImpl commonCancelService) {
-        this.commonCreationService = commonCreationService;
+                                       @Qualifier("CommonCancel") CommonCancelServiceImpl commonCancelService,
+                                       CommonStatusTransactionServiceImpl commonStatusTransactionService
+    ) {
+    this.commonCreationService = commonCreationService;
         this.commonCancelService = commonCancelService;
+        this.commonStatusTransactionService = commonStatusTransactionService;
     }
 
     @Override
@@ -46,4 +53,12 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 trxId);
         commonCancelService.cancelTransaction(trxId, merchantId, acquirerId);
     }
+
+    @Override
+    @PerformanceLog("GET_STATUS_TRANSACTION")
+    public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
+        log.info("[GET_STATUS_TRANSACTION] Merchant with {},{} requested to retrieve status of transaction{} ", merchantId, acquirerId, transactionId);
+        return commonStatusTransactionService.getStatusTransaction(transactionId, merchantId, acquirerId);
+    }
+
 }

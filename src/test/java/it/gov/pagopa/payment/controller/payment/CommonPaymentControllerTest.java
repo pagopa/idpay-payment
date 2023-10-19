@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import org.junit.jupiter.api.Assertions;
@@ -40,6 +41,10 @@ class CommonPaymentControllerTest {
     @MockBean
     @Qualifier("CommonCancel")
     private CommonCancelServiceImpl commonCancelServiceMock;
+
+    @MockBean
+    private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -129,4 +134,23 @@ class CommonPaymentControllerTest {
         assertEquals(actual, result.getResponse().getContentAsString());
     }
 
+    @Test
+    void getStatusTransaction_testMandatoryHeaders() throws Exception {
+        String expectedCode = "INVALID_REQUEST";
+
+        MvcResult result = mockMvc.perform(
+                        get("/idpay/payment/{transactionId}/status",
+                                TRX_ID)
+                                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
+                ErrorDTO.class);
+        assertEquals(expectedCode, actual.getCode());
+        assertEquals("Required request header "
+                        + "'x-merchant-id' for method parameter type String is not present",
+                actual.getMessage());
+
+    }
 }
