@@ -119,7 +119,7 @@ class CommonConfirmServiceImplTest {
         when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);
 
         TransactionResponse result = service.confirmPayment("TRXID", "MERCHID", "ACQID");
-        System.out.println(result);
+
         Assertions.assertEquals(result, mapper.apply(trx));
         Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());
     }
