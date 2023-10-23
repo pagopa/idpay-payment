@@ -304,322 +304,322 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
 
     {
-//        // useCase 0: initiative not existent
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId("DUMMYINITIATIVEID");
-//
-//            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.NOT_FOUND, null);
-//
-//            // Other APIs cannot be invoked because we have not a valid trxId
-//            TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("dummytrxcode").trxDate(OffsetDateTime.now()).build();
-//            extractResponse(preAuthTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
-//            extractResponse(authTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
-//            extractResponse(confirmPayment(dummyTrx, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
-//        });
-//
-//        // useCase 1: userId not onboarded
-//        useCases.add(i -> {
-//            String userIdNotOnboarded = "DUMMYUSERIDNOTONBOARDED";
-//
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            // Cannot relate user because not onboarded
-//            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
-//
-//            // Other APIs will fail because status not expected
-//            extractResponseAuthCannotRelateUser(trxCreated, userIdNotOnboarded);
-////            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null); //TODO BAD request into idpay-code
-//            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
-//        });
-//
-//        // useCase 2: trx rejected
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//            trxRequest.setMcc("NOTALLOWEDMCC");
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            // Relating to user
-//            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
-//
-//            // Cannot invoke other APIs if REJECTED
-//            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
-//            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
-//        });
-//
-//        // useCase 3: trx rejected when authorizing
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            // Relating to user
-//            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-//            checkTransactionStored(preAuthResult, USERID);
-//
-//            // Authorizing transaction, but obtaining rejection
-//            updateStoredTransaction(preAuthResult.getId(), t -> t.setMcc("NOTALLOWEDMCC"));
-//            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
-//
-//            //setpayload authResultRejected
-//            addExpectedAuthorizationEventRejected(trxCreated);
-//        });
-//
-//        // useCase 4: TooMany request thrown by reward-calculator
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            // Relating to user
-//            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-//            checkTransactionStored(preAuthResult, USERID);
-//
-//            // Authorizing transaction but obataining Too Many requests by reward-calculator
-//            updateStoredTransaction(preAuthResult.getId(), t -> t.setVat("TOOMANYREQUESTS"));
-//            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
-//            checkTransactionStored(preAuthResult, USERID);
-//        });
-//
-//        // useCase 5: complete successful flow
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//            assertTrxCreatedData(trxRequest, trxCreated);
-//
-//            // Cannot invoke other APIs if not relating first
-//            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
-//            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
-//            updateStoredTransaction(trxCreated.getId(), t -> {
-//                // resetting throttling data in order to assert preAuth data
-//                t.setTrxChargeDate(null);
-//                t.setElaborationDateTime(null);
-//            });
-//
-//            // Relating to user
-//            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-//            assertPreAuthData(preAuthResult, true);
-//            // Relating to user resubmission
-//            AuthPaymentDTO preAuthResultResubmitted = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(preAuthResult, preAuthResultResubmitted);
-//            checkTransactionStored(preAuthResult, USERID);
-//            // Only the right userId could resubmit preview
-//            extractResponse(preAuthTrx(trxCreated, "DUMMYUSERID", MERCHANTID), HttpStatus.FORBIDDEN, null);
-//
-//            // Cannot invoke other APIs if not authorizing first
-//            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
-//            updateStoredTransaction(trxCreated.getId(), t -> {
-//                // resetting throttling data in order to assert auth data
-//                t.setElaborationDateTime(null);
-//            });
-//
-//            waitThrottlingTime();
-//
-//            // Authorizing transaction
-//            AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//
-//            assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
-//            assertAuthData(authResult, true);
-//            // Cannot invoke preAuth after authorization
-//            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
-//            // Authorizing transaction resubmission after throttling time
-//            waitThrottlingTime();
-//
-//            //setpayload authResult
-//            addExpectedAuthorizationEvent(trxCreated);
-//
-//            updateStoredTransaction(authResult.getId(), t -> t.setCorrelationId("ALREADY_AUTHORED"));
-//            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
-//
-//            // Unexpected merchant trying to confirm
-//            extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
-//            waitThrottlingTime();
-//
-//            //set payload confirm
-//            addExpectedConfirmEvent(trxCreated);
-//
-//            // Confirming payment
-//            TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, TransactionResponse.class);
-//            assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
-//
-//            // Confirming payment resubmission
-//            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
-//
-//            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
-//
-//            //cannot cancel after confirm
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
-//        });
-//
-//        // useCase 6: an error occurred when publishing authorized event, returned false
-//        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE));
-//        // useCase 7: an error occurred when publishing authorized event, throwing error
-//        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION));
-//
-//        // useCase 8: an error occurred when publishing confirmed event, returned false
-//        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE));
-//        // useCase 9: an error occurred when publishing confirmed event, throwing error
-//        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
-//
-//        // useCase 10: merchant not related to the initiative
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
-//        });
-//
-//        //useCase 11: obtain unexpected http code from ms idpay-merchant
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.INTERNAL_SERVER_ERROR, null);
-//        });
-//
-//        // useCase 12: trx cancelled after create
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
-//
-//            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
-//
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
-//        });
-//
-//        // useCase 13: trx cancelled after preAuth
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            // Relating to user
-//            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-//            checkTransactionStored(preAuthResult, USERID);
-//
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
-//
-//            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
-//
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
-//        });
-//
-//        // useCase 14: trx cancelled after auth
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            changeTrxId2MatchCancelMatchedCondition(trxCreated);
-//
-//            // Relating to user
-//            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-//            checkTransactionStored(preAuthResult, USERID);
-//            // Authorizing transaction, but obtaining rejection
-//            AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
-//            assertAuthData(authResult, true);
-//
-//            addExpectedAuthorizationEvent(trxCreated);
-//
-//            addExpectedCancelledEvent(trxCreated);
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
-//
-//            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
-//
-//            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
-//        });
-//
-//        // useCase 15: an error occurred when publishing confirmed event, returned false
-//        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE));
-//        // useCase 16: an error occurred when publishing confirmed event, throwing error
-//        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION));
-//        //useCase 17: trx rejected budget exhausted
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//            trxRequest.setMcc("NOTALLOWEDMCC1");
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//
-//            // Relating to user
-//            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
-//
-//            // Cannot invoke other APIs if REJECTED
-//            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
-//            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
-//        });
-//
-//        //useCase 18: user cancel payment instead of authorizing
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//
-//            // Creating transaction
-//            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-//            TransactionInProgress trxInProgressCreated = checkIfStored(trxCreated.getId());
-//
-//            // Relating to user
-//            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-//            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-//            checkTransactionStored(preAuthResult, USERID);
-//
-//            extractResponse(unrelateTrx(trxCreated, USERID + "1"), HttpStatus.FORBIDDEN, null);
-//            extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
-//
-//            TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
-//
-//            checkCreateChannel(trxInProgressCreated.getChannel());
-//            cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
-//        });
-//
-//        //useCase 19: merchant tries to create transaction with amount = 0
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID);
-//            trxRequest.setAmountCents(0L);
-//
-//            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
-//        });
-//
-//        //useCase 20: merchant tries to create transaction out of valid initiative period
-//        useCases.add(i -> {
-//            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-//            trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
-//
-//            // Creating transaction
-//            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
-//        });
-//
+        // useCase 0: initiative not existent
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId("DUMMYINITIATIVEID");
+
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.NOT_FOUND, null);
+
+            // Other APIs cannot be invoked because we have not a valid trxId
+            TransactionResponse dummyTrx = TransactionResponse.builder().id("DUMMYTRXID").trxCode("dummytrxcode").trxDate(OffsetDateTime.now()).build();
+            extractResponse(preAuthTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(authTrx(dummyTrx, USERID, MERCHANTID), HttpStatus.NOT_FOUND, null);
+            extractResponse(confirmPayment(dummyTrx, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+        });
+
+        // useCase 1: userId not onboarded
+        useCases.add(i -> {
+            String userIdNotOnboarded = "DUMMYUSERIDNOTONBOARDED";
+
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Cannot relate user because not onboarded
+            extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
+
+            // Other APIs will fail because status not expected
+            extractResponseAuthCannotRelateUser(trxCreated, userIdNotOnboarded);
+//            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null); //TODO BAD request into idpay-code
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+        });
+
+        // useCase 2: trx rejected
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setMcc("NOTALLOWEDMCC");
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
+
+            // Cannot invoke other APIs if REJECTED
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+        });
+
+        // useCase 3: trx rejected when authorizing
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+
+            // Authorizing transaction, but obtaining rejection
+            updateStoredTransaction(preAuthResult.getId(), t -> t.setMcc("NOTALLOWEDMCC"));
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
+
+            //setpayload authResultRejected
+            addExpectedAuthorizationEventRejected(trxCreated);
+        });
+
+        // useCase 4: TooMany request thrown by reward-calculator
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+
+            // Authorizing transaction but obataining Too Many requests by reward-calculator
+            updateStoredTransaction(preAuthResult.getId(), t -> t.setVat("TOOMANYREQUESTS"));
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+            checkTransactionStored(preAuthResult, USERID);
+        });
+
+        // useCase 5: complete successful flow
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+            assertTrxCreatedData(trxRequest, trxCreated);
+
+            // Cannot invoke other APIs if not relating first
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+            updateStoredTransaction(trxCreated.getId(), t -> {
+                // resetting throttling data in order to assert preAuth data
+                t.setTrxChargeDate(null);
+                t.setElaborationDateTime(null);
+            });
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            assertPreAuthData(preAuthResult, true);
+            // Relating to user resubmission
+            AuthPaymentDTO preAuthResultResubmitted = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(preAuthResult, preAuthResultResubmitted);
+            checkTransactionStored(preAuthResult, USERID);
+            // Only the right userId could resubmit preview
+            extractResponse(preAuthTrx(trxCreated, "DUMMYUSERID", MERCHANTID), HttpStatus.FORBIDDEN, null);
+
+            // Cannot invoke other APIs if not authorizing first
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+            updateStoredTransaction(trxCreated.getId(), t -> {
+                // resetting throttling data in order to assert auth data
+                t.setElaborationDateTime(null);
+            });
+
+            waitThrottlingTime();
+
+            // Authorizing transaction
+            AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+
+            assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
+            assertAuthData(authResult, true);
+            // Cannot invoke preAuth after authorization
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
+            // Authorizing transaction resubmission after throttling time
+            waitThrottlingTime();
+
+            //setpayload authResult
+            addExpectedAuthorizationEvent(trxCreated);
+
+            updateStoredTransaction(authResult.getId(), t -> t.setCorrelationId("ALREADY_AUTHORED"));
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
+
+            // Unexpected merchant trying to confirm
+            extractResponse(confirmPayment(trxCreated, "DUMMYMERCHANTID", "DUMMYACQUIRERID"), HttpStatus.FORBIDDEN, null);
+            waitThrottlingTime();
+
+            //set payload confirm
+            addExpectedConfirmEvent(trxCreated);
+
+            // Confirming payment
+            TransactionResponse confirmResult = extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, TransactionResponse.class);
+            assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
+
+            // Confirming payment resubmission
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+
+            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
+
+            //cannot cancel after confirm
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+        });
+
+        // useCase 6: an error occurred when publishing authorized event, returned false
+        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE));
+        // useCase 7: an error occurred when publishing authorized event, throwing error
+        useCases.add(i -> configureAuthEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION));
+
+        // useCase 8: an error occurred when publishing confirmed event, returned false
+        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOFALSE));
+        // useCase 9: an error occurred when publishing confirmed event, throwing error
+        useCases.add(i -> configureConfirmEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CONFIRMNOTNOTIFIEDDUETOEXCEPTION));
+
+        // useCase 10: merchant not related to the initiative
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
+        });
+
+        //useCase 11: obtain unexpected http code from ms idpay-merchant
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            extractResponse(createTrx(trxRequest, "ERRORMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.INTERNAL_SERVER_ERROR, null);
+        });
+
+        // useCase 12: trx cancelled after create
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
+
+            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
+
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+        });
+
+        // useCase 13: trx cancelled after preAuth
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
+
+            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
+
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+        });
+
+        // useCase 14: trx cancelled after auth
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            changeTrxId2MatchCancelMatchedCondition(trxCreated);
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+            // Authorizing transaction, but obtaining rejection
+            AuthPaymentDTO authResult = extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
+            assertAuthData(authResult, true);
+
+            addExpectedAuthorizationEvent(trxCreated);
+
+            addExpectedCancelledEvent(trxCreated);
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
+
+            Assertions.assertFalse(transactionInProgressRepository.existsById(trxCreated.getId()));
+
+            extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
+        });
+
+        // useCase 15: an error occurred when publishing confirmed event, returned false
+        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOFALSE));
+        // useCase 16: an error occurred when publishing confirmed event, throwing error
+        useCases.add(i -> configureCancelledEventNotPublishedDueToError(i, IDTRXACQUIRERPREFIX_CANCELLEDNOTNOTIFIEDDUETOEXCEPTION));
+        //useCase 17: trx rejected budget exhausted
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setMcc("NOTALLOWEDMCC1");
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+
+            // Relating to user
+            extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, null);
+
+            // Cannot invoke other APIs if REJECTED
+            extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.BAD_REQUEST, null);
+            extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
+        });
+
+        //useCase 18: user cancel payment instead of authorizing
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+
+            // Creating transaction
+            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+            TransactionInProgress trxInProgressCreated = checkIfStored(trxCreated.getId());
+
+            // Relating to user
+            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
+            checkTransactionStored(preAuthResult, USERID);
+
+            extractResponse(unrelateTrx(trxCreated, USERID + "1"), HttpStatus.FORBIDDEN, null);
+            extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
+
+            TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
+
+            checkCreateChannel(trxInProgressCreated.getChannel());
+            cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
+        });
+
+        //useCase 19: merchant tries to create transaction with amount = 0
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID);
+            trxRequest.setAmountCents(0L);
+
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
+        });
+
+        //useCase 20: merchant tries to create transaction out of valid initiative period
+        useCases.add(i -> {
+            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
+            trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
+
+            // Creating transaction
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
+        });
+
         useCases.addAll(getExtraUseCases());
     }
 
@@ -952,8 +952,10 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals(userId, trxStored.getUserId());
         Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
 //        Assertions.assertEquals(getChannel(), trxStored.getChannel()); //todo delete
-        Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
-        Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
+        if(RewardConstants.TRX_CHANNEL_QRCODE.equals(getChannel())) {
+            Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
+            Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
+        }
         checkCreateChannel(trxStored.getChannel()); //TODO it's ok ?
 
         switch (trxStored.getStatus()) {

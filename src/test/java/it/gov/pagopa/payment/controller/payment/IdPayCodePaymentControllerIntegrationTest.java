@@ -208,7 +208,7 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
 
             // useCase 23: Error retrieve second factor
             idPayCodeUseCases.add(i -> {
-                String userWithoutSecondFactor = "NOTSECONDFACTORUSERID";
+                String userWithoutSecondFactor = "NOTSECONDFACTOR";
                 TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
                 trxRequest.setInitiativeId(INITIATIVEID);
 
@@ -223,9 +223,9 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
                 extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.NOT_FOUND, AuthPaymentDTO.class);
             });
 
-            // useCase 23: Error retrieve second factor
+            // useCase 24: Error retrieve pinBlock
             idPayCodeUseCases.add(i -> {
-                String userWithoutSecondFactor = "NOTSECONDFACTORUSERID";
+                String userWithoutSecondFactor = "NOTPINBLOCKUSERID";
                 TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
                 trxRequest.setInitiativeId(INITIATIVEID);
 
@@ -237,8 +237,11 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
                 extractResponse(relateUserTrx(trxCreated, userWithoutSecondFactor), HttpStatus.OK, RelateUserResponse.class);
 
                 // Preview
-                extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.NOT_FOUND, AuthPaymentDTO.class);
+                extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+                //
+                extractResponse(authTrx(trxCreated, userWithoutSecondFactor, MERCHANTID), HttpStatus.FORBIDDEN,null);
             });
+
         }
 
         return idPayCodeUseCases;

@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/idpay/instrument/code/secondFactor/NOTSECONDFACTORUSERID"
+    "urlPathPattern": "/idpay/instrument/code/secondFactor/NOTSECONDFACTOR"
   },
   "response": {
     "status": "404",
