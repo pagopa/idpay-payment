@@ -1,7 +1,8 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.custom.badrequest.TransactionInvalidException;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
@@ -44,9 +45,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
         try {
             if (amountCents <= 0L) {
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", amountCents);
-                throw new TransactionInvalidException(
-                        PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID,
-                        "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
+                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());

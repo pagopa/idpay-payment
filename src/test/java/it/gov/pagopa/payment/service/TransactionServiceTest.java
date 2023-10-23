@@ -2,8 +2,8 @@ package it.gov.pagopa.payment.service;
 
 import static org.mockito.Mockito.when;
 
-import it.gov.pagopa.common.web.exception.custom.forbidden.UserNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
@@ -80,7 +80,7 @@ class TransactionServiceTest {
         transactionService.getTransaction(TRANSACTION_ID, USER_ID)
     );
 
-    Assertions.assertEquals(ExceptionCode.PAYMENT_USER_NOT_VALID, result.getCode());
+    Assertions.assertEquals(ExceptionCode.TRX_ANOTHER_USER, result.getCode());
     Assertions.assertEquals("User USERID1 does not exist", result.getMessage());
   }
 }

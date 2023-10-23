@@ -739,7 +739,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
-        return TestUtils.extractResponse(response,expectedHttpStatusCode,expectedBodyClass);
+        return TestUtils.assertResponse(response,expectedHttpStatusCode,expectedBodyClass);
     }
 
     private void checkNotificationEventsOnTransactionQueue() {

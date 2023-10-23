@@ -1,7 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.payment.exception.custom.ServiceException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,13 @@ public class ServiceExceptionHandler {
   }
 
   private ClientException transcodeException(ServiceException error) {
-    HttpStatus httpStatus = transcodeMap.getOrDefault(error.getClass(), HttpStatus.INTERNAL_SERVER_ERROR);
+    HttpStatus httpStatus = transcodeMap.get(error.getClass());
+
+    if (httpStatus == null) {
+      log.warn("Unhandled exception: {}", error.getClass().getName());
+      httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
     return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.getCause());
   }
 

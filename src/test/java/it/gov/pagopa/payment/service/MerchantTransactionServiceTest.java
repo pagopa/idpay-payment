@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.custom.servererror.PDVInvocationException;
+import it.gov.pagopa.payment.exception.custom.servererror.PDVInvocationException;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;

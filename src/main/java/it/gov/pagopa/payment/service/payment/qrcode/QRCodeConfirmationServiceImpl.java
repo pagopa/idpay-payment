@@ -1,13 +1,12 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -43,13 +42,13 @@ public class QRCodeConfirmationServiceImpl implements QRCodeConfirmationService 
             TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
             if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, "[CONFIRM_PAYMENT] Cannot found transaction having id: " + trxId);
+                throw new TransactionNotFoundOrExpiredException("[CONFIRM_PAYMENT] Cannot found transaction having id: " + trxId);
             }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
-                throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, "[CONFIRM_PAYMENT] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
+                throw new MerchantOrAcquirerNotAllowedException("[CONFIRM_PAYMENT] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
             }
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "[CONFIRM_PAYMENT] Cannot confirm transaction having id %s: actual status is %s".formatted(trxId, trx.getStatus()));
+                throw new OperationNotAllowedException("[CONFIRM_PAYMENT] Cannot confirm transaction having id %s: actual status is %s".formatted(trxId, trx.getStatus()));
             }
 
             confirmAuthorizedPayment(trx);

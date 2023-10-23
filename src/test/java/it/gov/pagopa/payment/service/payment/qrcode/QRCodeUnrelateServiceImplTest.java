@@ -2,9 +2,9 @@ package it.gov.pagopa.payment.service.payment.qrcode;
 
 import static org.mockito.Mockito.when;
 
-import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.UserNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -70,7 +70,7 @@ class QRCodeUnrelateServiceImplTest {
             invokeService();
             Assertions.fail("Expected exception");
         } catch (UserNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.PAYMENT_USER_NOT_VALID, e.getCode());
+            Assertions.assertEquals(ExceptionCode.TRX_ANOTHER_USER, e.getCode());
             Assertions.assertEquals("[UNRELATE_TRANSACTION] Requesting userId (USERID) not allowed to operate on transaction having id MOCKEDTRANSACTION_qr-code_0", e.getMessage());
         }
     }
@@ -113,7 +113,7 @@ class QRCodeUnrelateServiceImplTest {
                 .build();
         when(repositoryMockFindInvocation()).thenReturn(trx);
 
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new TransactionNotFoundOrExpiredException("NOT_FOUND", "msg"));
+        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new TransactionNotFoundOrExpiredException("msg"));
 
         invokeService();
 

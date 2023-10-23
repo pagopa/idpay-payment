@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
@@ -52,14 +52,14 @@ public class CommonCancelServiceImpl {
             TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
             if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, "[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
+                throw new TransactionNotFoundOrExpiredException("[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
             }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
-                throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, "[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
+                throw new MerchantOrAcquirerNotAllowedException("[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
             }
 
             if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
+                throw new OperationNotAllowedException("[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
             }
             if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
                 throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));

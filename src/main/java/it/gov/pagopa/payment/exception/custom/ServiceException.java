@@ -1,4 +1,4 @@
-package it.gov.pagopa.common.web.exception.custom;
+package it.gov.pagopa.payment.exception.custom;
 
 import lombok.Getter;
 

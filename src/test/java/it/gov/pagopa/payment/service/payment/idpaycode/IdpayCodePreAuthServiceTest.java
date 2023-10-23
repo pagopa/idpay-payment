@@ -12,11 +12,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.custom.forbidden.BudgetExhaustedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.TransactionRejectedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.UserSuspendedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.TransactionRejectedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserSuspendedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;

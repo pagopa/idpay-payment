@@ -4,20 +4,17 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.common.web.exception.custom.servererror.RewardCalculatorInvocationException;
-import it.gov.pagopa.common.web.exception.custom.toomanyrequests.TooManyRequestsException;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.servererror.RewardCalculatorInvocationException;
+import it.gov.pagopa.payment.exception.custom.toomanyrequests.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -72,16 +69,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                     try {
                         responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
                     } catch (JsonProcessingException ex) {
-                        throw new TooManyRequestsException(ExceptionCode.TOO_MANY_REQUESTS, "Something went wrong", false, ex);
+                        throw new RewardCalculatorInvocationException("Something went wrong", false, ex);
                     }
                 }
-                case 429 -> throw new ClientExceptionWithBody(HttpStatus.TOO_MANY_REQUESTS, PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS,
+                case 429 -> throw new TooManyRequestsException(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS,
                         "Too many request on the ms reward");
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
-                        ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                         "Resource not found on reward-calculator", false, e);
                 default -> throw new RewardCalculatorInvocationException(
-                        ExceptionCode.GENERIC_ERROR,
                         "An error occurred in the microservice reward-calculator", false, e);
             }
         }

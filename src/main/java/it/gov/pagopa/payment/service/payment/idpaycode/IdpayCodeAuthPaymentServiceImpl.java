@@ -1,16 +1,15 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -42,14 +41,11 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
         TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId);
 
         if(trx == null){
-            throw new TransactionNotFoundOrExpiredException(
-                    PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
-                    "Cannot find transaction with transactionId [%s]".formatted(trxId));
+            throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
         }
 
         if(trx.getUserId() == null){
-            throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID,
-                    "Unexpected status for transaction with transactionId [%s]".formatted(trxId));
+            throw new OperationNotAllowedException("Unexpected status for transaction with transactionId [%s]".formatted(trxId));
         }
 
         // payment-instrument call to check pinBlock

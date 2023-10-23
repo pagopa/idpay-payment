@@ -1,11 +1,11 @@
-package it.gov.pagopa.common.web.exception.custom.servererror;
+package it.gov.pagopa.payment.exception.custom.servererror;
 
-import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.payment.exception.custom.ServiceException;
 
 public class InternalServerErrorException extends ServiceException {
 
   public InternalServerErrorException(String code, String message) {
-    super(code, message);
+    this(code, message, false, null);
   }
 
   public InternalServerErrorException(String code, String message, boolean printStackTrace, Throwable ex) {

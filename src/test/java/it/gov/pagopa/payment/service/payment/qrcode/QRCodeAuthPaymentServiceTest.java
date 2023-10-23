@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -11,14 +10,6 @@ import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.BudgetExhaustedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.TransactionAlreadyAuthorizedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.TransactionRejectedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.UserNotAllowedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.UserNotOnboardedException;
-import it.gov.pagopa.common.web.exception.custom.forbidden.UserSuspendedException;
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -27,6 +18,14 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.TransactionAlreadyAuthorizedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.TransactionRejectedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserSuspendedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -292,7 +291,6 @@ class QRCodeAuthPaymentServiceTest {
       service.authPayment("USERID1", "trxcode1");
       Assertions.fail("Expected exception");
     } catch (UserSuspendedException | UserNotOnboardedException e) {
-      assertNotNull(e);
       if(PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, e.getCode());
       } else {

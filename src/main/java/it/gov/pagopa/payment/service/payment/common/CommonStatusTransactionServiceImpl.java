@@ -1,9 +1,8 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.springframework.stereotype.Service;
@@ -21,7 +20,7 @@ public class CommonStatusTransactionServiceImpl {
 
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
         TransactionInProgress transactionInProgress= transactionInProgressRepository.findByIdAndMerchantIdAndAcquirerId(transactionId, merchantId, acquirerId)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,"Transaction does not exist"));
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Transaction does not exist"));
 
         return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);
     }
