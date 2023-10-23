@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
@@ -91,7 +93,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         extractResponse(createTrx(trxRequest, USERID), HttpStatus.NOT_FOUND, null);
 
         AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
-        extractResponse(authTrx(trxCode, authPaymentDTO, MERCHANTID), HttpStatus.NOT_FOUND, null);
+        Object response = extractResponse(authTrx(trxCode, authPaymentDTO, MERCHANTID), HttpStatus.NOT_FOUND, null);
+        assertNull(response);
     }
 
     @Test
@@ -110,7 +113,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // Creating transaction
-        extractResponse(createTrx(trxRequest, USERID), HttpStatus.FORBIDDEN, null);
+        Object response = extractResponse(createTrx(trxRequest, USERID), HttpStatus.FORBIDDEN, null);
+        assertNull(response);
     }
 
     @Test
@@ -121,7 +125,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .initiativeId(INITIATIVEID).build();
 
         // Creating transaction
-        extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.FORBIDDEN, TransactionBarCodeResponse.class);
+        Object response = extractResponse(createTrx(trxRequest, "USERID_KO"), HttpStatus.FORBIDDEN, TransactionBarCodeResponse.class);
+        assertNotNull(response);
     }
 
     @Test
@@ -133,7 +138,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .build();
 
         // Creating transaction
-        extractResponse(createTrx(trxRequest, USERID_UNSUBSCRIBED), HttpStatus.FORBIDDEN, null);
+        Object response = extractResponse(createTrx(trxRequest, USERID_UNSUBSCRIBED), HttpStatus.FORBIDDEN, null);
+        assertNull(response);
     }
 
     @Test
@@ -148,7 +154,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
         // Authorizing transaction but obtaining Too Many requests by reward-calculator
-        extractResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+        Object response = extractResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+        assertNull(response);
     }
 
     @Test
@@ -248,7 +255,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     private TransactionInProgress checkIfStored(String trxId) {
         TransactionInProgress stored = transactionInProgressRepository.findById(trxId).orElse(null);
-        Assertions.assertNotNull(stored);
+        assertNotNull(stored);
         return stored;
     }
 
@@ -256,14 +263,14 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         assertCommonFields(trxRequest, trxCreated);
 
         TransactionInProgress stored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
-        Assertions.assertNotNull(stored);
+        assertNotNull(stored);
         assertCommonFields(trxCreated, stored, userId);
     }
 
     private void assertCommonFields(TransactionBarCodeCreationRequest trxRequest, TransactionBarCodeResponse trxResponse) {
         OffsetDateTime now = OffsetDateTime.now();
-        Assertions.assertNotNull(trxResponse.getId());
-        Assertions.assertNotNull(trxResponse.getTrxCode());
+        assertNotNull(trxResponse.getId());
+        assertNotNull(trxResponse.getTrxCode());
         Assertions.assertEquals(trxRequest.getInitiativeId(), trxResponse.getInitiativeId());
         Assertions.assertFalse(trxResponse.getTrxDate().isAfter(now.plusMinutes(1L)));
         Assertions.assertFalse(trxResponse.getTrxDate().isBefore(now.minusMinutes(1L)));
@@ -285,7 +292,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     private void assertAuthData(AuthPaymentDTO authResult) {
         TransactionInProgress stored = transactionInProgressRepository.findById(authResult.getId()).orElse(null);
-        Assertions.assertNotNull(stored);
+        assertNotNull(stored);
         assertCommonFields(authResult, stored);
     }
 
