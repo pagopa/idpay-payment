@@ -1,8 +1,13 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import static org.mockito.Mockito.when;
+
+import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -10,6 +15,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,11 +25,6 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.time.OffsetDateTime;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeCancelServiceTest {
@@ -55,8 +56,9 @@ class QRCodeCancelServiceTest {
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
+        } catch (TransactionNotFoundOrExpiredException e) {
+            Assertions.assertEquals("PAYMENT_NOT_FOUND_EXPIRED", e.getCode());
+            Assertions.assertEquals("[CANCEL_TRANSACTION] Cannot found transaction having id: TRXID", e.getMessage());
         }
     }
 
@@ -68,8 +70,9 @@ class QRCodeCancelServiceTest {
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        } catch (MerchantOrAcquirerNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("[CANCEL_TRANSACTION] Requesting merchantId (MERCHID through acquirer ACQID) not allowed to operate on transaction having id TRXID", e.getMessage());
         }
     }
 
@@ -83,8 +86,9 @@ class QRCodeCancelServiceTest {
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        } catch (MerchantOrAcquirerNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("[CANCEL_TRANSACTION] Requesting merchantId (MERCHID through acquirer ACQID) not allowed to operate on transaction having id TRXID", e.getMessage());
         }
     }
 
@@ -98,8 +102,8 @@ class QRCodeCancelServiceTest {
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
+        } catch (OperationNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, e.getCode());
             Assertions.assertEquals("[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id TRXID", e.getMessage());
         }
     }
@@ -115,8 +119,8 @@ class QRCodeCancelServiceTest {
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
+        } catch (OperationNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, e.getCode());
             Assertions.assertEquals("[CANCEL_TRANSACTION] Cannot cancel expired transaction: id TRXID", e.getMessage());
         }
     }

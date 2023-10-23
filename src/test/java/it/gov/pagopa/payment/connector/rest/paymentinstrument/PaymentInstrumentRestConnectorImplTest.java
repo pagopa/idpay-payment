@@ -1,12 +1,21 @@
 package it.gov.pagopa.payment.connector.rest.paymentinstrument;
 
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.custom.forbidden.PinBlockInvalidException;
+import it.gov.pagopa.common.web.exception.custom.servererror.PaymentInstrumentInvocationException;
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.dto.VerifyPinBlockDTO;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
+import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,13 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.HashMap;
-
-import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentInstrumentRestConnectorImplTest {
@@ -51,20 +53,17 @@ class PaymentInstrumentRestConnectorImplTest {
     @Test
     void checkPinBlock_feignException403(){
         // Given
-        Request request = Request.create(Request.HttpMethod.PUT, "url",
-                new HashMap<>(), null, new RequestTemplate());
-        FeignException feignExceptionMock = new FeignException.Forbidden("", request, null, null);
-
         when(paymentInstrumentRestClientMock.verifyPinBlock(pinBlockDTO,USER_ID))
-                .thenThrow(feignExceptionMock);
+                .thenReturn(new VerifyPinBlockDTO(false));
 
         // When
-        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () ->   paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
+        PinBlockInvalidException exception = assertThrows(PinBlockInvalidException.class, () ->
+            paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
-        assertEquals("An error occurred in the microservice payment-instrument", exception.getMessage());
+        assertEquals(PaymentConstants.ExceptionCode.INVALID_PIN, exception.getCode());
+        assertEquals("The Pinblock is incorrect", exception.getMessage());
 
         verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
     }
@@ -80,11 +79,11 @@ class PaymentInstrumentRestConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () -> paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
+        PaymentInstrumentInvocationException exception = assertThrows(PaymentInstrumentInvocationException.class, () -> paymentInstrumentConnectorImplMock.checkPinBlock(pinBlockDTO,USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
+        assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
 
         verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
     }

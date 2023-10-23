@@ -4,7 +4,9 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.custom.toomanyrequests.TooManyRequestsException;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -225,7 +227,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
         if (trx == null && mongoTemplate.exists(Query.query(criteriaById(trxId)), TransactionInProgress.class)) {
-            throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having id: " + trxId);
+            throw new TooManyRequestsException(
+                ExceptionCode.TOO_MANY_REQUESTS, "Too many requests on trx having id: " + trxId);
         }
 
         return trx;

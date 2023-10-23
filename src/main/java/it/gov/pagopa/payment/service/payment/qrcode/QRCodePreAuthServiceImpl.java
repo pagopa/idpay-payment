@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -12,7 +12,6 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,8 +30,7 @@ public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implement
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
     TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
-            .orElseThrow(() -> new ClientExceptionWithBody(
-                    HttpStatus.NOT_FOUND,
+            .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                     PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                     "Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 

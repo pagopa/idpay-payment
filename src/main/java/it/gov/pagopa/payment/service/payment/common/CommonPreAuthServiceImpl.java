@@ -1,8 +1,15 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.TransactionAlreadyAuthorizedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.TransactionRejectedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.UserNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.UserNotOnboardedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.UserSuspendedException;
+import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -12,10 +19,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-
 import java.time.OffsetDateTime;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class CommonPreAuthServiceImpl{
@@ -46,7 +51,7 @@ public class CommonPreAuthServiceImpl{
 
       return trx;
 
-    } catch (ClientException e) {
+    } catch (ServiceException e) {
       auditUtilities.logErrorRelatedUserToTransaction(trx.getTrxCode(), userId);
       throw e;
     }
@@ -62,13 +67,11 @@ public class CommonPreAuthServiceImpl{
               trx.getId(), trx.getUserId(), preview.getRejectionReasons(), channel);
       log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
       if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
-        throw new ClientExceptionWithBody(
-                HttpStatus.FORBIDDEN,
+        throw new BudgetExhaustedException(
                 PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
                 "Budget exhausted for user [%s] and initiative [%s]".formatted(trx.getUserId(), trx.getInitiativeId()));
       }
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new TransactionRejectedException(
               PaymentConstants.ExceptionCode.REJECTED,
               "Transaction with trxCode [%s] is rejected".formatted(trx.getTrxCode()));
     } else {
@@ -91,43 +94,37 @@ public class CommonPreAuthServiceImpl{
   protected void checkPreAuth(String trxCode, String userId, TransactionInProgress trx) {
     String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new UserSuspendedException(
               PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR,
               "The user has been suspended for initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
     if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(walletStatus)){
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new UserNotOnboardedException(
               PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
               "The user has unsubscribed from initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
     if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
-      throw new ClientExceptionWithBody(
-              HttpStatus.NOT_FOUND,
+      throw new TransactionNotFoundOrExpiredException(
               PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
               "Cannot find transaction with trxCode [%s]".formatted(trxCode));
     }
 
     if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new UserNotAllowedException(
               PaymentConstants.ExceptionCode.TRX_ANOTHER_USER,
               "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
 
     if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
+      throw new TransactionAlreadyAuthorizedException(
               PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED,
               "Transaction with trxCode [%s] is already authorized".formatted(trxCode));
     }
 
     if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-      throw new ClientExceptionWithBody(
-              HttpStatus.BAD_REQUEST,
+      throw new OperationNotAllowedException(
               PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID,
               "Cannot relate transaction [%s] in status %s".formatted(trxCode, trx.getStatus()));
     }

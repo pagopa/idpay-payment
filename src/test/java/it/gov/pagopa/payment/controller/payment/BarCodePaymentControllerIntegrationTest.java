@@ -1,5 +1,9 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
@@ -19,6 +23,16 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,16 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
@@ -210,7 +214,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
         // Trying to authorize the bar code with a merchant not onboarded on the initiative
-        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
+        extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, "DUMMYMERCHANTID"), HttpStatus.NOT_FOUND, null);
 
         // Authroizing the bar code with a merchant onboarded on the initiative
         AuthPaymentDTO authPayment = extractResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);

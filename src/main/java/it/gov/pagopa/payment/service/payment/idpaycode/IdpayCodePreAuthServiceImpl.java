@@ -1,12 +1,14 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
@@ -22,12 +24,12 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements IdpayCodePreAuthService {
+
     private final EncryptRestConnector encryptRestConnector;
     private final RelateUserResponseMapper relateUserResponseMapper;
     private final AuthPaymentMapper authPaymentMapper;
@@ -57,8 +59,7 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         String userId = retrieveUserId(fiscalCode);
 
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
-                .orElseThrow(() -> new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                         "Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
@@ -76,14 +77,13 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
 
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
-                .orElseThrow(() -> new ClientExceptionWithBody(
-                        HttpStatus.NOT_FOUND,
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED,
                         "Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
         if(!trx.getMerchantId().equals(merchantId)){
-            throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
-                    PaymentConstants.ExceptionCode.REJECTED,
+            throw new MerchantOrAcquirerNotAllowedException(
+                    ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED,
                     "The merchant id [%s] of the trx, is not equals to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
 
         }

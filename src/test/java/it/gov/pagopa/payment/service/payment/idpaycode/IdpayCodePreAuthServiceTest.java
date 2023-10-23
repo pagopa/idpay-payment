@@ -1,7 +1,22 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.common.web.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.TransactionRejectedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.UserSuspendedException;
+import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
@@ -9,6 +24,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
@@ -23,6 +39,8 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,14 +48,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodePreAuthServiceTest {
@@ -111,13 +121,12 @@ class IdpayCodePreAuthServiceTest {
 
 
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
                 idpayCodePreAuthService.relateUser(trxId, FISCALCODE)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
 
     }
@@ -172,13 +181,12 @@ class IdpayCodePreAuthServiceTest {
                 .thenReturn(Optional.empty());
 
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
                 idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
 
     }
@@ -234,13 +242,12 @@ class IdpayCodePreAuthServiceTest {
                         authPaymentDTO.getRejectionReasons(),
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
                 idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
@@ -277,13 +284,12 @@ class IdpayCodePreAuthServiceTest {
                         authPaymentDTO.getRejectionReasons(),
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        BudgetExhaustedException result = Assertions.assertThrows(BudgetExhaustedException.class, () ->
                 idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
@@ -309,13 +315,12 @@ class IdpayCodePreAuthServiceTest {
                 .thenReturn(wallet);
 
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        UserSuspendedException result = Assertions.assertThrows(UserSuspendedException.class, () ->
                 idpayCodePreAuthService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, result.getCode());
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
@@ -336,14 +341,13 @@ class IdpayCodePreAuthServiceTest {
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        MerchantOrAcquirerNotAllowedException result = Assertions.assertThrows(MerchantOrAcquirerNotAllowedException.class, () ->
                 idpayCodePreAuthService.previewPayment(trxId, "DUMMYMERCHANT")
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
+        Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, result.getCode());
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());

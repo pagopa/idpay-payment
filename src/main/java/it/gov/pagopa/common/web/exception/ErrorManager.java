@@ -4,7 +4,6 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +22,7 @@ public class ErrorManager {
   }
 
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
+  public ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
     if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){
       log.error("Something went wrong handling request {}", getRequestDetails(request), error);
     } else {

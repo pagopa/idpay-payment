@@ -1,29 +1,30 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.common.web.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service("CommonCancel")
 public class CommonCancelServiceImpl {
-    private final Duration cancelExpiration;
 
+    private final Duration cancelExpiration;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -51,17 +52,17 @@ public class CommonCancelServiceImpl {
             TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
             if (trx == null) {
-                throw new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
+                throw new TransactionNotFoundOrExpiredException(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, "[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
             }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
-                throw new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
+                throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, "[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
             }
 
             if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
-                throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
+                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
             }
             if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
-                throw new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
+                throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
             }
 
             if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){
