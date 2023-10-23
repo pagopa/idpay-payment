@@ -3,11 +3,9 @@ package it.gov.pagopa.payment.connector.rest.paymentinstrument;
 import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
-import it.gov.pagopa.payment.connector.rest.wallet.WalletConnectorImpl;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,7 +67,7 @@ class PaymentInstrumentConnectorImplTest {
         Assertions.assertNotNull(exception);
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("PAYMENT_INSTRUMENT", exception.getCode());
-        assertEquals(String.format("There is not a idpaycode for the userId %s.", USER_ID), exception.getMessage());
+        assertEquals(String.format("There is not a idpaycode for the userId %s", USER_ID), exception.getMessage());
 
         verify(paymentInstrumentRestClient, times(1)).getSecondFactor(USER_ID);
     }

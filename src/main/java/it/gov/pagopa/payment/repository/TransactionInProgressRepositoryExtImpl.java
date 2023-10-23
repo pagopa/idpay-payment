@@ -186,7 +186,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
         if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
             update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
-                    .set(Fields.merchantId, trx.getMerchantId());
+                    .set(Fields.amountCents, trx.getAmountCents())
+                    .set(Fields.effectiveAmount, trx.getEffectiveAmount())
+                    .set(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
+                    .set(Fields.merchantId, trx.getMerchantId())
+                    .set(Fields.businessName, trx.getBusinessName())
+                    .set(Fields.vat, trx.getVat())
+                    .set(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
+                    .set(Fields.acquirerId, trx.getAcquirerId());
         }
 
         mongoTemplate.updateFirst(

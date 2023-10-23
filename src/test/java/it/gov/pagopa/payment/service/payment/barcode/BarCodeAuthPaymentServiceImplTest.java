@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
@@ -60,6 +61,13 @@ class BarCodeAuthPaymentServiceImplTest {
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
     private static final String TRX_CODE1 = "trxcode1";
+    private static final String ACQUIRER_ID = "ACQUIRER_ID";
+    private static final long AMOUNT_CENTS = 1000L;
+    private static final String ID_TRX_ACQUIRER = "ID_TRX_ACQUIRER";
+    private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
+            .amountCents(AMOUNT_CENTS)
+            .idTrxAcquirer(ID_TRX_ACQUIRER)
+            .build();
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
 
@@ -79,8 +87,6 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment(){
         // Given
-        long amountCents = 1000;
-
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         transaction.setUserId(USER_ID);
@@ -117,7 +123,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
 
         // When
-        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, amountCents);
+        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
 
         // Then
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
@@ -131,9 +137,15 @@ class BarCodeAuthPaymentServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {-100, 0})
     void barCodeAuthPayment_invalidAmount(long amountCents) {
+        // Given
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(amountCents)
+                .idTrxAcquirer("")
+                .build();
+
         // When
         ClientException result =
-                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, amountCents));
+                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, ACQUIRER_ID));
 
         // Then
         assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
@@ -147,7 +159,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         // When
         ClientException result =
-                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, 1000));
+                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID));
 
         // Then
         assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());

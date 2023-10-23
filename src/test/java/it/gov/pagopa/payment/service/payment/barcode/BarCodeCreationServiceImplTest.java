@@ -242,7 +242,7 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-        Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted.", trxCreationReq.getInitiativeId()), result.getMessage());
+        Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted", trxCreationReq.getInitiativeId()), result.getMessage());
     }
 
     @Test
