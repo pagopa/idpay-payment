@@ -1,24 +1,26 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
-import it.gov.pagopa.payment.dto.*;
+import it.gov.pagopa.payment.dto.CFDTO;
+import it.gov.pagopa.payment.dto.DecryptCfDTO;
+import it.gov.pagopa.payment.dto.EncryptedCfDTO;
+import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
+import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.exception.custom.servererror.PDVInvocationException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService {
@@ -84,10 +86,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "INTERNAL SERVER ERROR",
-                    "Error during decryption, userId: [%s]".formatted(userId));
+            throw new PDVInvocationException("Error during decryption, userId: [%s]".formatted(userId));
         }
         return fiscalCode;
     }
@@ -98,10 +97,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
             userId = encryptedCfDTO.getToken();
         } catch (Exception e) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "INTERNAL SERVER ERROR",
-                    "Error during encryption");
+            throw new PDVInvocationException("Error during encryption");
         }
         return userId;
     }

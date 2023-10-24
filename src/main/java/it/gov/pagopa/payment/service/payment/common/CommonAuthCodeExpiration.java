@@ -1,12 +1,12 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ServiceException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import org.springframework.http.HttpStatus;
 
 public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
     protected final long authorizationExpirationMinutes;
@@ -38,8 +38,8 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
         if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
-            } catch (ClientException e) {
-                if (e.getHttpStatus() != HttpStatus.NOT_FOUND) {
+            } catch (ServiceException e) {
+                if (! (e instanceof TransactionNotFoundOrExpiredException)) {
                     throw new IllegalStateException("An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()), e);
                 }
             }
