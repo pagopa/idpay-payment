@@ -1,8 +1,14 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.forbidden.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.notfound.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -25,8 +31,10 @@ import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.bson.BsonString;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,14 +46,6 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
-import org.springframework.http.HttpStatus;
-
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCreationServiceImplTest {
@@ -179,9 +179,9 @@ class CommonCreationServiceImplTest {
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.empty());
 
-    ClientException result =
+    InitiativeNotfoundException result =
         Assertions.assertThrows(
-            ClientException.class,
+            InitiativeNotfoundException.class,
             () ->
                     CommonCreationService.createTransaction(
                     trxCreationReq,
@@ -190,8 +190,7 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, result.getCode());
   }
 
   @Test
@@ -201,9 +200,9 @@ class CommonCreationServiceImplTest {
 
     when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.REFUND)));
 
-    ClientException result =
+    InitiativeNotfoundException result =
             Assertions.assertThrows(
-                    ClientException.class,
+                InitiativeNotfoundException.class,
                     () ->
                             CommonCreationService.createTransaction(
                                     trxCreationReq,
@@ -212,8 +211,7 @@ class CommonCreationServiceImplTest {
                                     "ACQUIRERID1",
                                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, result.getCode());
   }
 
   @Test
@@ -222,9 +220,9 @@ class CommonCreationServiceImplTest {
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
     trxCreationReq.setAmountCents(0L);
 
-    ClientException result =
+    TransactionInvalidException result =
         Assertions.assertThrows(
-            ClientException.class,
+            TransactionInvalidException.class,
             () ->
                     CommonCreationService.createTransaction(
                     trxCreationReq,
@@ -233,8 +231,7 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, result.getCode());
   }
 
   @ParameterizedTest
@@ -247,9 +244,9 @@ class CommonCreationServiceImplTest {
     when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
             .thenReturn(Optional.of(rule));
 
-    ClientException result =
+    InitiativeInvalidException result =
         Assertions.assertThrows(
-            ClientException.class,
+            InitiativeInvalidException.class,
             () ->
                     CommonCreationService.createTransaction(
                     trxCreationReq,
@@ -258,8 +255,7 @@ class CommonCreationServiceImplTest {
                     "ACQUIRERID1",
                     "IDTRXISSUER1"));
 
-    Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, result.getCode());
   }
 
   private static Stream<Arguments> dateArguments() {
@@ -269,7 +265,6 @@ class CommonCreationServiceImplTest {
      );
   }
 
-  @NotNull
   private RewardRule buildRuleWithInvalidDate(TransactionCreationRequest trxCreationReq, LocalDate invalidDate) {
     RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
     InitiativeConfig config = rule.getInitiativeConfig();
