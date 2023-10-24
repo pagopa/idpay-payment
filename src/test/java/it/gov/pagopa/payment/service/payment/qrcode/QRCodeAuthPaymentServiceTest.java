@@ -146,7 +146,7 @@ class QRCodeAuthPaymentServiceTest {
               return transaction;
             })
         .when(repositoryMock)
-        .updateTrxRejected(Mockito.eq(transaction), Mockito.eq(authPaymentDTO.getRejectionReasons()));
+        .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons());
 
     TransactionRejectedException result =
             assertThrows(TransactionRejectedException.class, () -> service.authPayment("USERID1", "trxcode1"));
@@ -182,7 +182,7 @@ class QRCodeAuthPaymentServiceTest {
                       return transaction;
                     })
             .when(repositoryMock)
-            .updateTrxRejected(Mockito.eq(transaction), Mockito.eq(authPaymentDTO.getRejectionReasons()));
+            .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons());
 
     BudgetExhaustedException result =
             assertThrows(BudgetExhaustedException.class, () -> service.authPayment("USERID1", "trxcode1"));
