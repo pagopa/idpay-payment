@@ -1,6 +1,9 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.forbidden.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.notfound.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -16,11 +19,9 @@ import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service("CommonCreate")
@@ -66,10 +67,7 @@ public class CommonCreationServiceImpl {
     try {
       if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[{}] Cannot create transaction with invalid amount: [{}]", getFlow(), trxCreationRequest.getAmountCents());
-        throw new ClientExceptionWithBody(
-                HttpStatus.BAD_REQUEST,
-                PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID,
-                "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
+        throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot create transaction with invalid amount: %s".formatted(trxCreationRequest.getAmountCents()));
       }
 
       InitiativeConfig initiative = rewardRuleRepository.findById(trxCreationRequest.getInitiativeId())
@@ -102,10 +100,7 @@ public class CommonCreationServiceImpl {
               "[{}] Cannot find initiative with ID: [{}]",
               getFlow(),
               initiativeId);
-      throw new ClientExceptionWithBody(
-              HttpStatus.NOT_FOUND,
-              PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND,
-              "Cannot find initiative with ID: [%s]".formatted(initiativeId));
+      throw new InitiativeNotfoundException("Cannot find initiative with ID: [%s]".formatted(initiativeId));
     }
 
     if (!InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
@@ -113,8 +108,7 @@ public class CommonCreationServiceImpl {
               "[{}] Initiative with ID: [{}] is not DISCOUNT type",
               getFlow(),
               initiativeId);
-      throw new ClientExceptionWithBody(
-              HttpStatus.NOT_FOUND,
+      throw new InitiativeNotfoundException(
               PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT,
               "Cannot find initiative with ID: [%s]".formatted(initiativeId));
     }
@@ -125,10 +119,7 @@ public class CommonCreationServiceImpl {
       log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
               getFlow(),
               initiative.getStartDate(), initiative.getEndDate());
-      throw new ClientExceptionWithBody(
-              HttpStatus.FORBIDDEN,
-              PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE,
-              "Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
+      throw new InitiativeInvalidException("Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
                       .formatted(initiative.getStartDate(), initiative.getEndDate()));
     }
   }

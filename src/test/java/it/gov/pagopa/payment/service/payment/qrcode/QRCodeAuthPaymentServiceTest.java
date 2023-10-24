@@ -10,8 +10,6 @@ import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -20,6 +18,14 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.TransactionAlreadyAuthorizedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.TransactionRejectedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserSuspendedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -43,7 +49,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeAuthPaymentServiceTest {
@@ -145,14 +150,13 @@ class QRCodeAuthPaymentServiceTest {
         .updateTrxRejected(Mockito.eq(transaction.getId()), Mockito.eq(authPaymentDTO.getRejectionReasons()),
             Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
 
-    ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    TransactionRejectedException result =
+            assertThrows(TransactionRejectedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(qrCodeAuthorizationExpiredServiceMock, times(1)).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
   }
 
   @Test
@@ -183,25 +187,23 @@ class QRCodeAuthPaymentServiceTest {
             .updateTrxRejected(Mockito.eq(transaction.getId()), Mockito.eq(authPaymentDTO.getRejectionReasons()),
                 Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
 
-    ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    BudgetExhaustedException result =
+            assertThrows(BudgetExhaustedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
   }
 
   @Test
   void authPaymentNotFound() {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 
-    ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    TransactionNotFoundOrExpiredException result =
+        assertThrows(TransactionNotFoundOrExpiredException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
-    assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-    assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, ((ClientExceptionWithBody) result).getCode());
+    assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
   }
 
   @Test
@@ -213,11 +215,10 @@ class QRCodeAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
 
-    ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("userId", "trxcode1"));
+    UserNotAllowedException result =
+        assertThrows(UserNotAllowedException.class, () -> service.authPayment("userId", "trxcode1"));
 
-    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, result.getCode());
   }
 
   @Test
@@ -234,13 +235,12 @@ class QRCodeAuthPaymentServiceTest {
         .thenReturn(transaction);
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
-    ClientException result =
-            assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
-    assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
+    TransactionAlreadyAuthorizedException result =
+            assertThrows(TransactionAlreadyAuthorizedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, result.getCode());
   }
 
   @Test
@@ -255,13 +255,12 @@ class QRCodeAuthPaymentServiceTest {
         .thenReturn(transaction);
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
-    ClientException result =
-        assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    OperationNotAllowedException result =
+        assertThrows(OperationNotAllowedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
   }
 
   @Test
@@ -291,8 +290,7 @@ class QRCodeAuthPaymentServiceTest {
     try {
       service.authPayment("USERID1", "trxcode1");
       Assertions.fail("Expected exception");
-    } catch (ClientExceptionWithBody e) {
-      assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+    } catch (UserSuspendedException | UserNotOnboardedException e) {
       if(PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, e.getCode());
       } else {

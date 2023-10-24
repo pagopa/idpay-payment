@@ -1,26 +1,26 @@
 package it.gov.pagopa.payment.connector.rest.paymentinstrument;
 
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
-import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.exception.custom.notfound.IdpaycodeNotFoundException;
+import it.gov.pagopa.payment.exception.custom.servererror.PaymentInstrumentInvocationException;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
-import it.gov.pagopa.payment.connector.rest.wallet.WalletConnectorImpl;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.HashMap;
-
-import static org.junit.Assert.assertThrows;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentInstrumentConnectorImplTest {
@@ -63,12 +63,11 @@ class PaymentInstrumentConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionWithBody exception = assertThrows(ClientExceptionWithBody.class, () -> paymentInstrumentConnector.getSecondFactor(USER_ID));
+        IdpaycodeNotFoundException exception = assertThrows(IdpaycodeNotFoundException.class, () -> paymentInstrumentConnector.getSecondFactor(USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
-        assertEquals("PAYMENT_INSTRUMENT", exception.getCode());
+        assertEquals(ExceptionCode.IDPAYCODE_NOT_FOUND, exception.getCode());
         assertEquals(String.format("There is not a idpaycode for the userId %s.", USER_ID), exception.getMessage());
 
         verify(paymentInstrumentRestClient, times(1)).getSecondFactor(USER_ID);
@@ -85,11 +84,10 @@ class PaymentInstrumentConnectorImplTest {
                 .thenThrow(feignExceptionMock);
 
         // When
-        ClientExceptionNoBody exception = assertThrows(ClientExceptionNoBody.class, () -> paymentInstrumentConnector.getSecondFactor(USER_ID));
+        PaymentInstrumentInvocationException exception = assertThrows(PaymentInstrumentInvocationException.class, () -> paymentInstrumentConnector.getSecondFactor(USER_ID));
 
         // Then
         Assertions.assertNotNull(exception);
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
 
         verify(paymentInstrumentRestClient, times(1)).getSecondFactor(USER_ID);
     }
