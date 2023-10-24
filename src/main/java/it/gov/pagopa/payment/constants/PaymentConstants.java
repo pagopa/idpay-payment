@@ -33,6 +33,7 @@ public class PaymentConstants {
     public static final String PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED = "PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED";
     public static final String PAYMENT_TRANSACTION_EXPIRED = "PAYMENT_TRANSACTION_EXPIRED";
     public static final String IDPAYCODE_NOT_FOUND = "PAYMENT_IDPAYCODE_NOT_FOUND";
+    public static final String MERCHANT_NOT_ONBOARDED = "PAYMENT_MERCHANT_NOT_ONBOARDED";
 
     private ExceptionCode() {}
   }

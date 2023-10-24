@@ -14,7 +14,6 @@ import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedExceptio
 import it.gov.pagopa.payment.exception.custom.forbidden.UserSuspendedException;
 import it.gov.pagopa.payment.exception.custom.notfound.IdpaycodeNotFoundException;
 import it.gov.pagopa.payment.exception.custom.notfound.InitiativeNotfoundException;
-import it.gov.pagopa.payment.exception.custom.notfound.MerchantNotFoundException;
 import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.servererror.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.servererror.MerchantInvocationException;
@@ -54,7 +53,6 @@ public class ServiceExceptionConfig {
     // NotFound
     exceptionMap.put(IdpaycodeNotFoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(InitiativeNotfoundException.class, HttpStatus.NOT_FOUND);
-    exceptionMap.put(MerchantNotFoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(TransactionNotFoundOrExpiredException.class, HttpStatus.NOT_FOUND);
 
     // InternalServerError

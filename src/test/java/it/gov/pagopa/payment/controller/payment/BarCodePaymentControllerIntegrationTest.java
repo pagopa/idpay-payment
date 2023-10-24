@@ -215,7 +215,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
         // Trying to authorize the bar code with a merchant not onboarded on the initiative
-        assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, "DUMMYMERCHANTID"), HttpStatus.NOT_FOUND, null);
+        assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
 
         // Authroizing the bar code with a merchant onboarded on the initiative
         AuthPaymentDTO authPayment = assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);

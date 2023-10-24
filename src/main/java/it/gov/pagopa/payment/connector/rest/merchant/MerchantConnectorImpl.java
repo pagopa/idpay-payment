@@ -2,7 +2,8 @@ package it.gov.pagopa.payment.connector.rest.merchant;
 
 import feign.FeignException;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
-import it.gov.pagopa.payment.exception.custom.notfound.MerchantNotFoundException;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.servererror.MerchantInvocationException;
 import org.springframework.stereotype.Service;
 
@@ -22,7 +23,7 @@ public class MerchantConnectorImpl implements MerchantConnector{
             merchantDetailDTO = restClient.merchantDetail(merchantId, initiativeId);
         } catch (FeignException e) {
             if (e.status() == 404) {
-                throw new MerchantNotFoundException(String.format("The merchant is not related with initiative [%s]", initiativeId));
+                throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.MERCHANT_NOT_ONBOARDED, String.format("The merchant is not related with initiative [%s]", initiativeId));
             }
 
             throw new MerchantInvocationException(

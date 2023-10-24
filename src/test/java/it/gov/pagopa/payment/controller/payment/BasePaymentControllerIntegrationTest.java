@@ -481,7 +481,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
 
-            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.NOT_FOUND, null);
+            extractResponse(createTrx(trxRequest, "DUMMYMERCHANTID", ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
         });
 
         //useCase 11: obtain unexpected http code from ms idpay-merchant
