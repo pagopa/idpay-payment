@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.exception.custom.servererror;
 
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.ServiceException;
 
 public class PaymentInstrumentInvocationException extends ServiceException {
 

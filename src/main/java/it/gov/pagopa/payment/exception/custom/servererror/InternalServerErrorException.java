@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.exception.custom.servererror;
 
-import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.ServiceException;
 
 public class InternalServerErrorException extends ServiceException {
 

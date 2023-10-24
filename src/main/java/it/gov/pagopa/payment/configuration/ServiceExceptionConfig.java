@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.configuration;
 
-import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;

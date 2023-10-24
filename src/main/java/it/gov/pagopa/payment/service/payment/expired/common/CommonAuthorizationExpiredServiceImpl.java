@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment.expired.common;
 
-import it.gov.pagopa.common.web.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
