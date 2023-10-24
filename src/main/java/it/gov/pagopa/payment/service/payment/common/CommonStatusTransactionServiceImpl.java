@@ -18,8 +18,8 @@ public class CommonStatusTransactionServiceImpl {
         this.transaction2statusMapper = transaction2statusMapper;
     }
 
-    public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
-        TransactionInProgress transactionInProgress= transactionInProgressRepository.findByIdAndMerchantIdAndAcquirerId(transactionId, merchantId, acquirerId)
+    public SyncTrxStatusDTO getStatusTransaction(String transactionId) {
+        TransactionInProgress transactionInProgress= transactionInProgressRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Transaction does not exist"));
 
         return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);

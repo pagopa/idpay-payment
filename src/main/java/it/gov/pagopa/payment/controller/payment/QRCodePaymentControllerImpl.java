@@ -102,9 +102,9 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
 
   @Override
   @PerformanceLog("GET_STATUS_TRANSACTION")
-  public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
-    log.info("[GET_STATUS_TRANSACTION] Merchant with {},{} requested to retrieve status of transaction{} ", merchantId, acquirerId, transactionId);
-    return qrCodePaymentService.getStatusTransaction(transactionId, merchantId, acquirerId);
+  public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
+    log.info("[GET_STATUS_TRANSACTION] Merchant with id {} requested to retrieve status of transaction {}", merchantId,transactionId);
+    return qrCodePaymentService.getStatusTransaction(transactionId);
   }
 
   @Override

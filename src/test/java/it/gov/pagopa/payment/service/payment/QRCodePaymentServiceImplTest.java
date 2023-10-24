@@ -59,10 +59,10 @@ class QRCodePaymentServiceImplTest {
         //given
         SyncTrxStatusDTO trxStatus = SyncTrxStatusFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        when(commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId(), trxStatus.getMerchantId(), trxStatus.getAcquirerId()))
+        when(commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId()))
                 .thenReturn(trxStatus);
         //when
-        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(trxStatus.getId(), trxStatus.getMerchantId(), trxStatus.getAcquirerId());
+        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(trxStatus.getId());
         //then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trxStatus, result);

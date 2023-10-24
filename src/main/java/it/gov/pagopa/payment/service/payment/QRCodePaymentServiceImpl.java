@@ -68,8 +68,8 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   }
 
   @Override
-  public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
-    return commonStatusTransactionService.getStatusTransaction(transactionId, merchantId, acquirerId);
+  public SyncTrxStatusDTO getStatusTransaction(String transactionId) {
+    return commonStatusTransactionService.getStatusTransaction(transactionId);
   }
 
   @Override
