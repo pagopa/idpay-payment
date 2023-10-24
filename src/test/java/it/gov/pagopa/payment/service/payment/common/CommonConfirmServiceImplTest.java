@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment.qrcode;
+package it.gov.pagopa.payment.service.payment.common;
 
 import static org.mockito.Mockito.when;
 
@@ -23,22 +23,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class QRCodeConfirmServiceTest {
+class CommonConfirmServiceImplTest {
 
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private TransactionNotifierService notifierServiceMock;
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
 
-    private final TransactionInProgress2TransactionResponseMapper mapper =
-            new TransactionInProgress2TransactionResponseMapper(4320,5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
 
-    private QRCodeConfirmationService service;
+    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(4320,5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+
+    CommonConfirmServiceImpl service;
 
     @BeforeEach
     void init() {
         service =
-                new QRCodeConfirmationServiceImpl(
+                new CommonConfirmServiceImpl(
                         repositoryMock,
                         mapper,
                         notifierServiceMock,
@@ -119,6 +119,7 @@ class QRCodeConfirmServiceTest {
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setReward(1000L);
+
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);
