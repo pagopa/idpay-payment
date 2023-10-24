@@ -23,7 +23,8 @@ public interface BarCodePaymentController {
     AuthPaymentDTO authPayment(
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
-            @RequestHeader("x-merchant-id") String merchantId
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-acquirer-id") String acquirerId
     );
 
 }

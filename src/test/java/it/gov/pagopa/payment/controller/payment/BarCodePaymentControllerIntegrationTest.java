@@ -56,12 +56,17 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     private static final String USERID = "USERID";
     private static final String USERID_UNSUBSCRIBED = "USERID_UNSUBSCRIBED";
     private static final String MERCHANTID = "MERCHANTID";
+    private static final String ACQUIRERID = "ACQUIRERID";
     private static final String INITIATIVEID = "INITIATIVEID";
     private static final String BARCODE_INITIATIVEID_REWARDED = "BARCODE_INITIATIVEID_REWARDED";
     private static final String BARCODE_INITIATIVEID_NO_BUDGET = "BARCODE_INITIATIVEID_NO_BUDGET";
     private static final String BARCODE_INITIATIVEID_TOOMANYREQUEST = "BARCODE_INITIATIVEID_TOOMANYREQUEST";
     private static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";
     private static final LocalDate TODAY = LocalDate.now();
+    private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
+            .amountCents(10000L)
+            .idTrxAcquirer("ID_TRX_ACQUIRER")
+            .build();
     private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
 
     protected MvcResult createTrx(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {
@@ -79,6 +84,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 .perform(
                         put("/idpay/payment/bar-code/{trxCode}/authorize", trxCode)
                                 .header("x-merchant-id", merchantId)
+                                .header("x-acquirer-id", ACQUIRERID)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(paymentDTO)))
                 .andReturn();
@@ -91,8 +97,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         String trxCode = "trxcode1";
         assertResponse(createTrx(trxRequest, USERID), HttpStatus.NOT_FOUND, null);
 
-        AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
-        assertResponse(authTrx(trxCode, authPaymentDTO, MERCHANTID), HttpStatus.NOT_FOUND, null);
+        assertResponse(authTrx(trxCode, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.NOT_FOUND, null);
     }
 
     @Test
@@ -143,13 +148,12 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
                 .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST).build();
-        AuthBarCodePaymentDTO authPaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
         // Authorizing transaction but obtaining Too Many requests by reward-calculator
-        assertResponse(authTrx(trxCreated.getTrxCode(), authPaymentDTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+        assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
     }
 
     @Test
@@ -159,12 +163,11 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
                 .initiativeId(BARCODE_INITIATIVEID_NO_BUDGET)
                 .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
-        assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
+        assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
     }
 
     @Test
@@ -174,12 +177,11 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
                 .initiativeId(INITIATIVEID)
                 .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, "USERID_SUSPENDED");
 
-        assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
+        assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
     }
 
     @Test
@@ -189,7 +191,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
                 .initiativeId(INITIATIVEID)
                 .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
@@ -199,7 +200,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         trxInProgress.setUserId(USERID_UNSUBSCRIBED);
         transactionInProgressRepository.save(trxInProgress);
 
-        assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
+        assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.FORBIDDEN, null);
     }
 
     @Test
@@ -209,16 +210,15 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
                 .initiativeId(BARCODE_INITIATIVEID_REWARDED)
                 .build();
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(10000L).build();
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
 
         // Trying to authorize the bar code with a merchant not onboarded on the initiative
-        assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
+        assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, null);
 
         // Authroizing the bar code with a merchant onboarded on the initiative
-        AuthPaymentDTO authPayment = assertResponse(authTrx(trxCreated.getTrxCode(), authBarCodePaymentDTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+        AuthPaymentDTO authPayment = assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
         assertEquals(SyncTrxStatus.AUTHORIZED, authPayment.getStatus());
         assertAuthData(authPayment);
 

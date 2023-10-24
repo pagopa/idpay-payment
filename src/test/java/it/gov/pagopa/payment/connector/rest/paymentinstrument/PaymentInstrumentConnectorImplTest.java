@@ -10,6 +10,8 @@ import static org.mockito.Mockito.when;
 import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
+import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.exception.custom.notfound.IdpaycodeNotFoundException;
 import it.gov.pagopa.payment.exception.custom.servererror.PaymentInstrumentInvocationException;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;

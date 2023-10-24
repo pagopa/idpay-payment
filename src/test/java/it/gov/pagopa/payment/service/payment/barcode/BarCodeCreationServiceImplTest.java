@@ -68,6 +68,8 @@ class BarCodeCreationServiceImplTest {
     @Mock private MerchantConnector merchantConnector;
     @Mock private WalletConnector walletConnector;
 
+    private static final String INITIATIVE_NAME = "INITIATIVE_NAME";
+
     BarCodeCreationServiceImpl barCodeCreationService;
 
     @BeforeEach
@@ -102,6 +104,7 @@ class BarCodeCreationServiceImplTest {
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
+                anyString(),
                 anyString()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
@@ -124,6 +127,7 @@ class BarCodeCreationServiceImplTest {
                 .initiativeConfig(InitiativeConfig.builder()
                         .initiativeId(initiativeid)
                         .initiativeRewardType(initiativeRewardType)
+                        .initiativeName(INITIATIVE_NAME)
                         .startDate(TODAY.minusDays(1))
                         .endDate(TODAY.plusDays(1))
                         .build())
@@ -148,6 +152,7 @@ class BarCodeCreationServiceImplTest {
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
+                anyString(),
                 anyString()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
