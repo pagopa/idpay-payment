@@ -24,7 +24,7 @@ public class WalletConnectorImpl implements WalletConnector{
             if (e.status() == 404) {
                 throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
                         PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED,
-                        String.format("The user is not onboarded on initiative [%s]", initiativeId));
+                        String.format("The user is not onboarded on initiative [%s].", initiativeId));
             }
 
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,

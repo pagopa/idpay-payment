@@ -73,7 +73,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                            trxBarCodeCreationRequest, channel, userId);
+                            trxBarCodeCreationRequest, channel, userId, initiative.getInitiativeName());
             generateTrxCodeAndSave(trx);
 
             logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
@@ -107,7 +107,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         if (wallet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
             throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
                     PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                    String.format("The budget related to the user on initiativeId [%s] was exhausted", initiativeId));
+                    String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
         }
 
         if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(wallet.getStatus())){

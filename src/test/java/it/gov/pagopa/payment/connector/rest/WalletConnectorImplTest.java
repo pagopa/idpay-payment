@@ -73,7 +73,7 @@ class WalletConnectorImplTest {
         Assertions.assertNotNull(exception);
         assertEquals(HttpStatus.FORBIDDEN, exception.getHttpStatus());
         assertEquals(PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED, exception.getCode());
-        assertEquals(String.format("The user is not onboarded on initiative [%s]", INITIATIVE_ID), exception.getMessage());
+        assertEquals(String.format("The user is not onboarded on initiative [%s].", INITIATIVE_ID), exception.getMessage());
 
         verify(walletRestClient, times(1)).getWallet(INITIATIVE_ID, USER_ID);
     }

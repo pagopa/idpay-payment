@@ -67,7 +67,7 @@ class PaymentInstrumentConnectorImplTest {
         Assertions.assertNotNull(exception);
         assertEquals(HttpStatus.NOT_FOUND, exception.getHttpStatus());
         assertEquals("PAYMENT_INSTRUMENT", exception.getCode());
-        assertEquals(String.format("There is not a idpaycode for the userId %s", USER_ID), exception.getMessage());
+        assertEquals(String.format("There is not a idpaycode for the userId %s.", USER_ID), exception.getMessage());
 
         verify(paymentInstrumentRestClient, times(1)).getSecondFactor(USER_ID);
     }

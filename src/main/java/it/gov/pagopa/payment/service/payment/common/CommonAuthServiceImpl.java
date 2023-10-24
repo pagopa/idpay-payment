@@ -84,7 +84,7 @@ public abstract class CommonAuthServiceImpl {
                     throw new ClientExceptionWithBody(
                             HttpStatus.FORBIDDEN,
                             PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                            "The budget related to the user on initiativeId [%s] was exhausted".formatted(trx.getInitiativeId()));
+                            "The budget related to the user on initiativeId [%s] was exhausted.".formatted(trx.getInitiativeId()));
                 }
                 throw new ClientExceptionWithBody(
                         HttpStatus.FORBIDDEN,

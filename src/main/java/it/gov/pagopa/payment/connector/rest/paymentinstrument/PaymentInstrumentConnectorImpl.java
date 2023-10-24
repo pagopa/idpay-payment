@@ -29,11 +29,11 @@ public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnecto
             if (e.status() == 404) {
                 throw new ClientExceptionWithBody(HttpStatus.NOT_FOUND,
                         "PAYMENT_INSTRUMENT",
-                        String.format("There is not a idpaycode for the userId %s", userId));
+                        String.format("There is not a idpaycode for the userId %s.", userId));
             }
 
             throw new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "An error occurred in the microservice payment-instrument", e);
+                    "An error occurred in the microservice payment-instrument.", e);
         }
     }
 
