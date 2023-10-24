@@ -64,7 +64,7 @@ class PaymentInstrumentRestConnectorImplTest {
         // Then
         Assertions.assertNotNull(exception);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getHttpStatus());
-        assertEquals("An error occurred in the microservice payment-instrument.", exception.getMessage());
+        assertEquals("An error occurred in the microservice payment-instrument", exception.getMessage());
 
         verify(paymentInstrumentRestClientMock).verifyPinBlock(pinBlockDTO,USER_ID);
     }

@@ -131,7 +131,6 @@ class QRCodeAuthPaymentServiceTest {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
 
-
     when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
@@ -142,8 +141,7 @@ class QRCodeAuthPaymentServiceTest {
               return transaction;
             })
         .when(repositoryMock)
-        .updateTrxRejected(Mockito.eq(transaction.getId()), Mockito.eq(authPaymentDTO.getRejectionReasons()),
-            Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
+        .updateTrxRejected(Mockito.eq(transaction), Mockito.eq(authPaymentDTO.getRejectionReasons()));
 
     ClientException result =
             assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));
@@ -180,8 +178,7 @@ class QRCodeAuthPaymentServiceTest {
                       return transaction;
                     })
             .when(repositoryMock)
-            .updateTrxRejected(Mockito.eq(transaction.getId()), Mockito.eq(authPaymentDTO.getRejectionReasons()),
-                Mockito.argThat(trxChargeDate -> trxChargeDate.isAfter(transaction.getTrxDate())));
+            .updateTrxRejected(Mockito.eq(transaction), Mockito.eq(authPaymentDTO.getRejectionReasons()));
 
     ClientException result =
             assertThrows(ClientException.class, () -> service.authPayment("USERID1", "trxcode1"));

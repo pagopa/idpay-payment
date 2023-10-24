@@ -78,7 +78,7 @@ public abstract class CommonAuthServiceImpl {
                 transactionInProgressRepository.updateTrxAuthorized(trx,
                         authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             } else {
-                transactionInProgressRepository.updateTrxRejected(trx.getId(), authPaymentDTO.getRejectionReasons(), trx.getTrxChargeDate());
+                transactionInProgressRepository.updateTrxRejected(trx, authPaymentDTO.getRejectionReasons());
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
                 if (authPaymentDTO.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
                     throw new ClientExceptionWithBody(

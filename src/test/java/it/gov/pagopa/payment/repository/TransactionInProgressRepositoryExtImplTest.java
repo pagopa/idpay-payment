@@ -525,6 +525,49 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         Assertions.assertEquals(transactionInProgress.getInitiativeId(), result.get(0).getInitiativeId());
     }
 
+    @Test
+    void updateTrxRejected_barCodeChannel() {
+        TransactionInProgress transactionInProgress2 =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgress2.setUserId(USER_ID);
+        transactionInProgress2.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
+
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgress.setUserId(USER_ID);
+        transactionInProgress.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
+        transactionInProgress.setAcquirerId(null);
+        transactionInProgress.setAmountCents(null);
+        transactionInProgress.setEffectiveAmount(null);
+        transactionInProgress.setAmountCurrency(null);
+        transactionInProgress.setMerchantFiscalCode(null);
+        transactionInProgress.setMerchantId(null);
+        transactionInProgress.setIdTrxAcquirer(null);
+        transactionInProgress.setIdTrxIssuer(null);
+        transactionInProgress.setMcc(null);
+        transactionInProgress.setBusinessName(null);
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultFirstSave =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultFirstSave);
+        TestUtils.checkNotNullFields(
+                resultFirstSave,
+                "authDate", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "trxChargeDate",
+                "acquirerId", "amountCents", "effectiveAmount", "amountCurrency", "merchantFiscalCode", "merchantId",
+                "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName");
+
+        transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"));
+
+        TransactionInProgress resultSecondSave =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultSecondSave);
+        TestUtils.checkNotNullFields(resultSecondSave,
+                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc");
+        Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
+        Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
+    }
+
     private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
         long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
         assertTrue(minutes <= 1);
