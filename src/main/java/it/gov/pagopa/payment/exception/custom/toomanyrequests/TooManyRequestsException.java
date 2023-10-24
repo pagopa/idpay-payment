@@ -1,11 +1,11 @@
 package it.gov.pagopa.payment.exception.custom.toomanyrequests;
 
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.custom.ServiceException;
 
 public class TooManyRequestsException extends ServiceException {
 
-  public TooManyRequestsException(String code, String message) {
+  public TooManyRequestsException(String message) {
     this(message, false, null);
   }
 

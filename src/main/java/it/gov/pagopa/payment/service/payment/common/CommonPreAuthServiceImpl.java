@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.custom.ServiceException;
 import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
 import it.gov.pagopa.payment.exception.custom.forbidden.TransactionAlreadyAuthorizedException;

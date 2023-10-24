@@ -7,7 +7,6 @@ import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.servererror.RewardCalculatorInvocationException;
@@ -72,8 +71,8 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                         throw new RewardCalculatorInvocationException("Something went wrong", false, ex);
                     }
                 }
-                case 429 -> throw new TooManyRequestsException(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS,
-                        "Too many request on the ms reward");
+                case 429 -> throw new TooManyRequestsException(
+                    "Too many request on the ms reward");
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", false, e);
                 default -> throw new RewardCalculatorInvocationException(

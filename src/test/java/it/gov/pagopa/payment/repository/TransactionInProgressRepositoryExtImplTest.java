@@ -9,13 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.payment.exception.custom.toomanyrequests.TooManyRequestsException;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.toomanyrequests.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -43,7 +41,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.http.HttpStatus;
 
 @Slf4j
 class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
@@ -120,12 +117,13 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TestUtils.checkNotNullFields(
                 result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate");
 
-        ClientException exception =
+      TooManyRequestsException exception =
                 assertThrows(
-                        ClientException.class,
+                      TooManyRequestsException.class,
                         () -> transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1", EXPIRATION_MINUTES));
 
-        assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getHttpStatus());
+      assertEquals(ExceptionCode.TOO_MANY_REQUESTS, exception.getCode());
+      assertEquals("Too many requests on trx having trCode: trxcode1", exception.getMessage());
     }
 
 
@@ -141,8 +139,9 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                     try {
                         transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(stored.getTrxCode(), EXPIRATION_MINUTES);
                         return true;
-                    } catch (ClientExceptionNoBody e) {
-                        assertEquals(HttpStatus.TOO_MANY_REQUESTS, e.getHttpStatus());
+                    } catch (TooManyRequestsException e) {
+                        assertEquals(ExceptionCode.TOO_MANY_REQUESTS, e.getCode());
+                        assertEquals("Too many requests on trx having trCode: trxcode0", e.getMessage());
                         return false;
                     }
                 }

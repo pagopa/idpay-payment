@@ -1,7 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.payment.exception.custom.ServiceException;
+import it.gov.pagopa.common.web.exception.custom.ServiceException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
