@@ -24,7 +24,6 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import org.bson.BsonString;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -299,7 +298,6 @@ class BarCodeCreationServiceImplTest {
         );
     }
 
-    @NotNull
     private RewardRule buildRuleWithInvalidDate(TransactionBarCodeCreationRequest trxCreationReq, LocalDate invalidDate) {
         RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
         InitiativeConfig config = rule.getInitiativeConfig();
