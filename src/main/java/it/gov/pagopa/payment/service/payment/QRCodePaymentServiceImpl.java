@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.service.payment;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.service.payment.qrcode.*;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeConfirmationService qrCodeConfirmationService;
   private final QRCodeCancelService qrCodeCancelService;
   private final QRCodeUnrelateService qrCodeUnrelateService;
-  private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
 
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public QRCodePaymentServiceImpl(
@@ -26,15 +24,13 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
           QRCodeAuthPaymentService qrCodeAuthPaymentService,
           QRCodeConfirmationService qrCodeConfirmationService,
           QRCodeCancelService qrCodeCancelService,
-          QRCodeUnrelateService qrCodeUnrelateService,
-          CommonStatusTransactionServiceImpl commonStatusTransactionService) {
+          QRCodeUnrelateService qrCodeUnrelateService) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
     this.qrCodeConfirmationService = qrCodeConfirmationService;
     this.qrCodeCancelService = qrCodeCancelService;
     this.qrCodeUnrelateService = qrCodeUnrelateService;
-    this.commonStatusTransactionService = commonStatusTransactionService;
   }
 
   @Override

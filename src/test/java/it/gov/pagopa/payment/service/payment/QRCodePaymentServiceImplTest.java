@@ -32,17 +32,15 @@ class QRCodePaymentServiceImplTest {
     private QRCodeUnrelateService qrCodeUnrelateService;
     @Mock
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
-    private QRCodePaymentServiceImpl qrCodePaymentService;
 
     @BeforeEach
     void setUp(){
-        qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
+       QRCodePaymentServiceImpl qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
                 qrCodeConfirmationServiceMock,
                 qrCodeCancelServiceMock,
-                qrCodeUnrelateService,
-                commonStatusTransactionServiceMock);
+                qrCodeUnrelateService);
     }
 
     @AfterEach
