@@ -62,7 +62,7 @@ class QRCodePaymentServiceImplTest {
         when(commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId()))
                 .thenReturn(trxStatus);
         //when
-        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(trxStatus.getId());
+        SyncTrxStatusDTO result= commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId());
         //then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trxStatus, result);

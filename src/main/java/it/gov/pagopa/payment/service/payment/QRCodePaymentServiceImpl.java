@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
@@ -65,11 +64,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
     return qrCodeConfirmationService.confirmPayment(trxId, merchantId, acquirerId);
-  }
-
-  @Override
-  public SyncTrxStatusDTO getStatusTransaction(String transactionId) {
-    return commonStatusTransactionService.getStatusTransaction(transactionId);
   }
 
   @Override
