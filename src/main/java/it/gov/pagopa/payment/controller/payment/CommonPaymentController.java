@@ -32,8 +32,7 @@ public interface CommonPaymentController {
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
-    SyncTrxStatusDTO getStatusTransaction(
-            @PathVariable("transactionId") String transactionId,
-            @RequestHeader("x-merchant-id") String merchantId,
-            @RequestHeader("x-acquirer-id") String acquirerId);
+    SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId,
+                                          @RequestHeader("x-merchant-id") String merchantId);
+
 }

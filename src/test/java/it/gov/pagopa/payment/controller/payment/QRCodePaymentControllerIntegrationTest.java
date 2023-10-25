@@ -76,12 +76,11 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     }
 
     @Override
-    protected MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception {
+    protected MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception {
         return mockMvc
                 .perform(
-                        get("/idpay/payment/qr-code/merchant/status/{transactionId}",transactionId)
+                        get("/idpay/payment/{transactionId}/status",transactionId)
                                 .header("x-merchant-id",merchantId)
-                                .header("x-acquirer-id",acquirerId)
                 ).andReturn();
     }
 

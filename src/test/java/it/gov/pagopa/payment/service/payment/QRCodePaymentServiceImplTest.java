@@ -32,17 +32,15 @@ class QRCodePaymentServiceImplTest {
     private QRCodeUnrelateService qrCodeUnrelateService;
     @Mock
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
-    private QRCodePaymentServiceImpl qrCodePaymentService;
 
     @BeforeEach
     void setUp(){
-        qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
+       QRCodePaymentServiceImpl qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
                 qrCodeConfirmationServiceMock,
                 qrCodeCancelServiceMock,
-                qrCodeUnrelateService,
-                commonStatusTransactionServiceMock);
+                qrCodeUnrelateService);
     }
 
     @AfterEach
@@ -59,10 +57,10 @@ class QRCodePaymentServiceImplTest {
         //given
         SyncTrxStatusDTO trxStatus = SyncTrxStatusFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        when(commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId(), trxStatus.getMerchantId(), trxStatus.getAcquirerId()))
+        when(commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId()))
                 .thenReturn(trxStatus);
         //when
-        SyncTrxStatusDTO result= qrCodePaymentService.getStatusTransaction(trxStatus.getId(), trxStatus.getMerchantId(), trxStatus.getAcquirerId());
+        SyncTrxStatusDTO result= commonStatusTransactionServiceMock.getStatusTransaction(trxStatus.getId());
         //then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trxStatus, result);

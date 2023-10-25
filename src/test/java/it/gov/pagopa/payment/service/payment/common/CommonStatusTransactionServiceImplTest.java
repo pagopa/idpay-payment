@@ -40,9 +40,9 @@ class CommonStatusTransactionServiceImplTest {
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
 
-        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findByIdAndMerchantIdAndAcquirerId(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
         //when
-        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId());
         //then
         Assertions.assertNotNull(result);
         TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
@@ -52,11 +52,11 @@ class CommonStatusTransactionServiceImplTest {
     void getStatusTransaction_NotFoundException(){
         //given
         doReturn(Optional.empty()).when(transactionInProgressRepositoryMock)
-                .findByIdAndMerchantIdAndAcquirerId("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1");
+                .findById("TRANSACTIONID1");
         //when
         //then
         TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
-                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
+                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1"));
         Assertions.assertEquals("PAYMENT_NOT_FOUND_EXPIRED", clientExceptionNoBody.getCode());
         Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
     }
