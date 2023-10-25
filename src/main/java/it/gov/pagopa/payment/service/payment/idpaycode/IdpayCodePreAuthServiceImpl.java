@@ -79,15 +79,14 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         if(!trx.getMerchantId().equals(merchantId)){
             throw new MerchantOrAcquirerNotAllowedException(
                     ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED,
-                    "The merchant id [%s] of the trx, is not equals to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
-
+                    "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
 
         if(trx.getUserId() == null){
             return authPaymentMapper.transactionMapper(trx);
         }
 
-        checkPreAuth(trx.getTrxCode(), trx.getUserId(), trx);
+        checkPreAuth(trx.getUserId(), trx);
         AuthPaymentDTO authPaymentDTO = super.previewPayment(trx, RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
         SecondFactorDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getUserId());

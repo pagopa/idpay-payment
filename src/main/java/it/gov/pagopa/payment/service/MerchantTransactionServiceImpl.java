@@ -86,7 +86,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new PDVInvocationException("Error during decryption, userId: [%s]".formatted(userId));
+            throw new PDVInvocationException("Error during decryption");
         }
         return fiscalCode;
     }

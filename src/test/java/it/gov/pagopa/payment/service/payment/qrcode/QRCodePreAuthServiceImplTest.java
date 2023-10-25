@@ -292,7 +292,7 @@ class QRCodePreAuthServiceImplTest {
 
     // Then
     assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, exception.getCode());
-    assertEquals(String.format("Transaction with trxCode [%s] is already authorized", trx.getTrxCode()), exception.getMessage());
+    assertEquals(String.format("Transaction with transactionId [%s] is already authorized", trx.getId()), exception.getMessage());
 
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
@@ -315,8 +315,8 @@ class QRCodePreAuthServiceImplTest {
     OperationNotAllowedException exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> qrCodePreAuthService.relateUser(trxCode, USER_ID1));
 
     // Then
-    assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
-    assertEquals(String.format("Cannot relate transaction [%s] in status %s", trx.getTrxCode(), trx.getStatus()), exception.getMessage());
+    assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
+    assertEquals(String.format("Cannot operate on transaction with transactionId [%s] in status %s", trx.getId(), trx.getStatus()), exception.getMessage());
 
     verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
