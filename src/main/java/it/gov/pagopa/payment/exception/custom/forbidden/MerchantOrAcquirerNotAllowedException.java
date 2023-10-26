@@ -6,7 +6,7 @@ import it.gov.pagopa.common.web.exception.ServiceException;
 public class MerchantOrAcquirerNotAllowedException extends ServiceException {
 
   public MerchantOrAcquirerNotAllowedException(String message) {
-    this(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, message);
+    this(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, message);
   }
 
   public MerchantOrAcquirerNotAllowedException(String code, String message) {

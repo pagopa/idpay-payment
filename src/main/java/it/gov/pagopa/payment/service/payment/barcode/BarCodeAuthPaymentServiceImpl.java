@@ -59,7 +59,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
 
-            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trxCode, trx);
+            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));

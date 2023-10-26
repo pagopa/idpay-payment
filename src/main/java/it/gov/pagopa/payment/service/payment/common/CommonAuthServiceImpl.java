@@ -15,6 +15,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.servererror.InternalServerErrorException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -55,7 +56,7 @@ public abstract class CommonAuthServiceImpl {
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
 
-            AuthPaymentDTO authPaymentDTO = invokeRuleEngine( trxCode, trx);
+            AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
@@ -67,7 +68,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected AuthPaymentDTO invokeRuleEngine(String trxCode, TransactionInProgress trx){
+    protected AuthPaymentDTO invokeRuleEngine(TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
         if (trx.getStatus().equals(getSyncTrxStatus())) {
             trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
@@ -86,9 +87,9 @@ public abstract class CommonAuthServiceImpl {
                 transactionInProgressRepository.updateTrxRejected(trx, authPaymentDTO.getRejectionReasons());
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
                 if (authPaymentDTO.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
-                    throw new BudgetExhaustedException("The budget related to the user on initiativeId [%s] was exhausted.".formatted(trx.getInitiativeId()));
+                    throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(trx.getInitiativeId()));
                 }
-                throw new TransactionRejectedException("Transaction with trxCode [%s] is rejected".formatted(trxCode));
+                throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
             }
 
             trx.setStatus(authPaymentDTO.getStatus());
@@ -96,9 +97,10 @@ public abstract class CommonAuthServiceImpl {
             sendAuthPaymentNotification(trx);
 
         } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
-            throw new TransactionAlreadyAuthorizedException("Transaction with trxCode [%s] is already authorized".formatted(trxCode));
+            throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
         } else {
-            throw new OperationNotAllowedException("Cannot relate transaction in status " + trx.getStatus());
+            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(),trx.getStatus()));
         }
         return authPaymentDTO;
     }
@@ -107,7 +109,7 @@ public abstract class CommonAuthServiceImpl {
         try {
             log.info("[AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] Sending Authorization Payment event to Notification: trxId {} - userId {}", trx.getId(), trx.getUserId());
             if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new IllegalStateException("[AUTHORIZE_TRANSACTION] Something gone wrong while Auth Payment notify");
+                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while Auth Payment notify");
             }
         } catch (Exception e) {
             if(!paymentErrorNotifierService.notifyAuthPayment(

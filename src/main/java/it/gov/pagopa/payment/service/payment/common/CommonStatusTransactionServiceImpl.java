@@ -20,7 +20,7 @@ public class CommonStatusTransactionServiceImpl {
 
     public SyncTrxStatusDTO getStatusTransaction(String transactionId) {
         TransactionInProgress transactionInProgress= transactionInProgressRepository.findById(transactionId)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Transaction does not exist"));
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
         return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);
     }

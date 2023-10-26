@@ -111,7 +111,7 @@ class CommonPreAuthServiceTest {
     );
 
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
-    Assertions.assertEquals("Transaction with trxCode [trxcode1] is rejected", result.getMessage());
+    Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
@@ -153,7 +153,7 @@ class CommonPreAuthServiceTest {
     );
 
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
-    Assertions.assertEquals("Transaction with trxCode [trxcode1] is rejected", result.getMessage());
+    Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
@@ -251,7 +251,7 @@ class CommonPreAuthServiceTest {
 
     // Then
     assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, exception.getCode());
-    assertEquals(String.format("Transaction with trxCode [%s] is already authorized", trx.getTrxCode()), exception.getMessage());
+    assertEquals(String.format("Transaction with transactionId [%s] is already authorized", trx.getId()), exception.getMessage());
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
 
@@ -271,8 +271,8 @@ class CommonPreAuthServiceTest {
             () -> commonPreAuthService.relateUser(trx, USER_ID1));
 
     // Then
-    assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
-    assertEquals(String.format("Cannot relate transaction [%s] in status %s", trx.getTrxCode(), trx.getStatus()), exception.getMessage());
+    assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
+    assertEquals(String.format("Cannot operate on transaction with transactionId [%s] in status %s", trx.getId(), trx.getStatus()), exception.getMessage());
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }

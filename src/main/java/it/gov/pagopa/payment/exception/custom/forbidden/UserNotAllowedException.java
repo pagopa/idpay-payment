@@ -6,7 +6,7 @@ import it.gov.pagopa.common.web.exception.ServiceException;
 public class UserNotAllowedException extends ServiceException {
 
   public UserNotAllowedException(String message) {
-    this(ExceptionCode.TRX_ANOTHER_USER, message);
+    this(ExceptionCode.TRX_ALREADY_ASSIGNED, message);
   }
 
   public UserNotAllowedException(String code, String message) {
