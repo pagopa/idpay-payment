@@ -1,9 +1,17 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
@@ -13,6 +21,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
@@ -24,6 +33,8 @@ import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.time.OffsetDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,17 +43,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.time.OffsetDateTime;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodeAuthPaymentServiceImplTest {
@@ -60,6 +60,13 @@ class BarCodeAuthPaymentServiceImplTest {
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
     private static final String TRX_CODE1 = "trxcode1";
+    private static final String ACQUIRER_ID = "ACQUIRER_ID";
+    private static final long AMOUNT_CENTS = 1000L;
+    private static final String ID_TRX_ACQUIRER = "ID_TRX_ACQUIRER";
+    private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
+            .amountCents(AMOUNT_CENTS)
+            .idTrxAcquirer(ID_TRX_ACQUIRER)
+            .build();
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
 
@@ -79,8 +86,6 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment(){
         // Given
-        long amountCents = 1000;
-
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         transaction.setUserId(USER_ID);
@@ -117,7 +122,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of());
 
         // When
-        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, amountCents);
+        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
 
         // Then
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
@@ -131,13 +136,18 @@ class BarCodeAuthPaymentServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {-100, 0})
     void barCodeAuthPayment_invalidAmount(long amountCents) {
+        // Given
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(amountCents)
+                .idTrxAcquirer("")
+                .build();
+
         // When
-        ClientException result =
-                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, amountCents));
+        TransactionInvalidException result =
+                assertThrows(TransactionInvalidException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, ACQUIRER_ID));
 
         // Then
-        assertEquals(HttpStatus.BAD_REQUEST, result.getHttpStatus());
-        assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, ((ClientExceptionWithBody) result).getCode());
+        assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, result.getCode());
     }
 
     @Test
@@ -146,11 +156,10 @@ class BarCodeAuthPaymentServiceImplTest {
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(null);
 
         // When
-        ClientException result =
-                assertThrows(ClientException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, MERCHANT_ID, 1000));
+        TransactionNotFoundOrExpiredException result =
+                assertThrows(TransactionNotFoundOrExpiredException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID));
 
         // Then
-        assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, ((ClientExceptionWithBody) result).getCode());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
     }
 }

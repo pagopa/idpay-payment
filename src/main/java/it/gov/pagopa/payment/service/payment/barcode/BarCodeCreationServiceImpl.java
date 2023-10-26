@@ -1,10 +1,12 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
@@ -19,12 +21,10 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implements BarCodeCreationService {
@@ -73,7 +73,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                            trxBarCodeCreationRequest, channel, userId);
+                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null);
             generateTrxCodeAndSave(trx);
 
             logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
@@ -105,16 +105,11 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         WalletDTO wallet = walletConnector.getWallet(initiativeId, userId);
 
         if (wallet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-            throw new ClientExceptionWithBody(HttpStatus.FORBIDDEN,
-                    PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED,
-                    String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
+            throw new BudgetExhaustedException(String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
         }
 
         if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(wallet.getStatus())){
-            throw new ClientExceptionWithBody(
-                    HttpStatus.FORBIDDEN,
-                    PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED,
-                    "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
+            throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
     }
 }

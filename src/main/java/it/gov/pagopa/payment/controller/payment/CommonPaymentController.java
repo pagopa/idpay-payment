@@ -17,6 +17,12 @@ public interface CommonPaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId,
             @RequestHeader("x-apim-request-id") String idTrxIssuer);
 
+    @PutMapping("/{transactionId}/confirm")
+    TransactionResponse confirmPayment(
+            @PathVariable("transactionId") String trxId,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-acquirer-id") String acquirerId);
+
     @DeleteMapping("/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
     void cancelTransaction(
@@ -24,11 +30,9 @@ public interface CommonPaymentController {
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId);
 
-
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
     SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId,
-                                          @RequestHeader("x-merchant-id") String merchantId,
-                                          @RequestHeader("x-acquirer-id") String acquirerId);
+                                          @RequestHeader("x-merchant-id") String merchantId);
 
 }

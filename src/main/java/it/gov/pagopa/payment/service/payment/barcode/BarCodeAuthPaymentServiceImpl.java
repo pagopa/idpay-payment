@@ -1,25 +1,26 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -42,24 +43,21 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, String merchantId, long amountCents){
+    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId){
         try {
-            if (amountCents <= 0L) {
-                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", amountCents);
-                throw new ClientExceptionWithBody(
-                        HttpStatus.BAD_REQUEST,
-                        PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID,
-                        "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
+            if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
+                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
+                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
             checkAuth(trxCode, trx);
 
-            String merchantBusinessName = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId()).getBusinessName();
+            MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
-            setTrxFields(merchantId, amountCents, trx, merchantBusinessName);
+            setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trxCode, trx);
 
@@ -88,11 +86,16 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
         return SyncTrxStatus.CREATED;
     }
 
-    private static void setTrxFields(String merchantId, long amountCents, TransactionInProgress trx, String merchantBusinessName) {
-        trx.setAmountCents(amountCents);
-        trx.setEffectiveAmount(CommonUtilities.centsToEuro(amountCents));
+    private static void setTrxFields(String merchantId, AuthBarCodePaymentDTO authBarCodePaymentDTO,
+                                     TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId) {
+        trx.setAmountCents(authBarCodePaymentDTO.getAmountCents());
+        trx.setEffectiveAmount(CommonUtilities.centsToEuro(authBarCodePaymentDTO.getAmountCents()));
+        trx.setIdTrxAcquirer(authBarCodePaymentDTO.getIdTrxAcquirer());
         trx.setMerchantId(merchantId);
-        trx.setBusinessName(merchantBusinessName);
+        trx.setBusinessName(merchantDetail.getBusinessName());
+        trx.setMerchantFiscalCode(merchantDetail.getFiscalCode());
+        trx.setVat(merchantDetail.getVatNumber());
+        trx.setAcquirerId(acquirerId);
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
     }
 }

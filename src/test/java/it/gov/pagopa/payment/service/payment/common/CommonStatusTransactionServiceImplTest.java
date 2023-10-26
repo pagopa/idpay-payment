@@ -1,6 +1,9 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
+
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
@@ -9,19 +12,14 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
 
 @ExtendWith(MockitoExtension.class)
 class CommonStatusTransactionServiceImplTest {
@@ -42,9 +40,9 @@ class CommonStatusTransactionServiceImplTest {
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
 
-        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findByIdAndMerchantIdAndAcquirerId(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
         //when
-        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId());
         //then
         Assertions.assertNotNull(result);
         TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
@@ -54,12 +52,12 @@ class CommonStatusTransactionServiceImplTest {
     void getStatusTransaction_NotFoundException(){
         //given
         doReturn(Optional.empty()).when(transactionInProgressRepositoryMock)
-                .findByIdAndMerchantIdAndAcquirerId("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1");
+                .findById("TRANSACTIONID1");
         //when
         //then
-        ClientExceptionNoBody clientExceptionNoBody= assertThrows(ClientExceptionNoBody.class,
-                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1","MERCHANTID1","ACQUIRERID1"));
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, clientExceptionNoBody.getHttpStatus());
+        TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
+                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1"));
+        Assertions.assertEquals("PAYMENT_NOT_FOUND_EXPIRED", clientExceptionNoBody.getCode());
         Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
     }
 }

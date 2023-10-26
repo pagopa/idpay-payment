@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
@@ -40,10 +39,6 @@ public interface QRCodePaymentController {
   @DeleteMapping("/merchant/{transactionId}")
   @ResponseStatus(code = HttpStatus.OK)
   void cancelTransaction(@PathVariable("transactionId") String transactionId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
-
-  @GetMapping("/merchant/status/{transactionId}")
-  @ResponseStatus(code = HttpStatus.OK)
-  SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
 
   @PutMapping("/force-expiration/confirm/{initiativeId}")
   Long forceConfirmTrxExpiration(@PathVariable("initiativeId") String initiativeId);

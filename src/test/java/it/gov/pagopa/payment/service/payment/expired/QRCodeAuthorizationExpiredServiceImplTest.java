@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.payment.expired;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.servererror.RewardCalculatorInvocationException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -15,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeAuthorizationExpiredServiceImplTest {
@@ -52,8 +52,8 @@ class QRCodeAuthorizationExpiredServiceImplTest {
         AuthPaymentDTO authTrx = AuthPaymentDTOFaker.mockInstance(1, trxIdentified);
         Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentified)).thenReturn(authTrx);
 
-        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException404)).thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "NOT_FOUND"));
-        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException500)).thenThrow(new ClientExceptionNoBody(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR"));
+        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException404)).thenThrow(new TransactionNotFoundOrExpiredException("NOT_FOUND"));
+        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException500)).thenThrow(new RewardCalculatorInvocationException("INTERNAL_SERVER_ERROR"));
 
         qrCodeAuthorizationExpiredService.execute();
         Mockito.verify(transactionInProgressRepositoryMock).deleteById(trxCreate.getId());

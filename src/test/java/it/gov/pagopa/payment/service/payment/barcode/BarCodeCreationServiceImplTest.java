@@ -1,15 +1,25 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.common.web.exception.ClientException;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
+import it.gov.pagopa.payment.exception.custom.notfound.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.mapper.*;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.InitiativeConfig;
@@ -23,8 +33,11 @@ import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
 import org.bson.BsonString;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,15 +49,6 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
-import org.springframework.http.HttpStatus;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodeCreationServiceImplTest {
@@ -63,6 +67,8 @@ class BarCodeCreationServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private MerchantConnector merchantConnector;
     @Mock private WalletConnector walletConnector;
+
+    private static final String INITIATIVE_NAME = "INITIATIVE_NAME";
 
     BarCodeCreationServiceImpl barCodeCreationService;
 
@@ -98,6 +104,7 @@ class BarCodeCreationServiceImplTest {
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
+                anyString(),
                 anyString()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
@@ -120,6 +127,7 @@ class BarCodeCreationServiceImplTest {
                 .initiativeConfig(InitiativeConfig.builder()
                         .initiativeId(initiativeid)
                         .initiativeRewardType(initiativeRewardType)
+                        .initiativeName(INITIATIVE_NAME)
                         .startDate(TODAY.minusDays(1))
                         .endDate(TODAY.plusDays(1))
                         .build())
@@ -144,6 +152,7 @@ class BarCodeCreationServiceImplTest {
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
+                anyString(),
                 anyString()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
@@ -184,17 +193,16 @@ class BarCodeCreationServiceImplTest {
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.empty());
 
-        ClientException result =
+        InitiativeNotfoundException result =
                 Assertions.assertThrows(
-                        ClientException.class,
+                    InitiativeNotfoundException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, result.getCode());
     }
 
     @Test
@@ -206,17 +214,16 @@ class BarCodeCreationServiceImplTest {
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.REFUND)));
 
-        ClientException result =
+        InitiativeNotfoundException result =
                 Assertions.assertThrows(
-                        ClientException.class,
+                    InitiativeNotfoundException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, result.getCode());
     }
 
     @Test
@@ -232,16 +239,15 @@ class BarCodeCreationServiceImplTest {
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
-        ClientException result =
+        BudgetExhaustedException result =
                 Assertions.assertThrows(
-                        ClientException.class,
+                    BudgetExhaustedException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
         Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted.", trxCreationReq.getInitiativeId()), result.getMessage());
     }
 
@@ -259,12 +265,11 @@ class BarCodeCreationServiceImplTest {
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         // When
-        ClientException result = Assertions.assertThrows(ClientException.class,
+        UserNotOnboardedException result = Assertions.assertThrows(UserNotOnboardedException.class,
                 () -> barCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
 
         // Then
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, result.getCode());
     }
 
     @ParameterizedTest
@@ -279,17 +284,16 @@ class BarCodeCreationServiceImplTest {
         when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
                 .thenReturn(Optional.of(rule));
 
-        ClientException result =
+        InitiativeInvalidException result =
                 Assertions.assertThrows(
-                        ClientException.class,
+                    InitiativeInvalidException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, ((ClientExceptionWithBody) result).getCode());
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, result.getCode());
     }
 
     private static Stream<Arguments> dateArguments() {
@@ -299,7 +303,6 @@ class BarCodeCreationServiceImplTest {
         );
     }
 
-    @NotNull
     private RewardRule buildRuleWithInvalidDate(TransactionBarCodeCreationRequest trxCreationReq, LocalDate invalidDate) {
         RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
         InitiativeConfig config = rule.getInitiativeConfig();
