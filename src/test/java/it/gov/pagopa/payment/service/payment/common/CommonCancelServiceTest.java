@@ -1,22 +1,18 @@
-package it.gov.pagopa.payment.service.payment.qrcode;
+package it.gov.pagopa.payment.service.payment.common;
 
-import static org.mockito.Mockito.when;
-
-import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,8 +23,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
+
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
-class QRCodeCancelServiceTest {
+class CommonCancelServiceTest {
 
     private final long cancelExpirationMinutes = 5;
 
