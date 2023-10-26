@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.service.payment.expired;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;
-import it.gov.pagopa.payment.service.payment.qrcode.QRCodeConfirmationService;
+import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -17,21 +17,19 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
     private final long cancelExpirationMinutes;
 
     private final TransactionInProgressRepository transactionInProgressRepository;
-    private final QRCodeConfirmationService qrCodeConfirmationService;
+    private final CommonConfirmServiceImpl commonConfirmService;
 
     public QRCodeCancelExpiredServiceImpl(
             @Value("${app.qrCode.expirations.cancelMinutes:15}") long cancelExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
-            QRCodeConfirmationService qrCodeConfirmationService,
-            AuditUtilities auditUtilities
-            ) {
+            AuditUtilities auditUtilities,
+            CommonConfirmServiceImpl commonConfirmService) {
         super(auditUtilities, RewardConstants.TRX_CHANNEL_QRCODE);
 
         this.transactionInProgressRepository = transactionInProgressRepository;
-        this.qrCodeConfirmationService = qrCodeConfirmationService;
-
         this.cancelExpirationMinutes = cancelExpirationMinutes;
+        this.commonConfirmService = commonConfirmService;
     }
 
     @Override
@@ -46,7 +44,7 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
 
     @Override
     protected TransactionInProgress handleExpiredTransaction(TransactionInProgress trx) {
-        qrCodeConfirmationService.confirmAuthorizedPayment(trx);
+        commonConfirmService.confirmAuthorizedPayment(trx);
         return trx;
     }
 

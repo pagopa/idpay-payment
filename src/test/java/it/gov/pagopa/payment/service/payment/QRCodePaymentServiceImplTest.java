@@ -25,8 +25,6 @@ class QRCodePaymentServiceImplTest {
     @Mock
     private QRCodeAuthPaymentService qrCodeAuthPaymentServiceMock;
     @Mock
-    private QRCodeConfirmationService qrCodeConfirmationServiceMock;
-    @Mock
     private QRCodeCancelService qrCodeCancelServiceMock;
     @Mock
     private QRCodeUnrelateService qrCodeUnrelateService;
@@ -38,7 +36,6 @@ class QRCodePaymentServiceImplTest {
        QRCodePaymentServiceImpl qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
-                qrCodeConfirmationServiceMock,
                 qrCodeCancelServiceMock,
                 qrCodeUnrelateService);
     }
@@ -48,8 +45,7 @@ class QRCodePaymentServiceImplTest {
         Mockito.verifyNoMoreInteractions(
                 qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
-                qrCodeAuthPaymentServiceMock,
-                qrCodeConfirmationServiceMock);
+                qrCodeAuthPaymentServiceMock);
     }
 
     @Test

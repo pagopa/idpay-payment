@@ -75,19 +75,6 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
 
   @Override
   @PerformanceLog(
-      value = "QR_CODE_CONFIRM_PAYMENT",
-      payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
-    log.info(
-        "[QR_CODE_CONFIRM_PAYMENT] The merchant {} through acquirer {} is confirming the transaction {}",
-        merchantId,
-        acquirerId,
-        trxId);
-    return qrCodePaymentService.confirmPayment(trxId, merchantId, acquirerId);
-  }
-
-  @Override
-  @PerformanceLog(
           value = "QR_CODE_CANCEL_TRANSACTION",
           payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
   public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
