@@ -53,7 +53,7 @@ class QRCodeUnrelateServiceImplTest {
             Assertions.fail("Expected exception");
         } catch (TransactionNotFoundOrExpiredException e) {
             Assertions.assertEquals(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, e.getCode());
-            Assertions.assertEquals("[UNRELATE_TRANSACTION] Cannot find transaction having code: TRXCODE", e.getMessage());
+            Assertions.assertEquals("Cannot find transaction with trxCode [TRXCODE]", e.getMessage());
 
         }
     }
@@ -70,8 +70,8 @@ class QRCodeUnrelateServiceImplTest {
             invokeService();
             Assertions.fail("Expected exception");
         } catch (UserNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_ANOTHER_USER, e.getCode());
-            Assertions.assertEquals("[UNRELATE_TRANSACTION] Requesting userId (USERID) not allowed to operate on transaction having id MOCKEDTRANSACTION_qr-code_0", e.getMessage());
+            Assertions.assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, e.getCode());
+            Assertions.assertEquals("Transaction with trxCode [TRXCODE] is already assigned to another user", e.getMessage());
         }
     }
 
@@ -85,8 +85,8 @@ class QRCodeUnrelateServiceImplTest {
             invokeService();
             Assertions.fail("Expected exception");
         } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, e.getCode());
-            Assertions.assertEquals("[UNRELATE_TRANSACTION] Cannot unrelate transaction not in status IDENTIFIED: id MOCKEDTRANSACTION_qr-code_0", e.getMessage());
+            Assertions.assertEquals(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("Cannot unrelate transaction with transactionId [MOCKEDTRANSACTION_qr-code_0] not in status identified", e.getMessage());
         }
     }
 

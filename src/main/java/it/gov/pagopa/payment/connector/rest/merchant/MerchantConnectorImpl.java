@@ -23,7 +23,8 @@ public class MerchantConnectorImpl implements MerchantConnector{
             merchantDetailDTO = restClient.merchantDetail(merchantId, initiativeId);
         } catch (FeignException e) {
             if (e.status() == 404) {
-                throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.MERCHANT_NOT_ONBOARDED, String.format("The merchant is not related with initiative [%s]", initiativeId));
+                throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.MERCHANT_NOT_ONBOARDED,
+                        String.format("The current merchant is not related with initiative [%s]", initiativeId));
             }
 
             throw new MerchantInvocationException(

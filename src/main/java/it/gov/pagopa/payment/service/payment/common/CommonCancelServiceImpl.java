@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.servererror.InternalServerErrorException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -52,17 +53,17 @@ public class CommonCancelServiceImpl {
             TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
             if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException("[CANCEL_TRANSACTION] Cannot found transaction having id: " + trxId);
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
             }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
-                throw new MerchantOrAcquirerNotAllowedException("[CANCEL_TRANSACTION] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
+                throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
 
             if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
-                throw new OperationNotAllowedException("[CANCEL_TRANSACTION] Cannot cancel confirmed transaction: id %s".formatted(trxId));
+                throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel confirmed transaction with transactionId [%s]".formatted(trxId));
             }
             if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
-                throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, "[CANCEL_TRANSACTION] Cannot cancel expired transaction: id %s".formatted(trxId));
+                throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, "Cannot cancel expired transaction with transactionId [%s]".formatted(trxId));
             }
 
             if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){
@@ -91,7 +92,7 @@ public class CommonCancelServiceImpl {
         try {
             log.info("[CANCEL_TRANSACTION][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
             if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new IllegalStateException("[CANCEL_TRANSACTION] Something gone wrong while cancelling Authorized Payment notify");
+                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while cancelling Authorized Payment notify");
             }
         } catch (Exception e) {
             if(!paymentErrorNotifierService.notifyCancelPayment(

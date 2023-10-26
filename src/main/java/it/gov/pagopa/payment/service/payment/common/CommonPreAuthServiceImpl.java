@@ -46,7 +46,7 @@ public class CommonPreAuthServiceImpl{
 
   public TransactionInProgress relateUser(TransactionInProgress trx, String userId) {
     try {
-      checkPreAuth(trx.getTrxCode(), userId, trx);
+      checkPreAuth(userId, trx);
 
       trx.setUserId(userId);
 
@@ -69,9 +69,9 @@ public class CommonPreAuthServiceImpl{
               trx.getId(), trx.getUserId(), preview.getRejectionReasons(), channel);
       log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
       if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
-        throw new BudgetExhaustedException("Budget exhausted for user [%s] and initiative [%s]".formatted(trx.getUserId(), trx.getInitiativeId()));
+        throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(trx.getInitiativeId()));
       }
-      throw new TransactionRejectedException("Transaction with trxCode [%s] is rejected".formatted(trx.getTrxCode()));
+      throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
     } else {
       preview.setRejectionReasons(null);
       preview.setStatus(SyncTrxStatus.IDENTIFIED);
@@ -89,7 +89,7 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  protected void checkPreAuth(String trxCode, String userId, TransactionInProgress trx) {
+  protected void checkPreAuth(String userId, TransactionInProgress trx) {
     String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
       throw new UserSuspendedException("The user has been suspended for initiative [%s]".formatted(trx.getInitiativeId()));
@@ -100,19 +100,19 @@ public class CommonPreAuthServiceImpl{
     }
 
     if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
-      throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
+      throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trx.getId()));
     }
 
     if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
-      throw new UserNotAllowedException("Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+      throw new UserNotAllowedException(ExceptionCode.TRX_ALREADY_ASSIGNED, "Transaction with transactionId [%s] is already assigned to another user".formatted(trx.getId()));
     }
 
     if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
-      throw new TransactionAlreadyAuthorizedException("Transaction with trxCode [%s] is already authorized".formatted(trxCode));
+      throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
     }
 
     if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-      throw new OperationNotAllowedException("Cannot relate transaction [%s] in status %s".formatted(trxCode, trx.getStatus()));
+      throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(), trx.getStatus()));
     }
   }
 

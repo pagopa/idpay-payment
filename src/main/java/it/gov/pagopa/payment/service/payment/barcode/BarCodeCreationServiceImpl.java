@@ -105,7 +105,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         WalletDTO wallet = walletConnector.getWallet(initiativeId, userId);
 
         if (wallet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
-            throw new BudgetExhaustedException(String.format("The budget related to the user on initiativeId [%s] was exhausted.", initiativeId));
+            throw new BudgetExhaustedException(String.format("Budget exhausted for the current user and initiative [%s]", initiativeId));
         }
 
         if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(wallet.getStatus())){

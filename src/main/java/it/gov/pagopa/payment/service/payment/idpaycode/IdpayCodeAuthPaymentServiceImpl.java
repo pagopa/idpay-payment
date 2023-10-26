@@ -36,7 +36,7 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
     }
-        @Override
+    @Override
     public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
         TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId);
 
@@ -45,16 +45,14 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
         }
 
         if(trx.getUserId() == null){
-            throw new OperationNotAllowedException("Unexpected status for transaction with transactionId [%s]".formatted(trxId));
+            throw new OperationNotAllowedException(ExceptionCode.TRX_USER_NOT_ASSOCIATED, "User not associated to transaction with transactionId [%s]".formatted(trxId));
         }
 
         // payment-instrument call to check pinBlock
         paymentInstrumentConnector.checkPinBlock(pinBlockBody,trx.getUserId());
 
         if (!merchantId.equals(trx.getMerchantId())){
-            throw new MerchantOrAcquirerNotAllowedException(
-                ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED,
-                    "The merchant id [%s] of the trx , is not equal to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
+            throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
         return super.authPayment(trx,trx.getUserId(),trx.getTrxCode());
 
