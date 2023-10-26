@@ -130,12 +130,11 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
     }
 
     @Override
-    protected MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception {//TODO fix duplicate code
+    protected MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception {//TODO fix duplicate code
         return mockMvc
                 .perform(
-                        get("/idpay/payment/qr-code/merchant/status/{transactionId}",transactionId)
+                        get("/idpay/payment/{transactionId}/status",transactionId)
                                 .header("x-merchant-id",merchantId)
-                                .header("x-acquirer-id",acquirerId)
                 ).andReturn();
     }
 
