@@ -57,7 +57,7 @@ class CommonStatusTransactionServiceImplTest {
         //then
         TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
                 ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1"));
-        Assertions.assertEquals("PAYMENT_NOT_FOUND_EXPIRED", clientExceptionNoBody.getCode());
-        Assertions.assertEquals("Transaction does not exist", clientExceptionNoBody.getMessage());
+        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", clientExceptionNoBody.getCode());
+        Assertions.assertEquals("Cannot find transaction with transactionId [TRANSACTIONID1]", clientExceptionNoBody.getMessage());
     }
 }

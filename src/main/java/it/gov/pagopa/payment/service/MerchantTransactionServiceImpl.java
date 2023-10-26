@@ -86,7 +86,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new PDVInvocationException("Error during decryption, userId: [%s]".formatted(userId));
+            throw new PDVInvocationException("An error occurred during decryption");
         }
         return fiscalCode;
     }
@@ -97,7 +97,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
             userId = encryptedCfDTO.getToken();
         } catch (Exception e) {
-            throw new PDVInvocationException("Error during encryption");
+            throw new PDVInvocationException("An error occurred during encryption");
         }
         return userId;
     }

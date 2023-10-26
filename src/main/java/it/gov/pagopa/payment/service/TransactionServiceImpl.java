@@ -26,11 +26,11 @@ public class TransactionServiceImpl implements TransactionService {
         .orElse(null);
 
     if (transactionInProgress == null) {
-      throw new TransactionNotFoundOrExpiredException("Transaction does not exist.");
+      throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(id));
     }
 
     if (!userId.equals(transactionInProgress.getUserId())) {
-      throw new UserNotAllowedException("User %s does not exist".formatted(userId));
+      throw new UserNotAllowedException("Transaction with transactionId [%s] is already assigned to another user".formatted(id));
     }
 
     return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);

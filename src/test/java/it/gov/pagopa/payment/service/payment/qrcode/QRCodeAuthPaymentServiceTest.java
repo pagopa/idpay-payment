@@ -215,7 +215,7 @@ class QRCodeAuthPaymentServiceTest {
     UserNotAllowedException result =
         assertThrows(UserNotAllowedException.class, () -> service.authPayment("userId", "trxcode1"));
 
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ANOTHER_USER, result.getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_ASSIGNED, result.getCode());
   }
 
   @Test
@@ -257,7 +257,7 @@ class QRCodeAuthPaymentServiceTest {
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, result.getCode());
   }
 
   @Test

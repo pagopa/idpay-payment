@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.qrcode;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.custom.forbidden.UserNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
@@ -44,7 +45,8 @@ public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implemen
 
   private void checkUser(String trxCode,String userId, TransactionInProgress trx){
     if (trx.getUserId()!=null && !userId.equals(trx.getUserId())) {
-      throw new UserNotAllowedException("Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
+      throw new UserNotAllowedException(ExceptionCode.TRX_ALREADY_ASSIGNED,
+              "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
     }
   }
 }

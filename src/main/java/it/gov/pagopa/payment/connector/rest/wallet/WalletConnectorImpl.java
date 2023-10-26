@@ -20,7 +20,7 @@ public class WalletConnectorImpl implements WalletConnector{
             walletDTO = restClient.getWallet(initiativeId, userId);
         } catch (FeignException e){
             if (e.status() == 404) {
-                throw new UserNotOnboardedException(String.format("The user is not onboarded on initiative [%s].", initiativeId));
+                throw new UserNotOnboardedException(String.format("The current user is not onboarded on initiative [%s]", initiativeId));
             }
 
             throw new WalletInvocationException(

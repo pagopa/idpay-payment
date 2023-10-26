@@ -89,7 +89,7 @@ class MerchantTransactionServiceTest {
             service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
         } catch (PDVInvocationException e){
             assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
-            assertEquals("Error during encryption", e.getMessage());
+            assertEquals("An error occurred during encryption", e.getMessage());
         }
     }
 
@@ -108,7 +108,7 @@ class MerchantTransactionServiceTest {
             service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
         } catch (PDVInvocationException e){
             assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
-            assertEquals("Error during decryption, userId: [USERID1]", e.getMessage());
+            assertEquals("An error occurred during decryption", e.getMessage());
         }
     }
 

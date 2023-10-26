@@ -65,7 +65,7 @@ class TransactionServiceTest {
     );
 
     Assertions.assertEquals(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
-    Assertions.assertEquals("Transaction does not exist.", result.getMessage());
+    Assertions.assertEquals("Cannot find transaction with transactionId [MOCKEDTRANSACTION_qr-code_1]", result.getMessage());
   }
 
   @Test
@@ -80,7 +80,7 @@ class TransactionServiceTest {
         transactionService.getTransaction(TRANSACTION_ID, USER_ID)
     );
 
-    Assertions.assertEquals(ExceptionCode.TRX_ANOTHER_USER, result.getCode());
-    Assertions.assertEquals("User USERID1 does not exist", result.getMessage());
+    Assertions.assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, result.getCode());
+    Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is already assigned to another user", result.getMessage());
   }
 }

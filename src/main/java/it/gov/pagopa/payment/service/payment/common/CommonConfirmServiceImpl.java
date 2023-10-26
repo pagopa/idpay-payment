@@ -1,12 +1,14 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.servererror.InternalServerErrorException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -37,13 +39,14 @@ public class CommonConfirmServiceImpl {
             TransactionInProgress trx = repository.findByIdThrottled(trxId);
 
             if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException("[CONFIRM_PAYMENT] Cannot found transaction having id: " + trxId);
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
             }
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
-                throw new OperationNotAllowedException("[CONFIRM_PAYMENT] Cannot confirm transaction having id %s: actual status is %s".formatted(trxId, trx.getStatus()));
+                throw new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                        "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trxId,trx.getStatus()));
             }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
-                throw new MerchantOrAcquirerNotAllowedException("[CONFIRM_PAYMENT] Requesting merchantId (%s through acquirer %s) not allowed to operate on transaction having id %s".formatted(merchantId, acquirerId, trxId));
+                throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
 
             confirmAuthorizedPayment(trx);
@@ -69,7 +72,7 @@ public class CommonConfirmServiceImpl {
         try {
             log.info("[CONFIRM_PAYMENT][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
             if (!notifierService.notify(trx, trx.getMerchantId())) {
-                throw new IllegalStateException("[CONFIRM_PAYMENT] Something gone wrong while Confirm Payment notify");
+                throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR,  "Something gone wrong while Confirm Payment notify");
             }
         } catch (Exception e) {
             if(!paymentErrorNotifierService.notifyConfirmPayment(
