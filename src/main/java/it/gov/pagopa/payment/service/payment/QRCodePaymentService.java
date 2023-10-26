@@ -7,7 +7,5 @@ public interface QRCodePaymentService {
 
   AuthPaymentDTO relateUser(String trxCode, String userId);
   AuthPaymentDTO authPayment(String userId, String trxCode);
-
-  void cancelPayment(String trxId, String merchantId, String acquirerId);
   void unrelateUser(String trxCode, String userId);
 }

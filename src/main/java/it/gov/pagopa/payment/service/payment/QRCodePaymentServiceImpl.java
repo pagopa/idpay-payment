@@ -10,18 +10,15 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
 
   private final QRCodePreAuthService qrCodePreAuthService;
   private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
-  private final QRCodeCancelService qrCodeCancelService;
   private final QRCodeUnrelateService qrCodeUnrelateService;
 
   @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public QRCodePaymentServiceImpl(
           QRCodePreAuthService qrCodePreAuthService,
           QRCodeAuthPaymentService qrCodeAuthPaymentService,
-          QRCodeCancelService qrCodeCancelService,
           QRCodeUnrelateService qrCodeUnrelateService) {
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
-    this.qrCodeCancelService = qrCodeCancelService;
     this.qrCodeUnrelateService = qrCodeUnrelateService;
   }
 
@@ -33,11 +30,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     return qrCodeAuthPaymentService.authPayment(userId, trxCode);
-  }
-
-  @Override
-  public void cancelPayment(String trxId, String merchantId, String acquirerId) {
-    qrCodeCancelService.cancelTransaction(trxId, merchantId, acquirerId);
   }
 
   @Override
