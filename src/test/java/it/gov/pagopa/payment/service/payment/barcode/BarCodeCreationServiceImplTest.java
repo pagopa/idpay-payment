@@ -248,7 +248,7 @@ class BarCodeCreationServiceImplTest {
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(String.format("The budget related to the user on initiativeId [%s] was exhausted.", trxCreationReq.getInitiativeId()), result.getMessage());
+        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage());
     }
 
     @Test
