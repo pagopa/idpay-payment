@@ -237,7 +237,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         //Unauthorized operator
         extractResponse(getStatusTransaction("DUMMYID", "DUMMYMERCHANTID"), HttpStatus.NOT_FOUND, null);
 
-        assertEquals(getChannel(), stored.getChannel());
+        assertNull(stored.getChannel());
         trxCreated.setTrxDate(OffsetDateTime.parse(
                 trxCreated.getTrxDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"))));
         assertEquals(trxCreated, transactionResponseMapper.apply(stored));
@@ -944,10 +944,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals("BUSINESSNAME", trxStored.getBusinessName());
         Assertions.assertEquals(userId, trxStored.getUserId());
         Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
-        Assertions.assertEquals(getChannel(), trxStored.getChannel());
-        Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
-        Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
+        Assertions.assertNull(trxStored.getChannel());
 
+        if (trxResponse.getAcquirerId().equals("PAGOPA")) {
+            Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
+            Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
+        }
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {
                 Assertions.assertNull(trxStored.getTrxChargeDate());

@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
@@ -21,19 +20,6 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService, QRCodeExpirationService qrCodeExpirationService) {
     this.qrCodePaymentService = qrCodePaymentService;
     this.qrCodeExpirationService = qrCodeExpirationService;
-  }
-
-  @Override
-  @PerformanceLog(
-      value = "QR_CODE_CREATE_TRANSACTION",
-      payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse createTransaction(
-      TransactionCreationRequest trxCreationRequest,
-      String merchantId,
-      String acquirerId,
-      String idTrxIssuer) {
-    log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} through acquirer {} is creating a transaction", merchantId, acquirerId);
-    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId, idTrxIssuer);
   }
 
   @Override

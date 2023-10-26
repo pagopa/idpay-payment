@@ -35,7 +35,7 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     private final PaymentInstrumentConnector paymentInstrumentConnector;
     private final AuthPaymentIdpayCodeMapper authPaymentIdpayCodeMapper;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-    public IdpayCodePreAuthServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
+    public IdpayCodePreAuthServiceImpl(@Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
                                        TransactionInProgressRepository transactionInProgressRepository,
                                        RewardCalculatorConnector rewardCalculatorConnector,
                                        AuditUtilities auditUtilities,

@@ -160,10 +160,10 @@ app:
   common:
     expirations:
       cancelMinutes: ${COMMON_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
+      authorizationMinutes: ${COMMON_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     expirations:
-      authorizationMinutes: ${QR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:4320}}
       cancelMinutes: ${QR_CODE_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
       schedule:
         authorizationExpired: ${QR_CODE_AUTH_EXPIRED_SCHEDULE:0 0 2 * * ?} # every day at 2AM and every 6 hours (for testing purposes: every 2 mins)
@@ -175,9 +175,6 @@ app:
   barCode:
     expirations:
       authorizationMinutes: ${BAR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
-  idpayCode:
-    expirations:
-      authorizationMinutes: ${IDPAY_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}

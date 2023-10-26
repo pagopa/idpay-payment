@@ -23,7 +23,6 @@ import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.qrcode.QRCodeCreationServiceImpl;
 import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -69,7 +68,7 @@ class CommonCreationServiceImplTest {
   @BeforeEach
   void setUp() {
     CommonCreationService =
-        new QRCodeCreationServiceImpl(
+        new CommonCreationServiceImpl(
                 transactionInProgress2TransactionResponseMapper,
             transactionCreationRequest2TransactionInProgressMapper,
             rewardRuleRepository,

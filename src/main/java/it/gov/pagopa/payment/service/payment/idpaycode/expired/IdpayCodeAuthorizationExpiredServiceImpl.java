@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpiration implements IdpayCodeAuthorizationExpiredService {
 
-    public IdpayCodeAuthorizationExpiredServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes:5}") long authorizationExpirationMinutes,
+    public IdpayCodeAuthorizationExpiredServiceImpl(@Value("${app.common.expirations.authorizationMinutes:5}") long authorizationExpirationMinutes,
                                                     TransactionInProgressRepository transactionInProgressRepository,
                                                     AuditUtilities auditUtilities,
                                                     RewardCalculatorConnector rewardCalculatorConnector) {
