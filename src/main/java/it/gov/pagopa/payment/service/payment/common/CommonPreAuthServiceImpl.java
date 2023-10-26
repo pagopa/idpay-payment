@@ -61,6 +61,7 @@ public class CommonPreAuthServiceImpl{
   public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel) {
     try {
     trx.setTrxChargeDate(OffsetDateTime.now());
+    trx.setChannel(channel);
     AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
 
     if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {

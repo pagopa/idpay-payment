@@ -31,7 +31,7 @@ class CommonConfirmServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
 
 
-    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(4320,5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
 
     CommonConfirmServiceImpl service;
 

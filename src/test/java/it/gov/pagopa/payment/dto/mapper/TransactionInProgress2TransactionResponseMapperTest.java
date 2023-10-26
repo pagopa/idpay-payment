@@ -17,13 +17,13 @@ class TransactionInProgress2TransactionResponseMapperTest {
 
     @BeforeEach
     void setUp() {
-        mapper = new TransactionInProgress2TransactionResponseMapper(4320,5,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
+        mapper = new TransactionInProgress2TransactionResponseMapper(5,QRCODE_IMG_BASEURL, QRCODE_TXT_BASEURL);
     }
 
     @Test
     void applyTest() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
-                .channel("QRCODE")
+                .acquirerId("PAGOPA")
                 .reward(1000L)
                 .build();
         TransactionResponse result = mapper.apply(trx);
@@ -39,7 +39,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     @Test
     void splitPaymentTrueTest() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
-                .channel("QRCODE")
+                .acquirerId("PAGOPA")
                 .reward(200L)
                 .build();
         TransactionResponse result = mapper.apply(trx);

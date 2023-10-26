@@ -40,7 +40,7 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     private static final int N = 20;
     private static final int N_EXPIRED = N/2;
 
-    @Value("${app.qrCode.expirations.authorizationMinutes}")
+    @Value("${app.common.expirations.authorizationMinutes}")
     private int authorizationMinutes;
     @Value("${app.qrCode.expirations.cancelMinutes}")
     private int cancelMinutes;

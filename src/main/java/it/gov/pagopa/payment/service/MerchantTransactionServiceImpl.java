@@ -33,7 +33,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
     public MerchantTransactionServiceImpl(
-            @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+            @Value("${app.common.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
 
             DecryptRestConnector decryptRestConnector,
             EncryptRestConnector encryptRestConnector,
