@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.time.OffsetDateTime;
@@ -37,12 +38,12 @@ class QRCodeCancelServiceTest {
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
 
-    private QRCodeCancelService service;
+    private CommonCancelServiceImpl service;
 
     @BeforeEach
     void init() {
         service =
-                new QRCodeCancelServiceImpl(
+                new CommonCancelServiceImpl (
                         cancelExpirationMinutes,
                         repositoryMock,
                         rewardCalculatorConnectorMock,

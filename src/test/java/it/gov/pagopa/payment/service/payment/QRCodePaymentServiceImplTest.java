@@ -25,8 +25,6 @@ class QRCodePaymentServiceImplTest {
     @Mock
     private QRCodeAuthPaymentService qrCodeAuthPaymentServiceMock;
     @Mock
-    private QRCodeCancelService qrCodeCancelServiceMock;
-    @Mock
     private QRCodeUnrelateService qrCodeUnrelateService;
     @Mock
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
@@ -36,7 +34,6 @@ class QRCodePaymentServiceImplTest {
        QRCodePaymentServiceImpl qrCodePaymentService = new QRCodePaymentServiceImpl(qrCodeCreationServiceMock,
                 qrCodePreAuthServiceMock,
                 qrCodeAuthPaymentServiceMock,
-                qrCodeCancelServiceMock,
                 qrCodeUnrelateService);
     }
 

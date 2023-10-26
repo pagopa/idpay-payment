@@ -74,19 +74,6 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   }
 
   @Override
-  @PerformanceLog(
-          value = "QR_CODE_CANCEL_TRANSACTION",
-          payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
-    log.info(
-            "[QR_CODE_CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {}",
-            merchantId,
-            acquirerId,
-            trxId);
-    qrCodePaymentService.cancelPayment(trxId, merchantId, acquirerId);
-  }
-
-  @Override
   @PerformanceLog("FORCE_CONFIRM_EXPIRATION")
   public Long forceConfirmTrxExpiration(String initiativeId) {
     log.info("[FORCE_CONFIRM_EXPIRATION] Requested confirm trx expiration for initiative {}", initiativeId);

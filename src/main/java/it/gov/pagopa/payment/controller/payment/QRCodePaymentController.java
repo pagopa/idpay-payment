@@ -33,10 +33,6 @@ public interface QRCodePaymentController {
   void unrelateUser(@PathVariable("trxCode") String trxCode,
                     @RequestHeader("x-user-id") String userId);
 
-  @DeleteMapping("/merchant/{transactionId}")
-  @ResponseStatus(code = HttpStatus.OK)
-  void cancelTransaction(@PathVariable("transactionId") String transactionId, @RequestHeader("x-merchant-id") String merchantId, @RequestHeader("x-acquirer-id") String acquirerId);
-
   @PutMapping("/force-expiration/confirm/{initiativeId}")
   Long forceConfirmTrxExpiration(@PathVariable("initiativeId") String initiativeId);
 
