@@ -13,7 +13,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeCreationService qrCodeCreationService;
   private final QRCodePreAuthService qrCodePreAuthService;
   private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
-  private final QRCodeConfirmationService qrCodeConfirmationService;
   private final QRCodeCancelService qrCodeCancelService;
   private final QRCodeUnrelateService qrCodeUnrelateService;
 
@@ -22,13 +21,11 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
           QRCodeCreationService qrCodeCreationService,
           QRCodePreAuthService qrCodePreAuthService,
           QRCodeAuthPaymentService qrCodeAuthPaymentService,
-          QRCodeConfirmationService qrCodeConfirmationService,
           QRCodeCancelService qrCodeCancelService,
           QRCodeUnrelateService qrCodeUnrelateService) {
     this.qrCodeCreationService = qrCodeCreationService;
     this.qrCodePreAuthService = qrCodePreAuthService;
     this.qrCodeAuthPaymentService = qrCodeAuthPaymentService;
-    this.qrCodeConfirmationService = qrCodeConfirmationService;
     this.qrCodeCancelService = qrCodeCancelService;
     this.qrCodeUnrelateService = qrCodeUnrelateService;
   }
@@ -55,11 +52,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   @Override
   public AuthPaymentDTO authPayment(String userId, String trxCode) {
     return qrCodeAuthPaymentService.authPayment(userId, trxCode);
-  }
-
-  @Override
-  public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
-    return qrCodeConfirmationService.confirmPayment(trxId, merchantId, acquirerId);
   }
 
   @Override
