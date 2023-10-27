@@ -1,7 +1,7 @@
 {
   "request": {
-    "method": "GET",
-    "urlPathPattern": "/idpay/instrument/code/secondFactor/.*USERID"
+    "method": "PUT",
+    "urlPathPattern": "/idpay/instrument/code/verify/NOTPINBLOCKUSERID"
   },
   "response": {
     "status": "200",
@@ -10,7 +10,7 @@
     },
     "transformers": ["response-template"],
     "jsonBody": {
-      "secondFactor": true
+      "pinBlockVerified": false
     }
   }
 }

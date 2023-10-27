@@ -1,12 +1,7 @@
 {
   "request": {
     "method": "PUT",
-    "urlPathPattern": "/idpay/instrument/code/verify/.*USERID.*",
-    "headers": {
-        "x-merchant-id": {
-          "equalTo": "MERCHANTID"
-        }
-    }
+    "urlPathPattern": "/idpay/instrument/code/verify/USERID"
   },
   "response": {
     "status": "200",
