@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -15,17 +14,15 @@ import java.util.function.Function;
 public class TransactionInProgress2TransactionResponseMapper
     implements Function<TransactionInProgress,TransactionResponse> {
 
-  private final int qrcodeAuthorizationExpirationMinutes;
-  private final int idpayCodeAuthorizationExpirationMinutes;
+  private final int commonAuthorizationExpirationMinutes;
   private final String imgBaseUrl;
   private final String txtBaseUrl;
 
-  public TransactionInProgress2TransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int qrcodeAuthorizationExpirationMinutes,
-                                                         @Value("${app.idpayCode.expirations.authorizationMinutes}") int idpayCodeAuthorizationExpirationMinutes,
+  public TransactionInProgress2TransactionResponseMapper(
+                                                         @Value("${app.common.expirations.authorizationMinutes}") int commonAuthorizationExpirationMinutes,
                                                          @Value("${app.qrCode.trxCode.baseUrl.img}") String imgBaseUrl,
                                                          @Value("${app.qrCode.trxCode.baseUrl.txt}") String txtBaseUrl) {
-    this.qrcodeAuthorizationExpirationMinutes =qrcodeAuthorizationExpirationMinutes;
-    this.idpayCodeAuthorizationExpirationMinutes = idpayCodeAuthorizationExpirationMinutes;
+    this.commonAuthorizationExpirationMinutes = commonAuthorizationExpirationMinutes;
     this.imgBaseUrl = imgBaseUrl;
     this.txtBaseUrl = txtBaseUrl;
   }
@@ -34,20 +31,13 @@ public class TransactionInProgress2TransactionResponseMapper
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
     Long residualAmountCents = null;
     Boolean splitPayment = null;
-    String qrcodePngUrl = null;
-    String qrcodeTxtUrl= null;
-    int authorizationExpirationMinutes = idpayCodeAuthorizationExpirationMinutes;
 
     if (transactionInProgress.getAmountCents() != null && transactionInProgress.getReward() != null) {
       residualAmountCents = transactionInProgress.getAmountCents() - transactionInProgress.getReward();
       splitPayment = residualAmountCents > 0L;
     }
-    if(RewardConstants.TRX_CHANNEL_QRCODE.equals(transactionInProgress.getChannel())){
-      qrcodePngUrl = generateTrxCodeImgUrl(transactionInProgress.getTrxCode());
-      qrcodeTxtUrl = generateTrxCodeTxtUrl(transactionInProgress.getTrxCode());
-      authorizationExpirationMinutes = qrcodeAuthorizationExpirationMinutes;
-    }
-    return TransactionResponse.builder()
+
+    TransactionResponse trxResponse = TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())
             .amountCents(transactionInProgress.getAmountCents())
             .amountCurrency(transactionInProgress.getAmountCurrency())
@@ -64,10 +54,14 @@ public class TransactionInProgress2TransactionResponseMapper
             .vat(transactionInProgress.getVat())
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
-            .trxExpirationMinutes(authorizationExpirationMinutes)
-            .qrcodePngUrl(qrcodePngUrl)
-            .qrcodeTxtUrl(qrcodeTxtUrl)
+            .trxExpirationMinutes(commonAuthorizationExpirationMinutes)
             .build();
+
+    if(transactionInProgress.getAcquirerId().equals("PAGOPA")){
+      trxResponse.setQrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()));
+      trxResponse.setQrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()));
+    }
+    return trxResponse;
   }
 
   public String generateTrxCodeImgUrl(String trxCode){

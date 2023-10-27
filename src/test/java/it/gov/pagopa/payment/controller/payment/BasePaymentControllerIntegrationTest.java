@@ -161,12 +161,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             }
         }
 
-//        checkNotificationEventsOnTransactionQueue();
-//
-//        //verifying error event notification
-//        checkErrorNotificationEvents();
-//
-//        checkForceExpiration();
+        checkNotificationEventsOnTransactionQueue();
+
+        //verifying error event notification
+        checkErrorNotificationEvents();
+
+        checkForceExpiration();
     }
 
     /**
@@ -241,7 +241,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         //Unauthorized operator
         extractResponse(getStatusTransaction("DUMMYID", "DUMMYMERCHANTID"), HttpStatus.NOT_FOUND, null); //TODO id trxCreated.getId()
 
-        checkCreateChannel(stored.getChannel());
+        assertNull(stored.getChannel());
         trxCreated.setTrxDate(OffsetDateTime.parse(
                 trxCreated.getTrxDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"))));
         assertEquals(trxCreated, transactionResponseMapper.apply(stored));
@@ -332,8 +332,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
 
             // Other APIs will fail because status not expected
-            extractResponseAuthCannotRelateUser(trxCreated, userIdNotOnboarded);
-//            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null); //TODO BAD request into idpay-code
+            //extractResponseAuthCannotRelateUser(trxCreated, userIdNotOnboarded);
+            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 
@@ -598,8 +598,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
 
             TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
-
-            checkCreateChannel(trxInProgressCreated.getChannel());
             cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
         });
 
@@ -624,15 +622,11 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         useCases.addAll(getExtraUseCases());
     }
 
-    private void cleanDatesAndCheckUnrelatedTrx(TransactionInProgress preAuthTrx, TransactionInProgress unrelated) {
+    private static void cleanDatesAndCheckUnrelatedTrx(TransactionInProgress preAuthTrx, TransactionInProgress unrelated) {
         Assertions.assertNotNull(preAuthTrx.getUpdateDate());
         preAuthTrx.setUpdateDate(null);
         Assertions.assertNotNull(unrelated.getUpdateDate());
         unrelated.setUpdateDate(null);
-
-        if(RewardConstants.TRX_CHANNEL_IDPAYCODE.equals(getChannel())) {
-            unrelated.setChannel(null);
-        }
 
         Assertions.assertEquals(preAuthTrx, unrelated);
     }
@@ -952,13 +946,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals("BUSINESSNAME", trxStored.getBusinessName());
         Assertions.assertEquals(userId, trxStored.getUserId());
         Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
-//        Assertions.assertEquals(getChannel(), trxStored.getChannel()); //todo delete
-        if(RewardConstants.TRX_CHANNEL_QRCODE.equals(getChannel())) {
+        Assertions.assertNull(trxStored.getChannel());
+
+        if (trxResponse.getAcquirerId().equals("PAGOPA")) {
             Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
             Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
         }
-        checkCreateChannel(trxStored.getChannel()); //TODO it's ok ?
-
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {
                 Assertions.assertNull(trxStored.getTrxChargeDate());

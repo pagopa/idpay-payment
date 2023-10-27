@@ -35,7 +35,7 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
     private final PaymentInstrumentConnector paymentInstrumentConnector;
     private final AuthPaymentIdpayCodeMapper authPaymentIdpayCodeMapper;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-    public IdpayCodePreAuthServiceImpl(@Value("${app.idpayCode.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
+    public IdpayCodePreAuthServiceImpl(@Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
                                        TransactionInProgressRepository transactionInProgressRepository,
                                        RewardCalculatorConnector rewardCalculatorConnector,
                                        AuditUtilities auditUtilities,
@@ -79,18 +79,17 @@ public class IdpayCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implem
         if(!trx.getMerchantId().equals(merchantId)){
             throw new MerchantOrAcquirerNotAllowedException(
                     ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED,
-                    "The merchant id [%s] of the trx, is not equals to the merchant id [%s]".formatted(trx.getMerchantId(),merchantId));
-
+                    "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
 
         if(trx.getUserId() == null){
             return authPaymentMapper.transactionMapper(trx);
         }
 
-        SecondFactorDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getUserId());
-
-        checkPreAuth(trx.getTrxCode(), trx.getUserId(), trx);
+        checkPreAuth(trx.getUserId(), trx);
         AuthPaymentDTO authPaymentDTO = super.previewPayment(trx, RewardConstants.TRX_CHANNEL_IDPAYCODE);
+
+        SecondFactorDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getUserId());
 
         auditUtilities.logPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), RewardConstants.TRX_CHANNEL_IDPAYCODE);
         return authPaymentIdpayCodeMapper.authPaymentMapper(authPaymentDTO, secondFactorDetails.getSecondFactor());

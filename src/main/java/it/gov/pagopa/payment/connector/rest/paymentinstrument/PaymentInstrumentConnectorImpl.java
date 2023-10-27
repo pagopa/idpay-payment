@@ -26,7 +26,7 @@ public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnecto
             return restClient.getSecondFactor(userId);
         } catch (FeignException e){
             if (e.status() == 404) {
-                throw new IdpaycodeNotFoundException(String.format("There is not a idpaycode for the userId %s.", userId));
+                throw new IdpaycodeNotFoundException("There is not a IDPay Code for the current user");
             }
 
             throw new PaymentInstrumentInvocationException(

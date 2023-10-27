@@ -100,7 +100,7 @@ public class CommonCreationServiceImpl {
               "[{}] Cannot find initiative with ID: [{}]",
               getFlow(),
               initiativeId);
-      throw new InitiativeNotfoundException("Cannot find initiative with ID: [%s]".formatted(initiativeId));
+      throw new InitiativeNotfoundException("Cannot find initiative with id [%s]".formatted(initiativeId));
     }
 
     if (!InitiativeRewardType.DISCOUNT.equals(initiative.getInitiativeRewardType())) {
@@ -110,7 +110,7 @@ public class CommonCreationServiceImpl {
               initiativeId);
       throw new InitiativeNotfoundException(
               PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT,
-              "Cannot find initiative with ID: [%s]".formatted(initiativeId));
+              "The initiative with id [%s] is not discount".formatted(initiativeId));
     }
   }
 

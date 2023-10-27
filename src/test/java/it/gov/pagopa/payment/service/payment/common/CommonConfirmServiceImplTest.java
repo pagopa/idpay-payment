@@ -31,7 +31,7 @@ class CommonConfirmServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
 
 
-    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(4320,5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
 
     CommonConfirmServiceImpl service;
 
@@ -52,8 +52,8 @@ class CommonConfirmServiceImplTest {
             service.confirmPayment("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
         } catch (TransactionNotFoundOrExpiredException e) {
-            Assertions.assertEquals("PAYMENT_NOT_FOUND_EXPIRED", e.getCode());
-            Assertions.assertEquals("[CONFIRM_PAYMENT] Cannot found transaction having id: TRXID", e.getMessage());
+            Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
+            Assertions.assertEquals("Cannot find transaction with transactionId [TRXID]", e.getMessage());
         }
     }
 
@@ -66,8 +66,8 @@ class CommonConfirmServiceImplTest {
             service.confirmPayment("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
         } catch (MerchantOrAcquirerNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("[CONFIRM_PAYMENT] Requesting merchantId (MERCHID through acquirer ACQID) not allowed to operate on transaction having id TRXID", e.getMessage());
+            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("The merchant with id [MERCHANTID0] associated to the transaction is not equal to the merchant with id [MERCHID]", e.getMessage());
         }
     }
 
@@ -79,11 +79,11 @@ class CommonConfirmServiceImplTest {
         when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
 
         try {
-            service.confirmPayment("TRXID", "MERCHID", "ACQID");
+            service.confirmPayment("TRXID", "MERCHID_2", "ACQID");
             Assertions.fail("Expected exception");
         } catch (MerchantOrAcquirerNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_OR_ACQUIRER_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("[CONFIRM_PAYMENT] Requesting merchantId (MERCHID through acquirer ACQID) not allowed to operate on transaction having id TRXID", e.getMessage());
+            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("The merchant with id [MERCHID] associated to the transaction is not equal to the merchant with id [MERCHID_2]", e.getMessage());
         }
     }
 
@@ -98,8 +98,8 @@ class CommonConfirmServiceImplTest {
             service.confirmPayment("TRXID", "MERCHID", "ACQID");
             Assertions.fail("Expected exception");
         } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, e.getCode());
-            Assertions.assertEquals("[CONFIRM_PAYMENT] Cannot confirm transaction having id TRXID: actual status is CREATED", e.getMessage());
+            Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("Cannot operate on transaction with transactionId [TRXID] in status CREATED", e.getMessage());
         }
     }
 
