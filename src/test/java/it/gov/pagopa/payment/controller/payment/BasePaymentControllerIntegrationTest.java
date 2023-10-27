@@ -1,8 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
@@ -25,30 +22,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -60,8 +33,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
+
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 @TestPropertySource(
         properties = {
@@ -175,9 +167,19 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     protected abstract String getChannel();
 
     /**
-     * Invoke create transaction API acting as <i>merchantId</i>
+     * Override in order to add specific create transaction API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxIssuer) throws Exception;
+    protected MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxIssuer) throws Exception{
+        return mockMvc
+                .perform(
+                        post("/idpay/payment/")
+                                .header("x-merchant-id", merchantId)
+                                .header("x-acquirer-id", acquirerId)
+                                .header("x-apim-request-id", idTrxIssuer)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(trxRequest)))
+                .andReturn();
+    }
 
     /**
      * Invoke pre-authorize transaction API to relate <i>userId</i> to the transaction created by <i>merchantId</i>
@@ -189,32 +191,60 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
      */
     protected abstract MvcResult authTrx(TransactionResponse trx, String userid, String merchantId) throws Exception;
 
-    protected abstract MvcResult unrelateTrx(TransactionResponse trx, String userId) throws Exception;
+    /**
+     * Override in order to add specific confirm payment API acting as <i>merchantId</i>
+     */
+    protected MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception{
+        return mockMvc
+                .perform(
+                        put("/idpay/payment/{transactionId}/confirm", trx.getId())
+                                .header("x-merchant-id", merchantId)
+                                .header("x-acquirer-id", acquirerId))
+                .andReturn();
+    }
 
     /**
-     * Invoke confirm payment API acting as <i>merchantId</i>
+     * Override in order to add specific cancel payment API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
+    protected MvcResult cancelTrx(TransactionResponse trx, String merchantId, String acquirerId) throws Exception{
+        return mockMvc
+                .perform(
+                        delete("/idpay/payment/{transactionId}", trx.getId())
+                                .header("x-merchant-id", merchantId)
+                                .header("x-acquirer-id", acquirerId))
+                .andReturn();
+    }
 
     /**
-     * Invoke cancel payment API acting as <i>merchantId</i>
+     * Override in order to add specific getStatusTransaction API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult cancelTrx(TransactionResponse trx, String merchantId, String acquirerId) throws Exception;
+    protected MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception{
+        return mockMvc
+                .perform(
+                        get("/idpay/payment/{transactionId}/status",transactionId)
+                                .header("x-merchant-id",merchantId)
+                ).andReturn();
+    }
 
     /**
-     * Invoke getStatusTransaction API acting as <i>merchantId</i>
+     * Override in order to add specific force auth transaction expiration
      */
-    protected abstract MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception;
+    protected MvcResult forceAuthExpiration(String initiativeId) throws Exception{
+        return mockMvc
+                .perform(
+                        put("/idpay/payment/qr-code/force-expiration/authorization/{initiativeId}",initiativeId)
+                ).andReturn();
+    }
 
     /**
-     * Force auth transaction expiration
+     * Override in order to add specific force confirm transaction expiration
      */
-    protected abstract MvcResult forceAuthExpiration(String initiativeId) throws Exception;
-
-    /**
-     * Force confirm transaction expiration
-     */
-    protected abstract MvcResult forceConfirmExpiration(String initiativeId) throws Exception;
+    protected MvcResult forceConfirmExpiration(String initiativeId) throws Exception{
+        return mockMvc
+                .perform(
+                        put("/idpay/payment/qr-code/force-expiration/confirm/{initiativeId}",initiativeId)
+                ).andReturn();
+    }
 
     /**
      * Override in order to add specific use cases
@@ -260,7 +290,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(expectedUserId, stored.getUserId());
     }
 
-    private TransactionInProgress checkIfStored(String trxId) {
+    protected TransactionInProgress checkIfStored(String trxId) {
         TransactionInProgress stored = transactionInProgressRepository.findById(trxId).orElse(null);
         Assertions.assertNotNull(stored);
         return stored;
@@ -332,8 +362,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(preAuthTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
 
             // Other APIs will fail because status not expected
-            //extractResponseAuthCannotRelateUser(trxCreated, userIdNotOnboarded);
-            extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
+            extractResponseAuthCannotRelateUser(trxCreated, userIdNotOnboarded);
+            //extractResponse(authTrx(trxCreated, userIdNotOnboarded, MERCHANTID), HttpStatus.FORBIDDEN, null);
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 
@@ -580,28 +610,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(confirmPayment(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.BAD_REQUEST, null);
         });
 
-        //useCase 18: user cancel payment instead of authorizing
-        useCases.add(i -> {
-            TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-            trxRequest.setInitiativeId(INITIATIVEID);
-
-            // Creating transaction
-            TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-            TransactionInProgress trxInProgressCreated = checkIfStored(trxCreated.getId());
-
-            // Relating to user
-            AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-            assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-            checkTransactionStored(preAuthResult, USERID);
-
-            extractResponse(unrelateTrx(trxCreated, USERID + "1"), HttpStatus.FORBIDDEN, null);
-            extractResponse(unrelateTrx(trxCreated, USERID), HttpStatus.OK, null);
-
-            TransactionInProgress unrelated = checkIfStored(trxCreated.getId());
-            cleanDatesAndCheckUnrelatedTrx(trxInProgressCreated, unrelated);
-        });
-
-        //useCase 19: merchant tries to create transaction with amount = 0
+        //useCase 18: merchant tries to create transaction with amount = 0
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID);
@@ -610,7 +619,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
         });
 
-        //useCase 20: merchant tries to create transaction out of valid initiative period
+        //useCase 19: merchant tries to create transaction out of valid initiative period
         useCases.add(i -> {
             TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
             trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
@@ -622,7 +631,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         useCases.addAll(getExtraUseCases());
     }
 
-    private static void cleanDatesAndCheckUnrelatedTrx(TransactionInProgress preAuthTrx, TransactionInProgress unrelated) {
+    protected static void cleanDatesAndCheckUnrelatedTrx(TransactionInProgress preAuthTrx, TransactionInProgress unrelated) {
         Assertions.assertNotNull(preAuthTrx.getUpdateDate());
         preAuthTrx.setUpdateDate(null);
         Assertions.assertNotNull(unrelated.getUpdateDate());

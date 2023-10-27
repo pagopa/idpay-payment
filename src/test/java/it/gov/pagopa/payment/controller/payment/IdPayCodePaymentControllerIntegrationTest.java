@@ -16,14 +16,19 @@ import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
+@TestPropertySource(
+        properties = {
+                "logging.level.it.gov.pagopa.payment.service.payment.IdpayCodePaymentServiceImpl=WARN"
+        })
 public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
 
     @Autowired
@@ -34,19 +39,6 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
     @Override
     protected String getChannel() {
         return RewardConstants.TRX_CHANNEL_IDPAYCODE;
-    }
-
-    @Override
-    protected MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxIssuer) throws Exception {
-        return mockMvc
-                .perform(
-                        post("/idpay/payment/")
-                                .header("x-merchant-id", merchantId)
-                                .header("x-acquirer-id", acquirerId)
-                                .header("x-apim-request-id", idTrxIssuer)
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(trxRequest)))
-                .andReturn();
     }
 
     @Override
@@ -77,11 +69,9 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
                 .andReturn();
     }
 
-
-
     @Override
     protected MvcResult authTrx(TransactionResponse trx, String userid, String merchantId) throws Exception {
-        PinBlockDTO pinBlockOk = PinBlockDTO.builder() //TODO add stub
+        PinBlockDTO pinBlockOk = PinBlockDTO.builder()
                 .pinBlock("PINBLOCK")
                 .encryptedKey("ENCRYPTEDKEY")
                 .build();
@@ -99,61 +89,6 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
                 .andReturn();
     }
 
-    //TODO with generics methods
-    @Override
-    protected MvcResult unrelateTrx(TransactionResponse trx, String userId) throws Exception {//TODO fix duplicate code
-        return mockMvc
-                .perform(
-                        delete("/idpay/payment/qr-code/{trxCode}", trx.getTrxCode())
-                                .header("x-user-id", userId))
-                .andReturn();
-    }
-
-    @Override
-    protected MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception {//TODO fix duplicate code
-        return mockMvc
-                .perform(
-                        put("/idpay/payment/qr-code/merchant/{transactionId}/confirm", trx.getId())
-                                .header("x-merchant-id", merchantId)
-                                .header("x-acquirer-id", acquirerId))
-                .andReturn();
-    }
-
-    @Override
-    protected MvcResult cancelTrx(TransactionResponse trx, String merchantId, String acquirerId) throws Exception {//TODO fix duplicate code
-        return mockMvc
-                .perform(
-                        delete("/idpay/payment/qr-code/merchant/{transactionId}", trx.getId())
-                                .header("x-merchant-id", merchantId)
-                                .header("x-acquirer-id", acquirerId))
-                .andReturn();
-    }
-
-    @Override
-    protected MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception {//TODO fix duplicate code
-        return mockMvc
-                .perform(
-                        get("/idpay/payment/{transactionId}/status",transactionId)
-                                .header("x-merchant-id",merchantId)
-                ).andReturn();
-    }
-
-    @Override
-    protected MvcResult forceAuthExpiration(String initiativeId) throws Exception { //TODO fix duplicate code
-        return mockMvc
-                .perform(
-                        put("/idpay/payment/qr-code/force-expiration/authorization/{initiativeId}",initiativeId)
-                ).andReturn();
-    }
-
-    @Override
-    protected MvcResult forceConfirmExpiration(String initiativeId) throws Exception { //TODO fix duplicate code
-        return mockMvc
-                .perform(
-                        put("/idpay/payment/qr-code/force-expiration/confirm/{initiativeId}",initiativeId)
-                ).andReturn();
-    }
-
     @Override
     protected void checkCreateChannel(String storedChannel) {
         assertNull(storedChannel);
@@ -161,7 +96,7 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
 
     @Override
     protected <T> T extractResponseAuthCannotRelateUser(TransactionResponse trxCreated, String userId) throws Exception {
-        return extractResponse(authTrx(trxCreated, userId, MERCHANTID), HttpStatus.BAD_REQUEST, null); //TODO BAD request into idpay-code
+        return extractResponse(authTrx(trxCreated, userId, MERCHANTID), HttpStatus.BAD_REQUEST, null);
     }
 
     @Override
@@ -169,7 +104,7 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
         List<FailableConsumer<Integer, Exception>> idPayCodeUseCases = new ArrayList<>();
 
         {
-            // useCase 21: Preview from another merchant
+            // useCase 20: Preview from another merchant
             idPayCodeUseCases.add(i -> {
                 TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
                 trxRequest.setInitiativeId(INITIATIVEID);
@@ -186,7 +121,7 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
 
             });
 
-            // useCase 22: Preview before relate transaction
+            // useCase 21: Preview before relate transaction
             idPayCodeUseCases.add(i -> {
                 TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
                 trxRequest.setInitiativeId(INITIATIVEID);
@@ -201,11 +136,11 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
                 //Check response
                 TransactionInProgress trxStored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
                 Assertions.assertNotNull(trxStored);
-                trxStored.setRewards(null); //TODO check
+                trxStored.setRewards(null);
                 Assertions.assertEquals(authPaymentMapper.transactionMapper(trxStored),authResponse);
             });
 
-            // useCase 23: Error retrieve second factor
+            // useCase 22: Error retrieve second factor
             idPayCodeUseCases.add(i -> {
                 String userWithoutSecondFactor = "NOTSECONDFACTOR";
                 TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
@@ -222,7 +157,7 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
                 extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.NOT_FOUND, AuthPaymentDTO.class);
             });
 
-            // useCase 24: Error retrieve pinBlock
+            // useCase 23: Error retrieve pinBlock
             idPayCodeUseCases.add(i -> {
                 String userWithoutSecondFactor = "NOTPINBLOCKUSERID";
                 TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
@@ -237,7 +172,8 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
 
                 // Preview
                 extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-                //
+
+                // Authorize
                 extractResponse(authTrx(trxCreated, userWithoutSecondFactor, MERCHANTID), HttpStatus.FORBIDDEN,null);
             });
 
