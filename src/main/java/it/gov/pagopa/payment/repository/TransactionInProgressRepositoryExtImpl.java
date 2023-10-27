@@ -3,15 +3,18 @@ package it.gov.pagopa.payment.repository;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.toomanyrequests.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
-import java.time.OffsetDateTime;
-
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -23,12 +26,6 @@ import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.http.HttpStatus;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
 @Slf4j
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
@@ -110,8 +107,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 && mongoTemplate.exists(
                 Query.query(criteriaByTrxCodeAndDateGreaterThan(trxCode, minTrxDate)),
                 TransactionInProgress.class)) {
-            throw new ClientExceptionNoBody(
-                    HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having trCode: " + trxCode);
+            throw new TooManyRequestsException("Too many requests on trx having trCode: " + trxCode);
         }
 
         return transaction;
@@ -186,7 +182,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
         if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
             update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
-                    .set(Fields.merchantId, trx.getMerchantId());
+                    .set(Fields.amountCents, trx.getAmountCents())
+                    .set(Fields.effectiveAmount, trx.getEffectiveAmount())
+                    .set(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
+                    .set(Fields.merchantId, trx.getMerchantId())
+                    .set(Fields.businessName, trx.getBusinessName())
+                    .set(Fields.vat, trx.getVat())
+                    .set(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
+                    .set(Fields.acquirerId, trx.getAcquirerId());
         }
 
         mongoTemplate.updateFirst(
@@ -196,16 +199,30 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxRejected(String id, List<String> rejectionReasons, OffsetDateTime trxChargeDate) {
+    public void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons) {
+        Update update = new Update()
+                .set(Fields.status, SyncTrxStatus.REJECTED)
+                .set(Fields.reward, 0L)
+                .set(Fields.rewards, Collections.emptyMap())
+                .set(Fields.rejectionReasons, rejectionReasons)
+                .set(Fields.trxChargeDate, trx.getTrxChargeDate())
+                .currentDate(Fields.updateDate);
+
+        if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
+            update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
+                    .set(Fields.amountCents, trx.getAmountCents())
+                    .set(Fields.effectiveAmount, trx.getEffectiveAmount())
+                    .set(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
+                    .set(Fields.merchantId, trx.getMerchantId())
+                    .set(Fields.businessName, trx.getBusinessName())
+                    .set(Fields.vat, trx.getVat())
+                    .set(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
+                    .set(Fields.acquirerId, trx.getAcquirerId());
+        }
+
         mongoTemplate.updateFirst(
-                Query.query(Criteria.where(Fields.id).is(id)),
-                new Update()
-                        .set(Fields.status, SyncTrxStatus.REJECTED)
-                        .set(Fields.reward, 0L)
-                        .set(Fields.rewards, Collections.emptyMap())
-                        .set(Fields.rejectionReasons, rejectionReasons)
-                        .set(Fields.trxChargeDate, trxChargeDate)
-                        .currentDate(Fields.updateDate),
+                Query.query(Criteria.where(Fields.id).is(trx.getId())),
+                update,
                 TransactionInProgress.class);
     }
 
@@ -225,7 +242,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
         if (trx == null && mongoTemplate.exists(Query.query(criteriaById(trxId)), TransactionInProgress.class)) {
-            throw new ClientExceptionNoBody(HttpStatus.TOO_MANY_REQUESTS, "Too many requests on trx having id: " + trxId);
+            throw new TooManyRequestsException("Too many requests on trx having id: " + trxId);
         }
 
         return trx;

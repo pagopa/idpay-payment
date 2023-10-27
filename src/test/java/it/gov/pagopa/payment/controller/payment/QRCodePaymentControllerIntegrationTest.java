@@ -19,7 +19,7 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     protected MvcResult createTrx(TransactionCreationRequest trxRequest, String merchantId, String acquirerId, String idTrxIssuer) throws Exception {
         return mockMvc
                 .perform(
-                        post("/idpay/payment/qr-code/merchant")
+                        post("/idpay/payment/")
                                 .header("x-merchant-id", merchantId)
                                 .header("x-acquirer-id", acquirerId)
                                 .header("x-apim-request-id", idTrxIssuer)
@@ -59,7 +59,7 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     protected MvcResult confirmPayment(TransactionResponse trx, String merchantId, String acquirerId) throws Exception {
         return mockMvc
                 .perform(
-                        put("/idpay/payment/qr-code/merchant/{transactionId}/confirm", trx.getId())
+                        put("/idpay/payment/{transactionId}/confirm", trx.getId())
                                 .header("x-merchant-id", merchantId)
                                 .header("x-acquirer-id", acquirerId))
                 .andReturn();
@@ -69,19 +69,18 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     protected MvcResult cancelTrx(TransactionResponse trx, String merchantId, String acquirerId) throws Exception {
         return mockMvc
                 .perform(
-                        delete("/idpay/payment/qr-code/merchant/{transactionId}", trx.getId())
+                        delete("/idpay/payment/{transactionId}", trx.getId())
                                 .header("x-merchant-id", merchantId)
                                 .header("x-acquirer-id", acquirerId))
                 .andReturn();
     }
 
     @Override
-    protected MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception {
+    protected MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception {
         return mockMvc
                 .perform(
-                        get("/idpay/payment/qr-code/merchant/status/{transactionId}",transactionId)
+                        get("/idpay/payment/{transactionId}/status",transactionId)
                                 .header("x-merchant-id",merchantId)
-                                .header("x-acquirer-id",acquirerId)
                 ).andReturn();
     }
 

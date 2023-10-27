@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment;
 
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -31,7 +32,7 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, long amountCents, String merchantId) {
-        return barCodeAuthPaymentService.authPayment(trxCode, merchantId, amountCents);
+    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId) {
+        return barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerId);
     }
 }

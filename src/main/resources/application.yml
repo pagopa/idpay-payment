@@ -33,22 +33,18 @@ spring:
         transaction-outcome:
           type: kafka
           environment:
-            spring.cloud.stream:
-              kafka:
-                binder:
-                  brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:${KAFKA_BROKER:}}
-                  configuration:
-                    sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
-                    key.serializer: org.apache.kafka.common.serialization.StringSerializer
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_TRANSACTION_OUTCOME_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_TRANSACTION_OUTCOME_SASL_JAAS_CONFIG:}
+                key.serializer: org.apache.kafka.common.serialization.StringSerializer
         kafka-commands:
           type: kafka
           environment:
-            spring.cloud.stream:
-              kafka:
-                binder:
-                  brokers: ${KAFKA_COMMANDS_BROKER:${KAFKA_BROKER:}}
-                  configuration:
-                    sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
+            spring.cloud.stream.kafka.binder:
+              brokers: ${KAFKA_COMMANDS_BROKER:${KAFKA_BROKER:}}
+              configuration:
+                sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       bindings:
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
@@ -122,7 +118,7 @@ logging:
   level:
     root: ${LOG_LEVEL_ROOT:INFO}
     it.gov.pagopa: ${LOG_LEVEL_PAGOPA:INFO}
-    it.gov.pagopa.reward: ${LOG_LEVEL_REWARD:INFO}
+    it.gov.pagopa.payment: ${LOG_LEVEL_PAYMENT:INFO}
     org.springframework.integration: ${LOG_LEVEL_SPRING_INTEGRATION:INFO}
     org.springframework.security: ${LOG_LEVEL_SPRING_SECURITY:INFO}
     org.springframework.ws: ${LOG_LEVEL_SPRING_WS:INFO}
@@ -136,8 +132,6 @@ logging:
     io.swagger: ${LOG_LEVEL_IO_SWAGGER:WARN}
     javax.persistence: ${LOG_LEVEL_JAVAX_PERSISTENCE:INFO}
     org.hibernate: ${LOG_LEVEL_ORG_HIBERNATE:INFO}
-    org.kie: ${LOG_LEVEL_ORG_KIE:WARN}
-    org.drools: ${LOG_LEVEL_ORG_DROOLS:WARN}
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
 
 rest-client:
@@ -163,10 +157,13 @@ app:
   threads:
     schedule-max-number: ${THREADS_SCHEDULE_MAX_NUMBER:1}
   trxCodeLength: ${PAYMENT_TRXCODE_LENGTH:8}
+  common:
+    expirations:
+      cancelMinutes: ${COMMON_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
+      authorizationMinutes: ${COMMON_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     expirations:
-      authorizationMinutes: ${QR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:4320}}
       cancelMinutes: ${QR_CODE_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
       schedule:
         authorizationExpired: ${QR_CODE_AUTH_EXPIRED_SCHEDULE:0 0 2 * * ?} # every day at 2AM and every 6 hours (for testing purposes: every 2 mins)
@@ -178,20 +175,17 @@ app:
   barCode:
     expirations:
       authorizationMinutes: ${BAR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
-  idpayCode:
-    expirations:
-      authorizationMinutes: ${IDPAY_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}
 
 management:
   health:
-    probes.enabled: true
     redis.enabled: ${REDIS_CACHE_ENABLED:false}
     mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
   endpoint:
     health:
+      probes.enabled: true
       group:
         readiness.include: "*"
         liveness.include: livenessState,diskSpace,ping,binders,streams

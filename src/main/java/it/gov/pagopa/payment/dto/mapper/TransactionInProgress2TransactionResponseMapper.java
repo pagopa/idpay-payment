@@ -12,16 +12,17 @@ import java.util.function.Function;
 @Service
 @Slf4j
 public class TransactionInProgress2TransactionResponseMapper
-    implements Function<TransactionInProgress, TransactionResponse> {
+    implements Function<TransactionInProgress,TransactionResponse> {
 
-  private final int authorizationExpirationMinutes;
+  private final int commonAuthorizationExpirationMinutes;
   private final String imgBaseUrl;
   private final String txtBaseUrl;
 
-  public TransactionInProgress2TransactionResponseMapper(@Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+  public TransactionInProgress2TransactionResponseMapper(
+                                                         @Value("${app.common.expirations.authorizationMinutes}") int commonAuthorizationExpirationMinutes,
                                                          @Value("${app.qrCode.trxCode.baseUrl.img}") String imgBaseUrl,
                                                          @Value("${app.qrCode.trxCode.baseUrl.txt}") String txtBaseUrl) {
-    this.authorizationExpirationMinutes = authorizationExpirationMinutes;
+    this.commonAuthorizationExpirationMinutes = commonAuthorizationExpirationMinutes;
     this.imgBaseUrl = imgBaseUrl;
     this.txtBaseUrl = txtBaseUrl;
   }
@@ -30,11 +31,13 @@ public class TransactionInProgress2TransactionResponseMapper
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
     Long residualAmountCents = null;
     Boolean splitPayment = null;
+
     if (transactionInProgress.getAmountCents() != null && transactionInProgress.getReward() != null) {
       residualAmountCents = transactionInProgress.getAmountCents() - transactionInProgress.getReward();
       splitPayment = residualAmountCents > 0L;
     }
-    return TransactionResponse.builder()
+
+    TransactionResponse trxResponse = TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())
             .amountCents(transactionInProgress.getAmountCents())
             .amountCurrency(transactionInProgress.getAmountCurrency())
@@ -51,10 +54,14 @@ public class TransactionInProgress2TransactionResponseMapper
             .vat(transactionInProgress.getVat())
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
-            .trxExpirationMinutes(authorizationExpirationMinutes)
-            .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
-            .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
+            .trxExpirationMinutes(commonAuthorizationExpirationMinutes)
             .build();
+
+    if(transactionInProgress.getAcquirerId().equals("PAGOPA")){
+      trxResponse.setQrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()));
+      trxResponse.setQrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()));
+    }
+    return trxResponse;
   }
 
   public String generateTrxCodeImgUrl(String trxCode){

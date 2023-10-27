@@ -1,7 +1,12 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
+import static org.mockito.Mockito.when;
+
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.UserNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -16,9 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeUnrelateServiceImplTest {
@@ -49,8 +51,10 @@ class QRCodeUnrelateServiceImplTest {
         try {
             invokeService();
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.NOT_FOUND, e.getHttpStatus());
+        } catch (TransactionNotFoundOrExpiredException e) {
+            Assertions.assertEquals(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, e.getCode());
+            Assertions.assertEquals("Cannot find transaction with trxCode [TRXCODE]", e.getMessage());
+
         }
     }
 
@@ -65,8 +69,9 @@ class QRCodeUnrelateServiceImplTest {
         try {
             invokeService();
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.FORBIDDEN, e.getHttpStatus());
+        } catch (UserNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, e.getCode());
+            Assertions.assertEquals("Transaction with trxCode [TRXCODE] is already assigned to another user", e.getMessage());
         }
     }
 
@@ -79,8 +84,9 @@ class QRCodeUnrelateServiceImplTest {
         try {
             invokeService();
             Assertions.fail("Expected exception");
-        } catch (ClientExceptionNoBody e) {
-            Assertions.assertEquals(HttpStatus.BAD_REQUEST, e.getHttpStatus());
+        } catch (OperationNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("Cannot unrelate transaction with transactionId [MOCKEDTRANSACTION_qr-code_0] not in status identified", e.getMessage());
         }
     }
 
@@ -101,29 +107,13 @@ class QRCodeUnrelateServiceImplTest {
     }
 
     @Test
-    void testSuccessfulRewardCalculator403() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
-                .userId(USERID)
-                .build();
-        when(repositoryMockFindInvocation()).thenReturn(trx);
-
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ClientExceptionNoBody(HttpStatus.FORBIDDEN, "msg"));
-
-        invokeService();
-
-        TransactionInProgress expectedTrx = trx.toBuilder().status(SyncTrxStatus.CREATED).userId(null).build();
-
-        Mockito.verify(repositoryMock).save(expectedTrx);
-    }
-
-    @Test
     void testSuccessfulRewardCalculator404() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
                 .userId(USERID)
                 .build();
         when(repositoryMockFindInvocation()).thenReturn(trx);
 
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new ClientExceptionNoBody(HttpStatus.NOT_FOUND, "msg"));
+        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new TransactionNotFoundOrExpiredException("msg"));
 
         invokeService();
 

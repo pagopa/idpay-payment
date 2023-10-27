@@ -1,14 +1,16 @@
 package it.gov.pagopa.payment.service.payment.expired.common;
 
-import it.gov.pagopa.common.web.exception.ClientException;
+import it.gov.pagopa.common.web.exception.ServiceException;
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.servererror.InternalServerErrorException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -58,9 +60,9 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
         if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
-            } catch (ClientException e) {
-                if (e.getHttpStatus() != HttpStatus.NOT_FOUND) {
-                    throw new IllegalStateException("An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()), e);
+            } catch (ServiceException e) {
+                if (! (e instanceof TransactionNotFoundOrExpiredException)) {
+                    throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR, "An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()));
                 }
             }
         }

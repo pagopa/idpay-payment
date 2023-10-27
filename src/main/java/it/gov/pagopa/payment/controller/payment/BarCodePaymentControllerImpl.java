@@ -34,8 +34,8 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_AUTHORIZE_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId) {
+    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId) {
         log.info("[BAR_CODE_AUTHORIZE_TRANSACTION] The merchant {} is authorizing the transaction having trxCode {}", merchantId, trxCode);
-        return barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO.getAmountCents(), merchantId);
+        return barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerId);
     }
 }

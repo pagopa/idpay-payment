@@ -77,11 +77,12 @@ class BarCodePaymentControllerTest {
     @Test
     void authorizeTransaction_testMandatoryFields() throws Exception {
         String expectedCode = "INVALID_REQUEST";
-        List<String> expectedInvalidFields = List.of("amountCents");
+        List<String> expectedInvalidFields = List.of("amountCents", "idTrxAcquirer");
 
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/trxCode/authorize")
                                 .header("x-merchant-id", "MERCHANT_ID")
+                                .header("x-acquirer-id", "ACQUIRER_ID")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{}"))
                 .andExpect(status().isBadRequest())
@@ -95,7 +96,10 @@ class BarCodePaymentControllerTest {
 
     @Test
     void authorizeTransaction_testMandatoryHeaders() throws Exception {
-        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder().amountCents(1000L).build();
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(1000L)
+                .idTrxAcquirer("ID_TRX_ACQUIRER")
+                .build();
 
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/trxCode/authorize")

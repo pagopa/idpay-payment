@@ -13,27 +13,29 @@ import java.util.UUID;
 @Service
 public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
 
-  public TransactionInProgress apply(
-          TransactionBarCodeCreationRequest transactionBarCodeCreationRequest,
-          String channel,
-          String userId
-          ) {
-    String id =
-        "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
+    public TransactionInProgress apply(
+            TransactionBarCodeCreationRequest transactionBarCodeCreationRequest,
+            String channel,
+            String userId,
+            String initiativeName
+    ) {
+        String id =
+                "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
 
-    OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
 
-    return TransactionInProgress.builder()
-        .id(id)
-        .correlationId(id)
-        .initiativeId(transactionBarCodeCreationRequest.getInitiativeId())
-        .trxDate(now)
-        .status(SyncTrxStatus.CREATED)
-        .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
-        .operationTypeTranscoded(OperationType.CHARGE)
-        .channel(channel)
-        .userId(userId)
-        .updateDate(now.toLocalDateTime())
-        .build();
-  }
+        return TransactionInProgress.builder()
+                .id(id)
+                .correlationId(id)
+                .initiativeId(transactionBarCodeCreationRequest.getInitiativeId())
+                .initiativeName(initiativeName)
+                .trxDate(now)
+                .status(SyncTrxStatus.CREATED)
+                .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
+                .operationTypeTranscoded(OperationType.CHARGE)
+                .channel(channel)
+                .userId(userId)
+                .updateDate(now.toLocalDateTime())
+                .build();
+    }
 }

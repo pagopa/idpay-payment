@@ -1,29 +1,30 @@
 package it.gov.pagopa.payment.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import it.gov.pagopa.payment.exception.custom.servererror.PDVInvocationException;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
-import it.gov.pagopa.payment.dto.*;
+import it.gov.pagopa.payment.dto.DecryptCfDTO;
+import it.gov.pagopa.payment.dto.EncryptedCfDTO;
+import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
+import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.MerchantTransactionDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MerchantTransactionServiceTest {
 
@@ -86,10 +87,9 @@ class MerchantTransactionServiceTest {
     void getMerchantTransactionList_ko_encrypt() {
         try {
             service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
-        } catch (ClientExceptionWithBody e){
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
-            assertEquals("INTERNAL SERVER ERROR", e.getCode());
-            assertEquals("Error during encryption", e.getMessage());
+        } catch (PDVInvocationException e){
+            assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
+            assertEquals("An error occurred during encryption", e.getMessage());
         }
     }
 
@@ -106,10 +106,9 @@ class MerchantTransactionServiceTest {
 
         try {
             service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
-        } catch (ClientExceptionWithBody e){
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getHttpStatus());
-            assertEquals("INTERNAL SERVER ERROR", e.getCode());
-            assertEquals("Error during decryption, userId: [USERID1]", e.getMessage());
+        } catch (PDVInvocationException e){
+            assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
+            assertEquals("An error occurred during decryption", e.getMessage());
         }
     }
 

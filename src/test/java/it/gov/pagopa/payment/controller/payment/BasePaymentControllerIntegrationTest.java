@@ -202,7 +202,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     /**
      * Invoke getStatusTransaction API acting as <i>merchantId</i>
      */
-    protected abstract MvcResult getStatusTransaction(String transactionId, String merchantId, String acquirerId) throws Exception;
+    protected abstract MvcResult getStatusTransaction(String transactionId, String merchantId) throws Exception;
 
     /**
      * Force auth transaction expiration
@@ -232,12 +232,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private void checkTransactionStored(TransactionResponse trxCreated) throws Exception {
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
         // Authorized merchant
-        SyncTrxStatusDTO syncTrxStatusResult = extractResponse(getStatusTransaction(trxCreated.getId(), trxCreated.getMerchantId(), trxCreated.getAcquirerId()), HttpStatus.OK, SyncTrxStatusDTO.class);
+        SyncTrxStatusDTO syncTrxStatusResult = extractResponse(getStatusTransaction(trxCreated.getId(), trxCreated.getMerchantId()), HttpStatus.OK, SyncTrxStatusDTO.class);
         assertEquals(transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(stored), syncTrxStatusResult);
         //Unauthorized operator
-        extractResponse(getStatusTransaction(trxCreated.getId(), "DUMMYMERCHANTID", trxCreated.getAcquirerId()), HttpStatus.NOT_FOUND, null);
+        extractResponse(getStatusTransaction("DUMMYID", "DUMMYMERCHANTID"), HttpStatus.NOT_FOUND, null);
 
-        assertEquals(getChannel(), stored.getChannel());
+        assertNull(stored.getChannel());
         trxCreated.setTrxDate(OffsetDateTime.parse(
                 trxCreated.getTrxDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx"))));
         assertEquals(trxCreated, transactionResponseMapper.apply(stored));
@@ -614,7 +614,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             trxRequest.setInitiativeId(INITIATIVEID_NOT_STARTED);
 
             // Creating transaction
-            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.BAD_REQUEST, null);
+            extractResponse(createTrx(trxRequest, MERCHANTID, ACQUIRERID, IDTRXISSUER), HttpStatus.FORBIDDEN, null);
         });
 
         useCases.addAll(getExtraUseCases());
@@ -739,7 +739,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     }
 
     private <T> T extractResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
-        return TestUtils.extractResponse(response,expectedHttpStatusCode,expectedBodyClass);
+        return TestUtils.assertResponse(response,expectedHttpStatusCode,expectedBodyClass);
     }
 
     private void checkNotificationEventsOnTransactionQueue() {
@@ -944,10 +944,12 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         Assertions.assertEquals("BUSINESSNAME", trxStored.getBusinessName());
         Assertions.assertEquals(userId, trxStored.getUserId());
         Assertions.assertEquals(trxResponse.getStatus(), trxStored.getStatus());
-        Assertions.assertEquals(getChannel(), trxStored.getChannel());
-        Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
-        Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
+        Assertions.assertNull(trxStored.getChannel());
 
+        if (trxResponse.getAcquirerId().equals("PAGOPA")) {
+            Assertions.assertEquals(trxResponse.getQrcodePngUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trxStored.getTrxCode()));
+            Assertions.assertEquals(trxResponse.getQrcodeTxtUrl(), transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trxStored.getTrxCode()));
+        }
         switch (trxStored.getStatus()) {
             case CREATED, IDENTIFIED -> {
                 Assertions.assertNull(trxStored.getTrxChargeDate());

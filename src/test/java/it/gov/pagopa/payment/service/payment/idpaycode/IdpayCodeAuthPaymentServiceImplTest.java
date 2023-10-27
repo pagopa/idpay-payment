@@ -1,12 +1,16 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import it.gov.pagopa.common.web.exception.ClientExceptionNoBody;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
+import static org.mockito.Mockito.when;
+
+import it.gov.pagopa.payment.exception.custom.badrequest.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -21,9 +25,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthPaymentServiceImplTest {
@@ -63,13 +64,12 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
 
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
                 idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", pinBlockDTO)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
 
     }
@@ -87,13 +87,12 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
 
         //When
-        ClientExceptionNoBody result = Assertions.assertThrows(ClientExceptionNoBody.class, () ->
+        OperationNotAllowedException result = Assertions.assertThrows(OperationNotAllowedException.class, () ->
                 idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", pinBlockDTO)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, result.getHttpStatus());
 
     }
 
@@ -113,14 +112,13 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
 
         //When
-        ClientExceptionWithBody result = Assertions.assertThrows(ClientExceptionWithBody.class, () ->
+        MerchantOrAcquirerNotAllowedException result = Assertions.assertThrows(MerchantOrAcquirerNotAllowedException.class, () ->
                 idpayCodeAuthPaymentService.authPayment(trxId, "DUMMY_MERCHANTID", pinBlockDTO)
         );
 
         //Then
         Assertions.assertNotNull(result);
-        Assertions.assertEquals(HttpStatus.FORBIDDEN, result.getHttpStatus());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
+        Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, result.getCode());
 
     }
 }

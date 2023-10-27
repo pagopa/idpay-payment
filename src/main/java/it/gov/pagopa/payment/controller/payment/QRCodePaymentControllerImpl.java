@@ -2,8 +2,6 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
-import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
@@ -22,19 +20,6 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
   public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService, QRCodeExpirationService qrCodeExpirationService) {
     this.qrCodePaymentService = qrCodePaymentService;
     this.qrCodeExpirationService = qrCodeExpirationService;
-  }
-
-  @Override
-  @PerformanceLog(
-      value = "QR_CODE_CREATE_TRANSACTION",
-      payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse createTransaction(
-      TransactionCreationRequest trxCreationRequest,
-      String merchantId,
-      String acquirerId,
-      String idTrxIssuer) {
-    log.info("[QR_CODE_CREATE_TRANSACTION] The merchant {} through acquirer {} is creating a transaction", merchantId, acquirerId);
-    return qrCodePaymentService.createTransaction(trxCreationRequest, merchantId, acquirerId, idTrxIssuer);
   }
 
   @Override
@@ -72,39 +57,6 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
              trxCode
       );
       qrCodePaymentService.unrelateUser(trxCode, userId);
-  }
-
-  @Override
-  @PerformanceLog(
-      value = "QR_CODE_CONFIRM_PAYMENT",
-      payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
-    log.info(
-        "[QR_CODE_CONFIRM_PAYMENT] The merchant {} through acquirer {} is confirming the transaction {}",
-        merchantId,
-        acquirerId,
-        trxId);
-    return qrCodePaymentService.confirmPayment(trxId, merchantId, acquirerId);
-  }
-
-  @Override
-  @PerformanceLog(
-          value = "QR_CODE_CANCEL_TRANSACTION",
-          payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-  public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
-    log.info(
-            "[QR_CODE_CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {}",
-            merchantId,
-            acquirerId,
-            trxId);
-    qrCodePaymentService.cancelPayment(trxId, merchantId, acquirerId);
-  }
-
-  @Override
-  @PerformanceLog("GET_STATUS_TRANSACTION")
-  public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId, String acquirerId) {
-    log.info("[GET_STATUS_TRANSACTION] Merchant with {},{} requested to retrieve status of transaction{} ", merchantId, acquirerId, transactionId);
-    return qrCodePaymentService.getStatusTransaction(transactionId, merchantId, acquirerId);
   }
 
   @Override
