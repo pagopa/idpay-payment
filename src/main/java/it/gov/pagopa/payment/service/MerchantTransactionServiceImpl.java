@@ -14,6 +14,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import java.util.ArrayList;
 import java.util.List;
+
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -69,8 +71,9 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                                     authorizationExpirationMinutes,
                                     transaction.getUpdateDate(),
                                     transaction.getStatus(),
-                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()),
-                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode())
+                                    transaction.getChannel(),
+                                    (null != transaction.getChannel() && RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) ? transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()) : null,
+                                    (null != transaction.getChannel() && RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) ? transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode()) : null
                             )));
         }
         long count = transactionInProgressRepository.getCount(criteria);
