@@ -60,7 +60,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
                     transaction ->
-                            merchantTransactions.add(popolaTest(transaction)));
+                            merchantTransactions.add(populateMerchantTransactionDTO(transaction)));
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
@@ -68,7 +68,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         return new MerchantTransactionsListDTO(merchantTransactions, result.getNumber(), result.getSize(),
                 (int) result.getTotalElements(), result.getTotalPages());
     }
-private MerchantTransactionDTO popolaTest(TransactionInProgress transaction){
+private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgress transaction){
         String trxCodeImgUrl = null;
         String trxCodeTxtUrl = null;
 
