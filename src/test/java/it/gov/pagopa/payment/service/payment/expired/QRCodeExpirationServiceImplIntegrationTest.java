@@ -178,6 +178,8 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
                 })
                 .collect(Collectors.toSet());
 
+        eventsResult.forEach(QRCodeExpirationServiceImplIntegrationTest::alignFetchedDateTimeToLocalOffset);
+
         Assertions.assertEquals(
                 sortAndCleanDates(expectedEvents.values()),
                 sortAndCleanDates(eventsResult)
@@ -187,6 +189,10 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
     private TransactionOutcomeDTO trxInProgress2TrxOutcome(TransactionInProgress t) {
         t.setStatus(SyncTrxStatus.REWARDED);
         return transactionOutcomeDTOMapper.apply(t);
+    }
+
+    private static void alignFetchedDateTimeToLocalOffset(TransactionInProgress trx) {
+        trx.setTrxDate(trx.getTrxDate().withOffsetSameInstant(OffsetDateTime.now().getOffset()));
     }
 
 }
