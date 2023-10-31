@@ -454,6 +454,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNotNull(expiredTrxResult);
         assertElaborationsDateTime(now, expiredTrxResult);
+        alignFetchedDateTimeToLocalOffset(expiredTrxResult);
         Assertions.assertEquals(transactionExpired, expiredTrxResult);
         Assertions.assertNull(transactionInProgressRepository.findAuthorizationExpiredTransaction("DUMMYINITIATIVEID", EXPIRATION_MINUTES));
 
@@ -461,6 +462,10 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNull(expiredTrxThrottledResult);
 
+    }
+
+    private static void alignFetchedDateTimeToLocalOffset(TransactionInProgress trx) {
+        trx.setTrxDate(trx.getTrxDate().withOffsetSameInstant(OffsetDateTime.now().getOffset()));
     }
 
     @Test
@@ -493,6 +498,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNotNull(expiredTrxResult);
         assertElaborationsDateTime(now, expiredTrxResult);
+        alignFetchedDateTimeToLocalOffset(expiredTrxResult);
         Assertions.assertEquals(transactionExpired, expiredTrxResult);
         Assertions.assertNull(transactionInProgressRepository.findCancelExpiredTransaction("DUMMYINITIATIVEID", EXPIRATION_MINUTES));
 
