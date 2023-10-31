@@ -19,6 +19,8 @@ import it.gov.pagopa.payment.test.fakers.MerchantTransactionDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import java.util.Collections;
 import java.util.List;
+
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,12 +52,51 @@ class MerchantTransactionServiceTest {
 
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1, transaction2));
 
+        MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
+        merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+
+
+        MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
+        merchantTransaction2.setTrxDate(transaction2.getTrxDate().toLocalDateTime());
+        merchantTransaction2.setFiscalCode(null);
+
+
+        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+                .content(List.of(merchantTransaction1, merchantTransaction2))
+                .pageSize(10).totalElements(2).totalPages(1).build();
+
+        DecryptCfDTO decryptCfDTO = new DecryptCfDTO("MERCHANTFISCALCODE1");
+        EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
+
+        Mockito.when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
+        Mockito.when(decryptRestConnector.getPiiByToken("USERID1")).thenReturn(decryptCfDTO);
+
+        MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
+
+        assertEquals(2, result.getContent().size());
+        assertEquals(merchantTransactionsListDTO_expected, result);
+        TestUtils.checkNotNullFields(result);
+    }
+
+    @Test
+    void getMerchantTransactionList_QRCODE() {
+        TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        transaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
+        transaction1.setUserId("USERID1");
+        TransactionInProgress transaction2 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transaction2.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
+
+        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1, transaction2));
+
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(QRCODE_TXTURL);
 
         MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
         merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         merchantTransaction1.setQrcodePngUrl(QRCODE_IMGURL);
         merchantTransaction1.setQrcodeTxtUrl(QRCODE_TXTURL);
 
@@ -63,6 +104,7 @@ class MerchantTransactionServiceTest {
         merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
         merchantTransaction2.setTrxDate(transaction2.getTrxDate().toLocalDateTime());
         merchantTransaction2.setFiscalCode(null);
+        merchantTransaction2.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         merchantTransaction2.setQrcodePngUrl(QRCODE_IMGURL);
         merchantTransaction2.setQrcodeTxtUrl(QRCODE_TXTURL);
 
@@ -113,9 +155,9 @@ class MerchantTransactionServiceTest {
     }
 
     @Test
-    void getMerchantTransactionList_NoFiscalCode() {
+    void getMerchantTransactionList_NoFiscalCode_QRCODE() {
         TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
+        transaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
 
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
@@ -125,8 +167,33 @@ class MerchantTransactionServiceTest {
         merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
         merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
         merchantTransaction.setFiscalCode(null);
+        merchantTransaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         merchantTransaction.setQrcodePngUrl(QRCODE_IMGURL);
         merchantTransaction.setQrcodeTxtUrl(QRCODE_TXTURL);
+
+        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+                .content(List.of(merchantTransaction))
+                .pageSize(10).totalElements(1).totalPages(1).build();
+
+        MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", null, null, null);
+
+        assertEquals(1, result.getContent().size());
+        assertEquals(merchantTransactionsListDTO_expected, result);
+        TestUtils.checkNotNullFields(result);
+    }
+
+    @Test
+    void getMerchantTransactionList_NoFiscalCode() {
+        TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
+
+
+        MerchantTransactionDTO merchantTransaction = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
+        merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction.setFiscalCode(null);
+
 
         MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction))
