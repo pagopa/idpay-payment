@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class QRCodeAuthorizationExpiredServiceImpl extends CommonAuthorizationExpiredServiceImpl implements QRCodeAuthorizationExpiredService {
 
     public QRCodeAuthorizationExpiredServiceImpl(
-            @Value("${app.qrCode.expirations.authorizationMinutes:15}") long authorizationExpirationMinutes,
+            @Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
