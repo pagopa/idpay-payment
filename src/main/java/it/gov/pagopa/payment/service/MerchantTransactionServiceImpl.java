@@ -14,6 +14,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import java.util.ArrayList;
 import java.util.List;
+
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -58,20 +60,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
                     transaction ->
-                            merchantTransactions.add(
-                            new MerchantTransactionDTO(
-                                    transaction.getTrxCode(),
-                                    transaction.getCorrelationId(),
-                                    transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
-                                    transaction.getAmountCents(),
-                                    transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
-                                    transaction.getTrxDate().toLocalDateTime(),
-                                    authorizationExpirationMinutes,
-                                    transaction.getUpdateDate(),
-                                    transaction.getStatus(),
-                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()),
-                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode())
-                            )));
+                            merchantTransactions.add(populateMerchantTransactionDTO(transaction)));
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
@@ -79,6 +68,29 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         return new MerchantTransactionsListDTO(merchantTransactions, result.getNumber(), result.getSize(),
                 (int) result.getTotalElements(), result.getTotalPages());
     }
+private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgress transaction){
+        String trxCodeImgUrl = null;
+        String trxCodeTxtUrl = null;
+
+        if(null != transaction.getChannel() && RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) {
+            trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
+            trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
+        }
+
+        return new MerchantTransactionDTO(transaction.getTrxCode(),
+                transaction.getCorrelationId(),
+                transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
+                transaction.getAmountCents(),
+                transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
+                transaction.getTrxDate().toLocalDateTime(),
+                authorizationExpirationMinutes,
+                transaction.getUpdateDate(),
+                transaction.getStatus(),
+                transaction.getChannel(),
+                trxCodeImgUrl,
+                trxCodeTxtUrl
+                );
+        }
 
     private String decryptCF(String userId) {
         String fiscalCode;

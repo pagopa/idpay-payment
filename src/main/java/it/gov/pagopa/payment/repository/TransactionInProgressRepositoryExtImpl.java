@@ -10,11 +10,6 @@ import it.gov.pagopa.payment.exception.custom.toomanyrequests.TooManyRequestsExc
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +21,11 @@ import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+
+import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
@@ -77,7 +77,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes) {
         return mongoTemplate.findOne(
                 Query.query(
-                        criteriaByTrxCodeAndDateGreaterThan(trxCode, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
+                        criteriaByTrxCodeAndDateGreaterThan(trxCode, OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes))),
                 TransactionInProgress.class);
     }
 
@@ -85,13 +85,13 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     public TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId, long authorizationExpirationMinutes) {
         return mongoTemplate.findOne(
                 Query.query(
-                        criteriaByTrxIdAndDateGreaterThan(trxId, LocalDateTime.now().minusMinutes(authorizationExpirationMinutes))),
+                        criteriaByTrxIdAndDateGreaterThan(trxId, OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes))),
                         TransactionInProgress.class);
     }
 
     @Override
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes) {
-        LocalDateTime minTrxDate = LocalDateTime.now().minusMinutes(authorizationExpirationMinutes);
+        OffsetDateTime minTrxDate = OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes);
         TransactionInProgress transaction =
                 mongoTemplate.findAndModify(
                         Query.query(
@@ -113,10 +113,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         return transaction;
     }
 
-    private Criteria criteriaByTrxCodeAndDateGreaterThan(String trxCode, LocalDateTime trxDate) {
+    private Criteria criteriaByTrxCodeAndDateGreaterThan(String trxCode, OffsetDateTime trxDate) {
         return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxDate).gte(trxDate);
     }
-    private Criteria criteriaByTrxIdAndDateGreaterThan(String trxId, LocalDateTime trxDate) {
+    private Criteria criteriaByTrxIdAndDateGreaterThan(String trxId, OffsetDateTime trxDate) {
         return Criteria.where(Fields.id).is(trxId).and(Fields.trxDate).gte(trxDate);
     }
 
@@ -301,7 +301,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     private TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes, List<SyncTrxStatus> statusList) {
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
 
         Criteria criteria = Criteria.where(Fields.trxDate).lt(now.minusMinutes(expirationMinutes)).andOperator(
                 Criteria.where(Fields.status).in(statusList)
