@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.common;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
@@ -24,12 +25,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CommonStatusTransactionServiceImplTest {
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
+    private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+
     private CommonStatusTransactionServiceImpl commonStatusTransactionService;
 
     @BeforeEach
     void setUp(){
         commonStatusTransactionService = new CommonStatusTransactionServiceImpl(transactionInProgressRepositoryMock,
-                new TransactionInProgress2SyncTrxStatusMapper());
+                new TransactionInProgress2SyncTrxStatusMapper(transactionInProgress2TransactionResponseMapperMock));
     }
 
     @Test
@@ -45,6 +48,25 @@ class CommonStatusTransactionServiceImplTest {
         SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId());
         //then
         Assertions.assertNotNull(result);
+        TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
+    }
+
+    @Test
+    void getStatusTransactionQRCode() {
+        //given
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
+                .reward(0L)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+
+        transaction.setChannel("QRCODE");
+        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
+        //when
+        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId());
+        //then
+        Assertions.assertNotNull(result);
+        Assertions.assertNotNull(result.getQrcodePngUrl());
+        Assertions.assertNotNull(result.getQrcodeTxtUrl());
         TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
     }
 

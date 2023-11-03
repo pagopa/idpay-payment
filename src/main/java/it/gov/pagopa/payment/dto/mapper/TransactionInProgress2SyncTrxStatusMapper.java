@@ -7,6 +7,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TransactionInProgress2SyncTrxStatusMapper {
+
+    private static final String TRX_CHANNEL_QRCODE = "QRCODE";
+
+    private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
+
+    public TransactionInProgress2SyncTrxStatusMapper(TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper) {
+        this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
+    }
+
+
     public SyncTrxStatusDTO transactionInProgressMapper(TransactionInProgress transaction){
         return SyncTrxStatusDTO.builder()
                 .id(transaction.getId())
@@ -24,6 +34,8 @@ public class TransactionInProgress2SyncTrxStatusMapper {
                 .rewardCents(transaction.getReward())
                 .rejectionReasons(transaction.getRejectionReasons())
                 .status(transaction.getStatus())
+                .qrcodePngUrl(TRX_CHANNEL_QRCODE.equals(transaction.getChannel()) ? transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()) : null)
+                .qrcodeTxtUrl(TRX_CHANNEL_QRCODE.equals(transaction.getChannel()) ? transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode()) : null)
                 .build();
     }
 }

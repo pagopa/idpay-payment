@@ -56,4 +56,7 @@ public class SyncTrxStatusDTO {
 
     @NotNull
     private SyncTrxStatus status;
+
+    private String qrcodePngUrl;
+    private String qrcodeTxtUrl;
 }
