@@ -73,6 +73,7 @@ spring:
         bindings:
           errors-out-0:
             producer:
+              sync: true
               configuration:
                 client.id: notificationQueue-errors
                 connections.max.idle.ms: ${KAFKA_ERRORS_CONNECTION_MAX_IDLE_TIME:180000}
@@ -81,6 +82,7 @@ spring:
                 batch.size: ${KAFKA_ERRORS_BATCH_SIZE:${KAFKA_BATCH_SIZE:16384}}
           transactionOutcome-out-0:
             producer:
+              sync: true
               configuration:
                 client.id: transactionOutcome
                 connections.max.idle.ms: ${KAFKA_TRANSACTION_OUTCOME_CONNECTION_MAX_IDLE_TIME:180000}
