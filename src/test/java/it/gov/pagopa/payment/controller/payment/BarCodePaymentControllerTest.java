@@ -1,13 +1,22 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -16,13 +25,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BarCodePaymentControllerImpl.class)
 @Import({JsonConfig.class, PaymentErrorManagerConfig.class, ValidationExceptionHandler.class})
@@ -39,7 +41,6 @@ class BarCodePaymentControllerTest {
 
     @Test
     void createTransaction_testMandatoryFields() throws Exception {
-        String expectedCode = "INVALID_REQUEST";
         List<String> expectedInvalidFields = List.of("initiativeId");
 
         MvcResult result = mockMvc.perform(
@@ -52,7 +53,7 @@ class BarCodePaymentControllerTest {
 
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
-        assertEquals(expectedCode, actual.getCode());
+        assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
         expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
     }
 
@@ -69,14 +70,13 @@ class BarCodePaymentControllerTest {
 
         assertNotNull(result.getResponse().getContentAsString());
 
-        String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+        String actual = "{\"code\":\"PAYMENT_INVALID_REQUEST\",\"message\":\"Required request header "
                 + "'x-user-id' for method parameter type String is not present\"}";
         assertEquals(actual, result.getResponse().getContentAsString());
     }
 
     @Test
     void authorizeTransaction_testMandatoryFields() throws Exception {
-        String expectedCode = "INVALID_REQUEST";
         List<String> expectedInvalidFields = List.of("amountCents", "idTrxAcquirer");
 
         MvcResult result = mockMvc.perform(
@@ -90,7 +90,7 @@ class BarCodePaymentControllerTest {
 
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
-        assertEquals(expectedCode, actual.getCode());
+        assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
         expectedInvalidFields.forEach(field -> assertTrue(actual.getMessage().contains(field)));
     }
 
@@ -110,7 +110,7 @@ class BarCodePaymentControllerTest {
 
         assertNotNull(result.getResponse().getContentAsString());
 
-        String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+        String actual = "{\"code\":\"PAYMENT_INVALID_REQUEST\",\"message\":\"Required request header "
                 + "'x-merchant-id' for method parameter type String is not present\"}";
         assertEquals(actual, result.getResponse().getContentAsString());
     }
