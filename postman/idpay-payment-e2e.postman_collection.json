@@ -12611,6 +12611,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -13553,6 +13562,15 @@
 															"pm.test(\"Payment - Happy case - BarCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -15222,6 +15240,15 @@
 														],
 														"type": "text/javascript"
 													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 10000);"
+														],
+														"type": "text/javascript"
+													}
 												}
 											],
 											"request": {
@@ -16299,7 +16326,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -16377,7 +16404,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 5000);"
 														],
 														"type": "text/javascript"
 													}
@@ -16674,7 +16701,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -16752,7 +16779,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 5000);"
 														],
 														"type": "text/javascript"
 													}
@@ -17045,7 +17072,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -17195,7 +17222,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 5000);"
 														],
 														"type": "text/javascript"
 													}
@@ -17613,7 +17640,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 5000);"
 														],
 														"type": "text/javascript"
 													}
@@ -17747,6 +17774,15 @@
 																	"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
+																],
+																"type": "text/javascript"
+															}
+														},
+														{
+															"listen": "prerequest",
+															"script": {
+																"exec": [
+																	"setTimeout(() => {}, 10000);"
 																],
 																"type": "text/javascript"
 															}
@@ -18226,7 +18262,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -20644,6 +20680,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -20892,6 +20937,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -21099,6 +21153,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -21172,6 +21235,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -21235,6 +21307,15 @@
 													"    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
 													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -21458,6 +21539,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -21521,6 +21611,15 @@
 													"    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
 													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -21793,6 +21892,15 @@
 														],
 														"type": "text/javascript"
 													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 10000);"
+														],
+														"type": "text/javascript"
+													}
 												}
 											],
 											"request": {
@@ -21974,6 +22082,15 @@
 													"\r",
 													"    pm.expect(jsonResponse.message).to.eql(`Transaction with transactionId [${transactionId}] is already assigned to another user`);\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -22162,6 +22279,15 @@
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -22400,7 +22526,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -22548,6 +22674,15 @@
 													"\r",
 													"    pm.expect(jsonResponse.message).to.eql(`The user has been suspended for initiative [${initiativeId}]`);\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -22740,6 +22875,15 @@
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 10000);"
 														],
 														"type": "text/javascript"
 													}
@@ -23080,6 +23224,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -23286,6 +23439,15 @@
 													"\r",
 													"    pm.expect(jsonResponse.message).to.eql(`The current user is not onboarded on initiative [${initiativeId}]`);\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -23699,6 +23861,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -23762,6 +23933,15 @@
 													"    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
 													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -24058,6 +24238,15 @@
 													"\r",
 													"    pm.expect(jsonResponse.message).to.eql(`The current user is not onboarded on initiative [${initiativeId}]`);\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
