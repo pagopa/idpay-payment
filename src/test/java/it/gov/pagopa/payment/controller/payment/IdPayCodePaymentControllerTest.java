@@ -1,5 +1,10 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
@@ -14,11 +19,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(IdPayCodePaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
@@ -47,7 +47,7 @@ class IdPayCodePaymentControllerTest {
 
     assertNotNull(result.getResponse().getContentAsString());
 
-    String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+    String actual = "{\"code\":\"PAYMENT_INVALID_REQUEST\",\"message\":\"Required request header "
             + "'Fiscal-Code' for method parameter type String is not present\"}";
     assertEquals(actual, result.getResponse().getContentAsString());
   }

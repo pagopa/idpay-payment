@@ -63,10 +63,10 @@ public class TransactionInProgressFaker {
         .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
         .operationTypeTranscoded(OperationType.CHARGE)
         .status(status)
+        .channel("QRCODE")
         .channel("CHANNEL%d".formatted(bias))
         .reward(reward)
         .rewards(rewards)
-        .channel("CHANNEL%d".formatted(bias))
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

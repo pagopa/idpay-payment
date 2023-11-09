@@ -1,14 +1,24 @@
 package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.springframework.stereotype.Service;
 
 
 @Service
 public class TransactionInProgress2SyncTrxStatusMapper {
+
+    private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
+
+    public TransactionInProgress2SyncTrxStatusMapper(TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper) {
+        this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
+    }
+
+
     public SyncTrxStatusDTO transactionInProgressMapper(TransactionInProgress transaction){
-        return SyncTrxStatusDTO.builder()
+        SyncTrxStatusDTO response = SyncTrxStatusDTO.builder()
                 .id(transaction.getId())
                 .idTrxIssuer(transaction.getIdTrxIssuer())
                 .trxCode(transaction.getTrxCode())
@@ -25,5 +35,18 @@ public class TransactionInProgress2SyncTrxStatusMapper {
                 .rejectionReasons(transaction.getRejectionReasons())
                 .status(transaction.getStatus())
                 .build();
+
+        if(evaluateTransactionStatusAndChannel(transaction)){
+            response.setQrcodePngUrl(transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()));
+            response.setQrcodeTxtUrl(transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode()));
+        }
+
+        return response;
     }
+
+    private boolean evaluateTransactionStatusAndChannel(TransactionInProgress transaction){
+        return (SyncTrxStatus.CREATED.equals(transaction.getStatus()) && !RewardConstants.TRX_CHANNEL_BARCODE.equals(transaction.getChannel()))
+                || (!SyncTrxStatus.CREATED.equals(transaction.getStatus()) && RewardConstants.TRX_CHANNEL_QRCODE.equals(transaction.getChannel()));
+    }
+
 }
