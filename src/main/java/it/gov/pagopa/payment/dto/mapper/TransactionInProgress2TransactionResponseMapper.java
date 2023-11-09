@@ -37,7 +37,7 @@ public class TransactionInProgress2TransactionResponseMapper
       splitPayment = residualAmountCents > 0L;
     }
 
-    TransactionResponse trxResponse = TransactionResponse.builder()
+    return TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())
             .amountCents(transactionInProgress.getAmountCents())
             .amountCurrency(transactionInProgress.getAmountCurrency())
@@ -55,13 +55,9 @@ public class TransactionInProgress2TransactionResponseMapper
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
             .trxExpirationMinutes(commonAuthorizationExpirationMinutes)
+            .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
+            .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
             .build();
-
-    if(transactionInProgress.getAcquirerId().equals("PAGOPA")){
-      trxResponse.setQrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()));
-      trxResponse.setQrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()));
-    }
-    return trxResponse;
   }
 
   public String generateTrxCodeImgUrl(String trxCode){

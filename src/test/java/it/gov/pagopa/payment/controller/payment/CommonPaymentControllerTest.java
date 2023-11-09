@@ -1,9 +1,15 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -15,6 +21,8 @@ import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServi
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,14 +35,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommonPaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
@@ -66,7 +66,6 @@ class CommonPaymentControllerTest {
 
     @Test
     void createCommonTransaction_testMandatoryFields() throws Exception {
-        String expectedCode = "INVALID_REQUEST";
         List<String> expectedInvalidFields = Arrays.asList("initiativeId", "amountCents", "idTrxAcquirer");
 
         MvcResult result = mockMvc.perform(
@@ -80,7 +79,7 @@ class CommonPaymentControllerTest {
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
 
-        Assertions.assertEquals(expectedCode, actual.getCode());
+        Assertions.assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
         expectedInvalidFields.forEach(field -> Assertions.assertTrue(actual.getMessage().contains(field)));
     }
 
@@ -112,7 +111,6 @@ class CommonPaymentControllerTest {
 
     @Test
     void confirmCommonTransactionTestMandatoryHeaders() throws Exception{
-        String expectedCode = "INVALID_REQUEST";
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                 .put("/idpay/payment/{transactionId}/confirm", TRANSACTION_ID)
@@ -123,7 +121,7 @@ class CommonPaymentControllerTest {
 
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
-        assertEquals(expectedCode, actual.getCode());
+        assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
         assertEquals("Required request header "
                         + "'x-merchant-id' for method parameter type String is not present",
                 actual.getMessage());
@@ -178,14 +176,13 @@ class CommonPaymentControllerTest {
 
         assertNotNull(result.getResponse().getContentAsString());
 
-        String actual = "{\"code\":\"INVALID_REQUEST\",\"message\":\"Required request header "
+        String actual = "{\"code\":\"PAYMENT_INVALID_REQUEST\",\"message\":\"Required request header "
                 + "'x-merchant-id' for method parameter type String is not present\"}";
         assertEquals(actual, result.getResponse().getContentAsString());
     }
 
     @Test
     void getStatusTransaction_testMandatoryHeaders() throws Exception {
-        String expectedCode = "INVALID_REQUEST";
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                         .get("/idpay/payment/{transactionId}/status",
@@ -196,7 +193,7 @@ class CommonPaymentControllerTest {
 
         ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
                 ErrorDTO.class);
-        assertEquals(expectedCode, actual.getCode());
+        assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
         assertEquals("Required request header "
                         + "'x-merchant-id' for method parameter type String is not present",
                 actual.getMessage());
