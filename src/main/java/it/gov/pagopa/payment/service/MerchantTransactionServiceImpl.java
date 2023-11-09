@@ -72,7 +72,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
         String trxCodeImgUrl = null;
         String trxCodeTxtUrl = null;
 
-        if(null != transaction.getChannel() && RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) {
+        if(null == transaction.getChannel() || RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) {
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
@@ -113,4 +113,5 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
         }
         return userId;
     }
+
 }
