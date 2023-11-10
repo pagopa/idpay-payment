@@ -11406,7 +11406,7 @@
 												],
 												"body": {
 													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
+													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId_not_started}}\",\r\n    \"idTrxAcquirer\": \"IDTRXACQUIRER{{randomNum}}\",\r\n    \"trxDate\": \"{{trxDate}}\",\r\n    \"amountCents\": \"5000\"\r\n}",
 													"options": {
 														"raw": {
 															"language": "json"
@@ -24118,6 +24118,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 5000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -24271,7 +24280,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 18000);"
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
@@ -24352,7 +24361,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 18000);"
 												],
 												"type": "text/javascript"
 											}
@@ -25103,6 +25112,10 @@
 			"key": "acquirerId",
 			"value": "PAGOPA",
 			"type": "string"
+		},
+		{
+			"key": "initiativeId_not_started",
+			"value": ""
 		}
 	]
 }
