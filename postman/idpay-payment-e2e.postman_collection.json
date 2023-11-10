@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "c341041c-bde9-4831-beb5-717a1c526d68",
-		"name": "IDPay Payment - e2e Copy",
+		"name": "IDPay Payment - e2e",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "25166852",
 		"_collection_link": "https://pagopa-idpay-team.postman.co/workspace/IDPAY-Team-Iniziativa~997979e0-2fc3-4b2b-83cc-0a87b250465b/collection/25166852-c341041c-bde9-4831-beb5-717a1c526d68?action=share&source=collection_link&creator=25166852"
@@ -14054,6 +14054,15 @@
 												],
 												"type": "text/javascript"
 											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
+												],
+												"type": "text/javascript"
+											}
 										}
 									],
 									"request": {
@@ -15512,9 +15521,7 @@
 															"});\r",
 															"pm.test(\"Payment - BarCode - Create transaction - User budget exhausted - [USER] Create transaction [BARCODE] - Verify error message\", function () {\r",
 															"    let jsonResponse = pm.response.json();\r",
-															"    const initiativeId_exhausted = pm.collectionVariables.get(\"initiativeId_exhausted\");\r",
 															"    pm.expect(jsonResponse.code).equals(\"PAYMENT_BUDGET_EXHAUSTED\");\r",
-															"    pm.expect(jsonResponse.message).equals(`Budget exhausted for the current user and initiative [${initiativeId_exhausted}] was exhausted.`);\r",
 															"});\r",
 															""
 														],
@@ -20571,8 +20578,8 @@
 															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
 															"});\r",
 															"\r",
-															"pm.collectionVariables.set(\"merchantId\", pm.response.json().merchantId);\r",
-															"pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().fiscalCode);"
+															"pm.collectionVariables.set(\"merchantId\", pm.response.json().content[0].merchantId);\r",
+															"pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);"
 														],
 														"type": "text/javascript"
 													}
@@ -20960,7 +20967,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 5000);"
 												],
 												"type": "text/javascript"
 											}
@@ -21176,7 +21183,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 5000);"
 												],
 												"type": "text/javascript"
 											}
@@ -21544,15 +21551,13 @@
 											"listen": "test",
 											"script": {
 												"exec": [
-													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
-													"    pm.response.to.have.status(403);\r",
+													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"pm.test(\"Payment - Unhappy case - User suspended - Relate User with transaction [IDPAYCODE] - Verify response is: The current user is not onboarded on initiative\", function () {\r",
+													"pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Relate User with transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
 													"    let jsonResponse = pm.response.json();\r",
-													"    const initiativeId = pm.collectionVariables.get(\"initiativeId\");\r",
-													"\r",
-													"    pm.expect(jsonResponse.message).to.eql(`The current user is not onboarded on initiative [${initiativeId}]`);\r",
+													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
 													"});"
 												],
 												"type": "text/javascript"
@@ -21663,7 +21668,7 @@
 										"header": [
 											{
 												"key": "x-acquirer-id",
-												"value": "PAGO",
+												"value": "{{acquirerId}}",
 												"type": "text"
 											},
 											{
@@ -21761,14 +21766,14 @@
 											"script": {
 												"exec": [
 													"pm.test(\"Happy case: Status transaction [IDAPYCODE]\", function () {\r",
-													"    pm.response.to.have.status(200);\r",
+													"    pm.response.to.have.status(404);\r",
 													"});\r",
 													"\r",
 													"pm.test(\"Payment - IdpayCode - Status transaction - Verify response is: Cannot find transaction with transactionId\", function () {\r",
 													"    let jsonResponse = pm.response.json();\r",
-													"    const transactionId = pm.collectionVariables.get(\"transactionId\");\r",
+													"    const trxId = pm.collectionVariables.get(\"trxId\");\r",
 													"\r",
-													"    pm.expect(jsonResponse.message).to.eql(`Cannot find transaction with transactionId [${transactionId}]`);\r",
+													"    pm.expect(jsonResponse.message).to.eql(`Cannot find transaction with transactionId [${trxId}]`);\r",
 													"});"
 												],
 												"type": "text/javascript"
@@ -22076,6 +22081,317 @@
 														"idpay",
 														"onboarding",
 														"consent"
+													]
+												}
+											},
+											"response": []
+										}
+									]
+								},
+								{
+									"name": "Create transaction",
+									"item": [
+										{
+											"name": "Create TRX",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - IdpayCode - Unhappy case: Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
+															"    pm.response.to.have.status(201);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - IdpayCode - Unhappy case: Create transaction -  Create transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
+															"    let jsonResponse = pm.response.json();\r",
+															"    pm.expect(jsonResponse).to.have.property(\"trxCode\");\r",
+															"    pm.expect(jsonResponse.status).equals(\"CREATED\");\r",
+															"\r",
+															"    pm.collectionVariables.set(\"transactionId\", pm.response.json().id);\r",
+															"});\r",
+															""
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															""
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "apikey",
+													"apikey": [
+														{
+															"key": "value",
+															"value": "{{milSubscriptionKey}}",
+															"type": "string"
+														},
+														{
+															"key": "key",
+															"value": "Ocp-Apim-Subscription-Key",
+															"type": "string"
+														}
+													]
+												},
+												"method": "POST",
+												"header": [
+													{
+														"key": "x-merchant-fiscalcode",
+														"value": "{{merchantFiscalCode}}",
+														"type": "text"
+													},
+													{
+														"key": "x-acquirer-id",
+														"value": "{{acquirerId}}",
+														"type": "text"
+													}
+												],
+												"body": {
+													"mode": "raw",
+													"raw": "{\r\n    \"initiativeId\": \"{{initiativeId}}\",\r\n    \"amountCents\": 5000,\r\n    \"idTrxAcquirer\":\"{{idTrxAcquirer}}\"\r\n}",
+													"options": {
+														"raw": {
+															"language": "json"
+														}
+													}
+												},
+												"url": {
+													"raw": "{{baseUrl}}/idpay/mil/payment/",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"mil",
+														"payment",
+														""
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Relate user",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Relate User with transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
+															"    let jsonResponse = pm.response.json();\r",
+															"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 5000);"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "apikey",
+													"apikey": [
+														{
+															"key": "value",
+															"value": "{{minintSubscriptionKey}}",
+															"type": "string"
+														},
+														{
+															"key": "key",
+															"value": "Ocp-Apim-Subscription-Key",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [
+													{
+														"key": "Fiscal-Code",
+														"value": "{{CF_1}}",
+														"type": "text"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/minint/payment/{{transactionId}}/user",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"minint",
+														"payment",
+														"{{transactionId}}",
+														"user"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Preview",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Preview transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
+															"    let jsonResponse = pm.response.json();\r",
+															"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
+															"    pm.expect(jsonResponse).have.property(\"reward\");\r",
+															"    pm.expect(jsonResponse).have.property(\"residualBudget\");\r",
+															"    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
+															"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
+															"    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
+															"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
+															"});"
+														],
+														"type": "text/javascript"
+													}
+												},
+												{
+													"listen": "prerequest",
+													"script": {
+														"exec": [
+															"setTimeout(() => {}, 5000);"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "apikey",
+													"apikey": [
+														{
+															"key": "value",
+															"value": "{{milSubscriptionKey}}",
+															"type": "string"
+														},
+														{
+															"key": "key",
+															"value": "Ocp-Apim-Subscription-Key",
+															"type": "string"
+														}
+													]
+												},
+												"method": "PUT",
+												"header": [
+													{
+														"key": "x-acquirer-id",
+														"value": "{{acquirerId}}",
+														"type": "text"
+													},
+													{
+														"key": "x-merchant-fiscalcode",
+														"value": "{{merchantFiscalCode}}",
+														"type": "text"
+													},
+													{
+														"key": "Ocp-Apim-Trace",
+														"value": "true",
+														"type": "text"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/mil/payment/idpay-code/{{transactionId}}/preview",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"mil",
+														"payment",
+														"idpay-code",
+														"{{transactionId}}",
+														"preview"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "GetStatus trx",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Unhappy case: Status transaction [IDAPYCODE]\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"pm.test(\"Payment - IdpayCode - Status transaction - Verify response body contains fields\", function () {\r",
+															"    let jsonResponse = pm.response.json();\r",
+															"    pm.expect(jsonResponse.status).eq(\"IDENTIFIED\");\r",
+															"})"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "apikey",
+													"apikey": [
+														{
+															"key": "value",
+															"value": "{{milSubscriptionKey}}",
+															"type": "string"
+														},
+														{
+															"key": "key",
+															"value": "Ocp-Apim-Subscription-Key",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [
+													{
+														"key": "x-acquirer-id",
+														"value": "{{acquirerId}}",
+														"type": "text"
+													},
+													{
+														"key": "x-merchant-fiscalcode",
+														"value": "{{merchantFiscalCode}}",
+														"type": "text"
+													}
+												],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/mil/payment/{{transactionId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"mil",
+														"payment",
+														"{{transactionId}}",
+														"status"
 													]
 												}
 											},
@@ -23867,14 +24183,12 @@
 											"script": {
 												"exec": [
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
-													"    pm.response.to.have.status(403);\r",
+													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"pm.test(\"Payment - Unhappy case - User suspended - Relate User with transaction [IDPAYCODE] - Verify response is: The current user is not onboarded on initiative\", function () {\r",
+													"pm.test(\"Payment - Unhappy case - User suspended - Relate User with transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
 													"    let jsonResponse = pm.response.json();\r",
-													"    const initiativeId = pm.collectionVariables.get(\"initiativeId\");\r",
-													"\r",
-													"    pm.expect(jsonResponse.message).to.eql(`The current user is not onboarded on initiative [${initiativeId}]`);\r",
+													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
 													"});"
 												],
 												"type": "text/javascript"
@@ -24024,13 +24338,13 @@
 											"script": {
 												"exec": [
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
-													"    pm.response.to.have.status(200);\r",
+													"    pm.response.to.have.status(403);\r",
 													"});\r",
 													"\r",
 													"pm.test(\"Payment - Unhappy case - Pin Block Invalid - Authorize transaction [IDPAYCODE] - Verify response is: The Pinblock is incorrect\", function () {\r",
 													"    let jsonResponse = pm.response.json();\r",
 													"\r",
-													"    pm.expect(jsonResponse.message).to.eql(`The Pinblock is incorrect`);\r",
+													"    pm.expect(jsonResponse.code).to.eql(`PAYMENT_INVALID_PINBLOCK`);\r",
 													"});"
 												],
 												"type": "text/javascript"
@@ -24247,14 +24561,12 @@
 											"script": {
 												"exec": [
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
-													"    pm.response.to.have.status(403);\r",
+													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"pm.test(\"Payment - Unhappy case - User suspended - Relate User with transaction [IDPAYCODE] - Verify response is: The current user is not onboarded on initiative\", function () {\r",
+													"pm.test(\"Payment - Unhappy case - Merchant not onboarded - Relate User with transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
 													"    let jsonResponse = pm.response.json();\r",
-													"    const initiativeId = pm.collectionVariables.get(\"initiativeId\");\r",
-													"\r",
-													"    pm.expect(jsonResponse.message).to.eql(`The current user is not onboarded on initiative [${initiativeId}]`);\r",
+													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
 													"});"
 												],
 												"type": "text/javascript"
@@ -24318,18 +24630,13 @@
 											"script": {
 												"exec": [
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
-													"    pm.response.to.have.status(200);\r",
+													"    pm.response.to.have.status(403);\r",
 													"});\r",
 													"\r",
 													"pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Preview transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
 													"    let jsonResponse = pm.response.json();\r",
-													"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
-													"    pm.expect(jsonResponse).have.property(\"reward\");\r",
-													"    pm.expect(jsonResponse).have.property(\"residualBudget\");\r",
-													"    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
-													"    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
-													"    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
-													"    pm.expect(jsonResponse.status).equals(\"IDENTIFIED\");\r",
+													"\r",
+													"    pm.expect(jsonResponse.code).to.eql(\"PAYMENT_MERCHANT_NOT_ONBOARDED\");\r",
 													"});"
 												],
 												"type": "text/javascript"
