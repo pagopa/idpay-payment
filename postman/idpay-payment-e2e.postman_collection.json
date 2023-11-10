@@ -10353,9 +10353,7 @@
 															"script": {
 																"exec": [
 																	"var jsonData = JSON.parse(responseBody);\r",
-																	"// console.log('jsondata', jsonData);\r",
-																	"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
-																	"pm.collectionVariables.set('initiativeId', jsonData.initiativeId);\r",
+																	"pm.collectionVariables.set('initiativeId_not_started', jsonData.initiativeId);\r",
 																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative creation - STEP1 - Responses with 201\", function () {\r",
 																	"    pm.response.to.have.status(201);\r",
@@ -10505,7 +10503,7 @@
 															"variable": [
 																{
 																	"key": "initiativeId",
-																	"value": "{{initiativeId}}",
+																	"value": "{{initiativeId_not_started}}",
 																	"description": "(Required) The initiative ID"
 																}
 															]
@@ -10552,12 +10550,12 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlInitiative}}/{{initiativeId}}/beneficiary",
+															"raw": "{{baseUrlInitiative}}/{{initiativeId_not_started}}/beneficiary",
 															"host": [
 																"{{baseUrlInitiative}}"
 															],
 															"path": [
-																"{{initiativeId}}",
+																"{{initiativeId_not_started}}",
 																"beneficiary"
 															]
 														}
@@ -10655,7 +10653,7 @@
 															"variable": [
 																{
 																	"key": "initiativeId",
-																	"value": "{{initiativeId}}",
+																	"value": "{{initiativeId_not_started}}",
 																	"description": "(Required) The initiative ID"
 																}
 															]
@@ -10783,7 +10781,7 @@
 															"variable": [
 																{
 																	"key": "initiativeId",
-																	"value": "{{initiativeId}}",
+																	"value": "{{initiativeId_not_started}}",
 																	"description": "(Required) The initiative ID"
 																}
 															]
@@ -10909,12 +10907,12 @@
 															}
 														],
 														"url": {
-															"raw": "{{baseUrlInitiative}}/{{initiativeId}}/approved",
+															"raw": "{{baseUrlInitiative}}/{{initiativeId_not_started}}/approved",
 															"host": [
 																"{{baseUrlInitiative}}"
 															],
 															"path": [
-																"{{initiativeId}}",
+																"{{initiativeId_not_started}}",
 																"approved"
 															]
 														}
@@ -11053,12 +11051,12 @@
 														"method": "PUT",
 														"header": [],
 														"url": {
-															"raw": "{{baseUrlInitiative}}/{{initiativeId}}/published",
+															"raw": "{{baseUrlInitiative}}/{{initiativeId_not_started}}/published",
 															"host": [
 																"{{baseUrlInitiative}}"
 															],
 															"path": [
-																"{{initiativeId}}",
+																"{{initiativeId_not_started}}",
 																"published"
 															]
 														}
@@ -11178,14 +11176,14 @@
 															]
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+															"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId_not_started}}/upload",
 															"host": [
 																"{{baseUrlToken}}"
 															],
 															"path": [
 																"merchant",
 																"initiative",
-																"{{initiativeId}}",
+																"{{initiativeId_not_started}}",
 																"upload"
 															],
 															"query": [
@@ -11256,13 +11254,13 @@
 														"method": "GET",
 														"header": [],
 														"url": {
-															"raw": "{{baseUrlMerchant}}/initiative/{{initiativeId}}/merchants",
+															"raw": "{{baseUrlMerchant}}/initiative/{{initiativeId_not_started}}/merchants",
 															"host": [
 																"{{baseUrlMerchant}}"
 															],
 															"path": [
 																"initiative",
-																"{{initiativeId}}",
+																"{{initiativeId_not_started}}",
 																"merchants"
 															]
 														}
@@ -11451,14 +11449,14 @@
 										"method": "DELETE",
 										"header": [],
 										"url": {
-											"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId}}",
+											"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId_not_started}}",
 											"host": [
 												"{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative"
 											],
 											"path": [
 												"idpay",
 												"initiative",
-												"{{initiativeId}}"
+												"{{initiativeId_not_started}}"
 											]
 										}
 									},
@@ -21340,7 +21338,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 18000);"
 												],
 												"type": "text/javascript"
 											}
@@ -21642,7 +21640,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 18000);"
 												],
 												"type": "text/javascript"
 											}
@@ -24273,7 +24271,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"setTimeout(() => {}, 18000);"
 												],
 												"type": "text/javascript"
 											}
@@ -24346,6 +24344,15 @@
 													"\r",
 													"    pm.expect(jsonResponse.code).to.eql(`PAYMENT_INVALID_PINBLOCK`);\r",
 													"});"
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													"setTimeout(() => {}, 10000);"
 												],
 												"type": "text/javascript"
 											}
