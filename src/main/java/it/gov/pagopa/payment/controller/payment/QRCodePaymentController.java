@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,11 +21,5 @@ public interface QRCodePaymentController {
   @ResponseStatus(code = HttpStatus.OK)
   void unrelateUser(@PathVariable("trxCode") String trxCode,
                     @RequestHeader("x-user-id") String userId);
-
-  @PutMapping("/force-expiration/confirm/{initiativeId}")
-  Long forceConfirmTrxExpiration(@PathVariable("initiativeId") String initiativeId);
-
-  @PutMapping("/force-expiration/authorization/{initiativeId}")
-  Long forceAuthorizationTrxExpiration(@PathVariable("initiativeId") String initiativeId);
 
 }
