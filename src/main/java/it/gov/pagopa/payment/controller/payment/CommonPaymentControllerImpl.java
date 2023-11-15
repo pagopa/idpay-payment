@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,16 +20,18 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
+    private final QRCodeExpirationService qrCodeExpirationService; // used just to force the expiration: this behavior is the same for all channels
 
     public CommonPaymentControllerImpl(@Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService,
                                        @Qualifier("CommonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("CommonCancel") CommonCancelServiceImpl commonCancelService,
-                                       CommonStatusTransactionServiceImpl commonStatusTransactionService
-    ) {
+                                       CommonStatusTransactionServiceImpl commonStatusTransactionService,
+                                       QRCodeExpirationService qrCodeExpirationService) {
     this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
         this.commonStatusTransactionService = commonStatusTransactionService;
+        this.qrCodeExpirationService = qrCodeExpirationService;
     }
 
     @Override
@@ -75,6 +78,20 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
         log.info("[GET_STATUS_TRANSACTION] The Merchant {} requested to retrieve status of transaction {} ", merchantId, transactionId);
         return commonStatusTransactionService.getStatusTransaction(transactionId);
+    }
+
+    @Override
+    @PerformanceLog("FORCE_CONFIRM_EXPIRATION")
+    public Long forceConfirmTrxExpiration(String initiativeId) {
+        log.info("[FORCE_CONFIRM_EXPIRATION] Requested confirm trx expiration for initiative {}", initiativeId);
+        return qrCodeExpirationService.forceConfirmTrxExpiration(initiativeId);
+    }
+
+    @Override
+    @PerformanceLog("FORCE_AUTHORIZATION_EXPIRATION")
+    public Long forceAuthorizationTrxExpiration(String initiativeId) {
+        log.info("[FORCE_AUTHORIZATION_EXPIRATION] Requested authorization trx expiration for initiative {}", initiativeId);
+        return qrCodeExpirationService.forceAuthorizationTrxExpiration(initiativeId);
     }
 
 }

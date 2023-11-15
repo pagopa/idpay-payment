@@ -1,11 +1,9 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
-import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -28,14 +26,9 @@ class QRCodePaymentControllerTest {
 
   @MockBean
   private QRCodePaymentService qrCodePaymentServiceMock;
-  @MockBean
-  private QRCodeExpirationService qrCodeExpirationServiceMock;
 
   @Autowired
   private MockMvc mockMvc;
-
-  @Autowired
-  private ObjectMapper objectMapper;
 
   @Test
   void preAuthTransaction_testGenericError() throws Exception {

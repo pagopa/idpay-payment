@@ -35,4 +35,10 @@ public interface CommonPaymentController {
     SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId,
                                           @RequestHeader("x-merchant-id") String merchantId);
 
+    @PutMapping("/force-expiration/confirm/{initiativeId}")
+    Long forceConfirmTrxExpiration(@PathVariable("initiativeId") String initiativeId);
+
+    @PutMapping("/force-expiration/authorization/{initiativeId}")
+    Long forceAuthorizationTrxExpiration(@PathVariable("initiativeId") String initiativeId);
+
 }

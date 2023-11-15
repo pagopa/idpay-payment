@@ -18,6 +18,7 @@ import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
@@ -49,6 +50,9 @@ class CommonPaymentControllerTest {
     @MockBean
     @Qualifier("CommonCancel")
     private CommonCancelServiceImpl commonCancelServiceMock;
+
+    @MockBean
+    private QRCodeExpirationService qrCodeExpirationServiceMock;
 
     @MockBean
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;

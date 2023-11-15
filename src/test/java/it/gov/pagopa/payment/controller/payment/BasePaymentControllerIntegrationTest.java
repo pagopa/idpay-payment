@@ -232,7 +232,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     protected MvcResult forceAuthExpiration(String initiativeId) throws Exception{
         return mockMvc
                 .perform(
-                        put("/idpay/payment/qr-code/force-expiration/authorization/{initiativeId}",initiativeId)
+                        put("/idpay/payment/force-expiration/authorization/{initiativeId}",initiativeId)
                 ).andReturn();
     }
 
@@ -242,7 +242,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     protected MvcResult forceConfirmExpiration(String initiativeId) throws Exception{
         return mockMvc
                 .perform(
-                        put("/idpay/payment/qr-code/force-expiration/confirm/{initiativeId}",initiativeId)
+                        put("/idpay/payment/force-expiration/confirm/{initiativeId}",initiativeId)
                 ).andReturn();
     }
 
