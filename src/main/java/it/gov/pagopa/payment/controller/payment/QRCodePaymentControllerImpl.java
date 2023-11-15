@@ -2,11 +2,8 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.QRCodePaymentService;
-import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
-import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,11 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class QRCodePaymentControllerImpl implements QRCodePaymentController {
 
   private final QRCodePaymentService qrCodePaymentService;
-  private final QRCodeExpirationService qrCodeExpirationService;
 
-  public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService, QRCodeExpirationService qrCodeExpirationService) {
+  public QRCodePaymentControllerImpl(QRCodePaymentService qrCodePaymentService) {
     this.qrCodePaymentService = qrCodePaymentService;
-    this.qrCodeExpirationService = qrCodeExpirationService;
   }
 
   @Override
@@ -57,19 +52,5 @@ public class QRCodePaymentControllerImpl implements QRCodePaymentController {
              trxCode
       );
       qrCodePaymentService.unrelateUser(trxCode, userId);
-  }
-
-  @Override
-  @PerformanceLog("FORCE_CONFIRM_EXPIRATION")
-  public Long forceConfirmTrxExpiration(String initiativeId) {
-    log.info("[FORCE_CONFIRM_EXPIRATION] Requested confirm trx expiration for initiative {}", initiativeId);
-    return qrCodeExpirationService.forceConfirmTrxExpiration(initiativeId);
-  }
-
-  @Override
-  @PerformanceLog("FORCE_AUTHORIZATION_EXPIRATION")
-  public Long forceAuthorizationTrxExpiration(String initiativeId) {
-    log.info("[FORCE_AUTHORIZATION_EXPIRATION] Requested authorization trx expiration for initiative {}", initiativeId);
-    return qrCodeExpirationService.forceAuthorizationTrxExpiration(initiativeId);
   }
 }
