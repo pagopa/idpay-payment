@@ -20,7 +20,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 @TestPropertySource(
@@ -85,11 +84,6 @@ class IdPayCodePaymentControllerIntegrationTest extends BasePaymentControllerInt
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(pinBlockBody)))
                 .andReturn();
-    }
-
-    @Override
-    protected void checkCreateChannel(String storedChannel) {
-        assertNull(storedChannel);
     }
 
     @Override

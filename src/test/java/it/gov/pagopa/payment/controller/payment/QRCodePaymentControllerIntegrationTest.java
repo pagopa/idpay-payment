@@ -58,11 +58,6 @@ class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegr
     }
 
     @Override
-    protected void checkCreateChannel(String storedChannel) {
-        assertEquals(getChannel(), storedChannel);
-    }
-
-    @Override
     protected <T> T extractResponseAuthCannotRelateUser(TransactionResponse trxCreated, String userId) throws Exception {
        return extractResponse(authTrx(trxCreated, userId, MERCHANTID), HttpStatus.FORBIDDEN, null);
     }

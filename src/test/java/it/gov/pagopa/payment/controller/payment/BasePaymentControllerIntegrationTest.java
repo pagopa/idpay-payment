@@ -219,7 +219,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 ).andReturn();
     }
 
-    protected abstract void checkCreateChannel(String storedChannel);
     protected abstract <T> T extractResponseAuthCannotRelateUser(TransactionResponse trxCreated, String userId) throws Exception;
 
     protected TransactionResponse createTrxSuccess(TransactionCreationRequest trxRequest) throws Exception {
@@ -228,7 +227,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         TransactionInProgress stored = checkTransactionStored(trxCreated);
         assertTrxCreatedData(trxRequest, trxCreated);
-        checkCreateChannel(stored.getChannel());
+        Assertions.assertNull(stored.getChannel());
 
         return trxCreated;
     }
