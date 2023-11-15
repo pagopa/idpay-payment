@@ -10,17 +10,15 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import org.apache.commons.lang3.function.FailableConsumer;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -29,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
         properties = {
                 "logging.level.it.gov.pagopa.payment.service.payment.IdpayCodePaymentServiceImpl=WARN"
         })
-public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
+class IdPayCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
 
     @Autowired
     private AuthPaymentMapper authPaymentMapper;
@@ -99,86 +97,84 @@ public class IdPayCodePaymentControllerIntegrationTest extends BasePaymentContro
         return extractResponse(authTrx(trxCreated, userId, MERCHANTID), HttpStatus.BAD_REQUEST, null);
     }
 
-    @Override
-    protected List<FailableConsumer<Integer, Exception>> getExtraUseCases() {
-        List<FailableConsumer<Integer, Exception>> idPayCodeUseCases = new ArrayList<>();
 
-        {
-            // useCase 20: Preview from another merchant
-            idPayCodeUseCases.add(i -> {
-                TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-                trxRequest.setInitiativeId(INITIATIVEID);
+//region extra useCases
 
-                // Creating transaction
-                TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-                assertTrxCreatedData(trxRequest, trxCreated);
+    @Test
+    @SneakyThrows
+    void test_previewFromAnotherMerchant() {
+        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
+        trxRequest.setInitiativeId(INITIATIVEID);
 
-                // Relate User
-                extractResponse(relateUserTrx(trxCreated, USERID), HttpStatus.OK, RelateUserResponse.class);
+        // Creating transaction
+        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+        assertTrxCreatedData(trxRequest, trxCreated);
 
-                // Preview
-                extractResponse(previewTrx(trxCreated, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
+        // Relate User
+        extractResponse(relateUserTrx(trxCreated, USERID), HttpStatus.OK, RelateUserResponse.class);
 
-            });
-
-            // useCase 21: Preview before relate transaction
-            idPayCodeUseCases.add(i -> {
-                TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-                trxRequest.setInitiativeId(INITIATIVEID);
-
-                // Creating transaction
-                TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-                assertTrxCreatedData(trxRequest, trxCreated);
-
-                // Preview
-                AuthPaymentDTO authResponse = extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-
-                //Check response
-                TransactionInProgress trxStored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
-                Assertions.assertNotNull(trxStored);
-                trxStored.setRewards(null);
-                Assertions.assertEquals(authPaymentMapper.transactionMapper(trxStored),authResponse);
-            });
-
-            // useCase 22: Error retrieve second factor
-            idPayCodeUseCases.add(i -> {
-                String userWithoutSecondFactor = "NOTSECONDFACTOR";
-                TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-                trxRequest.setInitiativeId(INITIATIVEID);
-
-                // Creating transaction
-                TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-                assertTrxCreatedData(trxRequest, trxCreated);
-
-                // Relate User
-                extractResponse(relateUserTrx(trxCreated, userWithoutSecondFactor), HttpStatus.OK, RelateUserResponse.class);
-
-                // Preview
-                extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.NOT_FOUND, AuthPaymentDTO.class);
-            });
-
-            // useCase 23: Error retrieve pinBlock
-            idPayCodeUseCases.add(i -> {
-                String userWithoutSecondFactor = "NOTPINBLOCKUSERID";
-                TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
-                trxRequest.setInitiativeId(INITIATIVEID);
-
-                // Creating transaction
-                TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-                assertTrxCreatedData(trxRequest, trxCreated);
-
-                // Relate User
-                extractResponse(relateUserTrx(trxCreated, userWithoutSecondFactor), HttpStatus.OK, RelateUserResponse.class);
-
-                // Preview
-                extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-
-                // Authorize
-                extractResponse(authTrx(trxCreated, userWithoutSecondFactor, MERCHANTID), HttpStatus.FORBIDDEN,null);
-            });
-
-        }
-
-        return idPayCodeUseCases;
+        // Preview
+        extractResponse(previewTrx(trxCreated, "DUMMYMERCHANTID"), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
     }
+
+    @Test
+    @SneakyThrows
+    void test_previewBeforeRelateTransaction() {
+        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
+        trxRequest.setInitiativeId(INITIATIVEID);
+
+        // Creating transaction
+        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+        assertTrxCreatedData(trxRequest, trxCreated);
+
+        // Preview
+        AuthPaymentDTO authResponse = extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+
+        //Check response
+        TransactionInProgress trxStored = transactionInProgressRepository.findById(trxCreated.getId()).orElse(null);
+        Assertions.assertNotNull(trxStored);
+        trxStored.setRewards(null);
+        Assertions.assertEquals(authPaymentMapper.transactionMapper(trxStored), authResponse);
+    }
+
+    @Test
+    @SneakyThrows
+    void test_errorRetrieveSecondFactor() {
+        String userWithoutSecondFactor = "NOTSECONDFACTOR";
+        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
+        trxRequest.setInitiativeId(INITIATIVEID);
+
+        // Creating transaction
+        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+        assertTrxCreatedData(trxRequest, trxCreated);
+
+        // Relate User
+        extractResponse(relateUserTrx(trxCreated, userWithoutSecondFactor), HttpStatus.OK, RelateUserResponse.class);
+
+        // Preview
+        extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.NOT_FOUND, AuthPaymentDTO.class);
+    }
+
+    @Test
+    @SneakyThrows
+    void test_errorRetrievePinBlock() {
+        String userWithoutSecondFactor = "NOTPINBLOCKUSERID";
+        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
+        trxRequest.setInitiativeId(INITIATIVEID);
+
+        // Creating transaction
+        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
+        assertTrxCreatedData(trxRequest, trxCreated);
+
+        // Relate User
+        extractResponse(relateUserTrx(trxCreated, userWithoutSecondFactor), HttpStatus.OK, RelateUserResponse.class);
+
+        // Preview
+        extractResponse(previewTrx(trxCreated, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
+
+        // Authorize
+        extractResponse(authTrx(trxCreated, userWithoutSecondFactor, MERCHANTID), HttpStatus.FORBIDDEN, null);
+    }
+//endregion
+
 }

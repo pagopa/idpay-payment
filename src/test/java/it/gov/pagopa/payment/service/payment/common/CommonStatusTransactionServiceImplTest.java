@@ -45,7 +45,7 @@ class CommonStatusTransactionServiceImplTest {
 
         doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
         //when
-        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId());
+        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId());
         //then
         Assertions.assertNotNull(result);
         TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
@@ -62,12 +62,31 @@ class CommonStatusTransactionServiceImplTest {
         transaction.setChannel("QRCODE");
         doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
         //when
-        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId());
+        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId());
         //then
         Assertions.assertNotNull(result);
         Assertions.assertNotNull(result.getQrcodePngUrl());
         Assertions.assertNotNull(result.getQrcodeTxtUrl());
         TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
+    }
+
+    @Test
+    void getStatusTransactionNotAuthorized() {
+        //given
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
+                .reward(0L)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+        String trxId = transaction.getId();
+        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(trxId);
+
+        //when
+        TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
+                ()-> commonStatusTransactionService.getStatusTransaction(trxId, "DUMMYMERCHANTID"));
+
+        //then
+        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", clientExceptionNoBody.getCode());
+        Assertions.assertEquals("Cannot find transaction with transactionId [" + trxId + "]", clientExceptionNoBody.getMessage());
     }
 
     @Test
@@ -78,7 +97,7 @@ class CommonStatusTransactionServiceImplTest {
         //when
         //then
         TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
-                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1"));
+                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1", "MERCHANTID"));
         Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", clientExceptionNoBody.getCode());
         Assertions.assertEquals("Cannot find transaction with transactionId [TRANSACTIONID1]", clientExceptionNoBody.getMessage());
     }

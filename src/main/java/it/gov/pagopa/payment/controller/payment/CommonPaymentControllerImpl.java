@@ -77,7 +77,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @PerformanceLog("GET_STATUS_TRANSACTION")
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
         log.info("[GET_STATUS_TRANSACTION] The Merchant {} requested to retrieve status of transaction {} ", merchantId, transactionId);
-        return commonStatusTransactionService.getStatusTransaction(transactionId);
+        return commonStatusTransactionService.getStatusTransaction(transactionId, merchantId);
     }
 
     @Override

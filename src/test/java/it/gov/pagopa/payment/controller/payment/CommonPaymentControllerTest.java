@@ -208,7 +208,7 @@ class CommonPaymentControllerTest {
     void getStatusTransaction() throws Exception{
         SyncTrxStatusDTO response = SyncTrxStatusFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED );
 
-        Mockito.when(commonStatusTransactionServiceMock.getStatusTransaction(TRANSACTION_ID)).thenReturn(response);
+        Mockito.when(commonStatusTransactionServiceMock.getStatusTransaction(TRANSACTION_ID, MERCHANT_ID)).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                         .get("/idpay/payment/{transactionId}/status",
@@ -224,7 +224,7 @@ class CommonPaymentControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(response,resultResponse);
-        Mockito.verify(commonStatusTransactionServiceMock).getStatusTransaction(TRANSACTION_ID);
+        Mockito.verify(commonStatusTransactionServiceMock).getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
 
     }
 }
