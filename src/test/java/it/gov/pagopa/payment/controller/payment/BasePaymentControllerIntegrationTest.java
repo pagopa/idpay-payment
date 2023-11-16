@@ -56,7 +56,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
                 "logging.level.it.gov.pagopa.common=WARN",
                 "logging.level.it.gov.pagopa.common.web.exception.ErrorManager=OFF",
                 "logging.level.AUDIT=OFF",
-                "app.qrCode.throttlingSeconds=2"
+                "app.qrCode.throttlingSeconds=1"
         })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {

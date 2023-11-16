@@ -10,17 +10,12 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-@TestPropertySource(
-        properties = {
-                "logging.level.it.gov.pagopa.payment.service.payment.QRCodePaymentServiceImpl=WARN"
-        })
 class QRCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
 
     @Override

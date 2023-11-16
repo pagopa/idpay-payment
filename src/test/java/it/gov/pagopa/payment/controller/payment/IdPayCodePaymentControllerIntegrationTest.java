@@ -17,15 +17,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-@TestPropertySource(
-        properties = {
-                "logging.level.it.gov.pagopa.payment.service.payment.IdpayCodePaymentServiceImpl=WARN"
-        })
 class IdPayCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
 
     @Autowired
