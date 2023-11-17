@@ -45,6 +45,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -226,15 +227,16 @@ class BarCodeCreationServiceImplTest {
         Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, result.getCode());
     }
 
-    @Test
-    void createTransaction_UserBudgetExhausted() {
+    @ParameterizedTest
+    @ValueSource(longs = {-100, 0})
+    void createTransaction_UserBudgetExhausted(long budgetAmount) {
 
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.ZERO);
+        walletDTO.setAmount(BigDecimal.valueOf(budgetAmount));
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
