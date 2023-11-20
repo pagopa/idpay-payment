@@ -26,9 +26,11 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .id(transactionInProgress.getId())
             .trxCode(transactionInProgress.getTrxCode())
             .initiativeId(transactionInProgress.getInitiativeId())
+            .initiativeName(transactionInProgress.getInitiativeName())
             .trxDate(transactionInProgress.getTrxDate())
             .trxExpirationMinutes(authorizationExpirationMinutes)
             .status(transactionInProgress.getStatus())
+            .residualBudgetCents(transactionInProgress.getAmountCents())
             .build();
   }
 }

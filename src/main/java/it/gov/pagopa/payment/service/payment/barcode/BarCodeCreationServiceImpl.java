@@ -25,6 +25,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import static it.gov.pagopa.common.utils.CommonUtilities.euroToCents;
+
 @Slf4j
 @Service
 public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implements BarCodeCreationService {
@@ -69,7 +72,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
 
             checkInitiativeValidPeriod(today, initiative);
 
-            checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
+            Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
@@ -78,6 +81,7 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
 
             logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
 
+            trx.setAmountCents(residualBudgetCents);
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
         } catch (RuntimeException e) {
@@ -101,15 +105,17 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         return "BAR_CODE_CREATE_TRANSACTION";
     }
 
-    private void checkWallet(String initiativeId, String userId){
+    private Long checkWallet(String initiativeId, String userId){
         WalletDTO wallet = walletConnector.getWallet(initiativeId, userId);
 
-        if (wallet.getAmount().compareTo(BigDecimal.ZERO) == 0) {
+        if (wallet.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new BudgetExhaustedException(String.format("Budget exhausted for the current user and initiative [%s]", initiativeId));
         }
 
         if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(wallet.getStatus())){
             throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
+
+        return euroToCents(wallet.getAmount());
     }
 }
