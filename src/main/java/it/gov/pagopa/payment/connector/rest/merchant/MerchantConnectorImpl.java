@@ -3,8 +3,8 @@ package it.gov.pagopa.payment.connector.rest.merchant;
 import feign.FeignException;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.forbidden.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.servererror.MerchantInvocationException;
+import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.MerchantInvocationException;
 import org.springframework.stereotype.Service;
 
 @Service

@@ -2,10 +2,10 @@ package it.gov.pagopa.payment.service.payment.expired.common;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.exception.custom.notfound.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.servererror.InternalServerErrorException;
+import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;

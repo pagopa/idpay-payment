@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.exception.custom.servererror;
+package it.gov.pagopa.payment.exception.custom;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
 

@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
+import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;

@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.exception.custom.notfound;
+package it.gov.pagopa.payment.exception.custom;
 
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.common.web.exception.ServiceException;
