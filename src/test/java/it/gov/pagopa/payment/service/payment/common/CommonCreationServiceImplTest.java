@@ -6,9 +6,9 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.forbidden.InitiativeInvalidException;
-import it.gov.pagopa.payment.exception.custom.notfound.InitiativeNotfoundException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;

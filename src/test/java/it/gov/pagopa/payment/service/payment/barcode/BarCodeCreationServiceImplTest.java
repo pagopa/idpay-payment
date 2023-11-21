@@ -6,10 +6,10 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.exception.custom.forbidden.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.forbidden.InitiativeInvalidException;
-import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
-import it.gov.pagopa.payment.exception.custom.notfound.InitiativeNotfoundException;
+import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;

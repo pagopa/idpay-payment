@@ -2,8 +2,8 @@ package it.gov.pagopa.payment.connector.rest.wallet;
 
 import feign.FeignException;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
-import it.gov.pagopa.payment.exception.custom.forbidden.UserNotOnboardedException;
-import it.gov.pagopa.payment.exception.custom.servererror.WalletInvocationException;
+import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
+import it.gov.pagopa.payment.exception.custom.WalletInvocationException;
 import org.springframework.stereotype.Service;
 
 @Service
