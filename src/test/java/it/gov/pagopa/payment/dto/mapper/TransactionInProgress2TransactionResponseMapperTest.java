@@ -87,7 +87,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
         if (trx.getChannel().equals("QRCODE")){
             Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());
             Assertions.assertEquals(QRCODE_TXT_BASEURL.concat("/%s".formatted(trx.getTrxCode())), result.getQrcodeTxtUrl());
-            Assertions.assertEquals(4320, result.getTrxExpirationMinutes());
+            Assertions.assertEquals(4320*60, result.getTrxExpirationSeconds());
         }
     }
 

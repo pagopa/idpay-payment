@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +55,7 @@ public class TransactionInProgress2TransactionResponseMapper
             .vat(transactionInProgress.getVat())
             .splitPayment(splitPayment)
             .residualAmountCents(residualAmountCents)
-            .trxExpirationMinutes(commonAuthorizationExpirationMinutes)
+            .trxExpirationSeconds(CommonUtilities.minutesToSeconds(commonAuthorizationExpirationMinutes))
             .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
             .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
             .build();

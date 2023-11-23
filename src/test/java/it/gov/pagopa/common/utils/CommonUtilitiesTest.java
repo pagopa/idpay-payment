@@ -30,4 +30,9 @@ class CommonUtilitiesTest {
         );
     }
 
+    @Test
+    void testMinutesToSeconds(){
+        Assertions.assertNull(CommonUtilities.minutesToSeconds(null));
+        Assertions.assertEquals(300 ,CommonUtilities.minutesToSeconds(5));
+    }
 }

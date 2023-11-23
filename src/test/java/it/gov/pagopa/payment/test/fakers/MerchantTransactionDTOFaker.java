@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.test.fakers;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 
@@ -29,7 +30,7 @@ public class MerchantTransactionDTOFaker {
                 .rewardAmount(reward != null ? reward : Long.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))
                 .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-                .trxExpirationMinutes(4320)
+                .trxExpirationSeconds(CommonUtilities.minutesToSeconds(4320))
                 .status(status)
                 .channel("CHANNEL%d".formatted(bias))
                 .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
