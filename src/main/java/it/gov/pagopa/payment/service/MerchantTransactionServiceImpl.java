@@ -83,7 +83,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 transaction.getAmountCents(),
                 transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
                 transaction.getTrxDate().toLocalDateTime(),
-                authorizationExpirationMinutes,
+                CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),
                 transaction.getStatus(),
                 transaction.getChannel(),

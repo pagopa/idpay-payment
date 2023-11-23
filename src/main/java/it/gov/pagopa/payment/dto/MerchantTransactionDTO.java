@@ -25,7 +25,7 @@ public class MerchantTransactionDTO {
     private Long rewardAmount;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime trxDate;
-    private Integer trxExpirationMinutes;
+    private Long trxExpirationSeconds;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime updateDate;
     private SyncTrxStatus status;
