@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.badrequest.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;

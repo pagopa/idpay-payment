@@ -17,7 +17,9 @@ public class TransactionBarCodeResponse {
     private String id;
     private String trxCode;
     private String initiativeId;
+    private String initiativeName;
     private OffsetDateTime trxDate;
     private SyncTrxStatus status;
-    private Integer trxExpirationMinutes;
+    private Long trxExpirationSeconds;
+    private Long residualBudgetCents;
 }

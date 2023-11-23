@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import lombok.extern.slf4j.Slf4j;
@@ -26,9 +27,11 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .id(transactionInProgress.getId())
             .trxCode(transactionInProgress.getTrxCode())
             .initiativeId(transactionInProgress.getInitiativeId())
+            .initiativeName(transactionInProgress.getInitiativeName())
             .trxDate(transactionInProgress.getTrxDate())
-            .trxExpirationMinutes(authorizationExpirationMinutes)
+            .trxExpirationSeconds(CommonUtilities.minutesToSeconds(authorizationExpirationMinutes))
             .status(transactionInProgress.getStatus())
+            .residualBudgetCents(transactionInProgress.getAmountCents())
             .build();
   }
 }

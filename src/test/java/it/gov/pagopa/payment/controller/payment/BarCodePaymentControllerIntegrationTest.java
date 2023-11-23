@@ -240,6 +240,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
 
     private void checkTransactionStored(TransactionBarCodeResponse trxCreated){
         TransactionInProgress stored = checkIfStored(trxCreated.getId());
+        //Since we don't save in the db the budgetAmount related to the bar code we manually insert it here for the check
+        stored.setAmountCents(trxCreated.getResidualBudgetCents());
 
         assertEquals(RewardConstants.TRX_CHANNEL_BARCODE, stored.getChannel());
         trxCreated.setTrxDate(OffsetDateTime.parse(

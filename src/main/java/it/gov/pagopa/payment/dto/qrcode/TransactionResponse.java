@@ -31,5 +31,5 @@ public class TransactionResponse {
   private String vat;
   private Boolean splitPayment;
   private Long residualAmountCents;
-  private Integer trxExpirationMinutes;
+  private Long trxExpirationSeconds;
 }

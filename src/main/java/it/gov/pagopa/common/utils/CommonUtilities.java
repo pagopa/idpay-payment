@@ -40,4 +40,8 @@ public class CommonUtilities {
     }
     return residualBudget;
   }
+
+  public static Long minutesToSeconds(Integer minutes){
+    return minutes == null ? null : (long)minutes*60;
+  }
 }

@@ -4,9 +4,9 @@ import feign.FeignException;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.dto.VerifyPinBlockDTO;
-import it.gov.pagopa.payment.exception.custom.forbidden.PinBlockInvalidException;
-import it.gov.pagopa.payment.exception.custom.notfound.IdpaycodeNotFoundException;
-import it.gov.pagopa.payment.exception.custom.servererror.PaymentInstrumentInvocationException;
+import it.gov.pagopa.payment.exception.custom.PinBlockInvalidException;
+import it.gov.pagopa.payment.exception.custom.IdpaycodeNotFoundException;
+import it.gov.pagopa.payment.exception.custom.PaymentInstrumentInvocationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

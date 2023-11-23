@@ -13,7 +13,7 @@ import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.toomanyrequests.TooManyRequestsException;
+import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;

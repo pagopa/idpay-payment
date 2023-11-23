@@ -9,7 +9,7 @@ import it.gov.pagopa.payment.dto.EncryptedCfDTO;
 import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.exception.custom.servererror.PDVInvocationException;
+import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import java.util.ArrayList;
@@ -83,7 +83,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 transaction.getAmountCents(),
                 transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
                 transaction.getTrxDate().toLocalDateTime(),
-                authorizationExpirationMinutes,
+                CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),
                 transaction.getStatus(),
                 transaction.getChannel(),
