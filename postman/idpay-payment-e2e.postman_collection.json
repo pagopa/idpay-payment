@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "71b1c7c9-836d-4187-8c8e-9d131d8a2cf8",
+		"_postman_id": "3d6dbd08-ebcf-4077-861b-70d20fb10436",
 		"name": "IDPay Payment - e2e",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "15747968"
@@ -34,6 +34,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -105,6 +107,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"var jsonData = JSON.parse(responseBody);\r",
 															"// console.log('jsondata', jsonData);\r",
 															"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
@@ -207,6 +211,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -273,6 +279,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -323,6 +331,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -420,6 +430,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -561,6 +573,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -616,6 +630,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -689,6 +705,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -744,6 +762,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -832,6 +852,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -887,6 +909,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Upload csv - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -957,6 +981,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Get merchant list - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -1053,6 +1079,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -1117,6 +1145,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -1188,6 +1218,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 													"});"
@@ -1250,6 +1282,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 													"    pm.response.to.have.status(202);\r",
 													"});"
@@ -1301,6 +1335,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -1348,6 +1384,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -1409,6 +1447,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -1472,6 +1512,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -1561,6 +1603,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -1622,6 +1666,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -1690,6 +1736,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -1752,6 +1800,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: Cancel transaction by citizen - [IO] Cancel transaction\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});"
@@ -1824,6 +1874,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -1902,6 +1954,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case: Cancel transaction by citizen - [IO] Cancel transaction - Generate Portal Token (Merchant)', () => {\r",
@@ -1957,6 +2011,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: Cancel transaction by citizen - [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -2045,6 +2101,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - Cancel transaction by citizen - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -2106,6 +2164,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: Cancel transaction by citizen - [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -2174,6 +2234,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: Cancel transaction by citizen - [IO] Cancel transaction\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});"
@@ -2232,6 +2294,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: Cancel transaction by citizen - [IO] Cancel transaction - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -2312,6 +2376,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -2368,6 +2434,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -2465,6 +2533,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -2517,6 +2587,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -2586,6 +2658,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -2658,6 +2732,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -2728,6 +2804,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -2801,6 +2879,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -2857,6 +2937,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -2944,6 +3026,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -3005,6 +3089,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -3074,6 +3160,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -3146,6 +3234,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -3213,6 +3303,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -3287,6 +3379,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -3358,6 +3452,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"var jsonData = JSON.parse(responseBody);\r",
 															"// console.log('jsondata', jsonData);\r",
 															"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
@@ -3460,6 +3556,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -3527,6 +3625,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -3577,6 +3677,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -3675,6 +3777,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -3817,6 +3921,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -3872,6 +3978,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -3945,6 +4053,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -4002,6 +4112,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -4090,6 +4202,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -4145,6 +4259,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Upload csv - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -4215,6 +4331,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Get merchant list - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -4291,6 +4409,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Unhappy case - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -4355,6 +4475,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -4426,6 +4548,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 													"});"
@@ -4488,6 +4612,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 													"    pm.response.to.have.status(202);\r",
 													"});"
@@ -4539,6 +4665,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -4586,6 +4714,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -4650,6 +4780,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -4699,6 +4831,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR Code create transaction - [CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE]- Response status is 404\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -4796,6 +4930,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -4845,6 +4981,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR Code create transaction - Amount 0 -[CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE] Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(400);\r",
 															"});\r",
@@ -4947,6 +5085,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -4996,6 +5136,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: PAYMENT_GENERIC_REJECTED [STEP_2][ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -5081,6 +5223,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: PAYMENT_GENERIC_REJECTED [STEP_3] Retrieve Token for second user- Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -5133,6 +5277,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: PAYMENT_GENERIC_REJECTED [STEP_4][IO] Pre-Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -5222,6 +5368,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -5271,6 +5419,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Pre-Authorize transaction - [PRE_AUTH_TRX][TOKENIO_NOT_VALID][STEP_1][ACQUIRER] Create transaction [QR-CODE] Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -5348,6 +5498,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Pre-Authorize transaction - [PRE_AUTH_TRX][TOKENIO_NOT_VALID][STEP_2][IO] Pre-Authorize transaction with tokenIO not valid [QR-CODE] - Response status is 401\", function () {\r",
 															"    pm.response.to.have.status(401);\r",
 															"});\r",
@@ -5416,6 +5568,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test('Payment - Unhappy case - Onboarding - Generate Token IO', () => {\r",
 																	"    //verify response HTTP status \r",
 																	"    pm.response.to.have.status(200);\r",
@@ -5480,6 +5634,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -5542,6 +5698,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 																	"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 																	"});"
@@ -5604,6 +5762,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 																	"    pm.response.to.have.status(202);\r",
 																	"});"
@@ -5655,6 +5815,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -5702,6 +5864,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -5760,6 +5924,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -5809,6 +5975,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Pre-Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -5889,6 +6057,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Pre-Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -5951,6 +6121,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Pre-Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -6012,6 +6184,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Pre-Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_4] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -6074,6 +6248,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Pre-Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -6146,6 +6322,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Pre-Authorize transaction - [PRE_AUTH_TRX][TRX_NOT_FOUND][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -6198,6 +6376,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Pre-Authorize transaction - [PRE_AUTH_TRX][TRX_NOT_FOUND][STEP_1] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 404\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -6276,6 +6456,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QRCode Cancel transaction by citizen - [AUTH_TRX][TRX_NOT_FOUND][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -6328,6 +6510,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QRCode Cancel transaction by citizen - [IO] Cancel transaction\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -6398,6 +6582,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -6454,6 +6640,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Transaction not in status IDENTIFIED -Cancel transaction by citizen - [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -6542,6 +6730,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - Transaction not in status IDENTIFIED - Cancel transaction by citizen - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -6603,6 +6793,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Transaction not in status IDENTIFIED - Cancel transaction by citizen - [IO] Cancel transaction\", function () {\r",
 															"    pm.response.to.have.status(400);\r",
 															"});\r",
@@ -6673,6 +6865,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -6729,6 +6923,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Another user try to cancel transaction - Cancel transaction by citizen - [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -6818,6 +7014,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - Another user try to cancel transaction - Cancel transaction by citizen - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -6879,6 +7077,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
 															"\r",
 															"pm.test(\"Payment - Unhappy case: Another user try to cancel transaction - Cancel transaction by citizen - [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
@@ -6950,6 +7150,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - Another user try to cancel transaction - Cancel transaction by citizen - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -7011,6 +7213,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Another user try to cancel transaction - Cancel transaction by citizen - [IO] Cancel transaction\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -7086,6 +7290,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -7142,6 +7348,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][STATUS_NOT_EXPECTED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -7223,6 +7431,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][STATUS_NOT_EXPECTED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -7275,6 +7485,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][STATUS_NOT_EXPECTED][STEP_3][IO] Authorize transaction [QR-CODE] - Response status is 400\", function () {\r",
 															"    pm.response.to.have.status(400);\r",
 															"});\r",
@@ -7357,6 +7569,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -7413,6 +7627,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -7492,6 +7708,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -7554,6 +7772,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
 															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
@@ -7617,6 +7837,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_4] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -7679,6 +7901,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_5] [IO] Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -7749,6 +7973,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -7805,6 +8031,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -7885,6 +8113,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -7947,6 +8177,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ALREADY_AUTHORIZED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -8007,6 +8239,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: [IO] Authorize transaction [QR-CODE]-[ALREADY_AUTHORIZED]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});"
@@ -8057,6 +8291,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code PreAuthorize transaction - [AUTH_TRX][ALREADY_AUTHORIZED][STEP_5] [IO] PreAuthorize transaction [QR-CODE] - Response status is 403\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -8123,6 +8359,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ALREADY_AUTHORIZED][STEP_5] [IO] Authorize transaction [QR-CODE] - Response status is 403\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -8194,6 +8432,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][TRX_NOT_FOUND][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -8246,6 +8486,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][TRX_NOT_FOUND][STEP_2] [IO] Authorize transaction [QR-CODE] - Response status is 404\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -8321,6 +8563,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -8377,6 +8621,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_STATUS_NOT_AUTHORIZED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -8457,6 +8703,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_STATUS_NOT_AUTHORIZED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -8509,6 +8757,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(400);\r",
 															"});\r",
@@ -8588,6 +8838,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -8644,6 +8896,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -8724,6 +8978,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -8776,6 +9032,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -8837,6 +9095,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_4] [IO] Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -8907,6 +9167,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -8963,6 +9225,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -9042,6 +9306,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -9098,6 +9364,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -9166,6 +9434,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -9222,6 +9492,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_2] [ACQUIRER] Create transaction [QR-CODE] - Response status is 201\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -9302,6 +9574,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_1] Retrieve Token - Response status is 200', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -9354,6 +9628,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});"
@@ -9413,6 +9689,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_4] [IO] Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});"
@@ -9463,6 +9741,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_5] [ACQUIRER] Confirm transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});"
@@ -9510,6 +9790,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: [ACQUIRER] Confirm transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -9583,6 +9865,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -9639,6 +9923,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Budget exhausted - [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -9724,6 +10010,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - Budget exhausted - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -9776,6 +10064,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Budget exhausted - [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -9842,6 +10132,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - Budget exhausted - Get merchant transactions list - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -9927,6 +10219,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Cancel transaction by merchant - Generate Portal Token (Merchant)', () => {\r",
@@ -9983,6 +10277,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Cancel transaction by merchant - [IO] Cancel transaction\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -10067,6 +10363,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Cancel transaction by merchant - Another merchant try to cancel transaction - Generate Portal Token (Merchant)', () => {\r",
@@ -10123,6 +10421,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Cancel transaction by merchant - Another merchant try to cancel transaction - [ACQUIRER] Create transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -10211,6 +10511,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - Cancel transaction by merchant - Another merchant try to cancel transaction -  Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -10272,6 +10574,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Cancel transaction by merchant - Another merchant try to cancel transaction - [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -10348,6 +10652,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - Cancel transaction by merchant - Another merchant try to cancel transaction - Generate Portal Token (Merchant)', () => {\r",
@@ -10404,6 +10710,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Cancel transaction by merchant - Another merchant try to cancel transaction - [IO] Cancel transaction\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -10474,6 +10782,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy Case - Cancel transaction by merchant - Another merchant try to cancel transaction - Delete Initiative initativeId - Status test 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -10528,6 +10838,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -10599,6 +10911,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"var jsonData = JSON.parse(responseBody);\r",
 																	"pm.collectionVariables.set('initiativeId_not_started', jsonData.initiativeId);\r",
 																	"\r",
@@ -10699,6 +11013,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -10766,6 +11082,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -10816,6 +11134,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -10914,6 +11234,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -11056,6 +11378,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -11111,6 +11435,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -11184,6 +11510,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -11239,6 +11567,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});\r",
@@ -11327,6 +11657,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -11382,6 +11714,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Upload csv - Response status is 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -11452,6 +11786,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - Get merchant list - Response status is 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -11537,6 +11873,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -11593,6 +11931,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Initiative not started - Try to create transaction - [CREATE_TRX][INITIATIVE_NOT_FOUND][ACQUIRER] Create transaction [QR-CODE] Response status is 400\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -11682,6 +12022,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy Case - Delete Initiative - Status test 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -11716,6 +12058,8 @@
 									"listen": "test",
 									"script": {
 										"exec": [
+											"pm=instrumentPmMethod(pm);\r",
+											"\r",
 											"pm.test(\"Payment - Unhappy Case - Delete Initiative - Status test 204\", function () {\r",
 											"    pm.response.to.have.status(204);\r",
 											"});"
@@ -11750,6 +12094,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"pm=instrumentPmMethod(pm);\r",
+									"\r",
 									"pm.test(\"Payment - Unhappy Case - Delete Initiative initativeId_exhausted - Status test 204\", function () {\r",
 									"    pm.response.to.have.status(204);\r",
 									"});"
@@ -11805,6 +12151,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - BarCode - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -11876,6 +12224,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"var jsonData = JSON.parse(responseBody);\r",
 															"// console.log('jsondata', jsonData);\r",
 															"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
@@ -11978,6 +12328,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -12044,6 +12396,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -12094,6 +12448,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -12191,6 +12547,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -12332,6 +12690,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - BarCode - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -12387,6 +12747,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -12460,6 +12822,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - BarCode - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -12515,6 +12879,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -12603,6 +12969,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - BarCode - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -12658,6 +13026,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Upload csv - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -12728,6 +13098,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Get merchant list - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -12803,6 +13175,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - BarCode - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -12867,6 +13241,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - BarCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -12938,6 +13314,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - BarCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 													"});"
@@ -13000,6 +13378,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - BarCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 													"    pm.response.to.have.status(202);\r",
 													"});"
@@ -13051,6 +13431,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13098,6 +13480,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13150,6 +13534,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [USER] Create transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -13240,6 +13626,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case - BarCode - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -13289,6 +13677,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
 													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE]\", function () {\r",
@@ -13373,6 +13763,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13441,6 +13833,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Confirm transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13498,6 +13892,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [USER] Create transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -13588,6 +13984,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case - BarCode - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -13637,6 +14035,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13719,6 +14119,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13787,6 +14189,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [ACQUIRER] Confirm transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13847,6 +14251,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Happy case - BarCode - Onboarding - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -13911,6 +14317,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -13982,6 +14390,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 															"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 															"});"
@@ -14044,6 +14454,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - BarCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 															"    pm.response.to.have.status(202);\r",
 															"});"
@@ -14095,6 +14507,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -14142,6 +14556,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -14200,6 +14616,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - BarCode - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -14252,6 +14670,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [USER] Create transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -14342,6 +14762,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - Happy case - BarCode - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -14391,6 +14813,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
 													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE]\", function () {\r",
@@ -14475,6 +14899,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: Delete transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});"
@@ -14543,6 +14969,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Get merchant transactions list - Response status is 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -14628,6 +15056,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -14699,6 +15129,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"var jsonData = JSON.parse(responseBody);\r",
 															"pm.collectionVariables.set('initiativeId', jsonData.initiativeId);\r",
 															"\r",
@@ -14799,6 +15231,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -14866,6 +15300,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -14916,6 +15352,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -15014,6 +15452,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -15156,6 +15596,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -15211,6 +15653,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -15284,6 +15728,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -15339,6 +15785,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -15427,6 +15875,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -15482,6 +15932,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Upload csv - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -15552,6 +16004,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Get merchant list - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -15628,6 +16082,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Unhappy case - BarCode - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -15692,6 +16148,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - BarCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -15763,6 +16221,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - BarCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 													"});"
@@ -15825,6 +16285,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - BarCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 													"    pm.response.to.have.status(202);\r",
 													"});"
@@ -15876,6 +16338,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -15923,6 +16387,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -15987,6 +16453,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Create transaction - User budget exhausted - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -16039,6 +16507,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Create transaction - User budget exhausted - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -16130,6 +16600,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Create transaction - Initiative not found - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -16182,6 +16654,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Create transaction - Initiative not found - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -16276,6 +16750,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Create transaction - User not onboarded - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -16328,6 +16804,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Create transaction - User not onboarded - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -16421,6 +16899,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - BarCode - Create transaction - UNSUBSCRIBED user try to create - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -16473,6 +16953,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Create transaction - UNSUBSCRIBED user try to create - Unsubscribe - Response status is 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -16549,6 +17031,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Create transaction - UNSUBSCRIBED user try to create - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -16649,6 +17133,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Status REJECTED - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -16701,6 +17187,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Status REJECTED - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -16792,6 +17280,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Status REJECTED - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -16848,6 +17338,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Status REJECTED - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -16926,6 +17418,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Status REJECTED - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(400);\r",
 															"});\r",
@@ -17018,6 +17512,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Already authorized - Onboarding - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -17070,6 +17566,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Already authorized - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -17161,6 +17659,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Already authorized - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -17217,6 +17717,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Already authorized - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -17298,6 +17800,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Already authorized - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -17390,6 +17894,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Amount 0 - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -17442,6 +17948,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Amount 0 - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -17533,6 +18041,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Amount 0 - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -17589,6 +18099,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Amount 0 - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(400);\r",
 															"});\r",
@@ -17680,6 +18192,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Authorize transaction - Transaction not found - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -17736,6 +18250,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Authorize transaction - Transaction not found - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(404);\r",
 															"});\r",
@@ -17828,6 +18344,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - BarCode - Authorize transaction - Try to authorize on SUSPENDED user - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -17892,6 +18410,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - BarCode - Authorize transaction - Try to authorize on SUSPENDED user - Suspend user', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(204);\r",
@@ -17953,6 +18473,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - BarCode - Authorize transaction - Try to authorize on SUSPENDED user - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -18005,6 +18527,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Authorize transaction - Try to authorize on SUSPENDED user - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -18095,6 +18619,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - BarCode - Authorize transaction - Try to authorize on SUSPENDED user - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -18151,6 +18677,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Authorize transaction - Try to authorize on SUSPENDED user - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -18237,6 +18765,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test('Payment - Happy case - Onboarding - Generate Token IO', () => {\r",
 																	"    //verify response HTTP status \r",
 																	"    pm.response.to.have.status(200);\r",
@@ -18301,6 +18831,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -18372,6 +18904,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 																	"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 																	"});"
@@ -18434,6 +18968,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 																	"    pm.response.to.have.status(202);\r",
 																	"});"
@@ -18485,6 +19021,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -18532,6 +19070,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -18590,6 +19130,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - BarCode - Authorize transaction - Try to authorize on UNSUBSCRIBED user - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -18642,6 +19184,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Authorize transaction - Try to authorize on UNSUBSCRIBED user - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -18723,6 +19267,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Authorize transaction - Try to authorize on UNSUBSCRIBED user - Unsubscribe - Response status is 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -18808,6 +19354,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - BarCode - Authorize transaction - Try to authorize on UNSUBSCRIBED user - Initiative creation - Generate Portal Token (Merchant)', () => {\r",
@@ -18864,6 +19412,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - BarCode - Authorize transaction - Try to authorize on UNSUBSCRIBED user - [IO] Authorize transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -18944,6 +19494,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy Case - Delete Initiative - Status test 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -18996,6 +19548,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - BarCode - Initiative not started - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -19067,6 +19621,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"var jsonData = JSON.parse(responseBody);\r",
 																	"// console.log('jsondata', jsonData);\r",
 																	"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
@@ -19169,6 +19725,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -19236,6 +19794,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -19286,6 +19846,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -19384,6 +19946,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -19526,6 +20090,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - BarCode - Initiative not started - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -19581,6 +20147,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
@@ -19654,6 +20222,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - BarCode - Initiative not started - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -19709,6 +20279,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});\r",
@@ -19797,6 +20369,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"let textResponse = pm.response.text()\r",
 																	"\r",
 																	"pm.test('Payment - Unhappy case - BarCode - Initiative not started - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -19852,6 +20426,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Upload csv - Response status is 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -19922,6 +20498,8 @@
 															"listen": "test",
 															"script": {
 																"exec": [
+																	"pm=instrumentPmMethod(pm);\r",
+																	"\r",
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Get merchant list - Response status is 200\", function () {\r",
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
@@ -20006,6 +20584,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - BarCode - Initiative not started - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -20058,6 +20638,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - [USER] Create transaction [BARCODE]\", function () {\r",
 															"    pm.response.to.have.status(403);\r",
 															"});\r",
@@ -20143,6 +20725,8 @@
 									"listen": "test",
 									"script": {
 										"exec": [
+											"pm=instrumentPmMethod(pm);\r",
+											"\r",
 											"pm.test(\"Payment - Unhappy Case - Delete Initiative - Status test 204\", function () {\r",
 											"    pm.response.to.have.status(204);\r",
 											"});"
@@ -20175,6 +20759,8 @@
 									"listen": "test",
 									"script": {
 										"exec": [
+											"pm=instrumentPmMethod(pm);\r",
+											"\r",
 											"pm.test(\"Payment - Unhappy Case - Delete Initiative initativeId_exhausted - Status test 204\", function () {\r",
 											"    pm.response.to.have.status(204);\r",
 											"});"
@@ -20232,6 +20818,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - IdpayCode - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -20303,6 +20891,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"var jsonData = JSON.parse(responseBody);\r",
 															"// console.log('jsondata', jsonData);\r",
 															"// console.log('jsondata.initiativeId', jsonData.initiativeId);\r",
@@ -20405,6 +20995,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative creation - STEP2 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -20471,6 +21063,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative creation - STEP3 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -20521,6 +21115,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative creation - STEP4 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -20618,6 +21214,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative creation - STEP5 - Responses with 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -20759,6 +21357,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - IdpayCode - Initiative updating - Generate Portal Token (PagoPA Admin)', () => {\r",
@@ -20814,6 +21414,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative updating - PagoPA Admin updates initiative status into APPROVED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -20887,6 +21489,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - IdpayCode - Initiative pubblication - Generate Portal Token (Ente Admin)', () => {\r",
@@ -20942,6 +21546,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
@@ -21030,6 +21636,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"let textResponse = pm.response.text()\r",
 															"\r",
 															"pm.test('Payment - Happy case - IdpayCode - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -21085,6 +21693,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Upload csv - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -21155,6 +21765,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - IdpayCode - Get merchant list - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -21230,6 +21842,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - IdpayCode - Onboarding - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -21294,6 +21908,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - IdapyCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});"
@@ -21365,6 +21981,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - IdapyCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 													"});"
@@ -21427,6 +22045,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - IdapyCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 													"    pm.response.to.have.status(202);\r",
 													"});"
@@ -21478,6 +22098,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -21525,6 +22147,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -21577,6 +22201,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - Happy case - IdpayCode - Enroll code - Generate Token IO', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
@@ -21641,6 +22267,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case:  Generate Code [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -21706,6 +22334,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case:  Enroll Code [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});"
@@ -21759,6 +22389,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: Payment Instrument List [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -21852,6 +22484,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -21938,6 +22572,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -22007,6 +22643,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -22093,6 +22731,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: Status transaction [IDAPYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -22163,6 +22803,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy case - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -22240,6 +22882,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -22309,6 +22953,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -22395,6 +23041,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: Delete transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});"
@@ -22454,6 +23102,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: Status transaction [IDAPYCODE]\", function () {\r",
 													"    pm.response.to.have.status(404);\r",
 													"});\r",
@@ -22534,6 +23184,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - IdpayCode - Onboarding - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -22598,6 +23250,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -22669,6 +23323,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 															"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 															"});"
@@ -22731,6 +23387,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 															"    pm.response.to.have.status(202);\r",
 															"});"
@@ -22782,6 +23440,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -22829,6 +23489,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -22881,6 +23543,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - IdpayCode - Unhappy case: Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 															"    pm.response.to.have.status(201);\r",
 															"});\r",
@@ -22967,6 +23631,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -23036,6 +23702,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -23122,6 +23790,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Unhappy case: Status transaction [IDAPYCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -23189,6 +23859,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(403);\r",
 													"});\r",
@@ -23260,6 +23932,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(404);\r",
 													"});\r",
@@ -23329,6 +24003,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - IdpayCode - Onboarding - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -23393,6 +24069,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -23464,6 +24142,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 															"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 															"});"
@@ -23526,6 +24206,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 															"    pm.response.to.have.status(202);\r",
 															"});"
@@ -23577,6 +24259,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -23624,6 +24308,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -23682,6 +24368,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"let textResponse = pm.response.text()\r",
 													"\r",
 													"pm.test('Payment - IdpayCode - Authorize transaction - Try to authorize on SUSPENDED user - Initiative creation - Generate Portal Token (Ente Admin)', () => {\r",
@@ -23746,6 +24434,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test('Payment - IdpayCode - Authorize transaction - Try to authorize on SUSPENDED user - Suspend user', () => {\r",
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(204);\r",
@@ -23798,6 +24488,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy case - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -23875,6 +24567,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(403);\r",
 													"});\r",
@@ -23946,6 +24640,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy Case: Status transaction [IDAPYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -24019,6 +24715,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Unhappy case - IdpayCode - Onboarding - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -24083,6 +24781,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Accept T&C - return status 204\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});"
@@ -24154,6 +24854,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
 															"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
 															"});"
@@ -24216,6 +24918,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case - IdapyCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
 															"    pm.response.to.have.status(202);\r",
 															"});"
@@ -24267,6 +24971,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -24314,6 +25020,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -24363,6 +25071,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - IdpayCode - Authorize transaction - Try to authorize on UNSUBSCRIBED user - Unsubscribe - Response status is 204\", function () {\r",
 													"    pm.response.to.have.status(204);\r",
 													"});\r",
@@ -24439,6 +25149,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy case - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -24516,6 +25228,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(403);\r",
 													"});\r",
@@ -24587,6 +25301,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy Case: Status transaction [IDAPYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -24657,6 +25373,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy case - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -24734,6 +25452,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(403);\r",
 													"});\r",
@@ -24813,6 +25533,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test('Payment - Happy case - IdpayCode - Enroll code - Generate Token IO', () => {\r",
 															"    //verify response HTTP status \r",
 															"    pm.response.to.have.status(200);\r",
@@ -24877,6 +25599,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case:  Generate Code [IDPAYCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -24933,6 +25657,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case:  Enroll Code [IDPAYCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});"
@@ -24986,6 +25712,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"pm=instrumentPmMethod(pm);\r",
+															"\r",
 															"pm.test(\"Payment - Happy case: Payment Instrument List [IDPAYCODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -25076,6 +25804,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy case - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -25162,6 +25892,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -25231,6 +25963,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -25317,6 +26051,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(403);\r",
 													"});\r",
@@ -25402,6 +26138,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy Case: Status transaction [IDAPYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -25472,6 +26210,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Payment - Unhappy case - IdpayCode - Create transaction - Create transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(201);\r",
 													"});\r",
@@ -25549,6 +26289,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -25618,6 +26360,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: [IO] Pre-Authorize transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(403);\r",
 													"});\r",
@@ -25695,6 +26439,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Unhappy case: Delete transaction [IDPAYCODE]\", function () {\r",
 													"    pm.response.to.have.status(404);\r",
 													"});\r",
@@ -25761,6 +26507,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"pm=instrumentPmMethod(pm);\r",
+													"\r",
 													"pm.test(\"Happy case: Status transaction [IDAPYCODE]\", function () {\r",
 													"    pm.response.to.have.status(404);\r",
 													"});\r",
@@ -25832,6 +26580,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"pm=instrumentPmMethod(pm);\r",
+									"\r",
 									"pm.test(\"Payment - Happy Case - Delete Initiative - Status test 204\", function () {\r",
 									"    pm.response.to.have.status(204);\r",
 									"});"
@@ -25875,6 +26625,21 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
+					"skipTests=false;",
+					"",
+					"instrumentPmMethod = (pm) => {",
+					"    const pmProxy = {",
+					"        get: function(pm, key) {",
+					"            if (key == 'test') {",
+					"                return (skipTests ? pm.test.skip : pm.test);",
+					"            }",
+					"            return pm[key];",
+					"        }",
+					"    };",
+					"",
+					"    return new Proxy(pm, pmProxy);",
+					"}",
+					"",
 					"retryRequest = (postman, pm, setTimeout, waitingMillis = 500, maxAttempts = 20) => {",
 					"    if(!postman || !pm || !setTimeout){",
 					"        throw new Error(\"Invalid invoke to retryRequest function! Some required parameters are undefined: postman=\" + postman + \", pm=\" + pm + \", setTimeout=\" + setTimeout)",
@@ -25895,6 +26660,7 @@
 					"retryWhenStatusCode = (postman, pm, setTimeout, statusCode, waitingMillis, maxAttempts) => {",
 					"    if(pm.response.code == statusCode){",
 					"        console.log(\"Obtained \" + statusCode + \"! Performing retry...\")",
+					"        skipTests=true;",
 					"        return retryRequest(postman, pm, setTimeout, waitingMillis, maxAttempts)",
 					"    }",
 					"}",
