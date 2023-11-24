@@ -22,9 +22,9 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
     private final QRCodeExpirationService qrCodeExpirationService; // used just to force the expiration: this behavior is the same for all channels
 
-    public CommonPaymentControllerImpl(@Qualifier("CommonCreate") CommonCreationServiceImpl commonCreationService,
-                                       @Qualifier("CommonConfirm") CommonConfirmServiceImpl commonConfirmService,
-                                       @Qualifier("CommonCancel") CommonCancelServiceImpl commonCancelService,
+    public CommonPaymentControllerImpl(@Qualifier("commonCreate") CommonCreationServiceImpl commonCreationService,
+                                       @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
+                                       @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
     this.commonCreationService = commonCreationService;

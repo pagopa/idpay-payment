@@ -41,14 +41,14 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @Import({JsonConfig.class, ValidationExceptionHandler.class})
 class CommonPaymentControllerTest {
     @MockBean
-    @Qualifier("CommonCreate")
+    @Qualifier("commonCreate")
     private CommonCreationServiceImpl commonCreationServiceMock;
     @MockBean
-    @Qualifier("CommonConfirm")
+    @Qualifier("commonConfirm")
     private CommonConfirmServiceImpl commonConfirmServiceMock;
 
     @MockBean
-    @Qualifier("CommonCancel")
+    @Qualifier("commonCancel")
     private CommonCancelServiceImpl commonCancelServiceMock;
 
     @MockBean

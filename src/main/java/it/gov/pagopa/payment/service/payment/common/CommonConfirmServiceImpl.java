@@ -16,7 +16,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 @Slf4j
-@Service("CommonConfirm")
+@Service("commonConfirm")
 public class CommonConfirmServiceImpl {
     private final TransactionInProgressRepository repository;
     private final TransactionInProgress2TransactionResponseMapper mapper;

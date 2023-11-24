@@ -22,7 +22,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
-@Service("CommonCancel")
+@Service("commonCancel")
 public class CommonCancelServiceImpl {
 
     private final Duration cancelExpiration;
