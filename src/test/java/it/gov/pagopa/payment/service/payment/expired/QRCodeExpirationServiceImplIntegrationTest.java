@@ -32,8 +32,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestPropertySource(properties = {
-        "app.qrCode.expirations.schedule.authorizationExpired=0/30 * * * * ?",
-        "app.qrCode.expirations.schedule.cancelExpired=0/30 * * * * ?"
+        "app.qrCode.expirations.schedule.authorizationExpired=0/5 * * * * ?",
+        "app.qrCode.expirations.schedule.cancelExpired=0/5 * * * * ?"
 })
 class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
 
@@ -131,7 +131,7 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         TestUtils.waitFor(() -> (count[0]=repository.findAllById(testIds).size()) == N_EXPIRED,
                 () -> "Expected %d trxs, found %d".formatted(N_EXPIRED, count[0]),
                 60,
-                1000);
+                500);
 
         // valid trxs still on db
         checkNotExpiredTrxs();

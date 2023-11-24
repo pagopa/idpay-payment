@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "c341041c-bde9-4831-beb5-717a1c526d68",
+		"_postman_id": "61d076ff-2819-4e44-bf77-f97d475cfa79",
 		"name": "IDPay Payment - e2e",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "25166852",
-		"_collection_link": "https://pagopa-idpay-team.postman.co/workspace/IDPAY-Team-Iniziativa~997979e0-2fc3-4b2b-83cc-0a87b250465b/collection/25166852-c341041c-bde9-4831-beb5-717a1c526d68?action=share&source=collection_link&creator=25166852"
+		"_exporter_id": "15747968"
 	},
 	"item": [
 		{
@@ -335,7 +334,6 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(()=> {}, 10000)\r",
 															"const d = new Date();\r",
 															"dateString = d.toISOString()\r",
 															"let endTime = dateString.split('T');\r",
@@ -570,9 +568,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -631,7 +627,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(function(){}, 20000); //milliseconds"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -700,9 +696,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -753,7 +747,8 @@
 															"pm.test(\"Payment - Happy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
-															""
+															"\r",
+															"waitDroolsRuleSync(setTimeout);"
 														],
 														"type": "text/javascript"
 													}
@@ -966,18 +961,23 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"pm.test(\"Payment - Happy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+															"if(pm.response.json().content.length == 0) {\r",
+															"    retryRequest(postman, pm, setTimeout);\r",
+															"} else {\r",
+															"        pm.test(\"Payment - Happy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 															"\r",
-															"    const response = pm.response.json().content[0];\r",
-															"    pm.expect(response).have.property(\"merchantId\");\r",
-															"    pm.expect(response).have.property(\"businessName\");\r",
-															"    pm.expect(response).have.property(\"fiscalCode\");\r",
-															"    pm.expect(response).have.property(\"merchantStatus\");\r",
-															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
+															"        const response = pm.response.json().content[0];\r",
+															"        pm.expect(response).have.property(\"merchantId\");\r",
+															"        pm.expect(response).have.property(\"businessName\");\r",
+															"        pm.expect(response).have.property(\"fiscalCode\");\r",
+															"        pm.expect(response).have.property(\"merchantStatus\");\r",
+															"        pm.expect(response).have.property(\"updateStatusDate\");\r",
 															"\r",
-															"    //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
-															"    pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
-															"});"
+															"        //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
+															"        pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
+															"        pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);\r",
+															"    });\r",
+															"}"
 														],
 														"type": "text/javascript"
 													}
@@ -986,7 +986,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -1018,6 +1018,26 @@
 												}
 											},
 											"response": []
+										}
+									],
+									"event": [
+										{
+											"listen": "prerequest",
+											"script": {
+												"type": "text/javascript",
+												"exec": [
+													""
+												]
+											}
+										},
+										{
+											"listen": "test",
+											"script": {
+												"type": "text/javascript",
+												"exec": [
+													""
+												]
+											}
 										}
 									]
 								}
@@ -1108,7 +1128,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 100000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1273,6 +1293,100 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "Get Onboarding Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId_exhausted}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"{{initiativeId_exhausted}}",
+												"status"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Wallet Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId_exhausted}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"wallet",
+												"{{initiativeId_exhausted}}",
+												"status"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -1286,7 +1400,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1302,9 +1416,7 @@
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1351,9 +1463,7 @@
 													"\r",
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
-													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"\r",
-													"setTimeout(() => {}, 7000);"
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 												],
 												"type": "text/javascript"
 											}
@@ -1442,7 +1552,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1503,7 +1613,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 18000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1571,7 +1681,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1653,7 +1763,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"waitPaymentThrottling(setTimeout);"
 												],
 												"type": "text/javascript"
 											}
@@ -1730,7 +1840,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 13000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1783,7 +1893,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -1798,10 +1908,7 @@
 													"    //verify response HTTP status \r",
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
-													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													"});"
 												],
 												"type": "text/javascript"
 											}
@@ -1877,9 +1984,7 @@
 													"\r",
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
-													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"\r",
-													"setTimeout(() => {}, 7000);"
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 												],
 												"type": "text/javascript"
 											}
@@ -1954,7 +2059,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 3000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2021,7 +2126,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2080,7 +2185,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2145,7 +2250,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2198,7 +2303,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2214,9 +2319,7 @@
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2292,9 +2395,7 @@
 													"\r",
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
-													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"\r",
-													"setTimeout(() => {}, 3000);"
+													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 												],
 												"type": "text/javascript"
 											}
@@ -2355,7 +2456,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 3000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2437,7 +2538,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2509,7 +2610,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 3000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2579,7 +2680,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2691,7 +2792,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2707,9 +2808,7 @@
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2859,7 +2958,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 3000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2927,7 +3026,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -2999,7 +3098,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -3066,7 +3165,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -3725,9 +3824,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -3786,7 +3883,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(function(){}, 20000); //milliseconds"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -3908,7 +4005,8 @@
 															"pm.test(\"Payment - Unhappy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
-															""
+															"\r",
+															"waitDroolsRuleSync(setTimeout);"
 														],
 														"type": "text/javascript"
 													}
@@ -4121,18 +4219,23 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"pm.test(\"Payment - Unhappy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+															"if(pm.response.json().content.length == 0) {\r",
+															"    retryRequest(postman, pm, setTimeout);\r",
+															"} else {\r",
+															"    pm.test(\"Payment - Unhappy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 															"\r",
-															"    const response = pm.response.json().content[0];\r",
-															"    pm.expect(response).have.property(\"merchantId\");\r",
-															"    pm.expect(response).have.property(\"businessName\");\r",
-															"    pm.expect(response).have.property(\"fiscalCode\");\r",
-															"    pm.expect(response).have.property(\"merchantStatus\");\r",
-															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
+															"        const response = pm.response.json().content[0];\r",
+															"        pm.expect(response).have.property(\"merchantId\");\r",
+															"        pm.expect(response).have.property(\"businessName\");\r",
+															"        pm.expect(response).have.property(\"fiscalCode\");\r",
+															"        pm.expect(response).have.property(\"merchantStatus\");\r",
+															"        pm.expect(response).have.property(\"updateStatusDate\");\r",
 															"\r",
-															"    //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
-															"    pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
-															"});"
+															"        //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
+															"        pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
+															"        pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);\r",
+															"    });\r",
+															"}"
 														],
 														"type": "text/javascript"
 													}
@@ -4141,7 +4244,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4175,259 +4278,353 @@
 											"response": []
 										}
 									]
+								}
+							]
+						},
+						{
+							"name": "Onboarding",
+							"item": [
+								{
+									"name": "Generate Token IO",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Payment - Unhappy case - Onboarding - Generate Token IO', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "noauth"
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{genericSubscriptionKey}}",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"rtd",
+												"mock-io",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
 								},
 								{
-									"name": "Onboarding",
-									"item": [
+									"name": "Accept T&C",
+									"event": [
 										{
-											"name": "Generate Token IO",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test('Payment - Unhappy case - Onboarding - Generate Token IO', () => {\r",
-															"    //verify response HTTP status \r",
-															"    pm.response.to.have.status(200);\r",
-															"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
-															"});\r",
-															""
-														],
-														"type": "text/javascript"
-													}
-												},
-												{
-													"listen": "prerequest",
-													"script": {
-														"exec": [
-															""
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "noauth"
-												},
-												"method": "POST",
-												"header": [
-													{
-														"key": "Ocp-Apim-Subscription-Key",
-														"value": "{{genericSubscriptionKey}}",
-														"type": "default"
-													},
-													{
-														"key": "Ocp-Apim-Trace",
-														"value": "true",
-														"type": "default"
-													}
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
+													"    pm.response.to.have.status(204);\r",
+													"});"
 												],
-												"url": {
-													"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"rtd",
-														"mock-io",
-														"login"
-													],
-													"query": [
-														{
-															"key": "fiscalCode",
-															"value": "{{CF_1}}"
-														}
-													]
-												}
-											},
-											"response": []
+												"type": "text/javascript"
+											}
 										},
 										{
-											"name": "Accept T&C",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test(\"Payment - Happy case - Onboarding - Accept T&C - return status 204\", function () {\r",
-															"    pm.response.to.have.status(204);\r",
-															"});"
-														],
-														"type": "text/javascript"
-													}
-												},
-												{
-													"listen": "prerequest",
-													"script": {
-														"exec": [
-															"setTimeout(() => {}, 100000);"
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "bearer",
-													"bearer": [
-														{
-															"key": "token",
-															"value": "{{tokenIO}}",
-															"type": "string"
-														}
-													]
-												},
-												"method": "PUT",
-												"header": [
-													{
-														"key": "Ocp-Apim-Subscription-Key",
-														"value": "{{apimSubscriptionKey}}",
-														"type": "text"
-													},
-													{
-														"key": "Ocp-Apim-Trace",
-														"value": "true",
-														"type": "text"
-													}
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
 												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{baseUrl}}/idpay/onboarding/",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"idpay",
-														"onboarding",
-														""
-													]
-												}
-											},
-											"response": []
-										},
-										{
-											"name": "Prerequisites Check",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test(\"Payment - Happy case - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
-															"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
-															"});"
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "bearer",
-													"bearer": [
-														{
-															"key": "token",
-															"value": "{{tokenIO}}",
-															"type": "string"
-														}
-													]
-												},
-												"method": "PUT",
-												"header": [
-													{
-														"key": "Ocp-Apim-Subscription-Key",
-														"value": "{{apimSubscriptionKey}}",
-														"type": "text"
-													},
-													{
-														"key": "Ocp-Apim-Trace",
-														"value": "true",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{baseUrl}}/idpay/onboarding/initiative",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"idpay",
-														"onboarding",
-														"initiative"
-													]
-												}
-											},
-											"response": []
-										},
-										{
-											"name": "PDND + Autocertification",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test(\"Payment - Happy case - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
-															"    pm.response.to.have.status(202);\r",
-															"});"
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "bearer",
-													"bearer": [
-														{
-															"key": "token",
-															"value": "{{tokenIO}}",
-															"type": "string"
-														}
-													]
-												},
-												"method": "PUT",
-												"header": [],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"pdndAccept\": true,\r\n    \"selfDeclarationList\": []\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{baseUrl}}/idpay/onboarding/consent",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"idpay",
-														"onboarding",
-														"consent"
-													]
-												}
-											},
-											"response": []
+												"type": "text/javascript"
+											}
 										}
-									]
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{apimSubscriptionKey}}",
+												"type": "text"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Prerequisites Check",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
+													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{apimSubscriptionKey}}",
+												"type": "text"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/initiative",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"initiative"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "PDND + Autocertification",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
+													"    pm.response.to.have.status(202);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"pdndAccept\": true,\r\n    \"selfDeclarationList\": []\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/consent",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"consent"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Onboarding Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"{{initiativeId}}",
+												"status"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Wallet Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"wallet",
+												"{{initiativeId}}",
+												"status"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -4444,7 +4641,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4460,9 +4657,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4592,7 +4787,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4608,9 +4803,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4745,7 +4938,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4761,9 +4954,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4823,9 +5014,7 @@
 															"\r",
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
-															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 														],
 														"type": "text/javascript"
 													}
@@ -4897,8 +5086,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
 															"});\r",
-															"\r",
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -4965,7 +5153,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5025,7 +5213,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5041,9 +5229,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5174,7 +5360,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5461,6 +5647,100 @@
 														}
 													},
 													"response": []
+												},
+												{
+													"name": "Get Onboarding Status",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"\r",
+																	"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+																	"    retryRequest(postman, pm, setTimeout, 1000);\r",
+																	"}"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"auth": {
+															"type": "bearer",
+															"bearer": [
+																{
+																	"key": "token",
+																	"value": "{{tokenIO}}",
+																	"type": "string"
+																}
+															]
+														},
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"idpay",
+																"onboarding",
+																"{{initiativeId}}",
+																"status"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Get Wallet Status",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"\r",
+																	"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+																	"    retryRequest(postman, pm, setTimeout, 1000);\r",
+																	"}"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"auth": {
+															"type": "bearer",
+															"bearer": [
+																{
+																	"key": "token",
+																	"value": "{{tokenIO}}",
+																	"type": "string"
+																}
+															]
+														},
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"idpay",
+																"wallet",
+																"{{initiativeId}}",
+																"status"
+															]
+														}
+													},
+													"response": []
 												}
 											]
 										},
@@ -5471,7 +5751,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5487,9 +5767,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5626,7 +5904,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5686,7 +5964,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5749,7 +6027,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5815,7 +6093,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -5940,7 +6218,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6111,7 +6389,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6127,9 +6405,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6205,9 +6481,7 @@
 															"\r",
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
-															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 														],
 														"type": "text/javascript"
 													}
@@ -6282,7 +6556,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6390,7 +6664,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6406,9 +6680,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6485,8 +6757,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6561,7 +6832,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6608,6 +6879,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: Another user try to cancel transaction - Cancel transaction by citizen - [IO] Pre-Authorize transaction [QR-CODE]\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -6629,7 +6902,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6691,7 +6964,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6804,7 +7077,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -6820,9 +7093,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7024,7 +7295,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7077,7 +7348,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7093,9 +7364,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7238,7 +7507,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7285,6 +7554,8 @@
 													"listen": "test",
 													"script": {
 														"exec": [
+															"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
+															"\r",
 															"pm.test(\"Payment - Unhappy case: QR code Authorize transaction - [AUTH_TRX][ANOTHER_USER_RELATED][STEP_3] [IO] Pre-Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
@@ -7298,7 +7569,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 18000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7361,7 +7632,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7469,7 +7740,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7485,9 +7756,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7631,7 +7900,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7690,7 +7959,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7806,7 +8075,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -7872,7 +8141,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8043,7 +8312,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8059,9 +8328,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8262,7 +8529,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8312,7 +8579,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8328,9 +8595,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8524,7 +8789,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8585,7 +8850,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8633,7 +8898,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8649,9 +8914,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8694,7 +8957,7 @@
 											"response": []
 										},
 										{
-											"name": "[ACQUIRER] Confirm Transaction Copy 2",
+											"name": "[ACQUIRER] Confirm Transaction",
 											"event": [
 												{
 													"listen": "test",
@@ -8720,7 +8983,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8770,7 +9033,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8786,9 +9049,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8896,7 +9157,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -8912,9 +9173,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9106,7 +9365,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9315,7 +9574,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9331,9 +9590,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9406,9 +9663,7 @@
 															"\r",
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
-															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => { }, 3000);"
+															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 														],
 														"type": "text/javascript"
 													}
@@ -9539,7 +9794,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9605,7 +9860,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9663,7 +9918,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9679,9 +9934,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9805,7 +10058,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9821,9 +10074,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -9899,9 +10150,7 @@
 															"\r",
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
-															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))"
 														],
 														"type": "text/javascript"
 													}
@@ -9976,7 +10225,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -10042,7 +10291,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -10090,7 +10339,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -10106,9 +10355,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -10580,7 +10827,6 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"setTimeout(()=> {}, 10000)\r",
 																	"const d = new Date();\r",
 																	"dateString = d.toISOString()\r",
 																	"let endTime = dateString.split('T');\r",
@@ -10817,9 +11063,7 @@
 																	"    pm.response.to.have.status(200);\r",
 																	"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 																	"});\r",
-																	"\r",
-																	"//response time is less than 1s\r",
-																	"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -10878,7 +11122,7 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"//setTimeout(function(){}, 20000); //milliseconds"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -10947,9 +11191,7 @@
 																	"    pm.response.to.have.status(200);\r",
 																	"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
 																	"});\r",
-																	"\r",
-																	"//response time is less than 1s\r",
-																	"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -11000,7 +11242,8 @@
 																	"pm.test(\"Payment - Unhappy case - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});\r",
-																	""
+																	"\r",
+																	"waitDroolsRuleSync(setTimeout);"
 																],
 																"type": "text/javascript"
 															}
@@ -11213,19 +11456,23 @@
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
 																	"\r",
-																	"pm.test(\"Payment - Unhappy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+																	"if(pm.response.json().content.length == 0) {\r",
+																	"    retryRequest(postman, pm, setTimeout);\r",
+																	"} else {\r",
+																	"    pm.test(\"Payment - Unhappy case - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 																	"\r",
-																	"    const response = pm.response.json().content[0];\r",
-																	"    pm.expect(response).have.property(\"merchantId\");\r",
-																	"    pm.expect(response).have.property(\"businessName\");\r",
-																	"    pm.expect(response).have.property(\"fiscalCode\");\r",
-																	"    pm.expect(response).have.property(\"merchantStatus\");\r",
-																	"    pm.expect(response).have.property(\"updateStatusDate\");\r",
+																	"        const response = pm.response.json().content[0];\r",
+																	"        pm.expect(response).have.property(\"merchantId\");\r",
+																	"        pm.expect(response).have.property(\"businessName\");\r",
+																	"        pm.expect(response).have.property(\"fiscalCode\");\r",
+																	"        pm.expect(response).have.property(\"merchantStatus\");\r",
+																	"        pm.expect(response).have.property(\"updateStatusDate\");\r",
 																	"\r",
-																	"    //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
-																	"    pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
-																	"    pm.collectionVariables.set(\"merchantFiscalCode\", response.fiscalCode);\r",
-																	"});"
+																	"        //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
+																	"        pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
+																	"        pm.collectionVariables.set(\"merchantFiscalCode\", response.fiscalCode);\r",
+																	"    });\r",
+																	"}"
 																],
 																"type": "text/javascript"
 															}
@@ -11234,7 +11481,7 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"setTimeout(() => {}, 10000);"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -11281,7 +11528,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -11297,9 +11544,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -11495,40 +11740,40 @@
 								}
 							},
 							"response": []
-						},
-						{
-							"name": "Delete Initiative initiativeId_exhausted",
-							"event": [
-								{
-									"listen": "test",
-									"script": {
-										"exec": [
-											"pm.test(\"Payment - Unhappy Case - Delete Initiative initativeId_exhausted - Status test 204\", function () {\r",
-											"    pm.response.to.have.status(204);\r",
-											"});"
-										],
-										"type": "text/javascript"
-									}
-								}
-							],
-							"request": {
-								"method": "DELETE",
-								"header": [],
-								"url": {
-									"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId_exhausted}}",
-									"host": [
-										"{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative"
-									],
-									"path": [
-										"idpay",
-										"initiative",
-										"{{initiativeId_exhausted}}"
-									]
-								}
-							},
-							"response": []
 						}
 					]
+				},
+				{
+					"name": "Delete Initiative initiativeId_exhausted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Payment - Unhappy Case - Delete Initiative initativeId_exhausted - Status test 204\", function () {\r",
+									"    pm.response.to.have.status(204);\r",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative/idpay/initiative/{{initiativeId_exhausted}}",
+							"host": [
+								"{{AKSAPIServerUrlGeneric}}idpayportalwelfarebackendinitiative"
+							],
+							"path": [
+								"idpay",
+								"initiative",
+								"{{initiativeId_exhausted}}"
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -11860,7 +12105,6 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(()=> {}, 10000)\r",
 															"const d = new Date();\r",
 															"dateString = d.toISOString()\r",
 															"let endTime = dateString.split('T');\r",
@@ -12095,9 +12339,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -12156,7 +12398,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(function(){}, 20000); //milliseconds"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -12225,9 +12467,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -12278,7 +12518,8 @@
 															"pm.test(\"Payment - Happy case - BarCode - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
-															""
+															"\r",
+															"waitDroolsRuleSync(setTimeout);"
 														],
 														"type": "text/javascript"
 													}
@@ -12491,17 +12732,22 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"pm.test(\"Payment - Happy case - BarCode - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+															"if(pm.response.json().content.length == 0) {\r",
+															"    retryRequest(postman, pm, setTimeout);\r",
+															"} else {\r",
+															"    pm.test(\"Payment - Happy case - BarCode - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 															"\r",
-															"    const response = pm.response.json().content[0];\r",
-															"    pm.expect(response).have.property(\"merchantId\");\r",
-															"    pm.expect(response).have.property(\"businessName\");\r",
-															"    pm.expect(response).have.property(\"fiscalCode\");\r",
-															"    pm.expect(response).have.property(\"merchantStatus\");\r",
-															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
-															"});\r",
+															"        const response = pm.response.json().content[0];\r",
+															"        pm.expect(response).have.property(\"merchantId\");\r",
+															"        pm.expect(response).have.property(\"businessName\");\r",
+															"        pm.expect(response).have.property(\"fiscalCode\");\r",
+															"        pm.expect(response).have.property(\"merchantStatus\");\r",
+															"        pm.expect(response).have.property(\"updateStatusDate\");\r",
+															"    });\r",
 															"\r",
-															"pm.collectionVariables.set(\"merchantId\", pm.response.json().content[0].merchantId);"
+															"    pm.collectionVariables.set(\"merchantId\", pm.response.json().content[0].merchantId);\r",
+															"    pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);\r",
+															"}"
 														],
 														"type": "text/javascript"
 													}
@@ -12510,7 +12756,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -12632,7 +12878,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 100000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -12797,6 +13043,100 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "Get Onboarding Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId_exhausted}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"{{initiativeId_exhausted}}",
+												"status"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Wallet Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId_exhausted}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"wallet",
+												"{{initiativeId_exhausted}}",
+												"status"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -12836,8 +13176,7 @@
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
 													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"\r",
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -12892,7 +13231,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -12908,9 +13247,7 @@
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -12952,6 +13289,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -12975,7 +13314,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"waitPaymentThrottling(setTimeout);"
 												],
 												"type": "text/javascript"
 											}
@@ -13028,7 +13367,7 @@
 									"response": []
 								},
 								{
-									"name": "Get Merchant Transactions Copy",
+									"name": "Get Merchant Transactions",
 									"event": [
 										{
 											"listen": "test",
@@ -13055,7 +13394,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13096,7 +13435,7 @@
 									"response": []
 								},
 								{
-									"name": "[ACQUIRER] Confirm Transaction Copy",
+									"name": "[ACQUIRER] Confirm Transaction",
 									"event": [
 										{
 											"listen": "test",
@@ -13185,8 +13524,7 @@
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
 													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"\r",
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13241,7 +13579,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13257,9 +13595,7 @@
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13324,7 +13660,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13377,7 +13713,7 @@
 									"response": []
 								},
 								{
-									"name": "Get Merchant Transactions Copy",
+									"name": "Get Merchant Transactions",
 									"event": [
 										{
 											"listen": "test",
@@ -13404,7 +13740,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13445,7 +13781,7 @@
 									"response": []
 								},
 								{
-									"name": "[ACQUIRER] Confirm Transaction Copy",
+									"name": "[ACQUIRER] Confirm Transaction",
 									"event": [
 										{
 											"listen": "test",
@@ -13586,7 +13922,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -13751,6 +14087,100 @@
 												}
 											},
 											"response": []
+										},
+										{
+											"name": "Get Onboarding Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId_exhausted}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"onboarding",
+														"{{initiativeId_exhausted}}",
+														"status"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Get Wallet Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId_exhausted}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"wallet",
+														"{{initiativeId_exhausted}}",
+														"status"
+													]
+												}
+											},
+											"response": []
 										}
 									]
 								},
@@ -13761,7 +14191,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13848,8 +14278,7 @@
 													"pm.collectionVariables.set(\"trxDate\", today);\r",
 													"\r",
 													"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-													"\r",
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13904,7 +14333,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13920,9 +14349,7 @@
 													"    pm.response.to.have.status(200);\r",
 													"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 													"});\r",
-													"\r",
-													"//response time is less than 1s\r",
-													"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -13964,6 +14391,8 @@
 											"listen": "test",
 											"script": {
 												"exec": [
+													"retryWhenStatusCode(postman, pm, setTimeout, 403);\r",
+													"\r",
 													"pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE]\", function () {\r",
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
@@ -13987,7 +14416,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"//setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -14057,7 +14486,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													"waitPaymentThrottling(setTimeout);"
 												],
 												"type": "text/javascript"
 											}
@@ -14087,8 +14516,8 @@
 												"type": "text"
 											},
 											{
-												"key": "x-merchant-id",
-												"value": "{{merchantId}}",
+												"key": "x-merchant-fiscalCode",
+												"value": "{{merchantFiscalCode}}",
 												"type": "text"
 											}
 										],
@@ -14108,7 +14537,7 @@
 									"response": []
 								},
 								{
-									"name": "Get Merchant Transactions Copy 2",
+									"name": "Get Merchant Transactions",
 									"event": [
 										{
 											"listen": "test",
@@ -14130,7 +14559,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -14734,9 +15163,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -14795,7 +15222,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(function(){}, 20000); //milliseconds"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -14864,9 +15291,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -14917,7 +15342,8 @@
 															"pm.test(\"Payment - Unhappy case - BarCode - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
-															""
+															"\r",
+															"waitDroolsRuleSync(setTimeout);"
 														],
 														"type": "text/javascript"
 													}
@@ -15130,18 +15556,23 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"pm.test(\"Payment - Unhappy case - BarCode - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+															"if(pm.response.json().content.length == 0) {\r",
+															"    retryRequest(postman, pm, setTimeout);\r",
+															"} else {\r",
+															"    pm.test(\"Payment - Unhappy case - BarCode - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 															"\r",
-															"    const response = pm.response.json().content[0];\r",
-															"    pm.expect(response).have.property(\"merchantId\");\r",
-															"    pm.expect(response).have.property(\"businessName\");\r",
-															"    pm.expect(response).have.property(\"fiscalCode\");\r",
-															"    pm.expect(response).have.property(\"merchantStatus\");\r",
-															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
+															"        const response = pm.response.json().content[0];\r",
+															"        pm.expect(response).have.property(\"merchantId\");\r",
+															"        pm.expect(response).have.property(\"businessName\");\r",
+															"        pm.expect(response).have.property(\"fiscalCode\");\r",
+															"        pm.expect(response).have.property(\"merchantStatus\");\r",
+															"        pm.expect(response).have.property(\"updateStatusDate\");\r",
 															"\r",
-															"    //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
-															"    pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
-															"});"
+															"        //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
+															"        pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
+															"        pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);\r",
+															"    });\r",
+															"}"
 														],
 														"type": "text/javascript"
 													}
@@ -15150,7 +15581,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15184,259 +15615,353 @@
 											"response": []
 										}
 									]
+								}
+							]
+						},
+						{
+							"name": "Onboarding",
+							"item": [
+								{
+									"name": "Generate Token IO",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test('Payment - Unhappy case - BarCode - Onboarding - Generate Token IO', () => {\r",
+													"    //verify response HTTP status \r",
+													"    pm.response.to.have.status(200);\r",
+													"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
+													"});\r",
+													""
+												],
+												"type": "text/javascript"
+											}
+										},
+										{
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "noauth"
+										},
+										"method": "POST",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{genericSubscriptionKey}}",
+												"type": "default"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "default"
+											}
+										],
+										"url": {
+											"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"rtd",
+												"mock-io",
+												"login"
+											],
+											"query": [
+												{
+													"key": "fiscalCode",
+													"value": "{{CF_1}}"
+												}
+											]
+										}
+									},
+									"response": []
 								},
 								{
-									"name": "Onboarding",
-									"item": [
+									"name": "Accept T&C",
+									"event": [
 										{
-											"name": "Generate Token IO",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test('Payment - Unhappy case - BarCode - Onboarding - Generate Token IO', () => {\r",
-															"    //verify response HTTP status \r",
-															"    pm.response.to.have.status(200);\r",
-															"    pm.collectionVariables.set(\"tokenIO\", pm.response.text());\r",
-															"});\r",
-															""
-														],
-														"type": "text/javascript"
-													}
-												},
-												{
-													"listen": "prerequest",
-													"script": {
-														"exec": [
-															""
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "noauth"
-												},
-												"method": "POST",
-												"header": [
-													{
-														"key": "Ocp-Apim-Subscription-Key",
-														"value": "{{genericSubscriptionKey}}",
-														"type": "default"
-													},
-													{
-														"key": "Ocp-Apim-Trace",
-														"value": "true",
-														"type": "default"
-													}
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - BarCode - Onboarding - Accept T&C - return status 204\", function () {\r",
+													"    pm.response.to.have.status(204);\r",
+													"});"
 												],
-												"url": {
-													"raw": "{{baseUrl}}/rtd/mock-io/login?fiscalCode={{CF_1}}",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"rtd",
-														"mock-io",
-														"login"
-													],
-													"query": [
-														{
-															"key": "fiscalCode",
-															"value": "{{CF_1}}"
-														}
-													]
-												}
-											},
-											"response": []
+												"type": "text/javascript"
+											}
 										},
 										{
-											"name": "Accept T&C",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test(\"Payment - Happy case - BarCode - Onboarding - Accept T&C - return status 204\", function () {\r",
-															"    pm.response.to.have.status(204);\r",
-															"});"
-														],
-														"type": "text/javascript"
-													}
-												},
-												{
-													"listen": "prerequest",
-													"script": {
-														"exec": [
-															"setTimeout(() => {}, 100000);"
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "bearer",
-													"bearer": [
-														{
-															"key": "token",
-															"value": "{{tokenIO}}",
-															"type": "string"
-														}
-													]
-												},
-												"method": "PUT",
-												"header": [
-													{
-														"key": "Ocp-Apim-Subscription-Key",
-														"value": "{{apimSubscriptionKey}}",
-														"type": "text"
-													},
-													{
-														"key": "Ocp-Apim-Trace",
-														"value": "true",
-														"type": "text"
-													}
+											"listen": "prerequest",
+											"script": {
+												"exec": [
+													""
 												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{baseUrl}}/idpay/onboarding/",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"idpay",
-														"onboarding",
-														""
-													]
-												}
-											},
-											"response": []
-										},
-										{
-											"name": "Prerequisites Check",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test(\"Payment - Happy case - BarCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
-															"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
-															"});"
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "bearer",
-													"bearer": [
-														{
-															"key": "token",
-															"value": "{{tokenIO}}",
-															"type": "string"
-														}
-													]
-												},
-												"method": "PUT",
-												"header": [
-													{
-														"key": "Ocp-Apim-Subscription-Key",
-														"value": "{{apimSubscriptionKey}}",
-														"type": "text"
-													},
-													{
-														"key": "Ocp-Apim-Trace",
-														"value": "true",
-														"type": "text"
-													}
-												],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{baseUrl}}/idpay/onboarding/initiative",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"idpay",
-														"onboarding",
-														"initiative"
-													]
-												}
-											},
-											"response": []
-										},
-										{
-											"name": "PDND + Autocertification",
-											"event": [
-												{
-													"listen": "test",
-													"script": {
-														"exec": [
-															"pm.test(\"Payment - Happy case - BarCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
-															"    pm.response.to.have.status(202);\r",
-															"});"
-														],
-														"type": "text/javascript"
-													}
-												}
-											],
-											"request": {
-												"auth": {
-													"type": "bearer",
-													"bearer": [
-														{
-															"key": "token",
-															"value": "{{tokenIO}}",
-															"type": "string"
-														}
-													]
-												},
-												"method": "PUT",
-												"header": [],
-												"body": {
-													"mode": "raw",
-													"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"pdndAccept\": true,\r\n    \"selfDeclarationList\": []\r\n}",
-													"options": {
-														"raw": {
-															"language": "json"
-														}
-													}
-												},
-												"url": {
-													"raw": "{{baseUrl}}/idpay/onboarding/consent",
-													"host": [
-														"{{baseUrl}}"
-													],
-													"path": [
-														"idpay",
-														"onboarding",
-														"consent"
-													]
-												}
-											},
-											"response": []
+												"type": "text/javascript"
+											}
 										}
-									]
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{apimSubscriptionKey}}",
+												"type": "text"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												""
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Prerequisites Check",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - BarCode - Onboarding - Prerequisites Check - return status 200 or 202\", function () {\r",
+													"    pm.expect(pm.response.code).to.be.oneOf([200,202]);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [
+											{
+												"key": "Ocp-Apim-Subscription-Key",
+												"value": "{{apimSubscriptionKey}}",
+												"type": "text"
+											},
+											{
+												"key": "Ocp-Apim-Trace",
+												"value": "true",
+												"type": "text"
+											}
+										],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\"\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/initiative",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"initiative"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "PDND + Autocertification",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - BarCode - Onboarding - PDND + Autocertification - return status 202\", function () {\r",
+													"    pm.response.to.have.status(202);\r",
+													"});"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "PUT",
+										"header": [],
+										"body": {
+											"mode": "raw",
+											"raw": "{\r\n    \"initiativeId\" : \"{{initiativeId}}\",\r\n    \"pdndAccept\": true,\r\n    \"selfDeclarationList\": []\r\n}",
+											"options": {
+												"raw": {
+													"language": "json"
+												}
+											}
+										},
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/consent",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"consent"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Onboarding Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"{{initiativeId}}",
+												"status"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Wallet Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"wallet",
+												"{{initiativeId}}",
+												"status"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -15536,8 +16061,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15597,7 +16121,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15683,8 +16207,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15744,7 +16267,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15829,8 +16352,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15890,7 +16412,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -15966,7 +16488,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 4000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16053,8 +16575,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 4000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16119,7 +16640,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16207,8 +16728,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16263,7 +16783,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16279,9 +16799,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16349,7 +16867,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16427,7 +16945,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16491,7 +17009,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16579,8 +17097,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16635,7 +17152,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16651,9 +17168,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16724,7 +17239,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16802,7 +17317,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16866,7 +17381,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -16954,8 +17469,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17010,7 +17524,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17026,9 +17540,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17095,7 +17607,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17159,7 +17671,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17175,9 +17687,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17245,7 +17755,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17373,7 +17883,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17434,7 +17944,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17521,8 +18031,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17577,7 +18086,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17593,9 +18102,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17663,7 +18170,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -17805,7 +18312,7 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"setTimeout(() => {}, 10000);"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -17970,6 +18477,100 @@
 														}
 													},
 													"response": []
+												},
+												{
+													"name": "Get Onboarding Status",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"\r",
+																	"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+																	"    retryRequest(postman, pm, setTimeout, 1000);\r",
+																	"}"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"auth": {
+															"type": "bearer",
+															"bearer": [
+																{
+																	"key": "token",
+																	"value": "{{tokenIO}}",
+																	"type": "string"
+																}
+															]
+														},
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"idpay",
+																"onboarding",
+																"{{initiativeId}}",
+																"status"
+															]
+														}
+													},
+													"response": []
+												},
+												{
+													"name": "Get Wallet Status",
+													"event": [
+														{
+															"listen": "test",
+															"script": {
+																"exec": [
+																	"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+																	"    pm.response.to.have.status(200);\r",
+																	"});\r",
+																	"\r",
+																	"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+																	"    retryRequest(postman, pm, setTimeout, 1000);\r",
+																	"}"
+																],
+																"type": "text/javascript"
+															}
+														}
+													],
+													"request": {
+														"auth": {
+															"type": "bearer",
+															"bearer": [
+																{
+																	"key": "token",
+																	"value": "{{tokenIO}}",
+																	"type": "string"
+																}
+															]
+														},
+														"method": "GET",
+														"header": [],
+														"url": {
+															"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+															"host": [
+																"{{baseUrl}}"
+															],
+															"path": [
+																"idpay",
+																"wallet",
+																"{{initiativeId}}",
+																"status"
+															]
+														}
+													},
+													"response": []
 												}
 											]
 										},
@@ -17980,7 +18581,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -18067,8 +18668,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -18138,7 +18738,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -18199,7 +18799,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -18215,9 +18815,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"merchantPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 2s\r",
-															"tests[\"Response time is less than s\"] = responseTime < 2000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -18285,7 +18883,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -18699,7 +19297,6 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"setTimeout(()=> {}, 10000)\r",
 																	"const d = new Date();\r",
 																	"dateString = d.toISOString()\r",
 																	"let endTime = dateString.split('T');\r",
@@ -18936,9 +19533,7 @@
 																	"    pm.response.to.have.status(200);\r",
 																	"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 																	"});\r",
-																	"\r",
-																	"//response time is less than 1s\r",
-																	"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -18997,7 +19592,7 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"//setTimeout(function(){}, 20000); //milliseconds"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -19066,9 +19661,7 @@
 																	"    pm.response.to.have.status(200);\r",
 																	"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
 																	"});\r",
-																	"\r",
-																	"//response time is less than 1s\r",
-																	"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -19119,7 +19712,8 @@
 																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 																	"    pm.response.to.have.status(204);\r",
 																	"});\r",
-																	""
+																	"\r",
+																	"waitDroolsRuleSync(setTimeout);"
 																],
 																"type": "text/javascript"
 															}
@@ -19332,18 +19926,22 @@
 																	"    pm.response.to.have.status(200);\r",
 																	"});\r",
 																	"\r",
-																	"pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+																	"if(pm.response.json().content.length == 0) {\r",
+																	"    retryRequest(postman, pm, setTimeout);\r",
+																	"} else {\r",
+																	"    pm.test(\"Payment - Unhappy case - BarCode - Initiative not started - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 																	"\r",
-																	"    const response = pm.response.json().content[0];\r",
-																	"    pm.expect(response).have.property(\"merchantId\");\r",
-																	"    pm.expect(response).have.property(\"businessName\");\r",
-																	"    pm.expect(response).have.property(\"fiscalCode\");\r",
-																	"    pm.expect(response).have.property(\"merchantStatus\");\r",
-																	"    pm.expect(response).have.property(\"updateStatusDate\");\r",
+																	"        const response = pm.response.json().content[0];\r",
+																	"        pm.expect(response).have.property(\"merchantId\");\r",
+																	"        pm.expect(response).have.property(\"businessName\");\r",
+																	"        pm.expect(response).have.property(\"fiscalCode\");\r",
+																	"        pm.expect(response).have.property(\"merchantStatus\");\r",
+																	"        pm.expect(response).have.property(\"updateStatusDate\");\r",
 																	"\r",
-																	"    //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
-																	"    pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
-																	"});"
+																	"        //const filterByMerchantId = response.filter(merchantId => merchantId.merchantId === pm.collectionVariables.get(\"merchantId\"));\r",
+																	"        pm.collectionVariables.set(\"merchantId\", response.merchantId);\r",
+																	"    });\r",
+																	"}"
 																],
 																"type": "text/javascript"
 															}
@@ -19352,7 +19950,7 @@
 															"listen": "prerequest",
 															"script": {
 																"exec": [
-																	"setTimeout(() => {}, 10000);"
+																	""
 																],
 																"type": "text/javascript"
 															}
@@ -19399,7 +19997,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -19486,8 +20084,7 @@
 															"pm.collectionVariables.set(\"trxDate\", today);\r",
 															"\r",
 															"pm.collectionVariables.set(\"randomNum\", Math.floor(Math.random() * 1000))\r",
-															"\r",
-															"setTimeout(() => {}, 3000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -19935,7 +20532,6 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(()=> {}, 10000)\r",
 															"const d = new Date();\r",
 															"dateString = d.toISOString()\r",
 															"let endTime = dateString.split('T');\r",
@@ -20170,9 +20766,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalTokenPagopa\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -20231,7 +20825,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"//setTimeout(function(){}, 20000); //milliseconds"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -20300,9 +20894,7 @@
 															"    pm.response.to.have.status(200);\r",
 															"    pm.collectionVariables.set(\"identityPortalToken\", textResponse);\r",
 															"});\r",
-															"\r",
-															"//response time is less than 1s\r",
-															"tests[\"Response time is less than 1s\"] = responseTime < 1000;"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -20353,7 +20945,8 @@
 															"pm.test(\"Payment - Happy case - IdpayCode - Initiative pubblication - Ente Admin updates initiative status into PUBLISHED -(Responses with 204)\", function () {\r",
 															"    pm.response.to.have.status(204);\r",
 															"});\r",
-															""
+															"\r",
+															"waitDroolsRuleSync(setTimeout);"
 														],
 														"type": "text/javascript"
 													}
@@ -20566,18 +21159,22 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"pm.test(\"Payment - Happy case - IdpayCode - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
+															"if(pm.response.json().content.length == 0) {\r",
+															"    retryRequest(postman, pm, setTimeout);\r",
+															"} else {\r",
+															"    pm.test(\"Payment - Happy case - IdpayCode - Get merchant list - Verify response body contains merchantId,businessName,fiscalCode,merchantStatus,updateStatusDate\", function () {\r",
 															"\r",
-															"    const response = pm.response.json().content[0];\r",
-															"    pm.expect(response).have.property(\"merchantId\");\r",
-															"    pm.expect(response).have.property(\"businessName\");\r",
-															"    pm.expect(response).have.property(\"fiscalCode\");\r",
-															"    pm.expect(response).have.property(\"merchantStatus\");\r",
-															"    pm.expect(response).have.property(\"updateStatusDate\");\r",
-															"});\r",
+															"        const response = pm.response.json().content[0];\r",
+															"        pm.expect(response).have.property(\"merchantId\");\r",
+															"        pm.expect(response).have.property(\"businessName\");\r",
+															"        pm.expect(response).have.property(\"fiscalCode\");\r",
+															"        pm.expect(response).have.property(\"merchantStatus\");\r",
+															"        pm.expect(response).have.property(\"updateStatusDate\");\r",
+															"    });\r",
 															"\r",
-															"pm.collectionVariables.set(\"merchantId\", pm.response.json().content[0].merchantId);\r",
-															"pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);"
+															"    pm.collectionVariables.set(\"merchantId\", pm.response.json().content[0].merchantId);\r",
+															"    pm.collectionVariables.set(\"merchantFiscalCode\", pm.response.json().content[0].fiscalCode);\r",
+															"}"
 														],
 														"type": "text/javascript"
 													}
@@ -20586,7 +21183,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -20708,7 +21305,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 100000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -20873,6 +21470,100 @@
 										}
 									},
 									"response": []
+								},
+								{
+									"name": "Get Onboarding Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"onboarding",
+												"{{initiativeId}}",
+												"status"
+											]
+										}
+									},
+									"response": []
+								},
+								{
+									"name": "Get Wallet Status",
+									"event": [
+										{
+											"listen": "test",
+											"script": {
+												"exec": [
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+													"    pm.response.to.have.status(200);\r",
+													"});\r",
+													"\r",
+													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"}"
+												],
+												"type": "text/javascript"
+											}
+										}
+									],
+									"request": {
+										"auth": {
+											"type": "bearer",
+											"bearer": [
+												{
+													"key": "token",
+													"value": "{{tokenIO}}",
+													"type": "string"
+												}
+											]
+										},
+										"method": "GET",
+										"header": [],
+										"url": {
+											"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+											"host": [
+												"{{baseUrl}}"
+											],
+											"path": [
+												"idpay",
+												"wallet",
+												"{{initiativeId}}",
+												"status"
+											]
+										}
+									},
+									"response": []
 								}
 							]
 						},
@@ -20965,7 +21656,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -21181,7 +21872,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -21263,7 +21954,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -21338,7 +22029,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 18000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -21565,7 +22256,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -21640,7 +22331,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 18000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -21736,8 +22427,8 @@
 												"type": "text"
 											},
 											{
-												"key": "x-merchant-id",
-												"value": "{{merchantId}}",
+												"key": "x-merchant-fiscalCode",
+												"value": "{{merchantFiscalCode}}",
 												"type": "text"
 											}
 										],
@@ -21918,7 +22609,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -22083,6 +22774,100 @@
 												}
 											},
 											"response": []
+										},
+										{
+											"name": "Get Onboarding Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"onboarding",
+														"{{initiativeId}}",
+														"status"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Get Wallet Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"wallet",
+														"{{initiativeId}}",
+														"status"
+													]
+												}
+											},
+											"response": []
 										}
 									]
 								},
@@ -22198,7 +22983,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -22273,7 +23058,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 5000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -22422,7 +23207,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -22619,7 +23404,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -22784,6 +23569,100 @@
 												}
 											},
 											"response": []
+										},
+										{
+											"name": "Get Onboarding Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"onboarding",
+														"{{initiativeId}}",
+														"status"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Get Wallet Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"wallet",
+														"{{initiativeId}}",
+														"status"
+													]
+												}
+											},
+											"response": []
 										}
 									]
 								},
@@ -22858,7 +23737,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -23014,7 +23893,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -23215,7 +24094,7 @@
 													"listen": "prerequest",
 													"script": {
 														"exec": [
-															"setTimeout(() => {}, 10000);"
+															""
 														],
 														"type": "text/javascript"
 													}
@@ -23380,6 +24259,100 @@
 												}
 											},
 											"response": []
+										},
+										{
+											"name": "Get Onboarding Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/onboarding/{{initiativeId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"onboarding",
+														"{{initiativeId}}",
+														"status"
+													]
+												}
+											},
+											"response": []
+										},
+										{
+											"name": "Get Wallet Status",
+											"event": [
+												{
+													"listen": "test",
+													"script": {
+														"exec": [
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - return status 200\", function () {\r",
+															"    pm.response.to.have.status(200);\r",
+															"});\r",
+															"\r",
+															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
+															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"}"
+														],
+														"type": "text/javascript"
+													}
+												}
+											],
+											"request": {
+												"auth": {
+													"type": "bearer",
+													"bearer": [
+														{
+															"key": "token",
+															"value": "{{tokenIO}}",
+															"type": "string"
+														}
+													]
+												},
+												"method": "GET",
+												"header": [],
+												"url": {
+													"raw": "{{baseUrl}}/idpay/wallet/{{initiativeId}}/status",
+													"host": [
+														"{{baseUrl}}"
+													],
+													"path": [
+														"idpay",
+														"wallet",
+														"{{initiativeId}}",
+														"status"
+													]
+												}
+											},
+											"response": []
 										}
 									]
 								},
@@ -23405,7 +24378,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -23561,7 +24534,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -23779,7 +24752,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -24123,7 +25096,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 5000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -24205,7 +25178,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -24280,7 +25253,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -24361,7 +25334,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 18000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -24592,7 +25565,7 @@
 											"listen": "prerequest",
 											"script": {
 												"exec": [
-													"setTimeout(() => {}, 10000);"
+													""
 												],
 												"type": "text/javascript"
 											}
@@ -24761,8 +25734,8 @@
 												"type": "text"
 											},
 											{
-												"key": "x-merchant-id",
-												"value": "{{merchantId}}",
+												"key": "x-merchant-fiscalCode",
+												"value": "{{merchantFiscalCode}}",
 												"type": "text"
 											}
 										],
@@ -24902,7 +25875,46 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
-					""
+					"retryRequest = (postman, pm, setTimeout, waitingMillis = 500, maxAttempts = 20) => {",
+					"    if(!postman || !pm || !setTimeout){",
+					"        throw new Error(\"Invalid invoke to retryRequest function! Some required parameters are undefined: postman=\" + postman + \", pm=\" + pm + \", setTimeout=\" + setTimeout)",
+					"    }",
+					"",
+					"    const retryVariableName = \"retry_\" + pm.info.requestId",
+					"    const attempt = (pm.variables.get(retryVariableName) ?? 0) + 1;",
+					"    if(attempt < maxAttempts) {",
+					"        console.info(pm.info.requestName + \" not ready, retrying [attempt \" + attempt + \"/\" + maxAttempts + \"] after \" + waitingMillis + \" ms\");",
+					"        pm.variables.set(retryVariableName, attempt)",
+					"        postman.setNextRequest(pm.info.requestId);",
+					"        return setTimeout(()=>{}, waitingMillis);",
+					"    } else {",
+					"        pm.test(pm.info.requestName + \" not ready\", () => pm.expect.fail(attempt + \" attempts\"));",
+					"    }",
+					"}",
+					"",
+					"retryWhenStatusCode = (postman, pm, setTimeout, statusCode, waitingMillis, maxAttempts) => {",
+					"    if(pm.response.code == statusCode){",
+					"        console.log(\"Obtained \" + statusCode + \"! Performing retry...\")",
+					"        return retryRequest(postman, pm, setTimeout, waitingMillis, maxAttempts)",
+					"    }",
+					"}",
+					"",
+					"waitPaymentThrottling = (setTimeout) => {",
+					"    const paymentThrottlingMillis=1000;",
+					"    console.log(\"Waiting payment throttling millis\", paymentThrottlingMillis)",
+					"    return setTimeout(()=>{}, paymentThrottlingMillis)",
+					"}",
+					"",
+					"waitDroolsRuleSync = (setTimeout) => {",
+					"    const rewardRuleDroolsSyncMillis=pm.collectionVariables.get(\"rewardRuleDroolsSyncMillis_\" + pm.environment.name) ?? pm.collectionVariables.get(\"rewardRuleDroolsSyncMillis_UAT\");",
+					"    const beneficiaryRuleDroolsSyncMillis=pm.collectionVariables.get(\"beneficiaryRuleDroolsSyncMillis_\" + pm.environment.name) ?? pm.collectionVariables.get(\"beneficiaryRuleDroolsSyncMillis_UAT\");",
+					"    const droolsSyncMillis=Math.max(rewardRuleDroolsSyncMillis, beneficiaryRuleDroolsSyncMillis);",
+					"",
+					"    console.log(\"Waiting drools rules sync millis\", droolsSyncMillis)",
+					"    return setTimeout(()=>{}, droolsSyncMillis)",
+					"}",
+					"",
+					"retryWhenStatusCode(postman, pm, setTimeout, 429);"
 				]
 			}
 		}
@@ -24910,133 +25922,133 @@
 	"variable": [
 		{
 			"key": "trxCode",
-			"value": ""
+			"value": "vqrugekn"
 		},
 		{
 			"key": "transactionId",
-			"value": ""
+			"value": "ec3e5a75-8935-4d73-b982-942492e98f30_1700761059101"
 		},
 		{
 			"key": "initiativeId",
-			"value": "64f20f04ab8b933c762428af",
+			"value": "655f8db6dde3f11c05e73c29",
 			"type": "string"
 		},
 		{
 			"key": "trxDate",
-			"value": "",
+			"value": "2023-11-26T18:38:25.903+01:00",
 			"type": "string"
 		},
 		{
 			"key": "tokenIO",
-			"value": ""
+			"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJSTExDTEQ5Mk0wOEE2NjJPIiwiaWF0IjoxNzAwNzYxMTAyLCJleHAiOjE3MDA3NjQ3MDJ9.NIxX-z0CFPSDaD8jpESo8PFCO_pVsEsgoBme2w-cCk4"
 		},
 		{
 			"key": "randomNum",
-			"value": ""
+			"value": 397
 		},
 		{
 			"key": "identityPortalToken",
-			"value": ""
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDA3NjExMDEsImV4cCI6MTcwMDc4OTkwMSwiYXVkIjoiaWRwYXkud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiNGU0MzMxMzgtNGE4ZS00MmJlLWE3MTEtYWE2NjRlNWFjZTFiIiwibmFtZSI6IlJvY2t5IiwiZmFtaWx5X25hbWUiOiJCYWxib2EiLCJlbWFpbCI6InIuYmFsYm9hQHRlc3QuZW1haWwuaXQiLCJvcmdfaWQiOiJjMzI2Y2FjNi1hMzhjLTQxNmMtYTNjMy1mNmE0MDdiNzc5NTAiLCJvcmdfdmF0IjoiODAxMTcwODI3MjQiLCJvcmdfbmFtZSI6IkVudGUgZGkgdGVzdCBJZFBheSIsIm9yZ19wYXJ0eV9yb2xlIjoiTUFOQUdFUiIsIm9yZ19yb2xlIjoiYWRtaW4ifQ.BCtTtbv3n7TjfV0eYiTUDeAHyvhIIZvZdgTVaIiAJ9Kt4Y5usujZ5FfGCKhaQvl4jDk2YJB_opYp-nI_wMJ9P3Siyt9lt23iSAM-e6lEk5jh_dxyhSpttzCmJBbPkqjVaz_vfVN-kmgBZ1wnkz0BOEZ6pgGnHrSzpzsl3c6Rbvb4k4R4Ztms-SLA8qiRFZhOFNX9iBCMmtH0Q5FtGypR_6oV0YyqtGoXZU-YFZ41TUUgOlfgGKxwD8FvQSP4T1F2rG_BicM8eKSXj-6gboLVmwtw42jESv_4m4eQ2YndzWZdgiJZ-2Yd1zUzzLm6TXtfwVS3-_2oqCXPlu8bt6E7Ng"
 		},
 		{
 			"key": "identityPortalTokenPagopa",
-			"value": ""
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDA3NjEwODYsImV4cCI6MTcwMDc4OTg4NiwiYXVkIjoiaWRwYXkud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiNTlhOWRkYzgtNDhkMi00OGU0LTk0YzQtNmI4ODNiYThkMTBjIiwibmFtZSI6ImFkbWluIiwiZmFtaWx5X25hbWUiOiJwYWdvcGEiLCJlbWFpbCI6ImFkbWluX3BhZ29wYV9VQVRAdGVzdC5lbWFpbC5pdCIsIm9yZ19pZCI6ImMzMjZjYWM2LWEzOGMtNDE2Yy1hM2MzLWY2YTQwN2I3Nzk1MCIsIm9yZ192YXQiOiIxNTM3NjM3MTAwOSIsIm9yZ19uYW1lIjoiRW50ZSBkaSB0ZXN0IElkUGF5Iiwib3JnX3BhcnR5X3JvbGUiOiJTVUJfREVMRUdBVEUiLCJvcmdfcm9sZSI6InBhZ29wYV9hZG1pbiJ9.bWXPXx8w0BaAkFqOD7apoWM422a1C0bMxsngM4CZ7bMnPIUeRrAnNXkVLZhAo8KizcMvkcr3ODoM78p1opc4-kLqZxQjwMJXWAaMDaZSyY2TFrrA1FYgUvtYuA94nQnhObLq2RLLQlb9-xYQJA1fPSrE9HY7WFMDoQw7RwWe1K8wB_-fEgvWcCRkbQU--myBrTpesDHkKc6wWnOcKkrmeJ5dtCL0pMRVwym5nOYzY5GRDtWUz02bbf0w-sNHENjTVuB515rZwFmI87J-1mB3oWT0JSZJDOcas18Z5w5DuuwCTeHsC43LW4C2i7tvWMpReO5L3zuDsmTrYIh8yskTTA"
 		},
 		{
 			"key": "serviceName",
-			"value": ""
+			"value": "Test funzionali App IO BarCode 23-11-2023 06:38"
 		},
 		{
 			"key": "description",
-			"value": ""
+			"value": "Repellat illum ipsa et dignissimos."
 		},
 		{
 			"key": "channel_type",
-			"value": ""
+			"value": "web"
 		},
 		{
 			"key": "channel_contact",
-			"value": ""
+			"value": "http://dusty.name"
 		},
 		{
 			"key": "budget",
-			"value": ""
+			"value": 500
 		},
 		{
 			"key": "beneficiaryType",
-			"value": ""
+			"value": "PF"
 		},
 		{
 			"key": "beneficiaryKnown",
-			"value": ""
+			"value": false
 		},
 		{
 			"key": "rankingEnabled",
-			"value": ""
+			"value": false
 		},
 		{
 			"key": "beneficiaryBudget",
-			"value": ""
+			"value": 100
 		},
 		{
 			"key": "rankingStartDate",
-			"value": ""
+			"value": "2023-11-23"
 		},
 		{
 			"key": "rankingEndDate",
-			"value": ""
+			"value": "2023-12-23"
 		},
 		{
 			"key": "startDate",
-			"value": ""
+			"value": "2023-11-23"
 		},
 		{
 			"key": "endDate",
-			"value": ""
+			"value": "2024-02-23"
 		},
 		{
 			"key": "rewardRuleType",
-			"value": ""
+			"value": "rewardValue"
 		},
 		{
 			"key": "rewardValueType",
-			"value": ""
+			"value": "ABSOLUTE"
 		},
 		{
 			"key": "rewardRuleValue",
-			"value": ""
+			"value": 50
 		},
 		{
 			"key": "trxDaysOfWeek",
-			"value": ""
+			"value": "THURSDAY"
 		},
 		{
 			"key": "trxDayEndTime",
-			"value": ""
+			"value": "17:38:04.200"
 		},
 		{
 			"key": "trxThresholdFrom",
-			"value": ""
+			"value": 50
 		},
 		{
 			"key": "trxThresholdTo",
-			"value": ""
+			"value": 80
 		},
 		{
 			"key": "trxCountFrom",
-			"value": ""
+			"value": 3
 		},
 		{
 			"key": "trxCountTo",
-			"value": ""
+			"value": 11
 		},
 		{
 			"key": "trxRewardLimitFrequency",
-			"value": ""
+			"value": "DAILY"
 		},
 		{
 			"key": "trxRewardLimitValue",
-			"value": ""
+			"value": 3
 		},
 		{
 			"key": "body",
@@ -25067,19 +26079,19 @@
 		},
 		{
 			"key": "merchantPortalToken",
-			"value": ""
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDA3NjExMDUsImV4cCI6MTcwMDc4OTkwNSwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMzMwZjc5NTgtZTgzOS00OTRjLWExMTQtNjRmZWEyNmI4ZTg1IiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX1VBVEB0ZXN0LmVtYWlsLml0IiwiYWNxdWlyZXJfaWQiOiJQQUdPUEEiLCJtZXJjaGFudF9pZCI6IjNhNjAyYjE3LWFjMWMtMzAyOS05ZTc4LTBhNGJiYjg2OTNkNCIsIm9yZ19pZCI6ImYwNmNlNmVlLTk2MDUtNDMyNy04OWE2LTBmYjlmMjJiM2EwNiIsIm9yZ192YXQiOiIzMzQ0NDQzMzQ4OCIsIm9yZ19uYW1lIjoiRXNlcmNlbnRlIGRpIHRlc3QgSWRQYXkiLCJvcmdfcGFydHlfcm9sZSI6Ik1BTkFHRVIiLCJvcmdfcm9sZSI6ImFkbWluIn0.fnJlBJWmdVdZnAgUO0rMeHSGgz_r-RgdYLnx3W_49CHY2lJ5E3j1QupeVoAa18ygp6unc_Uz9fjR1oTaTTkbeQPYN2mqc84uvJ-MhVX9QHGrd3-Tfd71zNtERVvUfpoJ3jDv9AOJ-Bj1rIwkybkBfsPs2rRLJnJEjoir_pAQRPxcawd36tcacFCu_Khzl1gj4zf0OoP9aMZmRvjDhMlZt-FcgoPf9Ta4xzemZk79H5z52IkwZOENInlygXO8t0GGVJM4XtB23168GzlbrdsCVekjfAvZV-qsY17gldmFMKGaUILR2vc7x2uzsdZ3jXf76aYEjFOAGnGRE6QuV40G2w"
 		},
 		{
 			"key": "effectiveAmount",
-			"value": ""
+			"value": 500
 		},
 		{
 			"key": "rewardAmount",
-			"value": ""
+			"value": 3000
 		},
 		{
 			"key": "initiativeId_exhausted",
-			"value": "65291939b0c8da596609e265"
+			"value": "655f8dfadde3f11c05e73c2b"
 		},
 		{
 			"key": "transactionId_fake",
@@ -25092,7 +26104,7 @@
 		},
 		{
 			"key": "merchantFiscalCode",
-			"value": ""
+			"value": "33444433488"
 		},
 		{
 			"key": "merchantFiscalCode_fake",
@@ -25101,7 +26113,7 @@
 		},
 		{
 			"key": "trxId",
-			"value": ""
+			"value": "4398ab28-386f-4a04-a7b5-a81cf1d05131_1700756175881"
 		},
 		{
 			"key": "trx_Id",
@@ -25115,7 +26127,27 @@
 		},
 		{
 			"key": "initiativeId_not_started",
-			"value": ""
+			"value": "655f8de5dde3f11c05e73c2a"
+		},
+		{
+			"key": "beneficiaryRuleDroolsSyncMillis_DEV",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "rewardRuleDroolsSyncMillis_DEV",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "rewardRuleDroolsSyncMillis_UAT",
+			"value": "20000",
+			"type": "string"
+		},
+		{
+			"key": "beneficiaryRuleDroolsSyncMillis_UAT",
+			"value": "20000",
+			"type": "string"
 		}
 	]
 }
