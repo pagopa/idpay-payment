@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeApiRetryable;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
@@ -82,6 +83,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog("FORCE_CONFIRM_EXPIRATION")
+    @MongoRequestRateTooLargeApiRetryable
     public Long forceConfirmTrxExpiration(String initiativeId) {
         log.info("[FORCE_CONFIRM_EXPIRATION] Requested confirm trx expiration for initiative {}", initiativeId);
         return qrCodeExpirationService.forceConfirmTrxExpiration(initiativeId);
@@ -89,6 +91,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog("FORCE_AUTHORIZATION_EXPIRATION")
+    @MongoRequestRateTooLargeApiRetryable
     public Long forceAuthorizationTrxExpiration(String initiativeId) {
         log.info("[FORCE_AUTHORIZATION_EXPIRATION] Requested authorization trx expiration for initiative {}", initiativeId);
         return qrCodeExpirationService.forceAuthorizationTrxExpiration(initiativeId);
