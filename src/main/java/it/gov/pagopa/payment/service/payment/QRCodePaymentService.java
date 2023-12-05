@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 
 public interface QRCodePaymentService {
 

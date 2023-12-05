@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
@@ -16,8 +15,11 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @Slf4j
 public class PerformanceLoggerAspect {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
+
+    public PerformanceLoggerAspect(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
 
     @Around("@annotation(performanceLog)")
     public Object performanceLogger(ProceedingJoinPoint pjp, PerformanceLog performanceLog) {
