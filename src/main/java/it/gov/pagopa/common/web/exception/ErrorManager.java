@@ -1,25 +1,29 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import jakarta.servlet.http.HttpServletRequest;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 @Slf4j
 public class ErrorManager {
-  private static final ErrorDTO defaultErrorDTO;
+  private final ErrorDTO defaultErrorDTO;
 
-  static {
-    defaultErrorDTO = new ErrorDTO("Error", "Something gone wrong");
+  public ErrorManager(@Nullable ErrorDTO defaultErrorDTO) {
+    this.defaultErrorDTO = Optional.ofNullable(defaultErrorDTO)
+        .orElse(new ErrorDTO(ExceptionCode.GENERIC_ERROR, "Something gone wrong"));
   }
 
   @ExceptionHandler(RuntimeException.class)
-  protected ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
+  public ResponseEntity<ErrorDTO> handleException(RuntimeException error, HttpServletRequest request) {
     if(!(error instanceof ClientException clientException) || clientException.isPrintStackTrace() || clientException.getCause() != null){
       log.error("Something went wrong handling request {}", getRequestDetails(request), error);
     } else {

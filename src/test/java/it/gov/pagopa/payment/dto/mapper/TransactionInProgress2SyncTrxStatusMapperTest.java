@@ -11,16 +11,21 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import java.util.List;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class TransactionInProgress2SyncTrxStatusMapperTest {
+
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
+    private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+
+
     @BeforeEach
     void setUp() {
-        transactionInProgress2SyncTrxStatusMapper = new TransactionInProgress2SyncTrxStatusMapper();
+        transactionInProgress2SyncTrxStatusMapper = new TransactionInProgress2SyncTrxStatusMapper(transactionInProgress2TransactionResponseMapperMock);
     }
-
     @Test
     void transactionInProgressMapper() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
@@ -29,6 +34,60 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .build();
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
         mapperAssertion(transaction, result);
+        TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate", "qrcodePngUrl", "qrcodeTxtUrl");
+    }
+
+    @Test
+    void transactionInProgressMapper_StatusCreated() {
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
+                .reward(0L)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+        transaction.setStatus(SyncTrxStatus.CREATED);
+        SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
+        mapperAssertion(transaction, result);
+        TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate");
+    }
+
+    @Test
+    void transactionInProgressMapperQRCode_StatusCreated() {
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
+                .reward(0L)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
+        transaction.setStatus(SyncTrxStatus.CREATED);
+        SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
+        mapperAssertion(transaction, result);
+        TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate");
+    }
+
+    @Test
+    void transactionInProgressMapperQRCode_StatusAuthorized() {
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
+                .reward(0L)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
+        transaction.setStatus(SyncTrxStatus.AUTHORIZED);
+        SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
+        mapperAssertion(transaction, result);
+        TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate");
+    }
+
+    @Test
+    void transactionInProgressMapperBarCode_StatusAuthorized() {
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
+                .reward(0L)
+                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
+                .build();
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
+        transaction.setStatus(SyncTrxStatus.AUTHORIZED);
+        SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
+        mapperAssertion(transaction, result);
+        TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate", "qrcodePngUrl", "qrcodeTxtUrl");
+        Assertions.assertNull(result.getQrcodePngUrl());
+        Assertions.assertNull(result.getQrcodeTxtUrl());
     }
 
     public static void mapperAssertion(TransactionInProgress transaction, SyncTrxStatusDTO result) {
@@ -49,7 +108,6 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
             assertEquals(transaction.getReward(), result.getRewardCents());
             assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
             assertEquals(transaction.getStatus(), result.getStatus());
-            TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate");
         });
     }
 }

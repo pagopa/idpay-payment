@@ -1,24 +1,28 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.common.web.exception.ClientExceptionWithBody;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
-import it.gov.pagopa.payment.dto.*;
+import it.gov.pagopa.payment.dto.CFDTO;
+import it.gov.pagopa.payment.dto.DecryptCfDTO;
+import it.gov.pagopa.payment.dto.EncryptedCfDTO;
+import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
+import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import java.util.ArrayList;
+import java.util.List;
+
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.support.PageableExecutionUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService {
@@ -31,7 +35,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
     public MerchantTransactionServiceImpl(
-            @Value("${app.qrCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+            @Value("${app.common.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
 
             DecryptRestConnector decryptRestConnector,
             EncryptRestConnector encryptRestConnector,
@@ -56,20 +60,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
                     transaction ->
-                            merchantTransactions.add(
-                            new MerchantTransactionDTO(
-                                    transaction.getTrxCode(),
-                                    transaction.getCorrelationId(),
-                                    transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
-                                    transaction.getAmountCents(),
-                                    transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
-                                    transaction.getTrxDate().toLocalDateTime(),
-                                    authorizationExpirationMinutes,
-                                    transaction.getUpdateDate(),
-                                    transaction.getStatus(),
-                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode()),
-                                    transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode())
-                            )));
+                            merchantTransactions.add(populateMerchantTransactionDTO(transaction)));
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
@@ -77,6 +68,29 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         return new MerchantTransactionsListDTO(merchantTransactions, result.getNumber(), result.getSize(),
                 (int) result.getTotalElements(), result.getTotalPages());
     }
+private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgress transaction){
+        String trxCodeImgUrl = null;
+        String trxCodeTxtUrl = null;
+
+        if(null == transaction.getChannel() || RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) {
+            trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
+            trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
+        }
+
+        return new MerchantTransactionDTO(transaction.getTrxCode(),
+                transaction.getCorrelationId(),
+                transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
+                transaction.getAmountCents(),
+                transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
+                transaction.getTrxDate().toLocalDateTime(),
+                CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
+                transaction.getUpdateDate(),
+                transaction.getStatus(),
+                transaction.getChannel(),
+                trxCodeImgUrl,
+                trxCodeTxtUrl
+                );
+        }
 
     private String decryptCF(String userId) {
         String fiscalCode;
@@ -84,10 +98,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "INTERNAL SERVER ERROR",
-                    "Error during decryption, userId: [%s]".formatted(userId));
+            throw new PDVInvocationException("An error occurred during decryption");
         }
         return fiscalCode;
     }
@@ -98,11 +109,9 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
             userId = encryptedCfDTO.getToken();
         } catch (Exception e) {
-            throw new ClientExceptionWithBody(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "INTERNAL SERVER ERROR",
-                    "Error during encryption");
+            throw new PDVInvocationException("An error occurred during encryption");
         }
         return userId;
     }
+
 }

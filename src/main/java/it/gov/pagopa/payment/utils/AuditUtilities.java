@@ -16,13 +16,17 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_TRXID_TRXCODE = CEF_PATTERN_INITIATIVE + " cs2Label=trxId cs2={} cs3Label=trxCode cs3={}";
     private static final String CEF_PATTERN_TRXID_TRXCODE_MERCHANTID = CEF_PATTERN_TRXID_TRXCODE + " cs4Label=merchantId cs4={}";
     private static final String CEF_PATTERN_USER = CEF_PATTERN_TRXID_TRXCODE + " suser={}";
+    private static final String CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER = CEF_PATTERN_TRXID_TRXCODE + " cs4Label=channel cs4={} suser={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={}";
+    private static final String CEF_PATTERN_MERCHANT_REWARD_REJECTIONS = CEF_PATTERN_TRXID_TRXCODE_MERCHANTID + " cs5Label=reward cs5={} cs6Label=rejectionReasons cs6={}";
     private static final String CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID = CEF_PATTERN_USER + " cs4Label=reward cs4={} cs5Label=rejectionReasons cs5={} cs6Label=merchantId cs6={}";
     private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
+    private static final String CEF_PATTERN_INITIATIVE_USERID = CEF_PATTERN_INITIATIVE + " suser={}";
     private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
+    private static final String CEF_PATTERN_TRXCODE_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_USERID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=userId cs2={}";
-    private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}" ;
+    private static final String CEF_PATTERN_EXPIRED_TRX = CEF_PATTERN_USER + " cs4Label=flowCause cs4={}";
     private static final String CEF_PATTERN_USER_INITIATIVE = CEF_BASE_PATTERN + " suser={} cs1Label=initiativeId cs1={}";
 
 
@@ -34,19 +38,33 @@ public class AuditUtilities {
         );
     }
 
+    public void logBarCodeCreatedTransaction(String initiativeId, String trxId, String trxCode, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_USER,
+                "BARCODE transaction created", initiativeId, trxId, trxCode, userId
+        );
+    }
+
     public void logErrorCreatedTransaction(String initiativeId, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_INITIATIVE_MERCHANTID,
                 "Transaction created - KO", initiativeId, merchantId
         );
     }
+
+    public void logBarCodeErrorCreatedTransaction(String initiativeId, String userId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_INITIATIVE_USERID,
+                "BARCODE transaction created - KO", initiativeId, userId
+        );
+    }
     // endregion
 
-    // region relateUser
-    public void logRelatedUserToTransaction(String initiativeId, String trxId, String trxCode, String userId) {
+    // region preAuthPayment relateUser
+    public void logRelatedUserToTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_USER,
-                "User related to transaction", initiativeId, trxId, trxCode, userId
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User related to transaction", initiativeId, trxId, trxCode, userId, channel
         );
     }
 
@@ -54,6 +72,21 @@ public class AuditUtilities {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXCODE_USERID,
                 "User related to transaction - KO", trxCode, userId
+        );
+    }
+    // endregion
+
+    // region preAuthPayment previewPayment
+    public void logPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User request preview the transaction", initiativeId, trxId, trxCode, userId, channel
+        );
+    }
+    public void logErrorPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
+                "User request preview the transaction - KO", initiativeId, trxId, trxCode, userId, channel
         );
     }
     // endregion
@@ -66,10 +99,24 @@ public class AuditUtilities {
         );
     }
 
+    public void logBarCodeAuthorizedPayment(String initiativeId, String trxId, String trxCode, String merchantId, Long reward, List<String> rejectionReasons) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_MERCHANT_REWARD_REJECTIONS,
+                "Merchant authorized the transaction", initiativeId, trxId, trxCode, merchantId, reward.toString(), rejectionReasons.toString()
+        );
+    }
+
     public void logErrorAuthorizedPayment(String trxCode, String userId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXCODE_USERID,
                 "User authorized the transaction - KO", trxCode, userId
+        );
+    }
+
+    public void logBarCodeErrorAuthorizedPayment(String trxCode, String merchantId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXCODE_MERCHANTID,
+                "Merchant authorized the transaction - KO", trxCode, merchantId
         );
     }
     // endregion
@@ -121,19 +168,19 @@ public class AuditUtilities {
     // endregion
 
     // region expired transaction
-    public void logExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause){
+    public void logExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause) {
         AuditLogger.logAuditString(CEF_PATTERN_EXPIRED_TRX,
                 "Expire transaction processed", initiativeId, trxId, trxCode, userId, flowCause);
     }
 
-    public void logErrorExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause){
+    public void logErrorExpiredTransaction(String initiativeId, String trxId, String trxCode, String userId, String flowCause) {
         AuditLogger.logAuditString(CEF_PATTERN_EXPIRED_TRX,
                 "Expire transaction processed - KO", initiativeId, trxId, trxCode, userId, flowCause);
     }
     // endregion
 
     // region transaction in progress delete
-    public void logDeleteTransactions(String userId, String initiativeId){
+    public void logDeleteTransactions(String userId, String initiativeId) {
         AuditLogger.logAuditString(CEF_PATTERN_USER_INITIATIVE,
                 "Transactions in progress deleted", userId, initiativeId);
     }

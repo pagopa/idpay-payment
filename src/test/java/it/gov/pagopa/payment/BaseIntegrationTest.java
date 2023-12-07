@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import it.gov.pagopa.common.kafka.KafkaTestUtilitiesService;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.utils.TestIntegrationUtils;
 import it.gov.pagopa.common.utils.TestUtils;
 import jakarta.annotation.PostConstruct;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
                 "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}",
                 "rest-client.merchant.baseUrl=http://localhost:${wiremock.server.port}",
                 "rest-client.wallet.baseUrl=http://localhost:${wiremock.server.port}",
+                "rest-client.payment-instrument.baseUrl=http://localhost:${wiremock.server.port}",
                 "rest-client.decryptpdv.baseUrl=http://localhost:${wiremock.server.port}",
                 "rest-client.encryptpdv.baseUrl=http://localhost:${wiremock.server.port}",
                 //endregion
@@ -77,6 +79,7 @@ import java.util.concurrent.TimeUnit;
         })
 @AutoConfigureMockMvc
 @AutoConfigureWireMock(stubs = "classpath:/stub", port = 0)
+@AutoConfigureSingleInstanceMongodb
 public abstract class BaseIntegrationTest {
 
     @Autowired

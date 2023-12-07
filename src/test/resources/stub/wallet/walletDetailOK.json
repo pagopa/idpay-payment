@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "GET",
-    "urlPathPattern": "/idpay/wallet/INITIATIVEID/USERID"
+    "urlPathPattern": "/idpay/wallet/[^\\s]+/(.*USERID|NOTSECONDFACTOR)"
   },
   "response": {
     "status": "200",
@@ -15,7 +15,8 @@
       "initiativeName": "INITIATIVENAME",
       "status": "REFUNDABLE",
       "iban": "IBAN",
-      "businessName": "BUSINESSNAME"
+      "businessName": "BUSINESSNAME",
+      "amount": 1000
     }
   }
 }

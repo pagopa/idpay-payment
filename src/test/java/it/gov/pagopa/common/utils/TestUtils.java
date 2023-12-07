@@ -1,14 +1,12 @@
 package it.gov.pagopa.common.utils;
 
+import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.header.Header;
-import org.awaitility.Awaitility;
-import org.awaitility.core.ConditionTimeoutException;
-import org.junit.jupiter.api.Assertions;
-
+import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -20,9 +18,13 @@ import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-
-import static org.awaitility.Awaitility.await;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
+import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
+import org.junit.jupiter.api.Assertions;
+import org.springframework.http.HttpStatus;
+import org.springframework.test.web.servlet.MvcResult;
 
 public final class TestUtils {
     private TestUtils() {
@@ -138,5 +140,19 @@ public final class TestUtils {
     /** It will truncate timestamp value to MINUTES multiple of 10 */
     public static LocalDateTime truncateTimestamp(LocalDateTime timestamp) {
         return timestamp.truncatedTo(ChronoUnit.MINUTES).withMinute(timestamp.getMinute() / 10 * 10);
+    }
+
+    /** It will extract the response body and verify the HTTP status code */
+    public static <T> T assertResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
+        assertEquals(expectedHttpStatusCode.value(), response.getResponse().getStatus());
+        if (expectedBodyClass != null) {
+            try {
+                return objectMapper.readValue(response.getResponse().getContentAsString(), expectedBodyClass);
+            } catch (JsonProcessingException | UnsupportedEncodingException e) {
+                throw new IllegalStateException("Cannot read body response!", e);
+            }
+        } else {
+            return null;
+        }
     }
 }

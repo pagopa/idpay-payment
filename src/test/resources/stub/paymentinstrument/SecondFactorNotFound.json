@@ -1,0 +1,12 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/idpay/instrument/code/secondFactor/NOTSECONDFACTOR"
+  },
+  "response": {
+    "status": "404",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

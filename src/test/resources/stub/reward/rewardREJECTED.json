@@ -18,7 +18,7 @@
           "acquirerId":  "ACQUIRERID",
           "idTrxIssuer": "IDTRXISSUER",
           "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
-          "channel": "${json-unit.regex}(QRCODE|CIE)"
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE)"
         }
       }
     ]
