@@ -2,6 +2,7 @@ package it.gov.pagopa.common.utils;
 
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,5 +44,13 @@ public class CommonUtilities {
 
   public static Long minutesToSeconds(Integer minutes){
     return minutes == null ? null : (long)minutes*60;
+  }
+
+  public static Pair<Boolean, Long> getSplitPaymentAndResidualAmountCents(Long amountCents, Long rewardCents){
+    if (amountCents != null && rewardCents != null) {
+      long residualAmountCents = amountCents - rewardCents;
+      return Pair.of(residualAmountCents > 0L, residualAmountCents);
+    }
+    return Pair.of(null, null);
   }
 }
