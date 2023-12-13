@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -30,6 +31,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
+    private final WalletConnector walletConnector;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     public BarCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                          BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
@@ -42,6 +44,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
                 paymentErrorNotifierService, auditUtilities, walletConnector);
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
+        this.walletConnector = walletConnector;
     }
 
     @Override
@@ -59,16 +62,16 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
-            Long residualBudgetCents = trx.getAmountCents();
-
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
+            WalletDTO wallet = walletConnector.getWallet(trx.getInitiativeId(), trx.getUserId());
+
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
             authPaymentDTO.setRejectionReasons(null);
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), residualBudgetCents);
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), CommonUtilities.euroToCents(wallet.getAmount()));
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
