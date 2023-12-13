@@ -65,7 +65,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
             authPaymentDTO.setRejectionReasons(null);
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getResidualBudget());
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getReward());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
