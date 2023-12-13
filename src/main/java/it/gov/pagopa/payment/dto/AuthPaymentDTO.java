@@ -34,6 +34,9 @@ public class AuthPaymentDTO {
 
   private Long residualBudget;
 
+  private Boolean splitPayment;
+  private Long residualAmountCents;
+
   @JsonIgnore
   private Map<String, Reward> rewards;
 

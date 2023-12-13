@@ -128,7 +128,8 @@ class BarCodeAuthPaymentServiceImplTest {
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
         verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USER_ID);
         assertEquals(authPaymentDTO, result);
-        TestUtils.checkNotNullFields(result, "rejectionReasons");
+        TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment",
+                "residualAmountCents");
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
     }
