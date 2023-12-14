@@ -26703,7 +26703,7 @@
 					"    return new Proxy(pm, pmProxy);",
 					"}",
 					"",
-					"retryRequest = (postman, pm, setTimeout, waitingMillis = 500, maxAttempts = 20) => {",
+					"retryRequest = (postman, pm, setTimeout, waitingMillis = 1000, maxAttempts = 30) => {",
 					"    if(!postman || !pm || !setTimeout){",
 					"        throw new Error(\"Invalid invoke to retryRequest function! Some required parameters are undefined: postman=\" + postman + \", pm=\" + pm + \", setTimeout=\" + setTimeout)",
 					"    }",
@@ -26749,7 +26749,7 @@
 					"}",
 					"",
 					"waitHpanLookupUpdate = (setTimeout) => {",
-					"    const hpanLookupWaitingMillis=1000;",
+					"    const hpanLookupWaitingMillis=500;",
 					"    console.log(\"Waiting hpanLookup update millis\", hpanLookupWaitingMillis)",
 					"    return setTimeout(()=>{}, hpanLookupWaitingMillis)",
 					"}"
