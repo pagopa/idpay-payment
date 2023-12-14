@@ -60,8 +60,10 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
             Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), trx.getAmountCents());
+            System.out.println(trx);
 
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
+            System.out.println(trx);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
