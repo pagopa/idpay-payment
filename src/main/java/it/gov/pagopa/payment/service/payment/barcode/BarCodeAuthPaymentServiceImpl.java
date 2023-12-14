@@ -22,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -31,7 +30,6 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
-    private final WalletConnector walletConnector;
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     public BarCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                          BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
@@ -44,7 +42,6 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
                 paymentErrorNotifierService, auditUtilities, walletConnector);
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
-        this.walletConnector = walletConnector;
     }
 
     @Override
@@ -62,16 +59,16 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
+            Long residualBudget = trx.getAmountCents();
+
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
-            BigDecimal residualAmount = walletConnector.getWallet(trx.getInitiativeId(), trx.getUserId()).getAmount();
-
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
             authPaymentDTO.setRejectionReasons(null);
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), CommonUtilities.euroToCents(residualAmount));
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), residualBudget);
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
