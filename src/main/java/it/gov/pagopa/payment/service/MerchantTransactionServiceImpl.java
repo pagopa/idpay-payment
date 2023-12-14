@@ -15,6 +15,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -77,7 +78,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
-    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
+    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
 
     return new MerchantTransactionDTO(transaction.getTrxCode(),
                 transaction.getCorrelationId(),

@@ -1,27 +1,21 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.common.web.exception.ServiceException;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
-import it.gov.pagopa.payment.exception.custom.TransactionRejectedException;
-import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
-import it.gov.pagopa.payment.exception.custom.UserSuspendedException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.OffsetDateTime;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.OffsetDateTime;
 
 @Slf4j
 public class CommonPreAuthServiceImpl{
@@ -78,8 +72,8 @@ public class CommonPreAuthServiceImpl{
       transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards(), channel);
     }
 
-    Long residualBudget = CommonUtilities.calculateResidualBudget(preview.getRewards()) != null ?
-            Long.sum(CommonUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
+    Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+            Long.sum(CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
     preview.setResidualBudget(residualBudget);
 
     return preview;
