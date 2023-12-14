@@ -1,30 +1,24 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
-import it.gov.pagopa.payment.exception.custom.TransactionRejectedException;
-import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
-import it.gov.pagopa.payment.exception.custom.UserSuspendedException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
+
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class CommonAuthServiceImpl {
@@ -59,7 +53,7 @@ public abstract class CommonAuthServiceImpl {
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
+            authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
             authPaymentDTO.setRejectionReasons(null);
             return authPaymentDTO;
         } catch (RuntimeException e) {

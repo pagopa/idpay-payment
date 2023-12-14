@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,7 +32,7 @@ public class TransactionInProgress2TransactionResponseMapper
 
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
-    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(transactionInProgress.getAmountCents(), transactionInProgress.getReward());
+    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transactionInProgress.getAmountCents(), transactionInProgress.getReward());
 
     return TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())

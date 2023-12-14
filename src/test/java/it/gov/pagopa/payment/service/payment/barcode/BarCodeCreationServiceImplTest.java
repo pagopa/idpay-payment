@@ -106,8 +106,7 @@ class BarCodeCreationServiceImplTest {
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
                 anyString(),
-                anyString(),
-                any()))
+                anyString()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
@@ -155,7 +154,7 @@ class BarCodeCreationServiceImplTest {
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
                 anyString(),
-                anyString(),any()))
+                anyString()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
