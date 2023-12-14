@@ -76,12 +76,11 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null);
+                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, residualBudgetCents);
             generateTrxCodeAndSave(trx);
 
             logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
 
-            trx.setAmountCents(residualBudgetCents);
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
         } catch (RuntimeException e) {

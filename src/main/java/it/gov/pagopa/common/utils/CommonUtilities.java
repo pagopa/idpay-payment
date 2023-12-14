@@ -47,10 +47,9 @@ public class CommonUtilities {
     return minutes == null ? null : (long)minutes*60;
   }
 
+  /** idpaycode or qrcode = reward, barcode = residualBudget */
   public static Pair<Boolean, Long> getSplitPaymentAndResidualAmountCents(Long amountCents, Long rewardOrResidualBudget) {
-    // idpaycode or qrcode = reward
-    // barcode = residualBudget
-    if (amountCents != null && rewardOrResidualBudget != null) {
+    if (rewardOrResidualBudget != null) {
       long residualAmountCents = amountCents - rewardOrResidualBudget;
       if (residualAmountCents >= 0L) {
         return Pair.of(residualAmountCents > 0L, residualAmountCents);
