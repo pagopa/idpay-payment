@@ -17,6 +17,7 @@ import java.util.List;
 
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -76,8 +77,9 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
+    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
 
-        return new MerchantTransactionDTO(transaction.getTrxCode(),
+    return new MerchantTransactionDTO(transaction.getTrxCode(),
                 transaction.getCorrelationId(),
                 transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                 transaction.getAmountCents(),
@@ -86,6 +88,8 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),
                 transaction.getStatus(),
+                splitPaymentAndResidualAmountCents.getKey(),
+                splitPaymentAndResidualAmountCents.getValue(),
                 transaction.getChannel(),
                 trxCodeImgUrl,
                 trxCodeTxtUrl
