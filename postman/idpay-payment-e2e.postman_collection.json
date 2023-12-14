@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "3d6dbd08-ebcf-4077-861b-70d20fb10436",
+		"_postman_id": "54750e2a-b51d-40de-bbbb-baa9ecdc325b",
 		"name": "IDPay Payment - e2e",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "15747968"
@@ -1341,7 +1341,13 @@
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"const jsonResponse = pm.response.json();\r",
+													"\r",
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+													"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+													"});\r",
+													"\r",
+													"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
 													"}"
 												],
@@ -1392,6 +1398,8 @@
 													"\r",
 													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"} else {\r",
+													"    waitHpanLookupUpdate(setTimeout)\r",
 													"}"
 												],
 												"type": "text/javascript"
@@ -4671,7 +4679,13 @@
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"const jsonResponse = pm.response.json();\r",
+													"\r",
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+													"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+													"});\r",
+													"\r",
+													"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
 													"}"
 												],
@@ -13437,7 +13451,13 @@
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"const jsonResponse = pm.response.json();\r",
+													"\r",
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+													"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+													"});\r",
+													"\r",
+													"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
 													"}"
 												],
@@ -13488,6 +13508,8 @@
 													"\r",
 													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"} else {\r",
+													"    waitHpanLookupUpdate(setTimeout)\r",
 													"}"
 												],
 												"type": "text/javascript"
@@ -16344,7 +16366,13 @@
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"const jsonResponse = pm.response.json();\r",
+													"\r",
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+													"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+													"});\r",
+													"\r",
+													"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
 													"}"
 												],
@@ -16395,6 +16423,8 @@
 													"\r",
 													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"} else {\r",
+													"    waitHpanLookupUpdate(setTimeout)\r",
 													"}"
 												],
 												"type": "text/javascript"
@@ -22104,7 +22134,13 @@
 													"    pm.response.to.have.status(200);\r",
 													"});\r",
 													"\r",
-													"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+													"const jsonResponse = pm.response.json();\r",
+													"\r",
+													"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+													"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+													"});\r",
+													"\r",
+													"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
 													"}"
 												],
@@ -22155,6 +22191,8 @@
 													"\r",
 													"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 													"    retryRequest(postman, pm, setTimeout, 1000);\r",
+													"} else {\r",
+													"    waitHpanLookupUpdate(setTimeout)\r",
 													"}"
 												],
 												"type": "text/javascript"
@@ -23446,7 +23484,13 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"const jsonResponse = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+															"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+															"});\r",
+															"\r",
+															"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 															"    retryRequest(postman, pm, setTimeout, 1000);\r",
 															"}"
 														],
@@ -23497,6 +23541,8 @@
 															"\r",
 															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"} else {\r",
+															"    waitHpanLookupUpdate(setTimeout)\r",
 															"}"
 														],
 														"type": "text/javascript"
@@ -24265,7 +24311,13 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"const jsonResponse = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+															"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+															"});\r",
+															"\r",
+															"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 															"    retryRequest(postman, pm, setTimeout, 1000);\r",
 															"}"
 														],
@@ -24316,6 +24368,8 @@
 															"\r",
 															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"} else {\r",
+															"    waitHpanLookupUpdate(setTimeout)\r",
 															"}"
 														],
 														"type": "text/javascript"
@@ -24977,7 +25031,13 @@
 															"    pm.response.to.have.status(200);\r",
 															"});\r",
 															"\r",
-															"if(pm.response.json().status != \"ONBOARDING_OK\") {\r",
+															"const jsonResponse = pm.response.json();\r",
+															"\r",
+															"pm.test(\"Payment - Happy case - Onboarding - Get Onboarding Status - not KO\", function () {\r",
+															"    pm.expect(jsonResponse.status).not.eq('ONBOARDING_KO');\r",
+															"});\r",
+															"\r",
+															"if(jsonResponse.status != \"ONBOARDING_OK\") {\r",
 															"    retryRequest(postman, pm, setTimeout, 1000);\r",
 															"}"
 														],
@@ -25028,6 +25088,8 @@
 															"\r",
 															"if(pm.response.json().status != \"REFUNDABLE\") {\r",
 															"    retryRequest(postman, pm, setTimeout, 1000);\r",
+															"} else {\r",
+															"    waitHpanLookupUpdate(setTimeout)\r",
 															"}"
 														],
 														"type": "text/javascript"
@@ -26625,6 +26687,7 @@
 			"script": {
 				"type": "text/javascript",
 				"exec": [
+					"// START COMMON UTILITIES",
 					"skipTests=false;",
 					"",
 					"instrumentPmMethod = (pm) => {",
@@ -26640,7 +26703,7 @@
 					"    return new Proxy(pm, pmProxy);",
 					"}",
 					"",
-					"retryRequest = (postman, pm, setTimeout, waitingMillis = 500, maxAttempts = 20) => {",
+					"retryRequest = (postman, pm, setTimeout, waitingMillis = 1000, maxAttempts = 30) => {",
 					"    if(!postman || !pm || !setTimeout){",
 					"        throw new Error(\"Invalid invoke to retryRequest function! Some required parameters are undefined: postman=\" + postman + \", pm=\" + pm + \", setTimeout=\" + setTimeout)",
 					"    }",
@@ -26665,6 +26728,11 @@
 					"    }",
 					"}",
 					"",
+					"// Retrying if 429",
+					"retryWhenStatusCode(postman, pm, setTimeout, 429);",
+					"",
+					"// START PAYMENT UTILITIES",
+					"",
 					"waitPaymentThrottling = (setTimeout) => {",
 					"    const paymentThrottlingMillis=1000;",
 					"    console.log(\"Waiting payment throttling millis\", paymentThrottlingMillis)",
@@ -26680,7 +26748,11 @@
 					"    return setTimeout(()=>{}, droolsSyncMillis)",
 					"}",
 					"",
-					"retryWhenStatusCode(postman, pm, setTimeout, 429);"
+					"waitHpanLookupUpdate = (setTimeout) => {",
+					"    const hpanLookupWaitingMillis=500;",
+					"    console.log(\"Waiting hpanLookup update millis\", hpanLookupWaitingMillis)",
+					"    return setTimeout(()=>{}, hpanLookupWaitingMillis)",
+					"}"
 				]
 			}
 		}
@@ -26688,45 +26760,45 @@
 	"variable": [
 		{
 			"key": "trxCode",
-			"value": "vqrugekn"
+			"value": "kxr7uber"
 		},
 		{
 			"key": "transactionId",
-			"value": "ec3e5a75-8935-4d73-b982-942492e98f30_1700761059101"
+			"value": "980d55b7-317a-482f-85c6-9f21e4d47e13_1702479736122"
 		},
 		{
 			"key": "initiativeId",
-			"value": "655f8db6dde3f11c05e73c29",
+			"value": "6579c641dcfe31699a2b56b2",
 			"type": "string"
 		},
 		{
 			"key": "trxDate",
-			"value": "2023-11-26T18:38:25.903+01:00",
+			"value": "2023-12-16T16:02:15.697+01:00",
 			"type": "string"
 		},
 		{
 			"key": "tokenIO",
-			"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJSTExDTEQ5Mk0wOEE2NjJPIiwiaWF0IjoxNzAwNzYxMTAyLCJleHAiOjE3MDA3NjQ3MDJ9.NIxX-z0CFPSDaD8jpESo8PFCO_pVsEsgoBme2w-cCk4"
+			"value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJCUlRWTkw2M0UyNlgwMDBVIiwiaWF0IjoxNzAyNDc5NzM2LCJleHAiOjE3MDI0ODMzMzZ9.VatwcclPQLHQtSZbcrcnLBALvdDmffXbRnSF9AbItl8"
 		},
 		{
 			"key": "randomNum",
-			"value": 397
+			"value": 197
 		},
 		{
 			"key": "identityPortalToken",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDA3NjExMDEsImV4cCI6MTcwMDc4OTkwMSwiYXVkIjoiaWRwYXkud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiNGU0MzMxMzgtNGE4ZS00MmJlLWE3MTEtYWE2NjRlNWFjZTFiIiwibmFtZSI6IlJvY2t5IiwiZmFtaWx5X25hbWUiOiJCYWxib2EiLCJlbWFpbCI6InIuYmFsYm9hQHRlc3QuZW1haWwuaXQiLCJvcmdfaWQiOiJjMzI2Y2FjNi1hMzhjLTQxNmMtYTNjMy1mNmE0MDdiNzc5NTAiLCJvcmdfdmF0IjoiODAxMTcwODI3MjQiLCJvcmdfbmFtZSI6IkVudGUgZGkgdGVzdCBJZFBheSIsIm9yZ19wYXJ0eV9yb2xlIjoiTUFOQUdFUiIsIm9yZ19yb2xlIjoiYWRtaW4ifQ.BCtTtbv3n7TjfV0eYiTUDeAHyvhIIZvZdgTVaIiAJ9Kt4Y5usujZ5FfGCKhaQvl4jDk2YJB_opYp-nI_wMJ9P3Siyt9lt23iSAM-e6lEk5jh_dxyhSpttzCmJBbPkqjVaz_vfVN-kmgBZ1wnkz0BOEZ6pgGnHrSzpzsl3c6Rbvb4k4R4Ztms-SLA8qiRFZhOFNX9iBCMmtH0Q5FtGypR_6oV0YyqtGoXZU-YFZ41TUUgOlfgGKxwD8FvQSP4T1F2rG_BicM8eKSXj-6gboLVmwtw42jESv_4m4eQ2YndzWZdgiJZ-2Yd1zUzzLm6TXtfwVS3-_2oqCXPlu8bt6E7Ng"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDI0Nzk3MTgsImV4cCI6MTcwMjUwODUxOCwiYXVkIjoiaWRwYXkud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiODM4NDM4NjQtZjNjMC00ZGVmLWJhZGItN2YxOTc0NzFiNzJlIiwibmFtZSI6InBpcHBvIiwiZmFtaWx5X25hbWUiOiJxd2VydHkiLCJlbWFpbCI6InBpcHBvQHRlc3QuZW1haWwuaXQiLCJvcmdfaWQiOiIzOTBjZWEzOC1mMmRlLTRiY2ItYTE4MS1kNmVlZjk5ZmU1MjgiLCJvcmdfdmF0IjoiODAxMTcwODI3MjQiLCJvcmdfbmFtZSI6IkVudGUgZGkgdGVzdCBJZFBheSIsIm9yZ19wYXJ0eV9yb2xlIjoie3tvcmdQYXJ0eVJvbGVfRW50ZX19Iiwib3JnX3JvbGUiOiJhZG1pbiJ9.FUsVWGPaSJQEOufm9rV-xaccV5xGtJWITDTm6nKgvoKfIWqlpZfZ-1VoZpIo5DxodabEw7QHM5sWeArFUhKwqsLSSbWKHwsEjtz0nin5Q6BbvfazQYboMjAauJWEjir45a2K46yXhDYmiFmixRA49_dJyE1rUoppsuZuGzaR0uCG-x3ioWVa0phKa0OwJc19p2FO9MDkX-8htkLdymHYR7vLj9XNDdCZ873ohzuL_trXVc95aX0dJy5_vfVlq1s1IYKxCqc-XFiJgXlNnTnXfFhcasS8n1pNoa5q08R6ZIvvsPo7xxTakqIVuo_uLf2_p2XT7YUXMvBrffGBW1X4ow"
 		},
 		{
 			"key": "identityPortalTokenPagopa",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDA3NjEwODYsImV4cCI6MTcwMDc4OTg4NiwiYXVkIjoiaWRwYXkud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiNTlhOWRkYzgtNDhkMi00OGU0LTk0YzQtNmI4ODNiYThkMTBjIiwibmFtZSI6ImFkbWluIiwiZmFtaWx5X25hbWUiOiJwYWdvcGEiLCJlbWFpbCI6ImFkbWluX3BhZ29wYV9VQVRAdGVzdC5lbWFpbC5pdCIsIm9yZ19pZCI6ImMzMjZjYWM2LWEzOGMtNDE2Yy1hM2MzLWY2YTQwN2I3Nzk1MCIsIm9yZ192YXQiOiIxNTM3NjM3MTAwOSIsIm9yZ19uYW1lIjoiRW50ZSBkaSB0ZXN0IElkUGF5Iiwib3JnX3BhcnR5X3JvbGUiOiJTVUJfREVMRUdBVEUiLCJvcmdfcm9sZSI6InBhZ29wYV9hZG1pbiJ9.bWXPXx8w0BaAkFqOD7apoWM422a1C0bMxsngM4CZ7bMnPIUeRrAnNXkVLZhAo8KizcMvkcr3ODoM78p1opc4-kLqZxQjwMJXWAaMDaZSyY2TFrrA1FYgUvtYuA94nQnhObLq2RLLQlb9-xYQJA1fPSrE9HY7WFMDoQw7RwWe1K8wB_-fEgvWcCRkbQU--myBrTpesDHkKc6wWnOcKkrmeJ5dtCL0pMRVwym5nOYzY5GRDtWUz02bbf0w-sNHENjTVuB515rZwFmI87J-1mB3oWT0JSZJDOcas18Z5w5DuuwCTeHsC43LW4C2i7tvWMpReO5L3zuDsmTrYIh8yskTTA"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDI0Nzk3MDksImV4cCI6MTcwMjUwODUwOSwiYXVkIjoiaWRwYXkud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiNDNlNDI2M2ItNGRkNC00YzBmLTljNjQtMTFjYzFhMjIxY2RkIiwibmFtZSI6ImFkbWluIiwiZmFtaWx5X25hbWUiOiJwYWdvcGEiLCJlbWFpbCI6ImFkbWluX3BhZ29wYV9kZXZAdGVzdC5lbWFpbC5pdCIsIm9yZ19pZCI6IjM5MGNlYTM4LWYyZGUtNGJjYi1hMTgxLWQ2ZWVmOTlmZTUyOCIsIm9yZ192YXQiOiIxNTM3NjM3MTAwOSIsIm9yZ19uYW1lIjoiRW50ZSBkaSB0ZXN0IElkUGF5Iiwib3JnX3BhcnR5X3JvbGUiOiJTVUJfREVMRUdBVEUiLCJvcmdfcm9sZSI6InBhZ29wYV9hZG1pbiJ9.NQDgDxoVCpxcHp2NxKvIiqwvMtTMuNIAAhQuQ-IalWxvjbDjw9bZdX7n5E4eKuaqFvkOqKHXAe3bF5iHpM716A6Dq7jXwm6DFgFvz_lR27f1CrO74gUxntqaPm674ve1Mk2pGaYcOSMItcLugM7Zb9_xaLYBpdqw1V2KrA9J-Sf3w7lURrbkQS9sz8ebSQLeX5hIHys9x3dZm5QB85qftyHRWCBQip55bh_2Bnizu4WDTWjKbghIPGUkEWsAQyxwp--_POvIL1Cp3hp1o9aJx1S3Vbd1Y8IwwRnRnkXiG31feAnpxi_V7XC4G4o-At5senfAAXmdkv8qlaoIxT1JFw"
 		},
 		{
 			"key": "serviceName",
-			"value": "Test funzionali App IO BarCode 23-11-2023 06:38"
+			"value": "Test funzionali App IO QRCODE 13-12-2023 04:01"
 		},
 		{
 			"key": "description",
-			"value": "Repellat illum ipsa et dignissimos."
+			"value": "Illum enim sint."
 		},
 		{
 			"key": "channel_type",
@@ -26734,7 +26806,7 @@
 		},
 		{
 			"key": "channel_contact",
-			"value": "http://dusty.name"
+			"value": "http://ebba.info"
 		},
 		{
 			"key": "budget",
@@ -26758,19 +26830,19 @@
 		},
 		{
 			"key": "rankingStartDate",
-			"value": "2023-11-23"
+			"value": "2023-12-13"
 		},
 		{
 			"key": "rankingEndDate",
-			"value": "2023-12-23"
+			"value": "2024-01-13"
 		},
 		{
 			"key": "startDate",
-			"value": "2023-11-23"
+			"value": "2023-12-13"
 		},
 		{
 			"key": "endDate",
-			"value": "2024-02-23"
+			"value": "2024-03-13"
 		},
 		{
 			"key": "rewardRuleType",
@@ -26778,19 +26850,19 @@
 		},
 		{
 			"key": "rewardValueType",
-			"value": "ABSOLUTE"
+			"value": "PERCENTAGE"
 		},
 		{
 			"key": "rewardRuleValue",
-			"value": 50
+			"value": 100
 		},
 		{
 			"key": "trxDaysOfWeek",
-			"value": "THURSDAY"
+			"value": "FRIDAY"
 		},
 		{
 			"key": "trxDayEndTime",
-			"value": "17:38:04.200"
+			"value": "15:01:46.587"
 		},
 		{
 			"key": "trxThresholdFrom",
@@ -26845,11 +26917,11 @@
 		},
 		{
 			"key": "merchantPortalToken",
-			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDA3NjExMDUsImV4cCI6MTcwMDc4OTkwNSwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMzMwZjc5NTgtZTgzOS00OTRjLWExMTQtNjRmZWEyNmI4ZTg1IiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX1VBVEB0ZXN0LmVtYWlsLml0IiwiYWNxdWlyZXJfaWQiOiJQQUdPUEEiLCJtZXJjaGFudF9pZCI6IjNhNjAyYjE3LWFjMWMtMzAyOS05ZTc4LTBhNGJiYjg2OTNkNCIsIm9yZ19pZCI6ImYwNmNlNmVlLTk2MDUtNDMyNy04OWE2LTBmYjlmMjJiM2EwNiIsIm9yZ192YXQiOiIzMzQ0NDQzMzQ4OCIsIm9yZ19uYW1lIjoiRXNlcmNlbnRlIGRpIHRlc3QgSWRQYXkiLCJvcmdfcGFydHlfcm9sZSI6Ik1BTkFHRVIiLCJvcmdfcm9sZSI6ImFkbWluIn0.fnJlBJWmdVdZnAgUO0rMeHSGgz_r-RgdYLnx3W_49CHY2lJ5E3j1QupeVoAa18ygp6unc_Uz9fjR1oTaTTkbeQPYN2mqc84uvJ-MhVX9QHGrd3-Tfd71zNtERVvUfpoJ3jDv9AOJ-Bj1rIwkybkBfsPs2rRLJnJEjoir_pAQRPxcawd36tcacFCu_Khzl1gj4zf0OoP9aMZmRvjDhMlZt-FcgoPf9Ta4xzemZk79H5z52IkwZOENInlygXO8t0GGVJM4XtB23168GzlbrdsCVekjfAvZV-qsY17gldmFMKGaUILR2vc7x2uzsdZ3jXf76aYEjFOAGnGRE6QuV40G2w"
+			"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDI0Nzk3MzUsImV4cCI6MTcwMjUwODUzNSwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMmY5ZDk3MGQtMzFmYi00MzkzLTg3MjEtMmNhOTIxYmIyYmJjIiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX2RldkB0ZXN0LmVtYWlsLml0IiwiYWNxdWlyZXJfaWQiOiJQQUdPUEEiLCJtZXJjaGFudF9pZCI6IjNhNjAyYjE3LWFjMWMtMzAyOS05ZTc4LTBhNGJiYjg2OTNkNCIsIm9yZ19pZCI6IjJiNDhiZjk2LWZkNzQtNDc3ZS1hNzBhLTI4NmI0MTBmMDIwYSIsIm9yZ192YXQiOiIzMzQ0NDQzMzQ4OCIsIm9yZ19uYW1lIjoiRXNlcmNlbnRlIGRpIHRlc3QgSWRQYXkiLCJvcmdfcGFydHlfcm9sZSI6Ik1BTkFHRVIiLCJvcmdfcm9sZSI6ImFkbWluIn0.o7mPKH0fLnO8c91dYf_xVmT37y-TzEW8KxEXJdZ2aXRi5jKYgGr3GVe5xvtBS7LjXW0dVQrRgWNflntzotGT9PfUZQrImFZDXvj2MwQE-2MnDkpZEf0unMMrXes4MZyo_xLhUQlue7xhQKuOqfOtVxukFEsJk4eAjJYksa84TOaQzgaGmVaSp8LZjH0wOqMQ2o6xx8y3FDlnUrdYZIQRLclKE6N_AXhHgrMk5G5Qco2gzECQ6kcn0SIugV7EbwtDTwPo5bkRgtnDRVDWYIAkjYyNLG6rb502dO-QUuDw3BUuf1ksM0cb4GEVJGXmXGSGihMdDFnDLElpt2Gibsxjsg"
 		},
 		{
 			"key": "effectiveAmount",
-			"value": 500
+			"value": 7000
 		},
 		{
 			"key": "rewardAmount",
@@ -26857,7 +26929,7 @@
 		},
 		{
 			"key": "initiativeId_exhausted",
-			"value": "655f8dfadde3f11c05e73c2b"
+			"value": "6579c757dcfe31699a2b56b8"
 		},
 		{
 			"key": "transactionId_fake",
@@ -26893,16 +26965,16 @@
 		},
 		{
 			"key": "initiativeId_not_started",
-			"value": "655f8de5dde3f11c05e73c2a"
+			"value": "6579c5c7dcfe31699a2b56ac"
 		},
 		{
 			"key": "beneficiaryRuleDroolsSyncMillis_DEV",
-			"value": "0",
+			"value": "2000",
 			"type": "string"
 		},
 		{
 			"key": "rewardRuleDroolsSyncMillis_DEV",
-			"value": "0",
+			"value": "2000",
 			"type": "string"
 		},
 		{
