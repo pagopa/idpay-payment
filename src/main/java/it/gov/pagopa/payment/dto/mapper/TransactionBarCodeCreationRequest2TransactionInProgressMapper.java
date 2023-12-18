@@ -17,8 +17,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
             TransactionBarCodeCreationRequest transactionBarCodeCreationRequest,
             String channel,
             String userId,
-            String initiativeName,
-            Long amountCents
+            String initiativeName
     ) {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
@@ -27,7 +26,6 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
 
         return TransactionInProgress.builder()
                 .id(id)
-                .amountCents(amountCents)
                 .correlationId(id)
                 .initiativeId(transactionBarCodeCreationRequest.getInitiativeId())
                 .initiativeName(initiativeName)
