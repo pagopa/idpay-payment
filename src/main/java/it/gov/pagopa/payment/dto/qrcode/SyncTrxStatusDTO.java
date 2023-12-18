@@ -42,6 +42,9 @@ public class SyncTrxStatusDTO {
 
     private SyncTrxStatus status;
 
+    private Boolean splitPayment;
+    private Long residualAmountCents;
+
     private String qrcodePngUrl;
     private String qrcodeTxtUrl;
 }

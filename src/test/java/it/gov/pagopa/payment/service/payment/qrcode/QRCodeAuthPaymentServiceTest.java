@@ -117,7 +117,8 @@ class QRCodeAuthPaymentServiceTest {
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
     assertEquals(authPaymentDTO, result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor");
+    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
+            "residualAmountCents");
     assertEquals(transaction.getTrxCode(), result.getTrxCode());
     verify(notifierServiceMock).notify(any(TransactionInProgress.class), anyString());
   }

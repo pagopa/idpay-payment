@@ -75,7 +75,8 @@ import org.junit.jupiter.api.Test;
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
       assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
       assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
-        TestUtils.checkNotNullFields(result,"residualBudget", "secondFactor");
+        TestUtils.checkNotNullFields(result,"residualBudget", "secondFactor","splitPayment",
+                "residualAmountCents");
     });
   }
 
@@ -99,7 +100,8 @@ import org.junit.jupiter.api.Test;
        assertEquals(transaction.getTrxCode(), result.getTrxCode());
        assertNull(result.getCounters());
        assertEquals(Collections.emptyMap(), result.getRewards());
-       TestUtils.checkNotNullFields(result, "counters","residualBudget", "secondFactor");
+       TestUtils.checkNotNullFields(result, "counters","residualBudget", "secondFactor","splitPayment",
+               "residualAmountCents");
      });
    }
 
@@ -122,7 +124,8 @@ import org.junit.jupiter.api.Test;
              assertEquals(transaction.getTrxCode(), result.getTrxCode());
              assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
              assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
-             TestUtils.checkNotNullFields(result, "residualBudget", "secondFactor");
+             TestUtils.checkNotNullFields(result, "residualBudget", "secondFactor","splitPayment",
+                     "residualAmountCents");
          });
      }
 

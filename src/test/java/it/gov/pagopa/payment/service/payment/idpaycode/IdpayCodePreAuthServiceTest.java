@@ -164,7 +164,7 @@ class IdpayCodePreAuthServiceTest {
 
         //Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "rejectionReasons");
+        TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment","residualAmountCents");
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
@@ -208,7 +208,9 @@ class IdpayCodePreAuthServiceTest {
                 "reward",
                 "counters",
                 "residualBudget",
-                "secondFactor"
+                "secondFactor",
+                "splitPayment",
+                "residualAmountCents"
         );
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());

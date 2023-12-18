@@ -29,6 +29,8 @@ public class MerchantTransactionDTO {
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime updateDate;
     private SyncTrxStatus status;
+    private Boolean splitPayment;
+    private Long residualAmountCents;
     private String channel;
     private String qrcodePngUrl;
     private String qrcodeTxtUrl;

@@ -55,6 +55,8 @@ class MerchantTransactionServiceTest {
         MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
         merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction1.setSplitPayment(true);
+        merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getReward());
 
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -99,6 +101,8 @@ class MerchantTransactionServiceTest {
         merchantTransaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         merchantTransaction1.setQrcodePngUrl(QRCODE_IMGURL);
         merchantTransaction1.setQrcodeTxtUrl(QRCODE_TXTURL);
+        merchantTransaction1.setSplitPayment(true);
+        merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getReward());
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
@@ -204,11 +208,6 @@ class MerchantTransactionServiceTest {
         assertEquals(1, result.getContent().size());
         assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
-    }
-
-    private void setTrxCodeUrl(TransactionInProgress transaction1, MerchantTransactionDTO merchantTransaction) {
-        merchantTransaction.setQrcodePngUrl("qrcodeImgBaseUrl?trxcode=%s".formatted(transaction1.getTrxCode()));
-        merchantTransaction.setQrcodeTxtUrl("qrcodeTxtBaseUrl/%s".formatted(transaction1.getTrxCode()));
     }
 
     @Test
