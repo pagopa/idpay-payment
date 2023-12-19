@@ -20,4 +20,9 @@ public class PaymentErrorManagerConfig {
   ErrorDTO tooManyRequestsErrorDTO() {
     return new ErrorDTO(ExceptionCode.TOO_MANY_REQUESTS, "Too Many Requests");
   }
+
+  @Bean
+  ErrorDTO templateValidationErrorDTO() {
+    return new ErrorDTO(ExceptionCode.PAYMENT_INVALID_REQUEST,"Invalid request");
+  }
 }
