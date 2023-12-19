@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.exception.custom;
 
+import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.common.web.exception.ServiceException;
 
@@ -10,10 +11,10 @@ public class MerchantOrAcquirerNotAllowedException extends ServiceException {
   }
 
   public MerchantOrAcquirerNotAllowedException(String code, String message) {
-    this(code, message, false, null);
+    this(code, message, null, false, null);
   }
 
-  public MerchantOrAcquirerNotAllowedException(String code, String message, boolean printStackTrace, Throwable ex) {
-    super(code, message, printStackTrace, ex);
+  public MerchantOrAcquirerNotAllowedException(String code, String message, ServiceExceptionResponse response, boolean printStackTrace, Throwable ex) {
+    super(code, message, response, printStackTrace, ex);
   }
 }
