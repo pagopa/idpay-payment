@@ -44,8 +44,7 @@ public class ValidationExceptionHandler {
     log.info("A MethodArgumentNotValidException occurred handling request {}: HttpStatus 400 - {}",
         ErrorManager.getRequestDetails(request), message);
     log.debug("Something went wrong while validating http request", ex);
-    templateValidationErrorDTO.setMessage(message);
-    return templateValidationErrorDTO;
+    return new ErrorDTO(templateValidationErrorDTO.getCode(), message);
   }
 
   @ExceptionHandler(MissingRequestHeaderException.class)
@@ -58,8 +57,6 @@ public class ValidationExceptionHandler {
     log.info("A MissingRequestHeaderException occurred handling request {}: HttpStatus 400 - {}",
         ErrorManager.getRequestDetails(request), message);
     log.debug("Something went wrong handling request", ex);
-
-    templateValidationErrorDTO.setMessage(message);
-    return templateValidationErrorDTO;
+    return new ErrorDTO(templateValidationErrorDTO.getCode(), message);
   }
 }
