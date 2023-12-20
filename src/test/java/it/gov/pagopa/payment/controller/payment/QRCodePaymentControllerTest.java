@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({JsonConfig.class, PaymentErrorManagerConfig.class, ValidationExceptionHandler.class})
 class QRCodePaymentControllerTest {
 
+  public static final String EXPECTED_PAYMENT_GENERIC_ERROR =  "{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"A generic error occurred\"}";
   @MockBean
   private QRCodePaymentService qrCodePaymentServiceMock;
 
@@ -42,7 +43,7 @@ class QRCodePaymentControllerTest {
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.resolve(result.getResponse().getStatus()));
     assertEquals(
-        "{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"A generic error occurred for payment\"}",
+            EXPECTED_PAYMENT_GENERIC_ERROR,
         result.getResponse().getContentAsString()
     );
   }
@@ -59,7 +60,7 @@ class QRCodePaymentControllerTest {
 
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, HttpStatus.resolve(result.getResponse().getStatus()));
     assertEquals(
-        "{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"A generic error occurred for payment\"}",
+            EXPECTED_PAYMENT_GENERIC_ERROR,
         result.getResponse().getContentAsString()
     );
   }

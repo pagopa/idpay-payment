@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
+import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
@@ -21,7 +22,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(IdPayCodePaymentControllerImpl.class)
-@Import({JsonConfig.class, ValidationExceptionHandler.class})
+@Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class IdPayCodePaymentControllerTest {
 
   @MockBean
