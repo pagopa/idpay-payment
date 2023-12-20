@@ -1,14 +1,15 @@
 package it.gov.pagopa.payment.exception.custom;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
+import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
 
 public class TransactionInvalidException extends ServiceException {
 
   public TransactionInvalidException(String code, String message) {
-    this(code, message, false, null);
+    this(code, message, null, false, null);
   }
 
-  public TransactionInvalidException(String code, String message, boolean printStackTrace, Throwable ex) {
-    super(code, message, printStackTrace, ex);
+  public TransactionInvalidException(String code, String message, ServiceExceptionResponse response,boolean printStackTrace, Throwable ex) {
+    super(code, message, response,printStackTrace, ex);
   }
 }

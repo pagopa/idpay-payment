@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @ContextConfiguration(classes = {ErrorManagerTest.TestController.class, ErrorManager.class})
 class ErrorManagerTest {
 
+  public static final String EXPECTED_DEFAULT_ERROR = "{\"code\":\"Error\",\"message\":\"Something gone wrong\"}";
+
   @Autowired
   private MockMvc mockMvc;
 
@@ -77,7 +79,7 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST, "ClientException with httpStatus and message"))
         .when(testControllerSpy).testEndpoint();
@@ -85,7 +87,7 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST, "ClientException with httpStatus, message and throwable", new Throwable()))
         .when(testControllerSpy).testEndpoint();
@@ -93,7 +95,7 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
   }
 
   @Test
@@ -104,6 +106,6 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
   }
 }
