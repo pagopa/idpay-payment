@@ -14,7 +14,7 @@ public class TransactionNotFoundOrExpiredException extends ServiceException {
     this(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, message, null, printStackTrace, ex);
   }
 
-  public TransactionNotFoundOrExpiredException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
-    super(code, message, response, printStackTrace, ex);
+  public TransactionNotFoundOrExpiredException(String code, String message, ServiceExceptionPayload payload, boolean printStackTrace, Throwable ex) {
+    super(code, message, payload, printStackTrace, ex);
   }
 }

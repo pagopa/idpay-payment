@@ -14,7 +14,7 @@ public class InitiativeNotfoundException extends ServiceException {
     this(code, message, null, false, null);
   }
 
-  public InitiativeNotfoundException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
-    super(code, message, response, printStackTrace, ex);
+  public InitiativeNotfoundException(String code, String message, ServiceExceptionPayload payload, boolean printStackTrace, Throwable ex) {
+    super(code, message, payload, printStackTrace, ex);
   }
 }

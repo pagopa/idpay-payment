@@ -9,7 +9,7 @@ public class UserNotAllowedException extends ServiceException {
     this(code, message, null, false, null);
   }
 
-  public UserNotAllowedException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
-    super(code, message, response, printStackTrace, ex);
+  public UserNotAllowedException(String code, String message, ServiceExceptionPayload payload, boolean printStackTrace, Throwable ex) {
+    super(code, message, payload, printStackTrace, ex);
   }
 }

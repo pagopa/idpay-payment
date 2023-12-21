@@ -9,7 +9,7 @@ public class IdpaycodeNotFoundException extends ServiceException {
   public IdpaycodeNotFoundException(String message, boolean printStackTrace, Throwable ex) {
     this(ExceptionCode.IDPAYCODE_NOT_FOUND, message, null,printStackTrace, ex);
   }
-  public IdpaycodeNotFoundException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
-    super(code, message, response,printStackTrace, ex);
+  public IdpaycodeNotFoundException(String code, String message, ServiceExceptionPayload payload, boolean printStackTrace, Throwable ex) {
+    super(code, message, payload,printStackTrace, ex);
   }
 }

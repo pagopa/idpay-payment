@@ -14,7 +14,7 @@ public class InitiativeInvalidException extends ServiceException {
     this(code, message, null, false, null);
   }
 
-  public InitiativeInvalidException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
-    super(code, message, response,printStackTrace, ex);
+  public InitiativeInvalidException(String code, String message, ServiceExceptionPayload payload, boolean printStackTrace, Throwable ex) {
+    super(code, message, payload,printStackTrace, ex);
   }
 }
