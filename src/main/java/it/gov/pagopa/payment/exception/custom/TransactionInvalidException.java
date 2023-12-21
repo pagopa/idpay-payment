@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.exception.custom;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
-import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 
 public class TransactionInvalidException extends ServiceException {
 
@@ -9,7 +9,7 @@ public class TransactionInvalidException extends ServiceException {
     this(code, message, null, false, null);
   }
 
-  public TransactionInvalidException(String code, String message, ServiceExceptionResponse response,boolean printStackTrace, Throwable ex) {
+  public TransactionInvalidException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
     super(code, message, response,printStackTrace, ex);
   }
 }

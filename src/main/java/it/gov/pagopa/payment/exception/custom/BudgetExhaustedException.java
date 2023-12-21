@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.exception.custom;
 
-import it.gov.pagopa.common.web.exception.ServiceExceptionResponse;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.common.web.exception.ServiceException;
 
@@ -14,7 +14,7 @@ public class BudgetExhaustedException extends ServiceException {
     this(code, message,null, false, null);
   }
 
-  public BudgetExhaustedException(String code, String message, ServiceExceptionResponse response, boolean printStackTrace, Throwable ex) {
+  public BudgetExhaustedException(String code, String message, ServiceExceptionPayload response, boolean printStackTrace, Throwable ex) {
     super(code, message, response, printStackTrace, ex);
   }
 }
