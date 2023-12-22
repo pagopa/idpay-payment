@@ -103,7 +103,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during decryption");
+            throw new PDVInvocationException("An error occurred during decryption",true,e);
         }
         return fiscalCode;
     }
@@ -114,7 +114,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
             userId = encryptedCfDTO.getToken();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during encryption");
+            throw new PDVInvocationException("An error occurred during encryption",true,e);
         }
         return userId;
     }
