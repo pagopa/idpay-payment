@@ -24,11 +24,11 @@ public class MerchantConnectorImpl implements MerchantConnector{
         } catch (FeignException e) {
             if (e.status() == 404) {
                 throw new MerchantOrAcquirerNotAllowedException(ExceptionCode.MERCHANT_NOT_ONBOARDED,
-                        String.format("The current merchant is not related with initiative [%s]", initiativeId));
+                        String.format("The current merchant is not related with initiative [%s]", initiativeId),null,true,e);
             }
 
             throw new MerchantInvocationException(
-                    "An error occurred in the microservice merchant", false, e);
+                    "An error occurred in the microservice merchant", true, e);
         }
         return merchantDetailDTO;
     }
