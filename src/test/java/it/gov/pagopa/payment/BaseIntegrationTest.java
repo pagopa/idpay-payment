@@ -11,6 +11,7 @@ import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -102,6 +103,7 @@ public abstract class BaseIntegrationTest {
     protected String topicCommands;
 
     @BeforeAll
+    @AfterAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TestIntegrationUtils.setDefaultTimeZoneAndUnregisterCommonMBean();
     }

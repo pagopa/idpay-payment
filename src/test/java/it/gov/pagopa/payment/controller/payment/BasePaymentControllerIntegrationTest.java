@@ -256,7 +256,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(trx.getInitiativeId(), stored.getInitiativeId());
         assertEquals(trx.getStatus(), stored.getStatus());
         assertEquals(trx.getReward(), stored.getReward());
-        assertNull(trx.getRejectionReasons());
+        assertEquals(Collections.emptyList(), trx.getRejectionReasons());
 
         assertEquals(expectedUserId, stored.getUserId());
     }

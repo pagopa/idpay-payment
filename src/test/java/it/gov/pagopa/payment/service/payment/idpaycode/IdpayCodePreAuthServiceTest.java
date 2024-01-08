@@ -39,6 +39,8 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
@@ -153,7 +155,7 @@ class IdpayCodePreAuthServiceTest {
                 .updateTrxIdentified(trx.getId(),
                         trx.getUserId(),
                         authPaymentDTO.getReward(),
-                        null,
+                        Collections.emptyList(),
                         authPaymentDTO.getRewards(),
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
