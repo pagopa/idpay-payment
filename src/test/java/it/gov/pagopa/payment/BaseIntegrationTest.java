@@ -11,7 +11,6 @@ import jakarta.annotation.PostConstruct;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionTimeoutException;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,10 +34,6 @@ import java.util.concurrent.TimeUnit;
 }, controlledShutdown = true)
 @TestPropertySource(
         properties = {
-                // even if enabled into application.yml, spring test will not load it
-                // https://docs.spring.io/spring-boot/docs/current/reference/html/features.html#features.testing.spring-boot-applications.jmx
-                "spring.jmx.enabled=true",
-
                 // region mongodb
                 "logging.level.org.mongodb.driver=WARN",
                 "logging.level.de.flapdoodle.embed.mongo.spring.autoconfigure=WARN",
@@ -103,7 +98,6 @@ public abstract class BaseIntegrationTest {
     protected String topicCommands;
 
     @BeforeAll
-    @AfterAll
     public static void unregisterPreviouslyKafkaServers() throws MalformedObjectNameException, MBeanRegistrationException, InstanceNotFoundException {
         TestIntegrationUtils.setDefaultTimeZoneAndUnregisterCommonMBean();
     }
