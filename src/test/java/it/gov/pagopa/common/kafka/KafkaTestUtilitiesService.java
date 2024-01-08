@@ -26,6 +26,7 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
+import org.springframework.kafka.test.EmbeddedKafkaKraftBroker;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -52,7 +53,7 @@ public class KafkaTestUtilitiesService {
 
     public static final String GROUPID_TEST_CHECK = "idpay-group-test-check";
     @Autowired
-    private EmbeddedKafkaBroker kafkaBroker;
+    private EmbeddedKafkaKraftBroker kafkaBroker;
     @Autowired
     private KafkaTemplate<byte[], byte[]> template;
 
@@ -60,8 +61,6 @@ public class KafkaTestUtilitiesService {
     private String applicationName;
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
-    @Value("${spring.cloud.stream.kafka.binder.zkNodes}")
-    private String zkNodes;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -106,7 +105,7 @@ public class KafkaTestUtilitiesService {
 
     /** It will return usefull URLs related to embedded kafka */
     public String getKafkaUrls() {
-        return "bootstrapServers: %s, zkNodes: %s".formatted(bootstrapServers, zkNodes);
+        return "bootstrapServers: %s".formatted(bootstrapServers);
     }
 
 //region consume messages
