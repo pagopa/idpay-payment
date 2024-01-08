@@ -170,7 +170,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(1)).updateTrxIdentified(anyString(), anyString(), anyLong(), eq(null), anyMap(),anyString());
+        verify(transactionInProgressRepositoryMock, times(1)).updateTrxIdentified(anyString(), anyString(), anyLong(), eq(Collections.emptyList()), anyMap(),anyString());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyString());
     }
 
