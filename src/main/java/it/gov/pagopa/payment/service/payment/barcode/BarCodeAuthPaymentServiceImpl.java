@@ -18,6 +18,8 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+
+import java.util.Collections;
 import java.util.List;
 
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
@@ -66,7 +68,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
-            authPaymentDTO.setRejectionReasons(null);
+            authPaymentDTO.setRejectionReasons(Collections.emptyList());
             Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), trx.getReward());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
