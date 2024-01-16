@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -54,7 +55,7 @@ public abstract class CommonAuthServiceImpl {
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
-            authPaymentDTO.setRejectionReasons(null);
+            authPaymentDTO.setRejectionReasons(Collections.emptyList());
             return authPaymentDTO;
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, userId);

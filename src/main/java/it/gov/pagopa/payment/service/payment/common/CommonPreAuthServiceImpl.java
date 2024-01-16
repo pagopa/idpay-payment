@@ -16,6 +16,7 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.OffsetDateTime;
+import java.util.Collections;
 
 @Slf4j
 public class CommonPreAuthServiceImpl{
@@ -67,7 +68,7 @@ public class CommonPreAuthServiceImpl{
       }
       throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
     } else {
-      preview.setRejectionReasons(null);
+      preview.setRejectionReasons(Collections.emptyList());
       preview.setStatus(SyncTrxStatus.IDENTIFIED);
       transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards(), channel);
     }
