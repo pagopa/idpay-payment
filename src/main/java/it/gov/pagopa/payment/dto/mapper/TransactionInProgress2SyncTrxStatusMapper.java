@@ -3,7 +3,9 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 
@@ -18,6 +20,9 @@ public class TransactionInProgress2SyncTrxStatusMapper {
 
 
     public SyncTrxStatusDTO transactionInProgressMapper(TransactionInProgress transaction){
+
+        Pair<Boolean, Long> splitAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
+
         SyncTrxStatusDTO response = SyncTrxStatusDTO.builder()
                 .id(transaction.getId())
                 .idTrxIssuer(transaction.getIdTrxIssuer())
@@ -34,6 +39,8 @@ public class TransactionInProgress2SyncTrxStatusMapper {
                 .rewardCents(transaction.getReward())
                 .rejectionReasons(transaction.getRejectionReasons())
                 .status(transaction.getStatus())
+                .splitPayment(splitAndResidualAmountCents.getKey())
+                .residualAmountCents(splitAndResidualAmountCents.getValue())
                 .build();
 
         if(evaluateTransactionStatusAndChannel(transaction)){

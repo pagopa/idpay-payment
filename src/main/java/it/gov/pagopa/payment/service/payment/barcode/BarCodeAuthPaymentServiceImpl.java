@@ -18,8 +18,13 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+
+import java.util.Collections;
 import java.util.List;
+
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -62,8 +67,11 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudget(CommonUtilities.calculateResidualBudget(trx.getRewards()));
-            authPaymentDTO.setRejectionReasons(null);
+            authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
+            authPaymentDTO.setRejectionReasons(Collections.emptyList());
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), trx.getReward());
+            authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
+            authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);

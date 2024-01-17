@@ -1,7 +1,8 @@
 package it.gov.pagopa.payment.exception.custom;
 
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.common.web.exception.ServiceException;
+import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 
 public class RewardCalculatorInvocationException extends ServiceException {
 
@@ -10,6 +11,9 @@ public class RewardCalculatorInvocationException extends ServiceException {
   }
 
   public RewardCalculatorInvocationException(String message, boolean printStackTrace, Throwable ex) {
-    super(ExceptionCode.GENERIC_ERROR, message, printStackTrace, ex);
+    this(ExceptionCode.GENERIC_ERROR, message, null, printStackTrace, ex);
+  }
+  public RewardCalculatorInvocationException(String code, String message, ServiceExceptionPayload payload, boolean printStackTrace, Throwable ex) {
+    super(code, message, payload, printStackTrace, ex);
   }
 }

@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
+import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
 import java.util.List;
@@ -22,7 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 @WebMvcTest(IdPayCodePaymentMilControllerImpl.class)
-@Import({JsonConfig.class, ValidationExceptionHandler.class})
+@Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class IdPayCodePaymentMilControllerTest {
 
   @MockBean

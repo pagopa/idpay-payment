@@ -1,9 +1,18 @@
 package it.gov.pagopa.common.web.exception;
 
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.IThrowableProxy;
+import ch.qos.logback.classic.spi.StackTraceElementProxy;
+import it.gov.pagopa.common.utils.MemoryAppender;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -18,13 +27,18 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.regex.Pattern;
+
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(value = {ErrorManagerTest.TestController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ContextConfiguration(classes = {ErrorManagerTest.TestController.class, ErrorManager.class})
 class ErrorManagerTest {
 
+  public static final String EXPECTED_DEFAULT_ERROR = "{\"code\":\"Error\",\"message\":\"Something gone wrong\"}";
   @Autowired
   private MockMvc mockMvc;
+
+  private static MemoryAppender memoryAppender;
 
   @SpyBean
   private TestController testControllerSpy;
@@ -39,14 +53,34 @@ class ErrorManagerTest {
     }
   }
 
+  @BeforeAll
+  static void configureMemoryAppender(){
+    memoryAppender = new MemoryAppender();
+    memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
+    memoryAppender.start();
+  }
+
+  @BeforeEach
+  void clearAndAppendMemoryAppender(){
+    memoryAppender.reset();
+
+    ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ErrorManager.class.getName());
+    logger.setLevel(ch.qos.logback.classic.Level.INFO);
+    logger.addAppender(memoryAppender);
+  }
+
   @Test
   void handleExceptionClientExceptionNoBody() throws Exception {
     Mockito.doThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "NOTFOUND ClientExceptionNoBody"))
         .when(testControllerSpy).testEndpoint();
 
-    mockMvc.perform(MockMvcRequestBuilders.get("/test")
+     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isBadRequest());
+            .andExpect(MockMvcResultMatchers.status().isBadRequest());
+
+    checkStackTraceSuppressedLog(memoryAppender,
+            "A ClientExceptionNoBody occurred handling request GET /test: HttpStatus 400 BAD_REQUEST - NOTFOUND ClientExceptionNoBody at it.gov.pagopa.common.web.exception.ErrorManagerTest\\$TestController.testEndpoint\\(ErrorManagerTest.java:[0-9]+\\)");
+
   }
 
   @Test
@@ -54,18 +88,23 @@ class ErrorManagerTest {
     Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody"))
         .when(testControllerSpy).testEndpoint();
 
+    String errorClientExceptionWithBody= "{\"code\":\"Error\",\"message\":\"Error ClientExceptionWithBody\"}";
+
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isBadRequest())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"Error\",\"message\":\"Error ClientExceptionWithBody\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(errorClientExceptionWithBody));
 
-    Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody", new Exception()))
+    Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody", new Throwable()))
         .when(testControllerSpy).testEndpoint();
 
+    String errorClientExceptionWithBodyWithStatusAndTitleAndMessageAndThrowable= "{\"code\":\"Error\",\"message\":\"Error ClientExceptionWithBody\"}";
+
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isBadRequest())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"Error\",\"message\":\"Error ClientExceptionWithBody\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(errorClientExceptionWithBodyWithStatusAndTitleAndMessageAndThrowable));
+
   }
 
   @Test
@@ -77,7 +116,10 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+
+    checkStackTraceSuppressedLog(memoryAppender, "A ClientException occurred handling request GET /test: HttpStatus null - null at UNKNOWN");
+    memoryAppender.reset();
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST, "ClientException with httpStatus and message"))
         .when(testControllerSpy).testEndpoint();
@@ -85,7 +127,11 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+
+    checkStackTraceSuppressedLog(memoryAppender, "A ClientException occurred handling request GET /test: HttpStatus 400 BAD_REQUEST - ClientException with httpStatus and message at it.gov.pagopa.common.web.exception.ErrorManagerTest\\$TestController.testEndpoint\\(ErrorManagerTest.java:[0-9]+\\)");
+    memoryAppender.reset();
+
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST, "ClientException with httpStatus, message and throwable", new Throwable()))
         .when(testControllerSpy).testEndpoint();
@@ -93,7 +139,13 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+
+    checkLog(memoryAppender,
+            "Something went wrong handling request GET /test: HttpStatus 400 BAD_REQUEST - ClientException with httpStatus, message and throwable",
+            "it.gov.pagopa.common.web.exception.ClientException: ClientException with httpStatus, message and throwable",
+            "it.gov.pagopa.common.web.exception.ErrorManagerTest$TestController.testEndpoint"
+    );
   }
 
   @Test
@@ -104,6 +156,30 @@ class ErrorManagerTest {
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json("{\"code\":\"PAYMENT_GENERIC_ERROR\",\"message\":\"Something gone wrong\"}"));
+        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+  }
+
+  public static void checkStackTraceSuppressedLog(MemoryAppender memoryAppender, String expectedLoggedMessage) {
+    String loggedMessage = memoryAppender.getLoggedEvents().get(0).getFormattedMessage();
+    Assertions.assertTrue(Pattern.matches(expectedLoggedMessage, loggedMessage),
+            "Unexpected logged message: " + loggedMessage);
+  }
+
+
+  public static void checkLog(MemoryAppender memoryAppender, String expectedLoggedMessageRegexp, String expectedLoggedExceptionMessage, String expectedLoggedExceptionOccurrencePosition) {
+    ILoggingEvent loggedEvent = memoryAppender.getLoggedEvents().get(0);
+    IThrowableProxy loggedException = loggedEvent.getThrowableProxy();
+    StackTraceElementProxy loggedExceptionOccurrenceStackTrace = loggedException.getStackTraceElementProxyArray()[0];
+
+    String loggedMessage = loggedEvent.getFormattedMessage();
+    Assertions.assertTrue(Pattern.matches(expectedLoggedMessageRegexp,
+                    loggedEvent.getFormattedMessage()),
+            "Unexpected logged message: " + loggedMessage);
+
+    Assertions.assertEquals(expectedLoggedExceptionMessage,
+            loggedException.getClassName() + ": " + loggedException.getMessage());
+
+    Assertions.assertEquals(expectedLoggedExceptionOccurrencePosition,
+            loggedExceptionOccurrenceStackTrace.getStackTraceElement().getClassName() + "." + loggedExceptionOccurrenceStackTrace.getStackTraceElement().getMethodName());
   }
 }

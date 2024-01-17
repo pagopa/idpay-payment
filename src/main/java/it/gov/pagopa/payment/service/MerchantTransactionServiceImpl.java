@@ -15,8 +15,10 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -76,8 +78,9 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
+    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
 
-        return new MerchantTransactionDTO(transaction.getTrxCode(),
+    return new MerchantTransactionDTO(transaction.getTrxCode(),
                 transaction.getCorrelationId(),
                 transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                 transaction.getAmountCents(),
@@ -86,6 +89,8 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),
                 transaction.getStatus(),
+                splitPaymentAndResidualAmountCents.getKey(),
+                splitPaymentAndResidualAmountCents.getValue(),
                 transaction.getChannel(),
                 trxCodeImgUrl,
                 trxCodeTxtUrl
@@ -98,7 +103,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during decryption");
+            throw new PDVInvocationException("An error occurred during decryption",true,e);
         }
         return fiscalCode;
     }
@@ -109,7 +114,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
             userId = encryptedCfDTO.getToken();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during encryption");
+            throw new PDVInvocationException("An error occurred during encryption",true,e);
         }
         return userId;
     }

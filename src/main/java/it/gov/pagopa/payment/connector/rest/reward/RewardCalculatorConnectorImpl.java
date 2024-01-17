@@ -68,15 +68,15 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                     try {
                         responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
                     } catch (JsonProcessingException ex) {
-                        throw new RewardCalculatorInvocationException("Something went wrong", false, ex);
+                        throw new RewardCalculatorInvocationException("Something went wrong", true, ex);
                     }
                 }
                 case 429 -> throw new TooManyRequestsException(
-                    "Too many request on the ms reward");
+                    "Too many request on the ms reward",true,e);
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
-                        "Resource not found on reward-calculator", false, e);
+                        "Resource not found on reward-calculator", true, e);
                 default -> throw new RewardCalculatorInvocationException(
-                        "An error occurred in the microservice reward-calculator", false, e);
+                        "An error occurred in the microservice reward-calculator", true, e);
             }
         }
         return requestMapper.rewardResponseMap(responseDTO, trx);

@@ -26,11 +26,11 @@ public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnecto
             return restClient.getSecondFactor(userId);
         } catch (FeignException e){
             if (e.status() == 404) {
-                throw new IdpaycodeNotFoundException("There is not a IDPay Code for the current user");
+                throw new IdpaycodeNotFoundException("There is not a IDPay Code for the current user",true,e);
             }
 
             throw new PaymentInstrumentInvocationException(
-                    "An error occurred in the microservice payment-instrument.", false, e);
+                    "An error occurred in the microservice payment-instrument.", true, e);
         }
     }
 
@@ -44,7 +44,7 @@ public class PaymentInstrumentConnectorImpl implements PaymentInstrumentConnecto
             }
         }catch (FeignException e){
             throw new PaymentInstrumentInvocationException(
-                    "An error occurred in the microservice payment-instrument", false, e);
+                    "An error occurred in the microservice payment-instrument", true, e);
         }
         log.info("[VERIFY_PIN_BLOCK] The PinBlock has been verified, for the user with userId {}",userId);
         return verifyPinBlockDTO;
