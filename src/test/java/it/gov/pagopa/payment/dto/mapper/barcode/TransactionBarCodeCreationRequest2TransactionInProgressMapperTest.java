@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
-class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
+class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest { //TODO cancel mapper
     private TransactionBarCodeCreationRequest2TransactionInProgressMapper mapper;
 
     @BeforeEach
@@ -36,7 +36,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
         TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
                 "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmount", "amountCurrency",
                 "mcc", "acquirerId", "merchantId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
-                "reward", "rejectionReasons", "rewards");
+                "reward", "rejectionReasons", "rewards", "initiatives", "initiativeRejectionReasons"); //TODO TBV initiatives deve essere popolato alla creazione
         assertResponse(trxCreationReq, now, result);
     }
     void assertResponse(TransactionBarCodeCreationRequest trxCreationReq, OffsetDateTime now, TransactionInProgress result){

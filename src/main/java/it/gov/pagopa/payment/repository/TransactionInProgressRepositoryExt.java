@@ -15,10 +15,10 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes);
   TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId, long authorizationExpirationMinutes);
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
-  void updateTrxRejected(String id, String userId, List<String> rejectionReasons, String channel);
+  void updateTrxRejected(String id, String userId, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason, String channel);
   void updateTrxRelateUserIdentified(String id, String userId, String channel);
-  void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards, String channel);
-  void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons);
+  void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, Map<String, Reward> rewards, String channel);
+  void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons);
   void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons);
   Criteria getCriteria(String merchantId, String initiativeId, String userId, String status);
   List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable);

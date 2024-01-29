@@ -61,7 +61,11 @@ public class CommonPreAuthServiceImpl{
 
     if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
       transactionInProgressRepository.updateTrxRejected(
-              trx.getId(), trx.getUserId(), preview.getRejectionReasons(), channel);
+              trx.getId(),
+              trx.getUserId(),
+              preview.getRejectionReasons(),
+              CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
+              channel);
       log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
       if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
         throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(trx.getInitiativeId()));
@@ -70,7 +74,13 @@ public class CommonPreAuthServiceImpl{
     } else {
       preview.setRejectionReasons(Collections.emptyList());
       preview.setStatus(SyncTrxStatus.IDENTIFIED);
-      transactionInProgressRepository.updateTrxIdentified(trx.getId(), trx.getUserId(), preview.getReward(), preview.getRejectionReasons(), preview.getRewards(), channel);
+      transactionInProgressRepository.updateTrxIdentified(trx.getId(),
+              trx.getUserId(),
+              preview.getReward(),
+              preview.getRejectionReasons(),
+              CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
+              preview.getRewards(),
+              channel);
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?

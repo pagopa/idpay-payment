@@ -68,4 +68,8 @@ public class TransactionInProgress {
   private Map<String, Reward> rewards = new HashMap<>();
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private LocalDateTime updateDate;
+
+  private List<String> initiatives;
+  @Builder.Default
+  private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>(); //TODO ???
 }

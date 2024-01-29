@@ -57,6 +57,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
                         .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
                         .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
+                        .setOnInsert(Fields.initiatives, trx.getInitiatives())
                         .setOnInsert(Fields.mcc, trx.getMcc())
                         .setOnInsert(Fields.vat, trx.getVat())
                         .setOnInsert(Fields.trxDate, trx.getTrxDate())
@@ -130,7 +131,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons, String channel) {
+    public void updateTrxRejected(String id, String userId, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -139,6 +140,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.reward, 0L)
                         .set(Fields.rewards, Collections.emptyMap())
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                         .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
@@ -156,7 +158,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 TransactionInProgress.class);
     }
     @Override
-    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, Reward> rewards, String channel) {
+    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, Map<String, Reward> rewards, String channel) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
@@ -164,6 +166,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.userId, userId)
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
+                        .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                         .set(Fields.rewards, rewards)
                         .set(Fields.channel, channel)
                         .currentDate(Fields.updateDate),
@@ -171,11 +174,12 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons) {
+    public void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons) {
         Update update = new Update()
                 .set(Fields.status, SyncTrxStatus.AUTHORIZED)
                 .set(Fields.reward, reward)
                 .set(Fields.rejectionReasons, rejectionReasons)
+                .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                 .set(Fields.rewards, trx.getRewards())
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                 .currentDate(Fields.updateDate);
@@ -205,6 +209,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.reward, 0L)
                 .set(Fields.rewards, Collections.emptyMap())
                 .set(Fields.rejectionReasons, rejectionReasons)
+                .set(Fields.initiativeRejectionReasons, trx.getInitiativeRejectionReasons())
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                 .currentDate(Fields.updateDate);
 

@@ -4,8 +4,6 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
-import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
-import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
@@ -69,11 +67,11 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     public static final String IDTRXISSUER = "IDTRXISSUER";
     public static final LocalDate TODAY = LocalDate.now();
 
-    private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
-    private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationRejectedEvents = Collections.synchronizedSet(new HashSet<>());
-    private final Set<TransactionOutcomeDTO> expectedConfirmNotificationEvents = Collections.synchronizedSet(new HashSet<>());
-    private final Set<TransactionOutcomeDTO> expectedCancelledNotificationEvents = Collections.synchronizedSet(new HashSet<>());
-    private final Set<TransactionOutcomeDTO> expectedErrors = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedAuthorizationNotificationRejectedEvents = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedConfirmNotificationEvents = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedCancelledNotificationEvents = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedErrors = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
@@ -84,8 +82,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
     private TransactionInProgress2TransactionResponseMapper transactionResponseMapper;
     @Autowired
     private TransactionInProgress2SyncTrxStatusMapper transactionInProgress2SyncTrxStatusMapper;
-    @Autowired
-    private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
     @Autowired
     private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
@@ -348,7 +344,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
 
         //setpayload authResultRejected
-        addExpectedAuthorizationEventRejected(trxCreated);
+//        addExpectedAuthorizationEventRejected(trxCreated); TODO no eventi di autorizzazione
     }
 
     @Test
@@ -436,9 +432,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         // Authorizing transaction resubmission after throttling time
         waitThrottlingTime();
 
-        //setpayload authResult
-        addExpectedAuthorizationEvent(trxCreated);
-
         updateStoredTransaction(authResult.getId(), t -> t.setCorrelationId("ALREADY_AUTHORED"));
         extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
 
@@ -463,29 +456,29 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.NOT_FOUND, null);
     }
 
-    @Test
-    @SneakyThrows
-    void test_anErrorOccurredWhenPublishingAuthorizedEvent_ReturnedFalse() {
-        Mockito.doReturn(false).when(transactionNotifierServiceSpy)
-                .notify(Mockito.argThat(arg ->
-                                (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE) &&
-                                        SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
-                        ),
-                        Mockito.any());
-        configureAuthEventNotPublishedDueToError(bias, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE);
-    }
+//    @Test TODO remove
+//    @SneakyThrows
+//    void test_anErrorOccurredWhenPublishingAuthorizedEvent_ReturnedFalse() {
+//        Mockito.doReturn(false).when(transactionNotifierServiceSpy)
+//                .notify(Mockito.argThat(arg ->
+//                                (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE) &&
+//                                        SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
+//                        ),
+//                        Mockito.any());
+//        configureAuthEventNotPublishedDueToError(bias, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOFALSE);
+//    }
 
-    @Test
-    @SneakyThrows
-    void test_AnErrorOccurredWhenPublishingAuthorizedEvent_ThrowingError() {
-        Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(transactionNotifierServiceSpy)
-                .notify(Mockito.argThat(arg ->
-                                (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION) &&
-                                        SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
-                        ),
-                        Mockito.any());
-        configureAuthEventNotPublishedDueToError(bias, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION);
-    }
+//    @Test TODO remove
+//    @SneakyThrows
+//    void test_AnErrorOccurredWhenPublishingAuthorizedEvent_ThrowingError() {
+//        Mockito.doThrow(new RuntimeException("DUMMYEXCEPTION")).when(transactionNotifierServiceSpy)
+//                .notify(Mockito.argThat(arg ->
+//                                (arg.getIdTrxAcquirer().startsWith(IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION) &&
+//                                        SyncTrxStatus.AUTHORIZED.equals(arg.getStatus()))
+//                        ),
+//                        Mockito.any());
+//        configureAuthEventNotPublishedDueToError(bias, IDTRXACQUIRERPREFIX_AUTHNOTNOTIFIEDDUETOEXCEPTION);
+//    }
 
     @Test
     @SneakyThrows
@@ -588,7 +581,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
         assertAuthData(authResult, true);
 
-        addExpectedAuthorizationEvent(trxCreated);
+//        addExpectedAuthorizationEvent(trxCreated); //TODO no authorization messages
 
         addExpectedCancelledEvent(trxCreated);
         extractResponse(cancelTrx(trxCreated, MERCHANTID, ACQUIRERID), HttpStatus.OK, null);
@@ -682,7 +675,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         trxCreated.setId(stored.getId());
     }
 
-    private Pair<TransactionInProgress, TransactionOutcomeDTO> configureAuthEventNotPublishedDueToError(Integer i, String idTrxAcquirerPrefix) throws Exception {
+    private Pair<TransactionInProgress, TransactionInProgress> configureAuthEventNotPublishedDueToError(Integer i, String idTrxAcquirerPrefix) throws Exception {
         TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(i);
         trxRequest.setInitiativeId(INITIATIVEID);
         trxRequest.setIdTrxAcquirer("%s_%s".formatted(idTrxAcquirerPrefix, trxRequest.getIdTrxAcquirer()));
@@ -695,20 +688,23 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
 
         TransactionInProgress authStored = checkIfStored(trxCreated.getId());
-        TransactionOutcomeDTO expectedNotification = transactionInProgress2TransactionOutcomeDTOMapper.apply(authStored);
+        TransactionInProgress expectedNotification = authStored.toBuilder()
+                .elaborationDateTime(authStored.getTrxChargeDate().toLocalDateTime()) //TODO TB CHECK
+                .build();
         expectedErrors.add(expectedNotification);
 
         expectedNotification.setElaborationDateTime(TestUtils.truncateTimestamp(expectedNotification.getElaborationDateTime()));
+        expectedNotification.setUpdateDate(TestUtils.truncateTimestamp(expectedNotification.getUpdateDate())); //TODO ??
 
         return Pair.of(authStored, expectedNotification);
     }
 
     private void configureConfirmEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
-        Pair<TransactionInProgress, TransactionOutcomeDTO> trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
+        Pair<TransactionInProgress, TransactionInProgress> trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
 
         TransactionResponse trxResponse = transactionResponseMapper.apply(trx.getKey());
 
-        addExpectedAuthorizationEvent(trxResponse);
+//        addExpectedAuthorizationEvent(trxResponse); //TODO auth non invia su coda
 
         AuthPaymentDTO confirmResult = extractResponse(confirmPayment(trxResponse, MERCHANTID, ACQUIRERID), HttpStatus.OK, AuthPaymentDTO.class);
         assertEquals(SyncTrxStatus.REWARDED, confirmResult.getStatus());
@@ -716,13 +712,13 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         // updating status on errorNotificationStored expected
         trx.getValue().setStatus(SyncTrxStatus.REWARDED);
         trx.getValue().setElaborationDateTime(TestUtils.truncateTimestamp(LocalDateTime.now()));
+        trx.getValue().setUpdateDate(TestUtils.truncateTimestamp(LocalDateTime.now())); //TODO basta?
     }
 
     private void configureCancelledEventNotPublishedDueToError(Integer i, String idTrxIssuerPrefix) throws Exception {
-        Pair<TransactionInProgress, TransactionOutcomeDTO> trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
+        Pair<TransactionInProgress, TransactionInProgress> trx = configureAuthEventNotPublishedDueToError(i, idTrxIssuerPrefix);
 
         TransactionResponse trxResponse = transactionResponseMapper.apply(trx.getKey());
-        addExpectedAuthorizationEvent(trxResponse);
 
         changeTrxId2MatchCancelMatchedCondition(trxResponse);
 
@@ -732,6 +728,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         trx.getValue().setId(trxResponse.getId());
         trx.getValue().setCorrelationId(trxResponse.getId());
         trx.getValue().setStatus(SyncTrxStatus.CANCELLED);
+        trx.getValue().setReward(-trx.getValue().getReward());
         trx.getValue().setElaborationDateTime(TestUtils.truncateTimestamp(LocalDateTime.now()));
         trx.getValue().getRewards().values().forEach(r -> {
             r.setAccruedReward(r.getAccruedReward().negate());
@@ -739,22 +736,23 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         });
     }
 
-    private void addExpectedAuthorizationEvent(TransactionResponse trx) {
-        TransactionInProgress trxAuth = checkIfStored(trx.getId());
-        Assertions.assertNotEquals(Collections.emptyMap(), trxAuth.getRewards());
-        expectedAuthorizationNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxAuth));
-    }
+//    private void addExpectedAuthorizationEvent(TransactionResponse trx) {
+//        TransactionInProgress trxAuth = checkIfStored(trx.getId());
+//        Assertions.assertNotEquals(Collections.emptyMap(), trxAuth.getRewards());
+//        expectedAuthorizationNotificationEvents.add(trxAuth);
+//    }
 
-    private void addExpectedAuthorizationEventRejected(TransactionResponse trx) {
-        TransactionInProgress trxRejected = checkIfStored(trx.getId());
-        expectedAuthorizationNotificationRejectedEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxRejected));
-    }
+//    private void addExpectedAuthorizationEventRejected(TransactionResponse trx) {
+//        TransactionInProgress trxRejected = checkIfStored(trx.getId());
+//        expectedAuthorizationNotificationRejectedEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxRejected));
+//    }
 
     private void addExpectedConfirmEvent(TransactionResponse trx) {
         TransactionInProgress transactionConfirmed = checkIfStored(trx.getId());
         transactionConfirmed.setStatus(SyncTrxStatus.REWARDED);
         Assertions.assertNotEquals(Collections.emptyMap(), transactionConfirmed.getRewards());
-        expectedConfirmNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(transactionConfirmed));
+//        expectedConfirmNotificationEvents.add(trxInProgressToQueue(transactionConfirmed));
+        expectedConfirmNotificationEvents.add(transactionConfirmed);
     }
 
     private void addExpectedCancelledEvent(TransactionResponse trx) {
@@ -767,7 +765,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             r.setProvidedReward(r.getProvidedReward().negate());
         });
         trxCancelled.setElaborationDateTime(LocalDateTime.now());
-        expectedCancelledNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxCancelled));
+        expectedCancelledNotificationEvents.add(trxCancelled);
+//        expectedCancelledNotificationEvents.add(trxInProgressToQueue(trxCancelled));
     }
 
     protected void waitThrottlingTime() {
@@ -792,9 +791,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, numExpectedNotification, 15000);
 
-        Map<SyncTrxStatus, Set<TransactionOutcomeDTO>> eventsResult = consumerRecords.stream()
+        Map<SyncTrxStatus, Set<TransactionInProgress>> eventsResult = consumerRecords.stream()
                 .map(r -> {
-                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    TransactionInProgress out = TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
                     if (out.getStatus().equals(SyncTrxStatus.REWARDED)) {
                         assertEquals(out.getMerchantId(), r.key());
                     } else {
@@ -803,37 +802,46 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
                     return out;
                 })
-                .collect(Collectors.groupingBy(TransactionOutcomeDTO::getStatus, Collectors.toSet()));
+                .collect(Collectors.groupingBy(TransactionInProgress::getStatus, Collectors.toSet()));
 
         checkAuthorizationNotificationEvents(eventsResult.get(SyncTrxStatus.AUTHORIZED));
         checkConfirmNotificationEvents(eventsResult.get(SyncTrxStatus.REWARDED));
         checkCancelledNotificationEvents(eventsResult.get(SyncTrxStatus.CANCELLED));
     }
 
-    private void checkAuthorizationNotificationEvents(Set<TransactionOutcomeDTO> authorizationNotificationDTOS) {
+    private void checkAuthorizationNotificationEvents(Set<TransactionInProgress> authorizationNotificationDTOS) {
         assertNotifications(expectedAuthorizationNotificationEvents, authorizationNotificationDTOS);
     }
 
-    private void checkAuthorizationNotificationRejectedEvents(Set<TransactionOutcomeDTO> authorizationNotificationDTOS) {
+    private void checkAuthorizationNotificationRejectedEvents(Set<TransactionInProgress> authorizationNotificationDTOS) {
         assertNotifications(expectedAuthorizationNotificationRejectedEvents, authorizationNotificationDTOS);
     }
 
-    private void checkConfirmNotificationEvents(Set<TransactionOutcomeDTO> confirmNotificationDTOS) {
+    private void checkConfirmNotificationEvents(Set<TransactionInProgress> confirmNotificationDTOS) {
         assertNotifications(expectedConfirmNotificationEvents, confirmNotificationDTOS);
     }
 
-    private void checkCancelledNotificationEvents(Set<TransactionOutcomeDTO> cancelledNotificationDTOS) {
+    private void checkCancelledNotificationEvents(Set<TransactionInProgress> cancelledNotificationDTOS) {
         assertNotifications(expectedCancelledNotificationEvents, cancelledNotificationDTOS);
     }
 
-    private void assertNotifications(Set<TransactionOutcomeDTO> expectedNotificationEvents, Set<TransactionOutcomeDTO> notificationDTOS) {
+    private void assertNotifications(Set<TransactionInProgress> expectedNotificationEvents, Set<TransactionInProgress> notificationDTOS) {
         if(CollectionUtils.isEmpty(expectedNotificationEvents) && CollectionUtils.isEmpty(notificationDTOS)){
             return;
         }
 
-        expectedNotificationEvents.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
-        notificationDTOS.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
+        expectedNotificationEvents.stream().filter(n -> n.getElaborationDateTime() != null)
+                .forEach(e -> {
+                    e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime()));
+                    e.setUpdateDate(TestUtils.truncateTimestamp(e.getElaborationDateTime()));
+                });
+        notificationDTOS.stream().filter(n -> n.getElaborationDateTime() != null)
+                .forEach(e -> {
+                    e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime()));
+                    e.setUpdateDate(TestUtils.truncateTimestamp(e.getElaborationDateTime()));
+                });
         assertEquals(expectedNotificationEvents.size(), notificationDTOS.size());
+
         assertEquals(
                 sortEvents(expectedNotificationEvents),
                 sortEvents(notificationDTOS)
@@ -846,9 +854,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicErrors, expectedNotificationEvents, 15000);
         assertEquals(expectedNotificationEvents, consumerRecords.size());
 
-        Set<TransactionOutcomeDTO> eventsResult = consumerRecords.stream()
+        Set<TransactionInProgress> eventsResult = consumerRecords.stream()
                 .map(r -> {
-                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    TransactionInProgress out = TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
                     String expectedKey;
                     String expectedErrorDescription;
 
@@ -867,6 +875,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
                     if (out.getElaborationDateTime() != null) {
                         out.setElaborationDateTime(TestUtils.truncateTimestamp(out.getElaborationDateTime()));
+                    }
+                    if (out.getUpdateDate() != null) {
+                        out.setUpdateDate(TestUtils.truncateTimestamp(out.getUpdateDate()));
                     }
 
                     return out;
@@ -918,16 +929,17 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         if (expectedConfirmForced != null) {
             expectedConfirmNotificationEvents.addAll(expectedConfirmForced.stream()
-                    .map(transactionInProgress2TransactionOutcomeDTOMapper)
-                    .peek(t -> t.setStatus(SyncTrxStatus.REWARDED))
+                    .peek(t -> {
+                        t.setElaborationDateTime((t.getStatus().equals(SyncTrxStatus.AUTHORIZED)) ? t.getTrxChargeDate().toLocalDateTime() : t.getElaborationDateTime());
+                        t.setStatus(SyncTrxStatus.REWARDED);})
                     .toList());
             checkNotificationEventsOnTransactionQueue();
         }
     }
 
-    private List<TransactionOutcomeDTO> sortEvents(Set<TransactionOutcomeDTO> list) {
+    private List<TransactionInProgress> sortEvents(Set<TransactionInProgress> list) {
         return list.stream()
-                .sorted(Comparator.comparing(TransactionOutcomeDTO::getId))
+                .sorted(Comparator.comparing(TransactionInProgress::getId))
                 .toList();
     }
 
@@ -1088,5 +1100,11 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
             default -> throw new IllegalStateException("Unexpected stored status:" + trxStored.getStatus());
         }
     }
+
+//    private TransactionInProgress trxInProgressToQueue(TransactionInProgress trx) {
+//        return trx.toBuilder()
+//                .elaborationDateTime((trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) ? trx.getTrxChargeDate().toLocalDateTime() : trx.getElaborationDateTime())
+//                .build();
+//    }
 
 }

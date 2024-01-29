@@ -4,7 +4,10 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.util.CollectionUtils;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class CommonPaymentUtilities {
@@ -29,5 +32,12 @@ public class CommonPaymentUtilities {
             }
         }
         return PAIR_NULL;
+    }
+
+    public static Map<String, List<String>> getInitiativeRejectionReason(String initiativeId, List<String> rejectionReasons){
+        if(!CollectionUtils.isEmpty(rejectionReasons)){
+            return Map.of(initiativeId, rejectionReasons);
+        }
+        return Collections.emptyMap();
     }
 }

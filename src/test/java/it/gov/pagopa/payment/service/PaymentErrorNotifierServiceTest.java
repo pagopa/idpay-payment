@@ -1,8 +1,6 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
-import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
-import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -29,7 +27,6 @@ class PaymentErrorNotifierServiceTest {
     public static final String NOTIFICATIONBUILDER = "notificationbuilder";
     public static final String TOPIC = "topic";
     public static final String ERROR_MESSAGE = "test";
-    private final TransactionInProgress2TransactionOutcomeDTOMapper mapper = new TransactionInProgress2TransactionOutcomeDTOMapper();
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
 
@@ -80,8 +77,9 @@ class PaymentErrorNotifierServiceTest {
         verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
     }
 
-    private Message<TransactionOutcomeDTO> buildMessage(TransactionInProgress trx, String key) {
-        return MessageBuilder.withPayload(mapper.apply(trx))
+    private Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
+        //TODO set status?
+        return MessageBuilder.withPayload(trx)
             .setHeader(KafkaHeaders.KEY, key)
             .build();
     }

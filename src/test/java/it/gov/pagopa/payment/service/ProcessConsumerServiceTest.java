@@ -57,6 +57,7 @@ class ProcessConsumerServiceTest {
         TransactionInProgress trxInProgress = TransactionInProgress.builder()
                 .id(TRX_ID)
                 .initiativeId(INITIATIVE_ID)
+                .initiatives(List.of(INITIATIVE_ID))
                 .build();
         final List<TransactionInProgress> deletedPage = List.of(trxInProgress);
 
@@ -95,6 +96,7 @@ class ProcessConsumerServiceTest {
             trxPage.add(TransactionInProgress.builder()
                     .id(TRX_ID)
                     .initiativeId(INITIATIVE_ID)
+                    .initiatives(List.of(INITIATIVE_ID))
                     .build());
         }
 

@@ -8,8 +8,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
-import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
-import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
@@ -27,12 +25,7 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Assertions;
@@ -50,8 +43,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     private TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     private TransactionBarCodeInProgress2TransactionResponseMapper transactionResponseMapper;
-    @Autowired
-    private TransactionInProgress2TransactionOutcomeDTOMapper transactionInProgress2TransactionOutcomeDTOMapper;
 
     private static final String USERID = "USERID";
     private static final String USERID_UNSUBSCRIBED = "USERID_UNSUBSCRIBED";
@@ -67,7 +58,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
             .amountCents(10000L)
             .idTrxAcquirer("ID_TRX_ACQUIRER")
             .build();
-    private final Set<TransactionOutcomeDTO> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
+    private final Set<TransactionInProgress> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
 
     protected MvcResult createTrx(TransactionBarCodeCreationRequest trxRequest, String userId) throws Exception {
         return mockMvc
@@ -221,9 +212,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         AuthPaymentDTO authPayment = assertResponse(authTrx(trxCreated.getTrxCode(), AUTH_BAR_CODE_PAYMENT_DTO, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
         assertEquals(SyncTrxStatus.AUTHORIZED, authPayment.getStatus());
         assertAuthData(authPayment);
-
-        addExpectedAuthorizationEvent(authPayment);
-        checkNotificationEventsOnTransactionQueue();
     }
 
     private <T> T assertResponse(MvcResult response, HttpStatus expectedHttpStatusCode, Class<T> expectedBodyClass) {
@@ -313,7 +301,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         trxAuth.setEffectiveAmount(CommonUtilities.centsToEuro(authPaymentDTO.getAmountCents()));
         trxAuth.setBusinessName("BUSINESSNAME");
         Assertions.assertNotEquals(Collections.emptyMap(), trxAuth.getRewards());
-        expectedAuthorizationNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxAuth));
+//        expectedAuthorizationNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxAuth)); //TODO non più notifica
     }
 
     private void checkNotificationEventsOnTransactionQueue() {
@@ -321,22 +309,22 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
                 expectedAuthorizationNotificationEvents.size();
         List<ConsumerRecord<String, String>> consumerRecords = kafkaTestUtilitiesService.consumeMessages(topicConfirmNotification, numExpectedNotification, 15000);
 
-        Map<SyncTrxStatus, Set<TransactionOutcomeDTO>> eventsResult = consumerRecords.stream()
+        Map<SyncTrxStatus, Set<TransactionInProgress>> eventsResult = consumerRecords.stream()
                 .map(r -> {
-                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    TransactionInProgress out = TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
                     System.out.printf("OUTCOME DTO: " + out);
                     return out;
                 })
-                .collect(Collectors.groupingBy(TransactionOutcomeDTO::getStatus, Collectors.toSet()));
+                .collect(Collectors.groupingBy(TransactionInProgress::getStatus, Collectors.toSet()));
 
         checkAuthorizationNotificationEvents(eventsResult.get(SyncTrxStatus.AUTHORIZED));
     }
 
-    private void checkAuthorizationNotificationEvents(Set<TransactionOutcomeDTO> authorizationNotificationDTOS) {
+    private void checkAuthorizationNotificationEvents(Set<TransactionInProgress> authorizationNotificationDTOS) {
         assertNotifications(expectedAuthorizationNotificationEvents, authorizationNotificationDTOS);
     }
 
-    private void assertNotifications(Set<TransactionOutcomeDTO> expectedNotificationEvents, Set<TransactionOutcomeDTO> notificationDTOS) {
+    private void assertNotifications(Set<TransactionInProgress> expectedNotificationEvents, Set<TransactionInProgress> notificationDTOS) {
         expectedNotificationEvents.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
         notificationDTOS.stream().filter(n -> n.getElaborationDateTime() != null).forEach(e -> e.setElaborationDateTime(TestUtils.truncateTimestamp(e.getElaborationDateTime())));
         assertEquals(expectedNotificationEvents.size(), notificationDTOS.size());
@@ -346,9 +334,9 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         );
     }
 
-    private List<TransactionOutcomeDTO> sortEvents(Set<TransactionOutcomeDTO> list) {
+    private List<TransactionInProgress> sortEvents(Set<TransactionInProgress> list) {
         return list.stream()
-                .sorted(Comparator.comparing(TransactionOutcomeDTO::getId))
+                .sorted(Comparator.comparing(TransactionInProgress::getId))
                 .toList();
     }
 

@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -10,7 +9,6 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -20,27 +18,23 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 public abstract class CommonAuthServiceImpl {
 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
-    private final TransactionNotifierService notifierService;
-    private final PaymentErrorNotifierService paymentErrorNotifierService;
     protected final AuditUtilities auditUtilities;
     private final WalletConnector walletConnector;
 
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
-            TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
             AuditUtilities auditUtilities,
             WalletConnector walletConnector) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
-        this.notifierService = notifierService;
-        this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
         this.walletConnector = walletConnector;
     }
@@ -73,11 +67,17 @@ public abstract class CommonAuthServiceImpl {
             trx.setRewards(authPaymentDTO.getRewards());
             trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
 
+            Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities
+                    .getInitiativeRejectionReason(authPaymentDTO.getInitiativeId(), authPaymentDTO.getRejectionReasons());
+            trx.setInitiativeRejectionReasons(initiativeRejectionReasons);
+
             if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
                 log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
                 authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
                 transactionInProgressRepository.updateTrxAuthorized(trx,
-                        authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+                        authPaymentDTO.getReward(),
+                        authPaymentDTO.getRejectionReasons(),
+                        initiativeRejectionReasons);
             } else {
                 transactionInProgressRepository.updateTrxRejected(trx, authPaymentDTO.getRejectionReasons());
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
@@ -89,8 +89,6 @@ public abstract class CommonAuthServiceImpl {
 
             trx.setStatus(authPaymentDTO.getStatus());
 
-            sendAuthPaymentNotification(trx);
-
         } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
             throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
         } else {
@@ -98,24 +96,6 @@ public abstract class CommonAuthServiceImpl {
                     "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(),trx.getStatus()));
         }
         return authPaymentDTO;
-    }
-
-    private void sendAuthPaymentNotification(TransactionInProgress trx) {
-        try {
-            log.info("[AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] Sending Authorization Payment event to Notification: trxId {} - userId {}", trx.getId(), trx.getUserId());
-            if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while Auth Payment notify");
-            }
-        } catch (Exception e) {
-            if(!paymentErrorNotifierService.notifyAuthPayment(
-                    notifierService.buildMessage(trx, trx.getUserId()),
-                    "[AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result: trxId %s - userId %s".formatted(trx.getId(), trx.getUserId()),
-                    true,
-                    e)
-            ) {
-                log.error("[AUTHORIZE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - userId {}", trx.getId(), trx.getUserId(), e);
-            }
-        }
     }
 
     protected void checkWalletStatus(String initiativeId, String userId){
