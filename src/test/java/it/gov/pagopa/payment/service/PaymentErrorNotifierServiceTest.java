@@ -78,7 +78,6 @@ class PaymentErrorNotifierServiceTest {
     }
 
     private Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
-        //TODO set status?
         return MessageBuilder.withPayload(trx)
             .setHeader(KafkaHeaders.KEY, key)
             .build();

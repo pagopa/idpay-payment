@@ -101,7 +101,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
-        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons())); //TODO ???
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setReward(transaction.getAmountCents());
 
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);

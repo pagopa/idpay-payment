@@ -203,13 +203,13 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons) {
+    public void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason) {
         Update update = new Update()
                 .set(Fields.status, SyncTrxStatus.REJECTED)
                 .set(Fields.reward, 0L)
                 .set(Fields.rewards, Collections.emptyMap())
                 .set(Fields.rejectionReasons, rejectionReasons)
-                .set(Fields.initiativeRejectionReasons, trx.getInitiativeRejectionReasons())
+                .set(Fields.initiativeRejectionReasons, initiativeRejectionReason)
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                 .currentDate(Fields.updateDate);
 

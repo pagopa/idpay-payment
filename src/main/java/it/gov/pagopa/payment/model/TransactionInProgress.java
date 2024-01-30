@@ -71,5 +71,5 @@ public class TransactionInProgress {
 
   private List<String> initiatives;
   @Builder.Default
-  private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>(); //TODO ???
+  private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
 }

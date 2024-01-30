@@ -100,7 +100,6 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiatives", //TODO create if exist non dovrebbe aggiungere anche questo dato
                 "initiativeRejectionReasons");
     }
 
@@ -319,7 +318,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(
-                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate","initiativeRejectionReasons"); //TODO l'update di una contenente una rejection reason, non dovrebbe avere anche il campo initiativeRejectionReasons
+                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -350,7 +349,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
-        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "initiativeRejectionReasons"); //TODO questo campo non dovrebbe essere aggiornato insieme alla rejectionReason
+        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate");
         Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -582,13 +581,13 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "acquirerId", "amountCents", "effectiveAmount", "amountCurrency", "merchantFiscalCode", "merchantId",
                 "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName", "initiativeRejectionReasons");
 
-        transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"));
+        transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"), Map.of(transactionInProgress.getInitiativeId(), List.of("REJECTIONREASON1")));
 
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(resultSecondSave,
-                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc", "initiativeRejectionReasons"); //TODO l'update che aggiorna la rejection reason non dovrebbe aggiornare anche questo dato initiativeRejectionReasons
+                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc");
         Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }

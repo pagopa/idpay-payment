@@ -157,7 +157,7 @@ class IdpayCodePreAuthServiceTest {
                         trx.getUserId(),
                         authPaymentDTO.getReward(),
                         Collections.emptyList(),
-                        Collections.emptyMap(), //TODO verify
+                        Collections.emptyMap(),
                         authPaymentDTO.getRewards(),
                         RewardConstants.TRX_CHANNEL_IDPAYCODE);
 

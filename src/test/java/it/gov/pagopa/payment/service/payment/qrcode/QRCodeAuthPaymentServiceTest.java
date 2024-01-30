@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -122,14 +123,17 @@ class QRCodeAuthPaymentServiceTest {
     when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
+    Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
+
     Mockito.doAnswer(
             invocationOnMock -> {
               transaction.setStatus(authPaymentDTO.getStatus());
               transaction.setRejectionReasons(authPaymentDTO.getRejectionReasons());
+              transaction.setInitiativeRejectionReasons(initiativeRejectionReasons);
               return transaction;
             })
         .when(repositoryMock)
-        .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons());
+        .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons);
 
     TransactionRejectedException result =
             assertThrows(TransactionRejectedException.class, () -> service.authPayment("USERID1", "trxcode1"));
@@ -158,14 +162,17 @@ class QRCodeAuthPaymentServiceTest {
 
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
+    Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
+
     Mockito.doAnswer(
                     invocationOnMock -> {
                       transaction.setStatus(authPaymentDTO.getStatus());
                       transaction.setRejectionReasons(authPaymentDTO.getRejectionReasons());
+                      transaction.setInitiativeRejectionReasons(initiativeRejectionReasons);
                       return transaction;
                     })
             .when(repositoryMock)
-            .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons());
+            .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(),initiativeRejectionReasons);
 
     BudgetExhaustedException result =
             assertThrows(BudgetExhaustedException.class, () -> service.authPayment("USERID1", "trxcode1"));

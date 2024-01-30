@@ -301,7 +301,6 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         trxAuth.setEffectiveAmount(CommonUtilities.centsToEuro(authPaymentDTO.getAmountCents()));
         trxAuth.setBusinessName("BUSINESSNAME");
         Assertions.assertNotEquals(Collections.emptyMap(), trxAuth.getRewards());
-//        expectedAuthorizationNotificationEvents.add(transactionInProgress2TransactionOutcomeDTOMapper.apply(trxAuth)); //TODO non più notifica
     }
 
     private void checkNotificationEventsOnTransactionQueue() {
