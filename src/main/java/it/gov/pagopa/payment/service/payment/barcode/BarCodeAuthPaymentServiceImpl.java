@@ -1,31 +1,28 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-
-import java.util.Collections;
-import java.util.List;
-
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -37,12 +34,10 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
     public BarCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                          BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          RewardCalculatorConnector rewardCalculatorConnector,
-                                         TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
                                          AuditUtilities auditUtilities,
                                          WalletConnector walletConnector,
                                          MerchantConnector merchantConnector){
-        super(transactionInProgressRepository, rewardCalculatorConnector, notifierService,
-                paymentErrorNotifierService, auditUtilities, walletConnector);
+        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
     }

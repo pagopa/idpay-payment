@@ -1,9 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -74,7 +72,7 @@ class CommonPreAuthServiceTest {
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate", "initiativeRejectionReasons");
 
     verify(walletConnectorMock, times(1)).getWallet("INITIATIVEID1", USER_ID1);
   }
@@ -91,7 +89,7 @@ class CommonPreAuthServiceTest {
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate", "initiativeRejectionReasons");
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
@@ -113,8 +111,8 @@ class CommonPreAuthServiceTest {
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
     Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), any(), anyString());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
   @Test
@@ -134,8 +132,8 @@ class CommonPreAuthServiceTest {
 
     assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), any(), anyString());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
   @Test
@@ -155,8 +153,8 @@ class CommonPreAuthServiceTest {
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
     Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), anyString());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyString());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), any(), anyString());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
   @Test

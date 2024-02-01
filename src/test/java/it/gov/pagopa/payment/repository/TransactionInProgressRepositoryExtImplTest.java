@@ -16,6 +16,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -98,7 +99,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
     }
 
     @Test
@@ -115,7 +117,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         assertTrue(result.getTrxChargeDate().isAfter(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES)));
         TestUtils.checkNotNullFields(
-                result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate");
+                result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate", "initiativeRejectionReasons");
 
       TooManyRequestsException exception =
                 assertThrows(
@@ -157,7 +159,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         transaction.setUserId("USERID%d".formatted(1));
         transactionInProgressRepository.save(transaction);
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
         TransactionInProgress result =
                 transactionInProgressRepository.findById(transaction.getId()).orElse(null);
 
@@ -169,10 +171,11 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
     }
 
     @Test
@@ -184,7 +187,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
         TransactionInProgress result =
                 transactionInProgressRepository.findById(transaction.getId()).orElse(null);
 
@@ -196,10 +199,11 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of());
+        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
     }
 
     @Test
@@ -220,7 +224,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
 
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionInProgress);
@@ -248,7 +253,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
 
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
         transactionInProgressRepository.save(transactionInProgress);
@@ -280,7 +286,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
         Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
     }
@@ -303,9 +310,10 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
 
-        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"), Map.of("ID", new Reward()), "CHANNEL" );
+        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"),Map.of(transactionInProgress.getInitiativeId(), List.of("REASON")), Map.of("ID", new Reward()), "CHANNEL" );
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
@@ -333,10 +341,11 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "reward",
                 "rejectionReasons",
                 "rewards",
-                "trxChargeDate");
+                "trxChargeDate",
+                "initiativeRejectionReasons");
 
         transactionInProgressRepository.updateTrxRejected(
-                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"), "CHANNEL");
+                "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"), Map.of(transactionInProgress.getInitiativeId(), List.of("REJECTIONREASON1")), "CHANNEL");
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
@@ -415,10 +424,12 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress transactionInProgress2 =
                 TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
         transactionInProgress2.setInitiativeId(INITIATIVE_ID);
+        transactionInProgress2.setInitiatives(List.of(INITIATIVE_ID));
         transactionInProgress2.setMerchantId(MERCHANT_ID);
         TransactionInProgress transactionInProgress3 =
                 TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
         transactionInProgress3.setInitiativeId(INITIATIVE_ID);
+        transactionInProgress3.setInitiatives(List.of(INITIATIVE_ID));
         transactionInProgress3.setMerchantId(MERCHANT_ID);
         transactionInProgressRepository.save(transactionInProgress1);
         transactionInProgressRepository.save(transactionInProgress2);
@@ -525,6 +536,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         TransactionInProgress transactionInProgress = TransactionInProgress.builder()
                 .id(TRX_ID)
                 .initiativeId(INITIATIVE_ID)
+                .initiatives(List.of(INITIATIVE_ID))
                 .build();
         mongoTemplate.save(transactionInProgress);
 
@@ -567,9 +579,9 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 resultFirstSave,
                 "authDate", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "trxChargeDate",
                 "acquirerId", "amountCents", "effectiveAmount", "amountCurrency", "merchantFiscalCode", "merchantId",
-                "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName");
+                "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName", "initiativeRejectionReasons");
 
-        transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"));
+        transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"), Map.of(transactionInProgress.getInitiativeId(), List.of("REJECTIONREASON1")));
 
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);

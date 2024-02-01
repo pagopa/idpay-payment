@@ -15,6 +15,7 @@ import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TransactionInProgressFaker {
@@ -45,6 +46,7 @@ public class TransactionInProgressFaker {
         .id(id)
         .correlationId(id)
         .initiativeId(initiativeId)
+        .initiatives(List.of(initiativeId))
         .initiativeName("INITIATIVENAME%d".formatted(bias))
         .businessName("BUSINESSNAME%d".formatted(bias))
         .merchantId("MERCHANTID%d".formatted(bias))

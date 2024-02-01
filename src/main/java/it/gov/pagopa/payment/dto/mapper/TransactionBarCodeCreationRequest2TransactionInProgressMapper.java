@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,6 +29,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
                 .id(id)
                 .correlationId(id)
                 .initiativeId(transactionBarCodeCreationRequest.getInitiativeId())
+                .initiatives(List.of(transactionBarCodeCreationRequest.getInitiativeId()))
                 .initiativeName(initiativeName)
                 .trxDate(now)
                 .status(SyncTrxStatus.CREATED)

@@ -1,8 +1,6 @@
 package it.gov.pagopa.payment.connector.event.trx;
 
-import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
@@ -22,12 +20,9 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     private String binder;
 
     private final StreamBridge streamBridge;
-    private final TransactionInProgress2TransactionOutcomeDTOMapper mapper;
 
-    public TransactionNotifierServiceImpl(StreamBridge streamBridge,
-        TransactionInProgress2TransactionOutcomeDTOMapper mapper) {
+    public TransactionNotifierServiceImpl(StreamBridge streamBridge) {
         this.streamBridge = streamBridge;
-        this.mapper = mapper;
     }
 
     @Configuration
@@ -44,8 +39,8 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     }
 
     @Override
-    public Message<TransactionOutcomeDTO> buildMessage(TransactionInProgress trx, String key) {
-        return MessageBuilder.withPayload(mapper.apply(trx))
+    public Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
+        return MessageBuilder.withPayload(trx)
                 .setHeader(KafkaHeaders.KEY, key)
                 .build();
     }

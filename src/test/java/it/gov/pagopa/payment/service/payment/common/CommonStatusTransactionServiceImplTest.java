@@ -14,6 +14,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,7 @@ class CommonStatusTransactionServiceImplTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
-
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
         //when
         SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId());
@@ -59,6 +60,7 @@ class CommonStatusTransactionServiceImplTest {
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
 
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setChannel("QRCODE");
         doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
         //when
@@ -77,6 +79,7 @@ class CommonStatusTransactionServiceImplTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         String trxId = transaction.getId();
         doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(trxId);
 
