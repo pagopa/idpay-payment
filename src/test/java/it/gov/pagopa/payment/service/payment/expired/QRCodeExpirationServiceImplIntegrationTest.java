@@ -2,8 +2,6 @@ package it.gov.pagopa.payment.service.payment.expired;
 
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
-import it.gov.pagopa.payment.connector.event.trx.dto.TransactionOutcomeDTO;
-import it.gov.pagopa.payment.connector.event.trx.dto.mapper.TransactionInProgress2TransactionOutcomeDTOMapper;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorRestClient;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -51,9 +49,6 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
 
     @SpyBean
     private RewardCalculatorRestClient rewardCalculatorRestClientSpy;
-
-    @Autowired
-    private TransactionInProgress2TransactionOutcomeDTOMapper transactionOutcomeDTOMapper;
 
     @Autowired
     private TransactionInProgressRepository repository;
@@ -168,7 +163,7 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
 
         Set<TransactionInProgress> eventsResult = consumerRecords.stream()
                 .map(r -> {
-                    TransactionOutcomeDTO out = TestUtils.jsonDeserializer(r.value(), TransactionOutcomeDTO.class);
+                    TransactionInProgress out = TestUtils.jsonDeserializer(r.value(), TransactionInProgress.class);
                     assertEquals(SyncTrxStatus.REWARDED, out.getStatus());
                     assertEquals(out.getMerchantId(), r.key());
 
@@ -186,9 +181,9 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         );
     }
 
-    private TransactionOutcomeDTO trxInProgress2TrxOutcome(TransactionInProgress t) {
+    private TransactionInProgress trxInProgress2TrxOutcome(TransactionInProgress t) {
         t.setStatus(SyncTrxStatus.REWARDED);
-        return transactionOutcomeDTOMapper.apply(t);
+        return t;
     }
 
     private static void alignFetchedDateTimeToLocalOffset(TransactionInProgress trx) {

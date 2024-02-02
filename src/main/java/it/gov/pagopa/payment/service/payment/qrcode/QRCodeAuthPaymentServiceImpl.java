@@ -1,15 +1,13 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -25,11 +23,9 @@ public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implemen
   public QRCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                       QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService,
                                       RewardCalculatorConnector rewardCalculatorConnector,
-                                      TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService,
                                       AuditUtilities auditUtilities,
                                       WalletConnector walletConnector){
-    super(transactionInProgressRepository, rewardCalculatorConnector, notifierService,
-            paymentErrorNotifierService, auditUtilities, walletConnector);
+    super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
     this.qrCodeAuthorizationExpiredService = qrCodeAuthorizationExpiredService;
   }
 

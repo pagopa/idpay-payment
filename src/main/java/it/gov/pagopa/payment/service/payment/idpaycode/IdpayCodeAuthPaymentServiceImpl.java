@@ -1,18 +1,16 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -26,13 +24,11 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
     @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
     protected IdpayCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
                                               RewardCalculatorConnector rewardCalculatorConnector,
-                                              TransactionNotifierService notifierService,
-                                              PaymentErrorNotifierService paymentErrorNotifierService,
                                               AuditUtilities auditUtilities,
                                               WalletConnector walletConnector,
                                               IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService,
                                               PaymentInstrumentConnectorImpl paymentInstrumentConnector) {
-        super(transactionInProgressRepository, rewardCalculatorConnector, notifierService, paymentErrorNotifierService, auditUtilities, walletConnector);
+        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
     }

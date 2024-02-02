@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
         mapperAssertion(transaction, result);
         TestUtils.checkNotNullFields(result, "trxChargeDate", "authDate", "qrcodePngUrl", "qrcodeTxtUrl");
@@ -43,6 +45,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setStatus(SyncTrxStatus.CREATED);
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
         mapperAssertion(transaction, result);
@@ -55,6 +58,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         transaction.setStatus(SyncTrxStatus.CREATED);
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
@@ -68,6 +72,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         transaction.setStatus(SyncTrxStatus.AUTHORIZED);
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
@@ -81,6 +86,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .reward(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transaction.setStatus(SyncTrxStatus.AUTHORIZED);
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
@@ -95,6 +101,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setReward(transaction.getAmountCents());
 
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
@@ -108,6 +115,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
+        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
         transaction.setReward(null);
 
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);

@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -36,6 +37,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
         .merchantFiscalCode(merchantDetail.getFiscalCode())
         .idTrxIssuer(idTrxIssuer)
         .initiativeId(transactionCreationRequest.getInitiativeId())
+        .initiatives(List.of(transactionCreationRequest.getInitiativeId()))
         .initiativeName(merchantDetail.getInitiativeName())
         .businessName(merchantDetail.getBusinessName())
         .mcc(transactionCreationRequest.getMcc())

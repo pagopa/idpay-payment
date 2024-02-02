@@ -1,11 +1,5 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import static org.mockito.Mockito.when;
-
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -13,9 +7,11 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -26,12 +22,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthPaymentServiceImplTest {
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-    @Mock private TransactionNotifierService notifierServiceMock;
-    @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private WalletConnector walletConnectorMock;
     @Mock private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredServiceMock;
@@ -45,8 +41,6 @@ class IdpayCodeAuthPaymentServiceImplTest {
             idpayCodeAuthPaymentService = new IdpayCodeAuthPaymentServiceImpl(
                 transactionInProgressRepositoryMock,
                     rewardCalculatorConnectorMock,
-                    notifierServiceMock,
-                    paymentErrorNotifierServiceMock,
                     auditUtilitiesMock,
                     walletConnectorMock,
                     idpayCodeAuthorizationExpiredServiceMock,
