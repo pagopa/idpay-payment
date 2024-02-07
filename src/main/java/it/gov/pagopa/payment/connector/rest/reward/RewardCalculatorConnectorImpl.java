@@ -6,6 +6,7 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -14,6 +15,8 @@ import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+
+import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -54,10 +57,12 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         return result;
     }
 
-    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
-        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.rewardMap(trx)));
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, PreAuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.preAuthRequestMap(trx)));
     }
-
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, TriFunction<Long,String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getCounterVersion(),trx.getInitiativeId(), requestMapper.authRequestMap(trx)));
+    }
     private AuthPaymentDTO performRequest(TransactionInProgress trx, Supplier<AuthPaymentResponseDTO> requestExecutor) {
         AuthPaymentResponseDTO responseDTO;
         try {

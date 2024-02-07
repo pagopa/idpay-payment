@@ -28,6 +28,7 @@ public class AuthPaymentDTO {
   private String businessName;
   private SyncTrxStatus status;
   private Long reward;
+  private long counterVersion;
   private RewardCounters counters;
   private List<String> rejectionReasons;
   private Long amountCents;
