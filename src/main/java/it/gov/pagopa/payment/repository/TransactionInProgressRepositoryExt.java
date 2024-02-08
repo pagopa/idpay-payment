@@ -17,6 +17,7 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason, String channel);
   void updateTrxRelateUserIdentified(String id, String userId, String channel);
+  @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
   void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, Map<String, Reward> rewards, String channel, long counterVersion);
   void updateTrxAuthorized(TransactionInProgress trx, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons);
   void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason);

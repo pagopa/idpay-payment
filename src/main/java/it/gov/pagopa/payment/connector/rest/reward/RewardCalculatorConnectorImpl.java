@@ -8,17 +8,16 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-
-import java.util.NoSuchElementException;
-import java.util.function.BiFunction;
-import java.util.function.Supplier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 @Service
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
@@ -37,7 +36,22 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
     @Override
     @PerformanceLog("PREVIEW_TRANSACTION_REWARD_CALCULATOR")
     public AuthPaymentDTO previewTransaction(TransactionInProgress trx) {
-        return performRequest(trx, restClient::previewTransaction);
+        return performRequest(trx, (initiativeId, body) -> {
+
+            ResponseEntity<AuthPaymentResponseDTO> response = restClient.previewTransaction(initiativeId, body);
+            AuthPaymentResponseDTO authPaymentResponseDTO = response.getBody();
+
+            try {
+                String etagHeaderValue = response.getHeaders().getFirst(HttpHeaders.ETAG);
+                if (etagHeaderValue != null) {
+                    //noinspection DataFlowIssue
+                    authPaymentResponseDTO.setCounterVersion(Long.parseLong(etagHeaderValue));
+                }
+            } catch (NumberFormatException e) {
+                throw new RewardCalculatorInvocationException("Error parsing ETAG from headers", true, e);
+            }
+            return authPaymentResponseDTO;
+        });
     }
 
     @Override
@@ -58,23 +72,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         return result;
     }
 
-    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, AuthPaymentRequestDTO, Object> requestExecutor){
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
         return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.rewardMap(trx)));
     }
 
-    private AuthPaymentDTO performRequest(TransactionInProgress trx, Supplier<Object> requestExecutor) {
-        Object response;
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, Supplier<AuthPaymentResponseDTO> requestExecutor) {
         AuthPaymentResponseDTO responseDTO;
         try {
-            response = requestExecutor.get();
-            // Preview transaction case
-            if( response instanceof ResponseEntity<?> entity)
-                responseDTO = extractResponseFromBody(entity);
-            // Authorize payment case
-            else if(response instanceof AuthPaymentResponseDTO authPaymentResponseDTO)
-                responseDTO = authPaymentResponseDTO;
-            else
-                throw new RewardCalculatorInvocationException("Invalid response type");
+            responseDTO = requestExecutor.get();
         } catch (FeignException e) {
             switch (e.status()) {
                 case 403, 409 -> {
@@ -93,31 +98,5 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             }
         }
         return requestMapper.rewardResponseMap(responseDTO, trx);
-    }
-
-    private AuthPaymentResponseDTO extractResponseFromBody(ResponseEntity<?> entity) {
-        AuthPaymentResponseDTO responseDTO;
-        Object body = entity.getBody();
-        HttpHeaders headers = entity.getHeaders();
-        long etag;
-
-        if (body instanceof AuthPaymentResponseDTO authPaymentResponseDTO)
-            responseDTO = authPaymentResponseDTO;
-        else
-            throw new RewardCalculatorInvocationException("Invalid response body type");
-
-        try {
-            String etagHeaderValue = headers.getFirst(HttpHeaders.ETAG);
-            if (etagHeaderValue != null) {
-                etag = Long.parseLong(etagHeaderValue);
-            } else {
-                throw new RewardCalculatorInvocationException("ETAG header not found");
-            }
-        } catch (NumberFormatException | NoSuchElementException e) {
-            throw new RewardCalculatorInvocationException("Error parsing ETAG from headers", true, e);
-        }
-
-        responseDTO.setCounterVersion(etag);
-        return  responseDTO;
     }
 }
