@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
@@ -15,8 +16,8 @@ public interface RewardCalculatorRestClient {
           value = "reward/initiative/preview/{initiativeId}",
           produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  AuthPaymentResponseDTO previewTransaction(@PathVariable("initiativeId") String initiativeId,
-                                            @RequestBody AuthPaymentRequestDTO body);
+  ResponseEntity<AuthPaymentResponseDTO> previewTransaction(@PathVariable("initiativeId") String initiativeId,
+                                                           @RequestBody AuthPaymentRequestDTO body);
 
   @PostMapping(
       value = "reward/initiative/{initiativeId}",

@@ -80,7 +80,8 @@ public class CommonPreAuthServiceImpl{
               preview.getRejectionReasons(),
               CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
               preview.getRewards(),
-              channel);
+              channel,
+              preview.getCounterVersion());
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
