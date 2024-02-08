@@ -9,9 +9,7 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
-import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -80,6 +78,10 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                     "Too many request on the ms reward",true,e);
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", true, e);
+                case 412 -> throw new TransactionVersionMismatchException(
+                        "The transaction version mismatch",true,e);
+                case 423 -> throw new TransactionVersionPendingException(
+                        "The transaction version is actually locked", true,e);
                 default -> throw new RewardCalculatorInvocationException(
                         "An error occurred in the microservice reward-calculator", true, e);
             }

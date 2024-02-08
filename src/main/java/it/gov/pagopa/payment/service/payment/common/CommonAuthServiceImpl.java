@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -22,21 +23,23 @@ import java.util.Map;
 
 @Slf4j
 public abstract class CommonAuthServiceImpl {
-
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     protected final AuditUtilities auditUtilities;
     private final WalletConnector walletConnector;
+    private final CommonPreAuthServiceImpl commonPreAuthService;
+    private final static List<SyncTrxStatus> LIST_OF_STATUS_TO_IGNORE = List.of(SyncTrxStatus.AUTHORIZED,SyncTrxStatus.REWARDED,SyncTrxStatus.REJECTED,SyncTrxStatus.CANCELLED);
 
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities,
-            WalletConnector walletConnector) {
+            WalletConnector walletConnector, @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.auditUtilities = auditUtilities;
         this.walletConnector = walletConnector;
+        this.commonPreAuthService = commonPreAuthService;
     }
 
     protected AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
@@ -44,6 +47,8 @@ public abstract class CommonAuthServiceImpl {
             checkAuth(trxCode,trx);
 
             checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
+
+            checkTrxStatusToInvokePreAuth(userId,trx.getStatus(),trx);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
@@ -117,6 +122,15 @@ public abstract class CommonAuthServiceImpl {
 
     }
 
+    protected void checkTrxStatusToInvokePreAuth(String userId, SyncTrxStatus status, TransactionInProgress trx) {
+        if ((status.equals(SyncTrxStatus.CREATED) && userId != null) ||
+                (status.equals(SyncTrxStatus.IDENTIFIED) && trx.getReward() == null)){
+           commonPreAuthService.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        }else if(!LIST_OF_STATUS_TO_IGNORE.contains(status)) {
+            trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        }
+    }
+
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         auditUtilities.logAuthorizedPayment(initiativeId, id, trxCode, userId, reward, rejectionReasons);
     }
@@ -126,6 +140,6 @@ public abstract class CommonAuthServiceImpl {
     }
 
     protected SyncTrxStatus getSyncTrxStatus(){
-        return SyncTrxStatus.IDENTIFIED;
+        return SyncTrxStatus.AUTHORIZATION_REQUESTED;
     }
 }

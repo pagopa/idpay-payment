@@ -14,11 +14,14 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
 
 @Slf4j
+@Service("commonPreAuth")
 public class CommonPreAuthServiceImpl{
   private final long authorizationExpirationMinutes;
   protected final TransactionInProgressRepository transactionInProgressRepository;
@@ -27,7 +30,7 @@ public class CommonPreAuthServiceImpl{
   private final WalletConnector walletConnector;
 
   public CommonPreAuthServiceImpl(
-          long authorizationExpirationMinutes,
+          @Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuditUtilities auditUtilities,
@@ -53,7 +56,7 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel) {
+  public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel, SyncTrxStatus status) {
     try {
     trx.setTrxChargeDate(OffsetDateTime.now());
     trx.setChannel(channel);
@@ -73,14 +76,15 @@ public class CommonPreAuthServiceImpl{
       throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
     } else {
       preview.setRejectionReasons(Collections.emptyList());
-      preview.setStatus(SyncTrxStatus.IDENTIFIED);
-      transactionInProgressRepository.updateTrxIdentified(trx.getId(),
+      preview.setStatus(status);
+      transactionInProgressRepository.updateTrxWithStatus(trx.getId(),
               trx.getUserId(),
               preview.getReward(),
               preview.getRejectionReasons(),
               CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
               preview.getRewards(),
-              channel);
+              channel,
+              status);
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?

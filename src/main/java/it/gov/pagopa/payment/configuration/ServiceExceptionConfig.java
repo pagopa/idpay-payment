@@ -1,27 +1,8 @@
 package it.gov.pagopa.payment.configuration;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
-import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.PinBlockInvalidException;
-import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
-import it.gov.pagopa.payment.exception.custom.TransactionRejectedException;
-import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
-import it.gov.pagopa.payment.exception.custom.UserSuspendedException;
-import it.gov.pagopa.payment.exception.custom.IdpaycodeNotFoundException;
-import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
-import it.gov.pagopa.payment.exception.custom.MerchantInvocationException;
-import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
-import it.gov.pagopa.payment.exception.custom.PaymentInstrumentInvocationException;
-import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
-import it.gov.pagopa.payment.exception.custom.WalletInvocationException;
-import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.payment.exception.custom.*;
+
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.context.annotation.Bean;
@@ -65,6 +46,12 @@ public class ServiceExceptionConfig {
 
     // TooManyRequests
     exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
+
+    //PreconditionFailed
+    exceptionMap.put(TransactionVersionMismatchException.class, HttpStatus.PRECONDITION_FAILED);
+
+    //Locked
+    exceptionMap.put(TransactionVersionPendingException.class, HttpStatus.LOCKED);
 
     return exceptionMap;
   }
