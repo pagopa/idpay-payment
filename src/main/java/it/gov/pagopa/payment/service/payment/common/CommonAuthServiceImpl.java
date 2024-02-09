@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 
 import java.time.OffsetDateTime;
@@ -28,7 +29,6 @@ public abstract class CommonAuthServiceImpl {
     protected final AuditUtilities auditUtilities;
     private final WalletConnector walletConnector;
     private final CommonPreAuthServiceImpl commonPreAuthService;
-    private final static List<SyncTrxStatus> LIST_OF_STATUS_TO_IGNORE = List.of(SyncTrxStatus.AUTHORIZED,SyncTrxStatus.REWARDED,SyncTrxStatus.REJECTED,SyncTrxStatus.CANCELLED);
 
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
@@ -46,9 +46,9 @@ public abstract class CommonAuthServiceImpl {
         try {
             checkAuth(trxCode,trx);
 
-            checkWalletStatus(trx.getInitiativeId(), trx.getUserId() != null ? trx.getUserId() : userId);
+            checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
 
-            checkTrxStatusToInvokePreAuth(userId,trx.getStatus(),trx);
+            checkTrxStatusToInvokePreAuth(trx);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
@@ -122,11 +122,15 @@ public abstract class CommonAuthServiceImpl {
 
     }
 
-    protected void checkTrxStatusToInvokePreAuth(String userId, SyncTrxStatus status, TransactionInProgress trx) {
-        if ((status.equals(SyncTrxStatus.CREATED) && userId != null) ||
-                (status.equals(SyncTrxStatus.IDENTIFIED) && trx.getReward() == null)){
-           commonPreAuthService.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        }else if(!LIST_OF_STATUS_TO_IGNORE.contains(status)) {
+    protected void checkTrxStatusToInvokePreAuth(TransactionInProgress trx) {
+        if ((trx.getStatus().equals(SyncTrxStatus.CREATED) && trx.getUserId() != null) ||
+                (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED) && trx.getReward() == null)){
+            AuthPaymentDTO preAuth = commonPreAuthService.previewPayment(trx, trx.getChannel(), SyncTrxStatus.AUTHORIZATION_REQUESTED);
+            trx.setStatus(preAuth.getStatus());
+            trx.setReward(preAuth.getReward());
+            trx.setRewards(preAuth.getRewards());
+            trx.setRejectionReasons(preAuth.getRejectionReasons());
+        } else if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
     }

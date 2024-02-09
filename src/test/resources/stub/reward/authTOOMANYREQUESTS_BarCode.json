@@ -1,25 +1,32 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/BARCODE_INITIATIVEID_NO_BUDGET"
+    "urlPathPattern": "/reward/initiative/BARCODE_INITIATIVEID_TOOMANYREQUEST",
+    "headers" : {
+      "If-Match" : {
+        "equalTo" : "0"
+      }
+    }
   },
   "response": {
-    "status": "200",
+    "status": "429",
     "headers": {
       "Content-Type": "application/json"
     },
-    "transformers": ["response-template"],
+    "transformers": [
+      "response-template"
+    ],
     "jsonBody": {
-      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
-      "channel":  "{{jsonPath request.body '$.channel'}}",
-      "initiativeId": "INITIATIVEID",
+      "transactionId": "{{jsonPath request.body '$.transactionId'}}",
+      "channel": "{{jsonPath request.body '$.channel'}}",
+      "initiativeId": "BARCODE_INITIATIVEID_TOOMANYREQUEST",
       "userId": "USERID",
-      "status": "REJECTED",
+      "status": "REWARDED",
       "effectiveAmount": "0.10",
       "amount": "0.10",
       "amountCents": "10",
       "reward": {
-        "initiativeId": "INITIATIVEID",
+        "initiativeId": "BARCODE_INITIATIVEID_TOOMANYREQUEST",
         "organizationId": "ORGANIZATIONID",
         "providedReward": 2.00,
         "accruedReward": 2.00,
@@ -29,7 +36,7 @@
         "yearlyCapped": false,
         "weeklyCapped": false
       },
-      "rejectionReasons": ["BUDGET_EXHAUSTED"]
+      "rejectionReasons": []
     }
   }
 }

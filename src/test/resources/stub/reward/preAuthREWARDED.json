@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/(preview/)?INITIATIVEID",
+    "urlPathPattern": "/reward/initiative/preview/INITIATIVEID",
     "bodyPatterns": [
       {
         "equalToJson": {

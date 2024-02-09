@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/INITIATIVEID",
+    "urlPathPattern": "/reward/initiative/(INITIATIVEID|BARCODE_INITIATIVEID_REWARDED)",
     "headers" : {
       "If-Match" : {
         "equalTo" : "0"
@@ -11,7 +11,7 @@
       {
         "equalToJson": {
           "transactionId": "${json-unit.any-string}",
-          "userId": "USERID",
+          "userId": "${json-unit.regex}.*USERID",
           "merchantId": "MERCHANTID",
           "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
           "vat": "${json-unit.regex}VAT[0-9]+",
@@ -22,7 +22,7 @@
           "mcc":  "${json-unit.regex}MCC[0-9]+",
           "acquirerId":  "ACQUIRERID",
           "idTrxIssuer": "IDTRXISSUER",
-          "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
+          "idTrxAcquirer": "${json-unit.regex}.*IDTRXACQUIRER[0-9]+",
           "channel": "${json-unit.regex}(QRCODE|IDPAYCODE)",
           "rewardCents": 200
         }
@@ -30,7 +30,7 @@
     ]
   },
   "response": {
-    "status": "409",
+    "status": "200",
     "headers": {
       "Content-Type": "application/json"
     },
@@ -43,7 +43,7 @@
       "status": "REWARDED",
       "effectiveAmount": "0.10",
       "amount": "0.10",
-      "amountCents": "1000",
+      "amountCents": "10",
       "reward": {
         "initiativeId": "INITIATIVEID",
         "organizationId": "ORGANIZATIONID",

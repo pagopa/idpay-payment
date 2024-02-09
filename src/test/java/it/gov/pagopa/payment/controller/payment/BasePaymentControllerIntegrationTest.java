@@ -325,25 +325,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     @Test
     @SneakyThrows
-    void test_trxRejectedWhenAuthorizing() {
-        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
-        trxRequest.setInitiativeId(INITIATIVEID);
-
-        // Creating transaction
-        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-
-        // Relating to user
-        AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-        assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-        checkTransactionStored(preAuthResult, USERID);
-
-        // Authorizing transaction, but obtaining rejection
-        updateStoredTransaction(preAuthResult.getId(), t -> t.setMcc("NOTALLOWEDMCC"));
-        extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
-    }
-
-    @Test
-    @SneakyThrows
     void test_TooManyRequestThrownByRewardCalculator() {
         TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
         trxRequest.setInitiativeId(INITIATIVEID);

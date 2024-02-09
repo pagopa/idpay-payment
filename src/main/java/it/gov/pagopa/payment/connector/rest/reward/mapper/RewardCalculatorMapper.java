@@ -49,7 +49,7 @@ public class RewardCalculatorMapper {
                 .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
                 .trxChargeDate(transactionInProgress.getTrxChargeDate())
                 .channel(transactionInProgress.getChannel())
-                .rewardCents(transactionInProgress.getCounterVersion())
+                .rewardCents(transactionInProgress.getReward())
                 .build();
     }
 

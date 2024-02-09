@@ -61,7 +61,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
 
-            checkTrxStatusToInvokePreAuth(trx.getUserId(), trx.getStatus(),trx);
+            checkTrxStatusToInvokePreAuth(trx);
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
