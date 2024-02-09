@@ -35,6 +35,20 @@ public class RewardCalculatorMapper {
     }
     public AuthPaymentRequestDTO authRequestMap(TransactionInProgress transactionInProgress) {
         return AuthPaymentRequestDTO.builder()
+                .transactionId(transactionInProgress.getId())
+                .userId(transactionInProgress.getUserId())
+                .merchantId(transactionInProgress.getMerchantId())
+                .merchantFiscalCode(transactionInProgress.getMerchantFiscalCode())
+                .vat(transactionInProgress.getVat())
+                .idTrxAcquirer(transactionInProgress.getIdTrxAcquirer())
+                .trxDate(transactionInProgress.getTrxDate())
+                .amountCents(transactionInProgress.getAmountCents())
+                .amountCurrency(transactionInProgress.getAmountCurrency())
+                .mcc(transactionInProgress.getMcc())
+                .acquirerId(transactionInProgress.getAcquirerId())
+                .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
+                .trxChargeDate(transactionInProgress.getTrxChargeDate())
+                .channel(transactionInProgress.getChannel())
                 .rewardCents(transactionInProgress.getCounterVersion())
                 .build();
     }
