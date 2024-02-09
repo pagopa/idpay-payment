@@ -40,6 +40,7 @@ public class AuthPaymentDTOFaker {
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .rewards(Map.of(transaction.getInitiativeId(), reward))
         .counters(reward.getCounters())
-        .residualBudget(residualBudget);
+        .residualBudget(residualBudget)
+        .counterVersion(0L);
   }
 }

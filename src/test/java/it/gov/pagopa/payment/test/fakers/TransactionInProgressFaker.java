@@ -68,6 +68,7 @@ public class TransactionInProgressFaker {
         .channel("QRCODE")
         .channel("CHANNEL%d".formatted(bias))
         .reward(reward)
+        .counterVersion(0L)
         .rewards(rewards)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }

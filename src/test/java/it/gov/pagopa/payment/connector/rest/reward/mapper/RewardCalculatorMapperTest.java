@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID%d".formatted(1));
-    AuthPaymentRequestDTO result = mapper.rewardMap(transaction);
+    PreAuthPaymentRequestDTO result = mapper.preAuthRequestMap(transaction);
 
     assertAll(() -> {
       assertNotNull(result);

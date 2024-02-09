@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
@@ -48,6 +49,7 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
+  @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
 
   QRCodeAuthPaymentService service;
 
@@ -61,7 +63,8 @@ class QRCodeAuthPaymentServiceTest {
                     qrCodeAuthorizationExpiredServiceMock,
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
-                    walletConnectorMock);
+                    walletConnectorMock,
+                    commonPreAuthServiceMock);
   }
 
   @Test

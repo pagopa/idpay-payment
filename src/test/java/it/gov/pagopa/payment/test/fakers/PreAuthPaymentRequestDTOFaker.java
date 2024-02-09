@@ -1,18 +1,17 @@
 package it.gov.pagopa.payment.test.fakers;
 
-import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
 
-public class AuthPaymentRequestDTOFaker {
+public class PreAuthPaymentRequestDTOFaker {
 
-    public static AuthPaymentRequestDTO mockInstance(Integer bias) {
+    public static PreAuthPaymentRequestDTO mockInstance(Integer bias) {
       return mockInstanceBuilder(bias).build();
     }
-
-    public static AuthPaymentRequestDTO.AuthPaymentRequestDTOBuilder mockInstanceBuilder(Integer bias) {
-      return AuthPaymentRequestDTO.builder()
+    public static PreAuthPaymentRequestDTO.PreAuthPaymentRequestDTOBuilder mockInstanceBuilder(Integer bias) {
+      return PreAuthPaymentRequestDTO.builder()
           .transactionId("TRANSACTION%d_qr-code".formatted(bias))
           .merchantId("MERCHANTID%d".formatted(bias))
           .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
