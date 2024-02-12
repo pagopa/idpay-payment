@@ -313,7 +313,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "trxChargeDate",
                 "initiativeRejectionReasons");
 
-        transactionInProgressRepository.updateTrxWithStatus("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"),Map.of(transactionInProgress.getInitiativeId(), List.of("REASON")), Map.of("ID", new Reward()), "CHANNEL",SyncTrxStatus.IDENTIFIED );
+        transactionInProgressRepository.updateTrxWithStatus("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"),Map.of(transactionInProgress.getInitiativeId(), List.of("REASON")), Map.of("ID", new Reward()), "CHANNEL",SyncTrxStatus.IDENTIFIED, 10L);
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);

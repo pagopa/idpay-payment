@@ -239,10 +239,12 @@ class QRCodeAuthPaymentServiceTest {
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     transaction.setUserId("USERID%d".formatted(1));
 
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
+    when(commonPreAuthServiceMock.previewPayment(transaction,transaction.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(authPaymentDTO);
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     OperationNotAllowedException result =

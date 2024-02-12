@@ -16,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 
-import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -65,11 +63,8 @@ public abstract class CommonAuthServiceImpl {
     protected AuthPaymentDTO invokeRuleEngine(TransactionInProgress trx){
         AuthPaymentDTO authPaymentDTO;
         if (trx.getStatus().equals(getSyncTrxStatus())) {
-            trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
             authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
 
-            trx.setReward(authPaymentDTO.getReward());
-            trx.setRewards(authPaymentDTO.getRewards());
             trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
 
             Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities
@@ -133,6 +128,16 @@ public abstract class CommonAuthServiceImpl {
         } else if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
+        transactionInProgressRepository.updateTrxWithStatus(
+                trx.getId(),
+                trx.getUserId(),
+                trx.getReward(),
+                trx.getRejectionReasons(),
+                trx.getInitiativeRejectionReasons(),
+                trx.getRewards(),
+                trx.getChannel(),
+                trx.getStatus(),
+                trx.getCounterVersion());
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {

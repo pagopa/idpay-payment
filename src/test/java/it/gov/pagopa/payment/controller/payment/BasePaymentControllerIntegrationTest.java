@@ -340,6 +340,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         // Authorizing transaction but obataining Too Many requests by reward-calculator
         updateStoredTransaction(preAuthResult.getId(), t -> t.setVat("TOOMANYREQUESTS"));
         extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+        preAuthResult.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         checkTransactionStored(preAuthResult, USERID);
     }
 
@@ -638,12 +639,9 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         assertEquals(SyncTrxStatus.AUTHORIZED, authResult.getStatus());
 
         TransactionInProgress authStored = checkIfStored(trxCreated.getId());
-        TransactionInProgress expectedNotification = authStored.toBuilder()
-                .elaborationDateTime(authStored.getTrxChargeDate().toLocalDateTime())
-                .build();
+        TransactionInProgress expectedNotification = authStored.toBuilder().build();
         expectedErrors.add(expectedNotification);
 
-        expectedNotification.setElaborationDateTime(TestUtils.truncateTimestamp(expectedNotification.getElaborationDateTime()));
         expectedNotification.setUpdateDate(TestUtils.truncateTimestamp(expectedNotification.getUpdateDate()));
 
         return Pair.of(authStored, expectedNotification);
@@ -858,7 +856,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         List<TransactionInProgress> expectedConfirmForced = trxByStatus.get(SyncTrxStatus.AUTHORIZED);
         List<TransactionInProgress> expectedAuthorizationForced = Arrays.stream(SyncTrxStatus.values())
-                .filter(s -> !s.equals(SyncTrxStatus.AUTHORIZED))
+                .filter(s -> !s.equals(SyncTrxStatus.AUTHORIZED) && !s.equals(SyncTrxStatus.AUTHORIZATION_REQUESTED))
                 .map(trxByStatus::get)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
@@ -1036,7 +1034,8 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 Assertions.assertFalse(trxStored.getRewards().isEmpty());
 
                 if (trxStored.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
-                    Assertions.assertNotNull(trxStored.getTrxChargeDate());
+//                    Assertions.assertNotNull(trxStored.getTrxChargeDate());
+                    Assertions.assertNull(trxStored.getTrxChargeDate());
                 } else {
                     Assertions.assertNull(trxStored.getTrxChargeDate());
                 }
