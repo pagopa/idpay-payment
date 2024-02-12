@@ -1,0 +1,37 @@
+{
+  "request": {
+    "method": "DELETE",
+    "urlPathPattern": "/reward/MOCKEDTRANSACTION_qr-code_21"
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json",
+      "ETag": "1"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
+      "channel":  "{{jsonPath request.body '$.channel'}}",
+      "initiativeId": "INITIATIVEID21",
+      "userId": "USERID",
+      "status": "IDENTIFIED",
+      "effectiveAmount": "0.10",
+      "amount": "0.10",
+      "amountCents": "10",
+      "reward": {
+        "initiativeId": "INITIATIVEID21",
+        "organizationId": "ORGANIZATIONID21",
+        "providedReward": 2.00,
+        "accruedReward": 2.00,
+        "capped": false,
+        "dailyCapped": false,
+        "monthlyCapped": false,
+        "yearlyCapped": false,
+        "weeklyCapped": false
+      },
+      "counterVersion": 1.00,
+      "rejectionReasons": []
+    }
+  }
+}
