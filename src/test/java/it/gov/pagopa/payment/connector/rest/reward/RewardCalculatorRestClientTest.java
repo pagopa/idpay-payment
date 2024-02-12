@@ -108,9 +108,6 @@ class RewardCalculatorRestClientTest {
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(7, SyncTrxStatus.CREATED);
 
-        AuthPaymentResponseDTO responseDTO =
-                AuthPaymentResponseDTOFaker.mockInstance(7,SyncTrxStatus.REJECTED);
-
         doThrow(JsonProcessingException.class)
                 .when(objectMapper).readValue(anyString(), ArgumentMatchers.eq(AuthPaymentResponseDTO.class));
 
