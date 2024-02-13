@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
@@ -15,6 +16,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -23,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.mockito.Mockito.when;
@@ -93,6 +96,46 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
+
+    }
+    @Test
+    void givenAuthTrxWithStatusIdentifiedAndRewardNull() {
+        //Given
+        PinBlockDTO pinBlockDTO = new PinBlockDTO("PINBLOCK", "KEY");
+
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        trx.setReward(null);
+        trx.setUserId("USERID");
+
+        AuthPaymentDTO paymentDTO = AuthPaymentDTOFaker.mockInstance(1,trx);
+        paymentDTO.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,trx);
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+
+        WalletDTO wallet = WalletDTOFaker.mockInstance(1,WALLET_STATUS_REFUNDABLE);
+
+        when(walletConnectorMock.getWallet(trx.getInitiativeId(), trx.getUserId()))
+                .thenReturn(wallet);
+
+        when(idpayCodeAuthorizationExpiredServiceMock.findByTrxIdAndAuthorizationNotExpired(trx.getId()))
+                .thenReturn(trx);
+
+        when(commonPreAuthServiceMock.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(paymentDTO);
+
+        when(rewardCalculatorConnectorMock.authorizePayment(trx)).thenReturn(authPaymentDTO);
+
+        //When
+       AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Mockito.verifyNoMoreInteractions(
+                walletConnectorMock,
+                idpayCodeAuthorizationExpiredServiceMock,
+                commonPreAuthServiceMock,
+                rewardCalculatorConnectorMock
+        );
 
     }
 
