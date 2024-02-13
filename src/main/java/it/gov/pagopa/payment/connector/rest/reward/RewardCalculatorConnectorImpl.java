@@ -12,8 +12,12 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,7 +37,22 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
     @Override
     @PerformanceLog("PREVIEW_TRANSACTION_REWARD_CALCULATOR")
     public AuthPaymentDTO previewTransaction(TransactionInProgress trx) {
-        return performRequest(trx, restClient::previewTransaction);
+        return performRequest(trx, (initiativeId, body) -> {
+
+            ResponseEntity<AuthPaymentResponseDTO> response = restClient.previewTransaction(initiativeId, body);
+            AuthPaymentResponseDTO authPaymentResponseDTO = response.getBody();
+
+            try {
+                String etagHeaderValue = response.getHeaders().getFirst(HttpHeaders.ETAG);
+                if (etagHeaderValue != null) {
+                    //noinspection DataFlowIssue
+                    authPaymentResponseDTO.setCounterVersion(Long.parseLong(etagHeaderValue));
+                }
+            } catch (NumberFormatException e) {
+                throw new RewardCalculatorInvocationException("Error parsing ETAG from headers", true, e);
+            }
+            return authPaymentResponseDTO;
+        });
     }
 
     @Override
@@ -72,7 +91,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                     }
                 }
                 case 429 -> throw new TooManyRequestsException(
-                    "Too many request on the ms reward",true,e);
+                        "Too many request on the ms reward",true,e);
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", true, e);
                 default -> throw new RewardCalculatorInvocationException(

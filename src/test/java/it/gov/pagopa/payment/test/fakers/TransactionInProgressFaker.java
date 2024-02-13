@@ -69,6 +69,7 @@ public class TransactionInProgressFaker {
         .channel("CHANNEL%d".formatted(bias))
         .reward(reward)
         .rewards(rewards)
+        .counterVersion(1L)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

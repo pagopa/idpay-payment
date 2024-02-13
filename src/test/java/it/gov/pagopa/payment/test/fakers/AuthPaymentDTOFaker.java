@@ -22,7 +22,7 @@ public class AuthPaymentDTOFaker {
     return mockInstanceBuilder(bias,transaction).build();
   }
 
-  public static AuthPaymentDTO.AuthPaymentDTOBuilder mockInstanceBuilder(Integer bias, TransactionInProgress transaction) {
+  public static AuthPaymentDTO.AuthPaymentDTOBuilder<?,?> mockInstanceBuilder(Integer bias, TransactionInProgress transaction) {
     Reward reward = new Reward(transaction.getInitiativeId(), "ORGID", TestUtils.bigDecimalValue(10));
     reward.setCounters(RewardCounters.builder().exhaustedBudget(false).initiativeBudget(BigDecimal.valueOf(100)).totalReward(BigDecimal.valueOf(50)).build());
     Long residualBudget = CommonUtilities.euroToCents(reward.getCounters().getInitiativeBudget().subtract(reward.getCounters().getTotalReward()));
@@ -40,6 +40,7 @@ public class AuthPaymentDTOFaker {
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .rewards(Map.of(transaction.getInitiativeId(), reward))
         .counters(reward.getCounters())
+        .counterVersion(1L)
         .residualBudget(residualBudget);
   }
 }
