@@ -137,7 +137,8 @@ public abstract class CommonAuthServiceImpl {
                 trx.getRewards(),
                 trx.getChannel(),
                 trx.getStatus(),
-                trx.getCounterVersion());
+                trx.getCounterVersion(),
+                trx.getTrxChargeDate());
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {

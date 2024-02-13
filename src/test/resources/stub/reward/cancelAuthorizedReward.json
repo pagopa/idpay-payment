@@ -17,7 +17,7 @@
       "status": "REWARDED",
       "effectiveAmount": "0",
       "amount": "0.10",
-      "amountCents": "1000",
+      "amountCents": "10",
       "reward": {
         "initiativeId": "INITIATIVEID",
         "organizationId": "ORGANIZATIONID",

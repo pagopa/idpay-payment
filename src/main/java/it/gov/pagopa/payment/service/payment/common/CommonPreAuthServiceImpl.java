@@ -85,7 +85,8 @@ public class CommonPreAuthServiceImpl{
               preview.getRewards(),
               channel,
               status,
-              preview.getCounterVersion());
+              preview.getCounterVersion(),
+              trx.getTrxChargeDate());
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?

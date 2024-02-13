@@ -40,6 +40,8 @@ import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -141,6 +143,7 @@ class IdpayCodePreAuthServiceTest {
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
         trx.setMerchantId(MERCHANTID);
+        trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
@@ -153,15 +156,17 @@ class IdpayCodePreAuthServiceTest {
                 .thenReturn(authPaymentDTO);
 
         doNothing().when(transactionInProgressRepositoryMock)
-                .updateTrxWithStatus(trx.getId(),
-                        trx.getUserId(),
-                        authPaymentDTO.getReward(),
-                        Collections.emptyList(),
-                        Collections.emptyMap(),
-                        authPaymentDTO.getRewards(),
-                        RewardConstants.TRX_CHANNEL_IDPAYCODE,
-                        SyncTrxStatus.IDENTIFIED,
-                        authPaymentDTO.getCounterVersion());
+                .updateTrxWithStatus(
+                        eq(trx.getId()),
+                        eq(trx.getUserId()),
+                        eq(authPaymentDTO.getReward()),
+                        eq(Collections.emptyList()),
+                        eq(Collections.emptyMap()),
+                        eq(authPaymentDTO.getRewards()),
+                        eq(RewardConstants.TRX_CHANNEL_IDPAYCODE),
+                        eq(SyncTrxStatus.IDENTIFIED),
+                        eq(authPaymentDTO.getCounterVersion()),
+                        Mockito.any());
 
         when(paymentInstrumentConnectorMock.getSecondFactor(trx.getUserId()))
                 .thenReturn(new SecondFactorDTO(SECOND_FACTOR));
@@ -174,7 +179,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(Collections.emptyList()), anyMap(), anyMap(),anyString(), any(),anyLong());
+        verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(Collections.emptyList()), anyMap(), anyMap(),anyString(), any(),anyLong(),any());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 
@@ -261,7 +266,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong(),any());
         verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 
@@ -304,7 +309,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong(),any());
         verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 
@@ -335,7 +340,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong(),any());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(),anyString());
     }
 
@@ -361,7 +366,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong(),any());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 }
