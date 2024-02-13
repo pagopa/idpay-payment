@@ -32,7 +32,7 @@ public class AuthPaymentDTO {
   private RewardCounters counters;
   private List<String> rejectionReasons;
   private Long amountCents;
-
+  private long counterVersion;
   private Long residualBudget;
 
   private Boolean splitPayment;

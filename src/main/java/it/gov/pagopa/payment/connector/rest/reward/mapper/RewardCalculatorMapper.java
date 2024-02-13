@@ -68,7 +68,8 @@ public class RewardCalculatorMapper {
                 .initiativeName(transactionInProgress.getInitiativeName())
                 .businessName(transactionInProgress.getBusinessName())
                 .trxDate(transactionInProgress.getTrxDate())
-                .counterVersion(transactionInProgress.getCounterVersion()).build();
+                .counterVersion(transactionInProgress.getCounterVersion())
+                .build();
 
         if (responseDTO.getReward() != null) {
             out.setReward(CommonUtilities.euroToCents(responseDTO.getReward().getAccruedReward()));

@@ -70,6 +70,7 @@ public class TransactionInProgressFaker {
         .reward(reward)
         .counterVersion(0L)
         .rewards(rewards)
+        .counterVersion(1L)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

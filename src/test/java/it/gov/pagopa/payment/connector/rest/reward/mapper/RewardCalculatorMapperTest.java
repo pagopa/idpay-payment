@@ -69,6 +69,7 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
       assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
       assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
+      assertEquals(responseDTO.getCounterVersion(),result.getCounterVersion());
         TestUtils.checkNotNullFields(result,"residualBudget", "secondFactor","splitPayment",
                 "residualAmountCents");
     });

@@ -27,4 +27,5 @@ public class AuthPaymentResponseDTO {
   private BigDecimal amount;
   private Long amountCents;
   private OperationType operationType;
+  private long counterVersion;
 }
