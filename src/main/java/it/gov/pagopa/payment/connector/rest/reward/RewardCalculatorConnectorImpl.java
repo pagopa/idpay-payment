@@ -46,7 +46,8 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             try {
                 String etagHeaderValue = response.getHeaders().getFirst(HttpHeaders.ETAG);
                 if (etagHeaderValue != null) {
-                    trx.setCounterVersion(Long.parseLong(etagHeaderValue));
+                    //noinspection DataFlowIssue
+                    authPaymentResponseDTO.setCounterVersion(Long.parseLong(etagHeaderValue));
                 }
             } catch (NumberFormatException e) {
                 throw new RewardCalculatorInvocationException("Error parsing ETAG from headers", true, e);

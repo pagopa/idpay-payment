@@ -45,7 +45,12 @@
         "dailyCapped": false,
         "monthlyCapped": false,
         "yearlyCapped": false,
-        "weeklyCapped": false
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
       },
       "rejectionReasons": ["BUDGET_EXHAUSTED"]
     }
