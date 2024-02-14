@@ -74,7 +74,9 @@ public abstract class CommonAuthServiceImpl {
             if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
                 log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
                 authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
-                trx.setCounterVersion(authPaymentDTO.getRewards().get(authPaymentDTO.getInitiativeId()).getCounters().getVersion());
+                authPaymentDTO.setCounterVersion(authPaymentDTO.getCounters().getVersion());
+                trx.setCounterVersion(authPaymentDTO.getCounters().getVersion());
+                trx.setRewards(authPaymentDTO.getRewards());
                 transactionInProgressRepository.updateTrxAuthorized(trx,
                         authPaymentDTO.getReward(),
                         authPaymentDTO.getRejectionReasons(),
