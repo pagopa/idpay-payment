@@ -128,6 +128,7 @@ public abstract class CommonAuthServiceImpl {
             trx.setReward(preAuth.getReward());
             trx.setRewards(preAuth.getRewards());
             trx.setRejectionReasons(preAuth.getRejectionReasons());
+            trx.setCounterVersion(preAuth.getCounterVersion());
         } else if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
