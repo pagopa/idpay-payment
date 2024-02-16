@@ -8,7 +8,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 @SuperBuilder
-public class AuthPaymentRequestDTO extends PreAuthPaymentRequestDTO {
+public class AuthPaymentRequestDTO extends PaymentRequestDTO {
 
     private long rewardCents;
 }

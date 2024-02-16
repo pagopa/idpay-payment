@@ -4,7 +4,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID%d".formatted(1));
-    PreAuthPaymentRequestDTO result = mapper.preAuthRequestMap(transaction);
+    PaymentRequestDTO result = mapper.preAuthRequestMap(transaction);
 
       commonAssertField(transaction, result);
   }
@@ -124,7 +124,7 @@ import static org.junit.jupiter.api.Assertions.*;
          });
      }
 
-     private static void commonAssertField(TransactionInProgress transaction, PreAuthPaymentRequestDTO result) {
+     private static void commonAssertField(TransactionInProgress transaction, PaymentRequestDTO result) {
          assertAll(() -> {
              assertNotNull(result);
              assertEquals(transaction.getId(), result.getTransactionId());

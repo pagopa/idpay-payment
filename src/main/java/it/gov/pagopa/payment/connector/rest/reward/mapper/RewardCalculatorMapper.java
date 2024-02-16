@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.connector.rest.reward.mapper;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.apache.commons.lang3.ObjectUtils;
@@ -15,8 +15,8 @@ import java.util.Map;
 @Service
 public class RewardCalculatorMapper {
 
-    public PreAuthPaymentRequestDTO preAuthRequestMap(TransactionInProgress transactionInProgress) {
-        return PreAuthPaymentRequestDTO.builder()
+    public PaymentRequestDTO preAuthRequestMap(TransactionInProgress transactionInProgress) {
+        return PaymentRequestDTO.builder()
                 .transactionId(transactionInProgress.getId())
                 .userId(transactionInProgress.getUserId())
                 .merchantId(transactionInProgress.getMerchantId())

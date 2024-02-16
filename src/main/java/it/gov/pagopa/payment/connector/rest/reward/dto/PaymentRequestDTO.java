@@ -11,7 +11,7 @@ import java.time.OffsetDateTime;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PreAuthPaymentRequestDTO {
+public class PaymentRequestDTO {
 
   private String transactionId;
   private String userId;

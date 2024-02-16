@@ -6,7 +6,7 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
-import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -77,7 +77,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         return result;
     }
 
-    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, PreAuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, PaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
         return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.preAuthRequestMap(trx)));
     }
     private AuthPaymentDTO performRequest(TransactionInProgress trx, TriFunction<Long,String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
