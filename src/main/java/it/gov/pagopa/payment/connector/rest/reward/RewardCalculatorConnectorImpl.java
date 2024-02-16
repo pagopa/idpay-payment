@@ -101,9 +101,10 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", true, e);
                 case 412 ->{
-                        responseDTO= new AuthPaymentResponseDTO();
+                        responseDTO = new AuthPaymentResponseDTO();
                         responseDTO.setStatus(SyncTrxStatus.REJECTED);
                         responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+                        responseDTO.setInitiativeId(trx.getInitiativeId());
                 }
                 case 423 -> throw new TransactionVersionPendingException(
                         "The transaction version is actually locked", true,e);
