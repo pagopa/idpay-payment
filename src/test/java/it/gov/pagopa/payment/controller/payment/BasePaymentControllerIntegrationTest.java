@@ -325,25 +325,6 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
     @Test
     @SneakyThrows
-    void test_trxRejectedWhenAuthorizing() {
-        TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
-        trxRequest.setInitiativeId(INITIATIVEID);
-
-        // Creating transaction
-        TransactionResponse trxCreated = createTrxSuccess(trxRequest);
-
-        // Relating to user
-        AuthPaymentDTO preAuthResult = extractResponse(preAuthTrx(trxCreated, USERID, MERCHANTID), HttpStatus.OK, AuthPaymentDTO.class);
-        assertEquals(SyncTrxStatus.IDENTIFIED, preAuthResult.getStatus());
-        checkTransactionStored(preAuthResult, USERID);
-
-        // Authorizing transaction, but obtaining rejection
-        updateStoredTransaction(preAuthResult.getId(), t -> t.setMcc("NOTALLOWEDMCC"));
-        extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.FORBIDDEN, AuthPaymentDTO.class);
-    }
-
-    @Test
-    @SneakyThrows
     void test_TooManyRequestThrownByRewardCalculator() {
         TransactionCreationRequest trxRequest = TransactionCreationRequestFaker.mockInstance(bias);
         trxRequest.setInitiativeId(INITIATIVEID);
@@ -359,6 +340,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
         // Authorizing transaction but obataining Too Many requests by reward-calculator
         updateStoredTransaction(preAuthResult.getId(), t -> t.setVat("TOOMANYREQUESTS"));
         extractResponse(authTrx(trxCreated, USERID, MERCHANTID), HttpStatus.TOO_MANY_REQUESTS, null);
+        preAuthResult.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         checkTransactionStored(preAuthResult, USERID);
     }
 
@@ -877,7 +859,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
 
         List<TransactionInProgress> expectedConfirmForced = trxByStatus.get(SyncTrxStatus.AUTHORIZED);
         List<TransactionInProgress> expectedAuthorizationForced = Arrays.stream(SyncTrxStatus.values())
-                .filter(s -> !s.equals(SyncTrxStatus.AUTHORIZED))
+                .filter(s -> !s.equals(SyncTrxStatus.AUTHORIZED) && !s.equals(SyncTrxStatus.AUTHORIZATION_REQUESTED))
                 .map(trxByStatus::get)
                 .filter(Objects::nonNull)
                 .flatMap(Collection::stream)
@@ -1053,12 +1035,7 @@ abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest 
                 Assertions.assertEquals(Collections.emptyList(), trxStored.getRejectionReasons());
                 Assertions.assertNotNull(trxStored.getRewards());
                 Assertions.assertFalse(trxStored.getRewards().isEmpty());
-
-                if (trxStored.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
-                    Assertions.assertNotNull(trxStored.getTrxChargeDate());
-                } else {
-                    Assertions.assertNull(trxStored.getTrxChargeDate());
-                }
+                Assertions.assertNotNull(trxStored.getTrxChargeDate());
                 Assertions.assertNull(trxStored.getElaborationDateTime());
             }
             default -> throw new IllegalStateException("Unexpected stored status:" + trxStored.getStatus());

@@ -9,9 +9,11 @@ import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,8 +26,9 @@ public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implemen
                                       QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService,
                                       RewardCalculatorConnector rewardCalculatorConnector,
                                       AuditUtilities auditUtilities,
-                                      WalletConnector walletConnector){
-    super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
+                                      WalletConnector walletConnector,
+                                      @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService){
+    super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService);
     this.qrCodeAuthorizationExpiredService = qrCodeAuthorizationExpiredService;
   }
 

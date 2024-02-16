@@ -6,15 +6,19 @@ import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
-import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
+
+import org.apache.commons.lang3.function.TriFunction;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -73,10 +77,12 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         return result;
     }
 
-    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
-        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.rewardMap(trx)));
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, PaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.preAuthRequestMap(trx)));
     }
-
+    private AuthPaymentDTO performRequest(TransactionInProgress trx, TriFunction<Long,String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getCounterVersion(),trx.getInitiativeId(), requestMapper.authRequestMap(trx)));
+    }
     private AuthPaymentDTO performRequest(TransactionInProgress trx, Supplier<AuthPaymentResponseDTO> requestExecutor) {
         AuthPaymentResponseDTO responseDTO;
         try {
@@ -94,6 +100,14 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                         "Too many request on the ms reward",true,e);
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", true, e);
+                case 412 ->{
+                        responseDTO = new AuthPaymentResponseDTO();
+                        responseDTO.setStatus(SyncTrxStatus.REJECTED);
+                        responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+                        responseDTO.setInitiativeId(trx.getInitiativeId());
+                }
+                case 423 -> throw new TransactionVersionPendingException(
+                        "The transaction version is actually locked", true,e);
                 default -> throw new RewardCalculatorInvocationException(
                         "An error occurred in the microservice reward-calculator", true, e);
             }

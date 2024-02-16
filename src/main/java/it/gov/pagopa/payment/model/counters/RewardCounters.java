@@ -15,4 +15,5 @@ import lombok.experimental.SuperBuilder;
 public class RewardCounters extends Counters {
     private boolean exhaustedBudget;
     private BigDecimal initiativeBudget;
+    private long version;
 }

@@ -1,12 +1,17 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/preview/INITIATIVEID",
+    "urlPathPattern": "/reward/initiative/(INITIATIVEID|BARCODE_INITIATIVEID_REWARDED)",
+    "headers" : {
+      "If-Match" : {
+        "equalTo" : "0"
+      }
+    },
     "bodyPatterns": [
       {
         "equalToJson": {
           "transactionId": "${json-unit.any-string}",
-          "userId": "USERID",
+          "userId": "${json-unit.regex}.*USERID",
           "merchantId": "MERCHANTID",
           "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
           "vat": "${json-unit.regex}VAT[0-9]+",
@@ -14,11 +19,12 @@
           "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
           "amountCents":  "${json-unit.any-number}",
           "amountCurrency": "EUR",
-          "mcc":  "NOTALLOWEDMCC1",
+          "mcc":  "${json-unit.regex}MCC[0-9]+",
           "acquirerId":  "ACQUIRERID",
           "idTrxIssuer": "IDTRXISSUER",
-          "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
-          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE)"
+          "idTrxAcquirer": "${json-unit.regex}.*IDTRXACQUIRER[0-9]+",
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE)",
+          "rewardCents": 200
         }
       }
     ]
@@ -34,7 +40,7 @@
       "channel":  "{{jsonPath request.body '$.channel'}}",
       "initiativeId": "INITIATIVEID",
       "userId": "USERID",
-      "status": "REJECTED",
+      "status": "REWARDED",
       "effectiveAmount": "0.10",
       "amount": "0.10",
       "amountCents": "10",
@@ -47,9 +53,14 @@
         "dailyCapped": false,
         "monthlyCapped": false,
         "yearlyCapped": false,
-        "weeklyCapped": false
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
       },
-      "rejectionReasons": ["BUDGET_EXHAUSTED"]
+      "rejectionReasons": []
     }
   }
 }

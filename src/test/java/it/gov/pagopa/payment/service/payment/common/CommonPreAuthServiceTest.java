@@ -105,13 +105,13 @@ class CommonPreAuthServiceTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
-            commonPreAuthService.previewPayment(trx, "CHANNEL")
+            commonPreAuthService.previewPayment(trx, "CHANNEL",SyncTrxStatus.IDENTIFIED)
     );
 
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
     Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), any(), anyString(), anyLong());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(), any(),anyLong(),any());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
@@ -127,12 +127,12 @@ class CommonPreAuthServiceTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     BudgetExhaustedException result = Assertions.assertThrows(BudgetExhaustedException.class, () ->
-            commonPreAuthService.previewPayment(trx, "CHANNEL")
+            commonPreAuthService.previewPayment(trx, "CHANNEL", SyncTrxStatus.IDENTIFIED)
     );
 
     assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), any(), anyString(),anyLong());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(),anyLong(),any());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
@@ -147,13 +147,13 @@ class CommonPreAuthServiceTest {
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
     TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
-      commonPreAuthService.previewPayment(trx, "CHANNEL")
+      commonPreAuthService.previewPayment(trx, "CHANNEL",SyncTrxStatus.IDENTIFIED)
     );
 
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
     Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxIdentified(anyString(), anyString(), any(), any(), any(), any(), anyString(),anyLong());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(),anyLong(),any());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
@@ -288,7 +288,7 @@ class CommonPreAuthServiceTest {
     when(rewardCalculatorConnectorMock.previewTransaction(any())).thenReturn(responseRE);
 
     TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
-            commonPreAuthService.previewPayment(trx, "CHANNEL")
+            commonPreAuthService.previewPayment(trx, "CHANNEL",SyncTrxStatus.IDENTIFIED)
     );
 
     Assertions.assertNotNull(result);

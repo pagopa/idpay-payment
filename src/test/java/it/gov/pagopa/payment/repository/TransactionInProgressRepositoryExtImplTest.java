@@ -313,7 +313,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "trxChargeDate",
                 "initiativeRejectionReasons");
 
-        transactionInProgressRepository.updateTrxIdentified("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"),Map.of(transactionInProgress.getInitiativeId(), List.of("REASON")), Map.of("ID", new Reward()), "CHANNEL", 1L);
+        transactionInProgressRepository.updateTrxWithStatus("MOCKEDTRANSACTION_qr-code_1", "USERID1", 500L, List.of("REASON"),Map.of(transactionInProgress.getInitiativeId(), List.of("REASON")), Map.of("ID", new Reward()), "CHANNEL",SyncTrxStatus.IDENTIFIED, 10L, OffsetDateTime.now());
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
@@ -537,6 +537,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 .id(TRX_ID)
                 .initiativeId(INITIATIVE_ID)
                 .initiatives(List.of(INITIATIVE_ID))
+                .counterVersion(0L)
                 .build();
         mongoTemplate.save(transactionInProgress);
 

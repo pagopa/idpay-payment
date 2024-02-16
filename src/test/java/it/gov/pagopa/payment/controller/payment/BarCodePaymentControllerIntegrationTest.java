@@ -56,7 +56,7 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
     private static final LocalDate TODAY = LocalDate.now();
     private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
             .amountCents(10000L)
-            .idTrxAcquirer("ID_TRX_ACQUIRER")
+            .idTrxAcquirer("IDTRXACQUIRER0")
             .build();
     private final Set<TransactionInProgress> expectedAuthorizationNotificationEvents = Collections.synchronizedSet(new HashSet<>());
 
@@ -138,7 +138,8 @@ class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
         saveInitiativeRewardRule(BARCODE_INITIATIVEID_TOOMANYREQUEST);
 
         TransactionBarCodeCreationRequest trxRequest = TransactionBarCodeCreationRequest.builder()
-                .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST).build();
+                .initiativeId(BARCODE_INITIATIVEID_TOOMANYREQUEST)
+                .build();
 
         // Creating transaction
         TransactionBarCodeResponse trxCreated = createTrxSuccess(trxRequest, USERID);
