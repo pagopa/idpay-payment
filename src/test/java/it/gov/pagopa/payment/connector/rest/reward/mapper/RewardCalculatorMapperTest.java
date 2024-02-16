@@ -1,24 +1,23 @@
 package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
+import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
 
  class RewardCalculatorMapperTest {
 
@@ -30,32 +29,27 @@ import org.junit.jupiter.api.Test;
   }
 
   @Test
-  void rewardMap() {
+  void preAuthRquestMap() {
 
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
         SyncTrxStatus.IDENTIFIED);
     transaction.setUserId("USERID%d".formatted(1));
-    AuthPaymentRequestDTO result = mapper.rewardMap(transaction);
+    PaymentRequestDTO result = mapper.preAuthRequestMap(transaction);
 
-    assertAll(() -> {
-      assertNotNull(result);
-      assertEquals(transaction.getId(), result.getTransactionId());
-      assertEquals(transaction.getUserId(), result.getUserId());
-      assertEquals(transaction.getMerchantId(), result.getMerchantId());
-      assertEquals(transaction.getMerchantFiscalCode(), result.getMerchantFiscalCode());
-      assertEquals(transaction.getVat(), result.getVat());
-      assertEquals(transaction.getIdTrxIssuer(), result.getIdTrxIssuer());
-      assertEquals(transaction.getTrxDate(), result.getTrxDate());
-      assertEquals(transaction.getAmountCents(), result.getAmountCents());
-      assertEquals(transaction.getAmountCurrency(), result.getAmountCurrency());
-      assertEquals(transaction.getMcc(), result.getMcc());
-      assertEquals(transaction.getAcquirerId(), result.getAcquirerId());
-      assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
-      assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
-      assertEquals(transaction.getCorrelationId(), result.getTransactionId());
-      TestUtils.checkNotNullFields(result, "trxChargeDate");
-    });
+      commonAssertField(transaction, result);
   }
+     @Test
+     void authRquestMap() {
+
+         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1,
+                 SyncTrxStatus.IDENTIFIED);
+         transaction.setUserId("USERID%d".formatted(1));
+         transaction.setCounterVersion(100L);
+         AuthPaymentRequestDTO result = mapper.authRequestMap(transaction);
+
+         commonAssertField(transaction,result);
+         assertEquals(transaction.getCounterVersion(),result.getRewardCents());
+     }
 
   @Test
   void rewardResponseMap() {
@@ -75,6 +69,7 @@ import org.junit.jupiter.api.Test;
       assertEquals(transaction.getTrxCode(), result.getTrxCode());
       assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
       assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
+      assertEquals(responseDTO.getCounterVersion(),result.getCounterVersion());
         TestUtils.checkNotNullFields(result,"residualBudget", "secondFactor","splitPayment",
                 "residualAmountCents");
     });
@@ -126,6 +121,27 @@ import org.junit.jupiter.api.Test;
              assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
              TestUtils.checkNotNullFields(result, "residualBudget", "secondFactor","splitPayment",
                      "residualAmountCents");
+         });
+     }
+
+     private static void commonAssertField(TransactionInProgress transaction, PaymentRequestDTO result) {
+         assertAll(() -> {
+             assertNotNull(result);
+             assertEquals(transaction.getId(), result.getTransactionId());
+             assertEquals(transaction.getUserId(), result.getUserId());
+             assertEquals(transaction.getMerchantId(), result.getMerchantId());
+             assertEquals(transaction.getMerchantFiscalCode(), result.getMerchantFiscalCode());
+             assertEquals(transaction.getVat(), result.getVat());
+             assertEquals(transaction.getIdTrxIssuer(), result.getIdTrxIssuer());
+             assertEquals(transaction.getTrxDate(), result.getTrxDate());
+             assertEquals(transaction.getAmountCents(), result.getAmountCents());
+             assertEquals(transaction.getAmountCurrency(), result.getAmountCurrency());
+             assertEquals(transaction.getMcc(), result.getMcc());
+             assertEquals(transaction.getAcquirerId(), result.getAcquirerId());
+             assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
+             assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
+             assertEquals(transaction.getCorrelationId(), result.getTransactionId());
+             TestUtils.checkNotNullFields(result, "trxChargeDate");
          });
      }
 

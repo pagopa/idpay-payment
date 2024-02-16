@@ -1,52 +1,47 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/INITIATIVEID",
-    "headers" : {
-      "If-Match" : {
-        "equalTo" : "0"
-      }
-    },
+    "urlPathPattern": "/reward/initiative/preview/INITIATIVEID1",
     "bodyPatterns": [
       {
         "equalToJson": {
           "transactionId": "${json-unit.any-string}",
-          "userId": "USERID",
-          "merchantId": "MERCHANTID",
+          "userId": null,
+          "merchantId": "${json-unit.regex}MERCHANTID[0-9]+",
           "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
           "vat": "${json-unit.regex}VAT[0-9]+",
-          "trxDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
-          "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
+          "trxDate": "${json-unit.any-number}",
+          "trxChargeDate": null,
           "amountCents":  "${json-unit.any-number}",
-          "amountCurrency": "EUR",
+          "amountCurrency": "${json-unit.regex}AMOUNTCURRENCY[0-9]+",
           "mcc":  "${json-unit.regex}MCC[0-9]+",
-          "acquirerId":  "ACQUIRERID",
-          "idTrxIssuer": "IDTRXISSUER",
+          "acquirerId":  "${json-unit.regex}ACQUIRERID[0-9]+",
+          "idTrxIssuer": "${json-unit.regex}IDTRXISSUER[0-9]+",
           "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
-          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE)",
-          "rewardCents": 200
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)"
         }
       }
     ]
   },
   "response": {
-    "status": "409",
+    "status": "200",
     "headers": {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "ETag": "1"
     },
     "transformers": ["response-template"],
     "jsonBody": {
       "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
       "channel":  "{{jsonPath request.body '$.channel'}}",
-      "initiativeId": "INITIATIVEID",
+      "initiativeId": "INITIATIVEID1",
       "userId": "USERID",
-      "status": "REWARDED",
+      "status": "IDENTIFIED",
       "effectiveAmount": "0.10",
       "amount": "0.10",
-      "amountCents": "1000",
+      "amountCents": "10",
       "reward": {
-        "initiativeId": "INITIATIVEID",
-        "organizationId": "ORGANIZATIONID",
+        "initiativeId": "INITIATIVEID1",
+        "organizationId": "ORGANIZATIONID1",
         "providedReward": 2.00,
         "accruedReward": 2.00,
         "capped": false,
@@ -60,6 +55,7 @@
           "initiativeBudget" : 80
         }
       },
+      "counterVersion": 1.00,
       "rejectionReasons": []
     }
   }

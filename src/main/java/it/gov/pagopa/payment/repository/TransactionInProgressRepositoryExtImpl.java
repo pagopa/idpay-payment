@@ -70,7 +70,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.initiativeName, trx.getInitiativeName())
                         .setOnInsert(Fields.businessName, trx.getBusinessName())
                         .setOnInsert(Fields.updateDate, trx.getUpdateDate())
-                        .setOnInsert(Fields.userId, trx.getUserId()),
+                        .setOnInsert(Fields.userId, trx.getUserId())
+                        .setOnInsert(Fields.counterVersion, trx.getCounterVersion()),
                 TransactionInProgress.class);
     }
 
@@ -158,17 +159,19 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 TransactionInProgress.class);
     }
     @Override
-    public void updateTrxIdentified(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, Map<String, Reward> rewards, String channel) {
+    public void updateTrxWithStatus(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, Map<String, Reward> rewards, String channel, SyncTrxStatus status, long counterVersion, OffsetDateTime trxChargeDate) {
         mongoTemplate.updateFirst(
                 Query.query(Criteria.where(Fields.id).is(id)),
                 new Update()
-                        .set(Fields.status, SyncTrxStatus.IDENTIFIED)
+                        .set(Fields.status, status)
                         .set(Fields.userId, userId)
                         .set(Fields.reward, reward)
                         .set(Fields.rejectionReasons, rejectionReasons)
                         .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                         .set(Fields.rewards, rewards)
                         .set(Fields.channel, channel)
+                        .set(Fields.counterVersion,counterVersion)
+                        .set(Fields.trxChargeDate, trxChargeDate)
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
@@ -182,6 +185,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                 .set(Fields.rewards, trx.getRewards())
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
+                .set(Fields.counterVersion, trx.getCounterVersion())
                 .currentDate(Fields.updateDate);
 
         if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){

@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.qrcode;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -30,7 +31,7 @@ public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implement
             .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
     relateUser(trx, userId);
-    AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_QRCODE);
+    AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_QRCODE, SyncTrxStatus.IDENTIFIED);
 
     auditLogRelateUser(trx, RewardConstants.TRX_CHANNEL_QRCODE);
     return authPaymentDTO;

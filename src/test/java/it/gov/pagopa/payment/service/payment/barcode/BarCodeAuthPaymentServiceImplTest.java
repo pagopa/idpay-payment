@@ -18,6 +18,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -51,7 +53,8 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private WalletConnector walletConnectorMock;
     @Mock private MerchantConnector merchantConnector;
-
+    @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
+    @Mock private CommonAuthServiceImpl commonAuthServiceMock;
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
     private static final String TRX_CODE1 = "trxcode1";
@@ -73,14 +76,15 @@ class BarCodeAuthPaymentServiceImplTest {
                 rewardCalculatorConnectorMock,
                 auditUtilitiesMock,
                 walletConnectorMock,
-                merchantConnector);
+                merchantConnector,
+                commonPreAuthServiceMock);
     }
 
     @Test
     void barCodeAuthPayment(){
         // Given
         TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId(USER_ID);
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);

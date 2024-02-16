@@ -17,7 +17,7 @@
       "status": "REWARDED",
       "effectiveAmount": "0",
       "amount": "0.10",
-      "amountCents": "1000",
+      "amountCents": "10",
       "reward": {
         "initiativeId": "INITIATIVEID",
         "organizationId": "ORGANIZATIONID",
@@ -27,7 +27,12 @@
         "dailyCapped": false,
         "monthlyCapped": false,
         "yearlyCapped": false,
-        "weeklyCapped": false
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
       },
       "rejectionReasons": []
     }

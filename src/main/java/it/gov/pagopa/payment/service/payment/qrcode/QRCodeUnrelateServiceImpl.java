@@ -74,6 +74,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
         trx.setChannel(null);
         trx.setRejectionReasons(Collections.emptyList());
         trx.setUpdateDate(LocalDateTime.now());
+        trx.setTrxChargeDate(null);
     }
 
     private void callRewardCalculatorCancelTransaction(TransactionInProgress trx) {

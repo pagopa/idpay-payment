@@ -1,24 +1,24 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/preview/INITIATIVEID",
+    "urlPathPattern": "/reward/initiative/preview/INITIATIVEID2",
     "bodyPatterns": [
       {
         "equalToJson": {
           "transactionId": "${json-unit.any-string}",
-          "userId": "USERID",
-          "merchantId": "MERCHANTID",
+          "userId": null,
+          "merchantId": "${json-unit.regex}MERCHANTID[0-9]+",
           "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
           "vat": "${json-unit.regex}VAT[0-9]+",
-          "trxDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
-          "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
+          "trxDate": "${json-unit.any-number}",
+          "trxChargeDate": null,
           "amountCents":  "${json-unit.any-number}",
-          "amountCurrency": "EUR",
-          "mcc":  "NOTALLOWEDMCC1",
-          "acquirerId":  "ACQUIRERID",
-          "idTrxIssuer": "IDTRXISSUER",
+          "amountCurrency": "${json-unit.regex}AMOUNTCURRENCY[0-9]+",
+          "mcc":  "${json-unit.regex}MCC[0-9]+",
+          "acquirerId":  "${json-unit.regex}ACQUIRERID[0-9]+",
+          "idTrxIssuer": "${json-unit.regex}IDTRXISSUER[0-9]+",
           "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
-          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE)"
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)"
         }
       }
     ]
@@ -26,30 +26,37 @@
   "response": {
     "status": "200",
     "headers": {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "ETag": "ASD"
     },
     "transformers": ["response-template"],
     "jsonBody": {
       "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
       "channel":  "{{jsonPath request.body '$.channel'}}",
-      "initiativeId": "INITIATIVEID",
+      "initiativeId": "INITIATIVEID2",
       "userId": "USERID",
-      "status": "REJECTED",
+      "status": "IDENTIFIED",
       "effectiveAmount": "0.10",
       "amount": "0.10",
       "amountCents": "10",
       "reward": {
-        "initiativeId": "INITIATIVEID",
-        "organizationId": "ORGANIZATIONID",
+        "initiativeId": "INITIATIVEID2",
+        "organizationId": "ORGANIZATIONID2",
         "providedReward": 2.00,
         "accruedReward": 2.00,
         "capped": false,
         "dailyCapped": false,
         "monthlyCapped": false,
         "yearlyCapped": false,
-        "weeklyCapped": false
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
       },
-      "rejectionReasons": ["BUDGET_EXHAUSTED"]
+      "counterVersion": 1.00,
+      "rejectionReasons": []
     }
   }
 }

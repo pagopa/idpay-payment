@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
@@ -48,6 +49,7 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
+  @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
 
   QRCodeAuthPaymentService service;
 
@@ -61,7 +63,8 @@ class QRCodeAuthPaymentServiceTest {
                     qrCodeAuthorizationExpiredServiceMock,
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
-                    walletConnectorMock);
+                    walletConnectorMock,
+                    commonPreAuthServiceMock);
   }
 
   @Test
@@ -184,6 +187,44 @@ class QRCodeAuthPaymentServiceTest {
   }
 
   @Test
+  void authPaymentWhenMismatchVersionCounter() {
+    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID1");
+
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+    authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+    authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+
+    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+
+    when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
+            .thenReturn(transaction);
+
+    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
+
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+
+    Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
+
+    Mockito.doAnswer(
+                    invocationOnMock -> {
+                      transaction.setStatus(authPaymentDTO.getStatus());
+                      transaction.setRejectionReasons(authPaymentDTO.getRejectionReasons());
+                      transaction.setInitiativeRejectionReasons(initiativeRejectionReasons);
+                      return transaction;
+                    })
+            .when(repositoryMock)
+            .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(),initiativeRejectionReasons);
+
+    TransactionVersionMismatchException result =
+            assertThrows(TransactionVersionMismatchException.class, () -> service.authPayment("USERID1", "trxcode1"));
+
+    verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
+    verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH, result.getCode());
+  }
+  @Test
   void authPaymentNotFound() {
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired("trxcode1")).thenReturn(null);
 
@@ -236,10 +277,12 @@ class QRCodeAuthPaymentServiceTest {
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     transaction.setUserId("USERID%d".formatted(1));
 
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
+    when(commonPreAuthServiceMock.previewPayment(transaction,transaction.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(authPaymentDTO);
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     OperationNotAllowedException result =

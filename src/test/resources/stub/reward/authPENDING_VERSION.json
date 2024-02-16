@@ -1,0 +1,30 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/reward/initiative/INITIATIVEID_VERSION_PENDING",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "transactionId":"${json-unit.any-string}",
+          "userId":"${json-unit.regex}USERID[0-9]+",
+          "merchantId":"${json-unit.regex}MERCHANTID[0-9]+",
+          "merchantFiscalCode":"${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
+          "vat":"PENDING",
+          "trxDate":"${json-unit.any-number}",
+          "trxChargeDate":null,
+          "amountCents":"${json-unit.any-number}",
+          "amountCurrency":"${json-unit.regex}AMOUNTCURRENCY[0-9]+",
+          "mcc":"${json-unit.regex}MCC[0-9]+",
+          "acquirerId":"${json-unit.regex}ACQUIRERID[0-9]+",
+          "idTrxIssuer":"${json-unit.regex}IDTRXISSUER[0-9]+",
+          "idTrxAcquirer":"${json-unit.regex}IDTRXACQUIRER[0-9]+",
+          "channel":"${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)",
+          "rewardCents":"${json-unit.any-number}"
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "423"
+  }
+}

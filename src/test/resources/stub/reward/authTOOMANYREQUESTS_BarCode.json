@@ -1,7 +1,12 @@
 {
   "request": {
     "method": "POST",
-    "urlPathPattern": "/reward/initiative/BARCODE_INITIATIVEID_TOOMANYREQUEST"
+    "urlPathPattern": "/reward/initiative/BARCODE_INITIATIVEID_TOOMANYREQUEST",
+    "headers" : {
+      "If-Match" : {
+        "equalTo" : "0"
+      }
+    }
   },
   "response": {
     "status": "429",
@@ -21,7 +26,7 @@
       "amount": "0.10",
       "amountCents": "10",
       "reward": {
-        "initiativeId": "INITIATIVEID",
+        "initiativeId": "BARCODE_INITIATIVEID_TOOMANYREQUEST",
         "organizationId": "ORGANIZATIONID",
         "providedReward": 2.00,
         "accruedReward": 2.00,
@@ -29,7 +34,12 @@
         "dailyCapped": false,
         "monthlyCapped": false,
         "yearlyCapped": false,
-        "weeklyCapped": false
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
       },
       "rejectionReasons": []
     }
