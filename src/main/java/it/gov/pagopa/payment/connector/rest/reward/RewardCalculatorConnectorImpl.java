@@ -8,10 +8,13 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.PreAuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
@@ -97,8 +100,11 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                         "Too many request on the ms reward",true,e);
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", true, e);
-                case 412 -> throw new TransactionVersionMismatchException(
-                        "The transaction version mismatch",true,e);
+                case 412 ->{
+                        responseDTO= new AuthPaymentResponseDTO();
+                        responseDTO.setStatus(SyncTrxStatus.REJECTED);
+                        responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+                }
                 case 423 -> throw new TransactionVersionPendingException(
                         "The transaction version is actually locked", true,e);
                 default -> throw new RewardCalculatorInvocationException(

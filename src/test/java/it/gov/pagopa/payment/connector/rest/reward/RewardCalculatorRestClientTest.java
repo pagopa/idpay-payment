@@ -73,9 +73,11 @@ class RewardCalculatorRestClientTest {
         trx.setInitiativeId("INITIATIVEID_VERSION_MISMATCH");
         trx.setUserId("USERID1");
 
-        TransactionVersionMismatchException exception = Assert.assertThrows(TransactionVersionMismatchException.class, () -> rewardCalculatorConnector.authorizePayment(trx));
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH,exception.getCode());
-        Assertions.assertEquals("The transaction version mismatch",exception.getMessage() );
+        AuthPaymentDTO result = rewardCalculatorConnector.authorizePayment(trx);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+        Assertions.assertEquals(SyncTrxStatus.REJECTED,result.getStatus());
     }
 
     @Test

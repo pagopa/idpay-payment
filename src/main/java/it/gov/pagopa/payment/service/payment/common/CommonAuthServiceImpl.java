@@ -87,6 +87,9 @@ public abstract class CommonAuthServiceImpl {
                 if (authPaymentDTO.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
                     throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(trx.getInitiativeId()));
                 }
+                if(authPaymentDTO.getRejectionReasons().contains(ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH)){
+                    throw new TransactionVersionMismatchException("The transaction version mismatch");
+                }
                 throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
             }
 
