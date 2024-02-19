@@ -5117,7 +5117,7 @@
           "name": "Unhappy case",
           "item": [
             {
-              "name": "Different counter version and reward - 412",
+              "name": "Different counter version and reward - 403",
               "item": [
                 {
                   "name": "Initiative creation",
@@ -6942,12 +6942,12 @@
                               "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
                               "\r",
                               "pm.test(\"Payment - Unhappy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
-                              "    pm.response.to.have.status(412);\r",
+                              "    pm.response.to.have.status(403);\r",
                               "});\r",
                               "\r",
                               "pm.test(\"Payment - Unhappy case: [IO] Authorize transaction [QR-CODE] - Verify response status contains info about ko\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    pm.expect(jsonResponse.code).to.eql(\"PAYMENT_TRANSACTION_VERSION_MISMATCH\");\r",
+                              "    pm.expect(jsonResponse.code).to.eql(\"PAYMENT_GENERIC_REJECTED\");\r",
                               "});\r",
                               "\r",
                               ""
