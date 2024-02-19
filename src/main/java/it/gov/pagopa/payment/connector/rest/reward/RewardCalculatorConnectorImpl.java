@@ -103,7 +103,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                 case 412 ->{
                         responseDTO = new AuthPaymentResponseDTO();
                         responseDTO.setStatus(SyncTrxStatus.REJECTED);
-                        responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+                        responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
                         responseDTO.setInitiativeId(trx.getInitiativeId());
                 }
                 case 423 -> throw new TransactionVersionPendingException(

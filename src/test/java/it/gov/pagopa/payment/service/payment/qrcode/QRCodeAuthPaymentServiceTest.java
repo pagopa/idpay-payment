@@ -193,7 +193,7 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-    authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+    authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
@@ -216,13 +216,13 @@ class QRCodeAuthPaymentServiceTest {
             .when(repositoryMock)
             .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(),initiativeRejectionReasons);
 
-    TransactionVersionMismatchException result =
-            assertThrows(TransactionVersionMismatchException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    TransactionRejectedException result =
+            assertThrows(TransactionRejectedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH, result.getCode());
+    Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
   }
   @Test
   void authPaymentNotFound() {
