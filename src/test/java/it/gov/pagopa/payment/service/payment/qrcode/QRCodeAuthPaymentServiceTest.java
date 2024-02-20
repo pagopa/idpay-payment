@@ -216,13 +216,14 @@ class QRCodeAuthPaymentServiceTest {
             .when(repositoryMock)
             .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(),initiativeRejectionReasons);
 
-    TransactionRejectedException result =
-            assertThrows(TransactionRejectedException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
+    Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
   }
   @Test
   void authPaymentNotFound() {
