@@ -76,7 +76,7 @@ class RewardCalculatorRestClientTest {
         AuthPaymentDTO result = rewardCalculatorConnector.authorizePayment(trx);
 
         Assertions.assertNotNull(result);
-        Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+        Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
         Assertions.assertEquals(SyncTrxStatus.REJECTED,result.getStatus());
     }
 
