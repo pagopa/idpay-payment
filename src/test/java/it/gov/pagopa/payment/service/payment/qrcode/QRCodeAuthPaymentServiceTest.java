@@ -37,8 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -92,7 +91,7 @@ class QRCodeAuthPaymentServiceTest {
             invocationOnMock -> {
               transaction.setStatus(SyncTrxStatus.AUTHORIZED);
               transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
-              transaction.setRejectionReasons(List.of());
+              transaction.setRejectionReasons(null);
               transaction.setTrxChargeDate(OffsetDateTime.now());
               return transaction;
             })
@@ -107,6 +106,7 @@ class QRCodeAuthPaymentServiceTest {
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
             "residualAmountCents");
     assertEquals(transaction.getTrxCode(), result.getTrxCode());
+    assertTrue(result.getRejectionReasons().isEmpty());
   }
 
   @Test
@@ -116,7 +116,6 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-    authPaymentDTO.setRejectionReasons(List.of("DUMMYREJECTIONREASON"));
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
@@ -145,6 +144,7 @@ class QRCodeAuthPaymentServiceTest {
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
     Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
+    Assertions.assertTrue(initiativeRejectionReasons.isEmpty());
   }
 
   @Test
