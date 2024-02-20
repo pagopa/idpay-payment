@@ -18,6 +18,20 @@ spring:
     activate:
       on-profile: default
   cloud:
+    azure:
+      servicebus:
+        connection-string: ${SERVICEBUS_NAMESPACE_CONNECTION_STRING:idpay-payment-timeout-consumer-sas-key}
+      function:
+        definition: consume
+      stream:
+        bindings:
+          consume-in-0:
+            destination: ${SERVICEBUS_ENTITY_NAME:idpay-payment-timeout}
+        servicebus:
+          bindings:
+            consume-in-0:
+              consumer:
+                auto-complete: false
     function:
       definition: errors;transactionOutcome;consumerCommands
     stream:
