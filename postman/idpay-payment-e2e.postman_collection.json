@@ -1836,7 +1836,7 @@
                             "exec": [
                               "pm=instrumentPmMethod(pm);\r",
                               "\r",
-                              "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                              "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                               "\r",
                               "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
                               "    pm.response.to.have.status(200);\r",
@@ -4442,7 +4442,7 @@
                         "exec": [
                           "pm=instrumentPmMethod(pm);\r",
                           "\r",
-                          "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                          "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                           "\r",
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
                           "    pm.response.to.have.status(200);\r",
@@ -4919,7 +4919,7 @@
                         "exec": [
                           "pm=instrumentPmMethod(pm);\r",
                           "\r",
-                          "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                          "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                           "\r",
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
                           "    pm.response.to.have.status(200);\r",
@@ -5117,7 +5117,7 @@
           "name": "Unhappy case",
           "item": [
             {
-              "name": "Different counter version and reward - 403",
+              "name": "Different counter version and reward - REJECTED",
               "item": [
                 {
                   "name": "Initiative creation",
@@ -6939,15 +6939,16 @@
                             "exec": [
                               "pm=instrumentPmMethod(pm);\r",
                               "\r",
-                              "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                              "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                               "\r",
                               "pm.test(\"Payment - Unhappy case: [IO] Authorize transaction [QR-CODE]\", function () {\r",
-                              "    pm.response.to.have.status(403);\r",
+                              "    pm.response.to.have.status(200);\r",
                               "});\r",
                               "\r",
                               "pm.test(\"Payment - Unhappy case: [IO] Authorize transaction [QR-CODE] - Verify response status contains info about ko\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    pm.expect(jsonResponse.code).to.eql(\"PAYMENT_GENERIC_REJECTED\");\r",
+                              "    pm.expect(jsonResponse.status).to.eql(\"REJECTED\");\r",
+                              "    pm.expect(jsonResponse.rejectionReasons).to.contains(\"PAYMENT_CANNOT_GUARANTEE_REWARD\");\r",
                               "});\r",
                               "\r",
                               ""
@@ -12333,7 +12334,7 @@
                             "exec": [
                               "pm=instrumentPmMethod(pm);\r",
                               "\r",
-                              "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                              "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                               "\r",
                               "pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][ANOTHER_USER_RELATED][STEP_4] [IO] Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
                               "    pm.response.to.have.status(200);\r",
@@ -12896,7 +12897,7 @@
                             "exec": [
                               "pm=instrumentPmMethod(pm);\r",
                               "\r",
-                              "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                              "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                               "\r",
                               "pm.test(\"Payment - Unhappy case: QR code Confirm transaction - [CONFIRM_TRX][TRX_ALREADY_PROCESSED][STEP_4] [IO] Authorize transaction [QR-CODE] - Response status is 200\", function () {\r",
                               "    pm.response.to.have.status(200);\r",
@@ -16986,7 +16987,7 @@
                         "exec": [
                           "pm=instrumentPmMethod(pm);\r",
                           "\r",
-                          "retryWhenStatusCode(postman, pm, setTimeout, 423, 1000);\r",
+                          "retryWhenStatusCode(postman, pm, setTimeout, 429, 1000);\r",
                           "\r",
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE]\", function () {\r",
                           "    pm.response.to.have.status(200);\r",
