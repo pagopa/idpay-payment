@@ -9,5 +9,5 @@ import java.util.function.Consumer;
 @Configuration
 public class TimeoutConsumer {
     @Bean
-    public Consumer<String> sink() { 	return a -> log.info(a + "[TIMEOUT-CONSUMER-TEST]"); 	}
+    public Consumer<String> consume() { 	return a -> log.info(a + "[TIMEOUT-CONSUMER-TEST]"); 	}
 }
