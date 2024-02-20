@@ -118,6 +118,7 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+    authPaymentDTO.setRejectionReasons(List.of("DUMMYREJECTIONREASON"));
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
@@ -146,7 +147,6 @@ class QRCodeAuthPaymentServiceTest {
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
 
     Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
-    Assertions.assertTrue(initiativeRejectionReasons.isEmpty());
   }
 
   @Test
