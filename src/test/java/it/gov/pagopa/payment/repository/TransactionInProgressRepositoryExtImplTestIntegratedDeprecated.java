@@ -12,5 +12,5 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {
         "app.qrCode.throttlingSeconds:2"
 })
-class TransactionInProgressRepositoryExtImplTestIntegrated extends TransactionInProgressRepositoryExtImplTest {
+class TransactionInProgressRepositoryExtImplTestIntegratedDeprecated extends TransactionInProgressRepositoryExtImplTest {
 }

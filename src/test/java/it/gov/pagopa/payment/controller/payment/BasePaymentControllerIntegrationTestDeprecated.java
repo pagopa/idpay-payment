@@ -57,7 +57,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
                 "app.qrCode.throttlingSeconds=1"
         })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class BasePaymentControllerIntegrationTest extends BaseIntegrationTest {
+abstract class BasePaymentControllerIntegrationTestDeprecated extends BaseIntegrationTest {
 
     public static final String INITIATIVEID = "INITIATIVEID";
     public static final String INITIATIVEID_NOT_STARTED = INITIATIVEID + "1";

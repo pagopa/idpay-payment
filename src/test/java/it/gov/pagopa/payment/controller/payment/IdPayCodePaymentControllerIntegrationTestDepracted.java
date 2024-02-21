@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
-class IdPayCodePaymentControllerIntegrationTest extends BasePaymentControllerIntegrationTest {
+class IdPayCodePaymentControllerIntegrationTestDepracted extends BasePaymentControllerIntegrationTestDeprecated {
 
     @Autowired
     private AuthPaymentMapper authPaymentMapper;

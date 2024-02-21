@@ -35,7 +35,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
-class BarCodePaymentControllerIntegrationTest extends BaseIntegrationTest {
+class BarCodePaymentControllerIntegrationTestDeprecated extends BaseIntegrationTest {
 
     @Autowired
     private RewardRuleRepository rewardRuleRepository;
