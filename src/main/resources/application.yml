@@ -56,7 +56,7 @@ spring:
           #          group: ${KAFKA_ONBOARDING_REQUEST_GROUP_ID:idPayAdmissibilityProcessor}
           #          content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: servicebus-payment-timeout-request
-          consumer.autoStartup: false
+          consumer.autoStartup: true
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
