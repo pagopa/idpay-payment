@@ -19,6 +19,11 @@
     </properties>
 
     <dependencies>
+        <!-- Azure -->
+        <dependency>
+            <groupId>com.azure.spring</groupId>
+            <artifactId>spring-cloud-azure-stream-binder-servicebus</artifactId>
+        </dependency>
         <!--SB STARTER-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -168,6 +173,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.azure.spring</groupId>
+                <artifactId>spring-cloud-azure-dependencies</artifactId>
+                <version>5.8.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
