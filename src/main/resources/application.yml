@@ -20,11 +20,13 @@ spring:
   cloud:
     azure:
       servicebus:
-        connection-string: ${SERVICEBUS_PAYMENT_CONNECTION_STRING:}
+        connection-string: ${SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING:}
     function:
       definition: errors;transactionOutcome;consumerCommands;consume
     stream:
       binders:
+        servicebus-payment-timeout-request:
+          type: servicebus
         kafka-errors:
           type: kafka
           environment:
@@ -49,8 +51,12 @@ spring:
               configuration:
                 sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       bindings:
-        consumerTimeout-in-0:
-          destination: ${SERVICEBUS_ENTITY_NAME:idpay_payment_timeout}
+        consume-in-0:
+          destination: ${SERVICEBUS_PAYMENT_TIMEOUT_REQUEST_TOPIC:idpay-payment-timeout}
+          #          group: ${KAFKA_ONBOARDING_REQUEST_GROUP_ID:idPayAdmissibilityProcessor}
+          #          content-type: ${KAFKA_CONTENT_TYPE:application/json}
+          binder: servicebus-payment-timeout-request
+          consumer.autoStartup: false
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -64,6 +70,11 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_COMMANDS_TOPIC:idpay-commands}
           group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-payment-consumer-group}
+      servicebus:
+        bindings:
+          consume-in-0:
+            consumer:
+              auto-complete: false
       kafka:
         binder:
           auto-create-topics: false
