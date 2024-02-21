@@ -20,7 +20,7 @@ spring:
   cloud:
     azure:
       servicebus:
-        connection-string: ${SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING:}
+        connection-string: ${SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING:idpay-payment-timeout-consumer-sas-key}
     function:
       definition: errors;transactionOutcome;consumerCommands;consume
     stream:
