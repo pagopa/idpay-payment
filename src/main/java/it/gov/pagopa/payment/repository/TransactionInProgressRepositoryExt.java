@@ -29,5 +29,5 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findCancelExpiredTransaction(String initiativeId, long cancelExpirationMinutes);
   TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId, long authorizationExpirationMinutes);
   List<TransactionInProgress> deletePaged(String initiativeId, int pageSize);
-  void updateTrxPostTimeout(String trxId);
+  UpdateResult updateTrxPostTimeout(String trxId);
 }

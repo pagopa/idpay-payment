@@ -53,8 +53,6 @@ spring:
       bindings:
         paymentTimeoutConsumer-in-0:
           destination: ${SERVICEBUS_PAYMENT_TIMEOUT_REQUEST_TOPIC:idpay-payment-timeout}
-          #          group: ${KAFKA_ONBOARDING_REQUEST_GROUP_ID:idPayAdmissibilityProcessor}
-          #          content-type: ${KAFKA_CONTENT_TYPE:application/json}
           binder: servicebus-payment-timeout-request
           consumer.autoStartup: true
         errors-out-0:
@@ -70,11 +68,6 @@ spring:
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
           destination: ${KAFKA_COMMANDS_TOPIC:idpay-commands}
           group: ${KAFKA_COMMANDS_GROUP_ID:idpay-commands-payment-consumer-group}
-      servicebus:
-        bindings:
-          paymentTimeoutConsumer-in-0:
-            consumer:
-              auto-complete: false
       kafka:
         binder:
           auto-create-topics: false

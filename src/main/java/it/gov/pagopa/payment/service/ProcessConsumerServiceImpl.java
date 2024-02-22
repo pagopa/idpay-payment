@@ -1,11 +1,14 @@
 package it.gov.pagopa.payment.service;
 
+import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.event.QueueCommandOperationDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -54,6 +57,21 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
             log.info(
                     "[PERFORMANCE_LOG] [DELETE_INITIATIVE] Time occurred to perform business logic: {} ms",
                     System.currentTimeMillis() - startTime);
+        }
+    }
+
+    @Override
+    public void timeoutConsumer(Message<String> message) {
+        if (PaymentConstants.TIMEOUT_PAYMENT.equals(message.getHeaders().get(PaymentConstants.MESSAGE_TOPIC))) {
+            log.info("[TIMEOUT_PAYMENT] Start processing transaction with id %s".formatted(message.getPayload()));
+            UpdateResult result = transactionInProgressRepository.updateTrxPostTimeout(message.getPayload());
+            if (result.getModifiedCount() != 0) {
+                log.info("[TIMEOUT_PAYMENT] Transaction updated in status REJECTED");
+            } else {
+                log.info("[TIMEOUT_PAYMENT] Transaction skipped");
+            }
+        } else {
+            log.info("[TIMEOUT_PAYMENT] Skipping message");
         }
     }
 }
