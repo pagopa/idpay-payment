@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.event.consumer;
 
-import com.azure.messaging.servicebus.ServiceBusMessage;
+import com.azure.messaging.servicebus.ServiceBusReceivedMessage;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -17,9 +18,9 @@ public class TimeoutConsumer {
     }
 
     @Bean
-    public Consumer<ServiceBusMessage> paymentTimeoutConsumer() {
+    public Consumer<ServiceBusReceivedMessage> paymentTimeoutConsumer() {
         return message -> {
-            if ("TIMEOUT_PAYMENT".equals(message.getSubject())) {
+            if (PaymentConstants.TIMEOUT_PAYMENT.equals(message.getSubject())) {
                 log.info("[TIMEOUT PAYMENT] Start processing transaction with id %s".formatted(String.valueOf(message.getBody())));
                 transactionInProgressRepository.updateTrxPostTimeout(String.valueOf(message.getBody()));
                 log.info("[TIMEOUT PAYMENT] Transaction updated in status REJECTED");
