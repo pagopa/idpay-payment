@@ -14,6 +14,7 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.TimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -39,6 +40,8 @@ class IdpayCodeAuthPaymentServiceImplTest {
     @Mock private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredServiceMock;
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
+    @Mock private TimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
+
     private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
     private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
 
@@ -53,7 +56,8 @@ class IdpayCodeAuthPaymentServiceImplTest {
                     walletConnectorMock,
                     idpayCodeAuthorizationExpiredServiceMock,
                     paymentInstrumentConnectorMock,
-                    commonPreAuthServiceMock);
+                    commonPreAuthServiceMock,
+                    timeoutSchedulerServiceMock);
     }
 
     @Test

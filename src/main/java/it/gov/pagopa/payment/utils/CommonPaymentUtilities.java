@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
@@ -39,5 +41,12 @@ public class CommonPaymentUtilities {
             return Map.of(initiativeId, rejectionReasons);
         }
         return Collections.emptyMap();
+    }
+    public static <T> String convertToJson(T object, ObjectMapper objectMapper) {
+        try {
+            return objectMapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Error converting request in JSON",e);
+        }
     }
 }

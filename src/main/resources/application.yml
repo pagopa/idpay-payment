@@ -100,6 +100,10 @@ spring:
                   ms: ${KAFKA_COMMANDS_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
               standardHeaders: ${KAFKA_COMMANDS_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               startOffset: ${KAFKA_COMMANDS_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+    azure:
+      servicebus:
+        connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING}
+        queue_name: ${AZURE_SERVICEBUS_QUEUE_NAME:idpay-payment-timeout}
   data:
     mongodb:
       database: ${MONGODB_DBNAME:idpay}
@@ -178,6 +182,8 @@ app:
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}
+  timeoutPayment:
+    seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
 
 management:
   health:

@@ -9,8 +9,11 @@ public class PaymentConstants {
 
   public static final String WALLET_STATUS_SUSPENDED = "SUSPENDED";
   public static final String WALLET_STATUS_UNSUBSCRIBED = "UNSUBSCRIBED";
+  public static final String PAYMENT_AUTHORIZATION_TIMEOUT = "PAYMENT_AUTHORIZATION_TIMEOUT";
 
+  public static final String MESSAGE_TOPIC = "MESSAGE_TOPIC";
 
+  public static final String TIMEOUT_PAYMENT = "TIMEOUT_PAYMENT";
   public static final class ExceptionCode {
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_OR_EXPIRED";
     public static final String TRX_USER_NOT_ASSOCIATED = "PAYMENT_USER_NOT_ASSOCIATED";

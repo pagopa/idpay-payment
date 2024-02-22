@@ -17,6 +17,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.TimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
@@ -54,6 +55,8 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock private WalletConnector walletConnectorMock;
     @Mock private MerchantConnector merchantConnector;
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
+
+    @Mock private TimeoutSchedulerServiceImpl timeoutSchedulerService;
     @Mock private CommonAuthServiceImpl commonAuthServiceMock;
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
@@ -68,6 +71,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
 
+
     @BeforeEach
     void setup(){
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
@@ -77,7 +81,8 @@ class BarCodeAuthPaymentServiceImplTest {
                 auditUtilitiesMock,
                 walletConnectorMock,
                 merchantConnector,
-                commonPreAuthServiceMock);
+                commonPreAuthServiceMock,
+                timeoutSchedulerService);
     }
 
     @Test

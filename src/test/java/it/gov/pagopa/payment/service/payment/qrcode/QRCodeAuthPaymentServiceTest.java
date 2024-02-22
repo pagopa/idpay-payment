@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.TimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -49,10 +50,11 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
   @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
-
+  @Mock private TimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
   QRCodeAuthPaymentService service;
 
   private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
+
 
   @BeforeEach
   void setUp() {
@@ -63,7 +65,8 @@ class QRCodeAuthPaymentServiceTest {
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
                     walletConnectorMock,
-                    commonPreAuthServiceMock);
+                    commonPreAuthServiceMock,
+                    timeoutSchedulerServiceMock);
   }
 
   @Test
