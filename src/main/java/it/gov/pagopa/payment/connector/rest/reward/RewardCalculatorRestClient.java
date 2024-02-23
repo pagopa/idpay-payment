@@ -30,9 +30,10 @@ public interface RewardCalculatorRestClient {
                                                           @RequestBody AuthPaymentRequestDTO body);
 
   @DeleteMapping(
-      value = "reward/{transactionId}",
+      value = "reward/initiative/{initiativeId}",
       produces = MediaType.APPLICATION_JSON_VALUE)
   @ResponseBody
-  AuthPaymentResponseDTO cancelTransaction(@PathVariable("transactionId") String transactionId);
+  AuthPaymentResponseDTO cancelTransaction( @PathVariable("initiativeId") String initiativeId,
+                                            @RequestBody AuthPaymentRequestDTO body);
 
 }
