@@ -1,7 +1,28 @@
 {
   "request": {
     "method": "DELETE",
-    "urlPathPattern": "/reward/initiative/INITIATIVEID[0-9]+"
+    "urlPathPattern": "/reward/initiative/INITIATIVEID21",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "transactionId": "${json-unit.any-string}",
+          "userId": null,
+          "merchantId": "${json-unit.regex}MERCHANTID[0-9]+",
+          "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
+          "vat": "${json-unit.regex}VAT[0-9]+",
+          "trxDate": "${json-unit.any-number}",
+          "trxChargeDate": "${json-unit.any-number}",
+          "amountCents":  "${json-unit.any-number}",
+          "amountCurrency": "${json-unit.regex}AMOUNTCURRENCY[0-9]+",
+          "mcc":  "${json-unit.regex}MCC[0-9]+",
+          "acquirerId":  "${json-unit.regex}ACQUIRERID[0-9]+",
+          "idTrxIssuer": "${json-unit.regex}IDTRXISSUER[0-9]+",
+          "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)",
+          "rewardCents": 100
+        }
+      }
+    ]
   },
   "response": {
     "status": "200",

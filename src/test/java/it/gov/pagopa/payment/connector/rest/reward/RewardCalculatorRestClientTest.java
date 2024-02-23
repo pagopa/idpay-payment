@@ -194,7 +194,7 @@ class RewardCalculatorRestClientTest {
     void testCancelTransactionOk() {
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(21, SyncTrxStatus.AUTHORIZED);
-        trx.setReward(1L);
+        trx.setReward(100L);
         AuthPaymentDTO response =
                 rewardCalculatorConnector.cancelTransaction(trx);
         log.info(String.valueOf(response));
@@ -203,9 +203,9 @@ class RewardCalculatorRestClientTest {
     @Test
     void testCancelTransaction_404() {
         TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+                TransactionInProgressFaker.mockInstance(22, SyncTrxStatus.CREATED);
+        trx.setReward(100L);
         trx.setId("ID_CANCEL_NOT_FOUND");
-        trx.setReward(1L);
         AuthPaymentDTO response =
                 rewardCalculatorConnector.cancelTransaction(trx);
         assertNull(response);
