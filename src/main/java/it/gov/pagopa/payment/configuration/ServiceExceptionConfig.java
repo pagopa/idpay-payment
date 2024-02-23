@@ -48,9 +48,6 @@ public class ServiceExceptionConfig {
     exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
     exceptionMap.put(TransactionVersionPendingException.class, HttpStatus.TOO_MANY_REQUESTS);
 
-    //PreconditionFailed
-    exceptionMap.put(TransactionVersionMismatchException.class, HttpStatus.PRECONDITION_FAILED);
-
     return exceptionMap;
   }
 

@@ -51,8 +51,10 @@ public abstract class CommonAuthServiceImpl {
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
-            authPaymentDTO.setRejectionReasons(Collections.emptyList());
+            if(authPaymentDTO.getRejectionReasons() == null || authPaymentDTO.getRejectionReasons().isEmpty()) {
+                authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
+                authPaymentDTO.setRejectionReasons(Collections.emptyList());
+            }
             return authPaymentDTO;
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, userId);
@@ -87,8 +89,8 @@ public abstract class CommonAuthServiceImpl {
                 if (authPaymentDTO.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
                     throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(trx.getInitiativeId()));
                 }
-                if(authPaymentDTO.getRejectionReasons().contains(ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH)){
-                    throw new TransactionVersionMismatchException("The transaction version mismatch");
+                if(authPaymentDTO.getRejectionReasons().contains(ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD)){
+                    return authPaymentDTO;
                 }
                 throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
             }
