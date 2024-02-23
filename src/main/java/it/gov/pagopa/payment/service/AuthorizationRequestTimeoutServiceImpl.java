@@ -7,28 +7,29 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 @Slf4j
-public class TimeoutServiceImpl implements TimeoutService{
+public class AuthorizationRequestTimeoutServiceImpl implements AuthorizationRequestTimeoutService {
     private final TransactionInProgressRepository transactionInProgressRepository;
 
-    public TimeoutServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
+    public AuthorizationRequestTimeoutServiceImpl(TransactionInProgressRepository transactionInProgressRepository) {
         this.transactionInProgressRepository = transactionInProgressRepository;
     }
 
     @Override
-    public void timeoutConsumer(Message<String> message) {
+    public void execute(Message<String> message) {
         long startTime = System.currentTimeMillis();
-        if (PaymentConstants.TIMEOUT_PAYMENT.equals(message.getHeaders().get(PaymentConstants.MESSAGE_TOPIC))) {
+        String header = (String) message.getHeaders().get(PaymentConstants.MESSAGE_TOPIC);
+        if (PaymentConstants.TIMEOUT_PAYMENT.equals(header)) {
             String trxId = message.getPayload();
-            log.info("[TIMEOUT_PAYMENT] Start processing transaction with id %s".formatted(trxId));
+            log.info("[TIMEOUT_PAYMENT] Start processing transaction with id {}", trxId);
             UpdateResult result = transactionInProgressRepository.updateTrxPostTimeout(trxId);
             if (result.getModifiedCount() != 0) {
-                PerformanceLogger.log(PaymentConstants.TIMEOUT_PAYMENT, startTime,"Transaction with id %s updated in status REJECTED".formatted(trxId));
+                PerformanceLogger.log(PaymentConstants.TIMEOUT_PAYMENT, startTime,"Authorization request for transaction having id %s has expired".formatted(trxId));
             } else {
                 PerformanceLogger.log(PaymentConstants.TIMEOUT_PAYMENT, startTime, "Authorization completed in time for transaction with id %s".formatted(trxId));
             }
         } else {
             PerformanceLogger.log(PaymentConstants.TIMEOUT_PAYMENT, startTime,
-                    "Skipping message for message topic invalid: %s".formatted(message.getHeaders().get(PaymentConstants.MESSAGE_TOPIC)));
+                    "Unhandled MESSAGE_TOPIC header: %s".formatted(header));
         }
     }
 }
