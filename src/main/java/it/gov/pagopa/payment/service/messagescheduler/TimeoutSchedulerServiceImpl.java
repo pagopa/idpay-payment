@@ -3,16 +3,19 @@ package it.gov.pagopa.payment.service.messagescheduler;
 import com.azure.messaging.servicebus.ServiceBusMessage;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 
+@Service
 public class TimeoutSchedulerServiceImpl implements TimeoutSchedulerService {
-    private final MessageSchedulerServiceImpl messageSchedulerService;
-    @Value("${app.timeoutPayment.seconds}")
-    private int timeoutSeconds;
+    private final MessageSchedulerService messageSchedulerService;
+    private final int timeoutSeconds;
 
-    public TimeoutSchedulerServiceImpl(MessageSchedulerServiceImpl messageSchedulerService) {
+    public TimeoutSchedulerServiceImpl(MessageSchedulerService messageSchedulerService,
+                                       @Value("${app.timeoutPayment.seconds}") int timeoutSeconds) {
         this.messageSchedulerService = messageSchedulerService;
+        this.timeoutSeconds = timeoutSeconds;
     }
 
     @Override

@@ -82,6 +82,7 @@ public abstract class CommonAuthServiceImpl {
 
             if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
                 log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
+                trx.setCounterVersion(authPaymentDTO.getCounters().getVersion());
                 updateTrxAuthorized(trx, authPaymentDTO, initiativeRejectionReasons);
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
             } else {
@@ -99,7 +100,6 @@ public abstract class CommonAuthServiceImpl {
 
             trx.setRejectionReasons(authPaymentDTO.getRejectionReasons());
             trx.setInitiativeRejectionReasons(initiativeRejectionReasons);
-            trx.setCounterVersion(authPaymentDTO.getCounters().getVersion());
             trx.setRewards(authPaymentDTO.getRewards());
             trx.setStatus(authPaymentDTO.getStatus());
 
@@ -113,18 +113,17 @@ public abstract class CommonAuthServiceImpl {
     }
 
     private void updateTrxAuthorized(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO, Map<String, List<String>> initiativeRejectionReasons) {
-        UpdateResult result =  transactionInProgressRepository.updateTrxAuthorized(trx,
+        UpdateResult result = transactionInProgressRepository.updateTrxAuthorized(trx,
                 authPaymentDTO,
                 initiativeRejectionReasons);
-        if( result.getModifiedCount() == 0){
+        if(result.getModifiedCount() == 0){
             authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
             authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
             authPaymentDTO.setRewards(Collections.emptyMap());
             authPaymentDTO.setReward(null);
             authPaymentDTO.setCounters(null);
             authPaymentDTO.setCounterVersion(0);
-        }
-        else{
+        } else {
             authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
             authPaymentDTO.setCounterVersion(authPaymentDTO.getCounters().getVersion());
         }

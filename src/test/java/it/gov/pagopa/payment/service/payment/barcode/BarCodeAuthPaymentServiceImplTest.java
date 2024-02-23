@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
@@ -33,10 +33,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -110,18 +108,9 @@ class BarCodeAuthPaymentServiceImplTest {
 
         when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
-
-        Mockito.doAnswer(
-                        invocationOnMock -> {
-                            transaction.setStatus(SyncTrxStatus.AUTHORIZED);
-                            transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
-                            transaction.setRejectionReasons(List.of());
-                            transaction.setTrxChargeDate(OffsetDateTime.now());
-                            return transaction;
-                        })
-                .when(repositoryMock)
-                .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
-
+        when(repositoryMock.updateTrxAuthorized(transaction, authPaymentDTO,
+                CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of())))
+                .thenReturn(UpdateResult.acknowledged(1, 1L, null));
         // When
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
 

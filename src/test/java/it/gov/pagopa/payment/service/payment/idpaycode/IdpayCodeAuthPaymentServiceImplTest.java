@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -21,6 +22,7 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.mockito.Mockito.when;
 
@@ -128,6 +132,9 @@ class IdpayCodeAuthPaymentServiceImplTest {
         when(commonPreAuthServiceMock.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(paymentDTO);
 
         when(rewardCalculatorConnectorMock.authorizePayment(trx)).thenReturn(authPaymentDTO);
+        when(transactionInProgressRepositoryMock.updateTrxAuthorized(trx, authPaymentDTO,
+                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), List.of())))
+                .thenReturn(UpdateResult.acknowledged(1, 1L, null));
 
         //When
        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO);
