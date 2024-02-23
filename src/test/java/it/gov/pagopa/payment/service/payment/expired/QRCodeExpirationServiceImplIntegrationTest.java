@@ -134,8 +134,9 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
 
         // verify call to rewardCalculator cancel for IDENTIFIED and REJECTED expired trxs
         expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach
-                (t -> Mockito.verify(rewardCalculatorRestClientSpy)
-                        .cancelTransaction(t.getInitiativeId(), new AuthPaymentRequestDTO()));
+                (t -> {System.out.println(t);
+                    Mockito.verify(rewardCalculatorRestClientSpy).cancelTransaction(t.getInitiativeId(), new AuthPaymentRequestDTO());
+                });
 
         // verify AUTHORIZED expired trxs to be notified in idpay-transaction queue
         checkConfirmEvents();

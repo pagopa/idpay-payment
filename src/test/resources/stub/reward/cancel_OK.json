@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "DELETE",
-    "urlPathPattern": "/reward/MOCKEDTRANSACTION_qr-code_21"
+    "urlPathPattern": "/reward/initiative/INITIATIVEID21"
   },
   "response": {
     "status": "200",

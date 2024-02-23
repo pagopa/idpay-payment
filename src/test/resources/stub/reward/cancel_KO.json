@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "DELETE",
-    "urlPathPattern": "/reward/ID_CANCEL_NOT_FOUND"
+    "urlPathPattern": "/reward/initiative/ID_CANCEL_NOT_FOUND"
   },
   "response": {
     "status": "404",
