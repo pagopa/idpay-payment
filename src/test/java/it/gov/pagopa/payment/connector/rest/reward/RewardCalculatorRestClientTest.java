@@ -193,7 +193,7 @@ class RewardCalculatorRestClientTest {
     @Test
     void testCancelTransactionOk() {
         TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(21, SyncTrxStatus.CREATED);
+                TransactionInProgressFaker.mockInstance(21, SyncTrxStatus.AUTHORIZED);
         trx.setReward(1L);
         AuthPaymentDTO response =
                 rewardCalculatorConnector.cancelTransaction(trx);

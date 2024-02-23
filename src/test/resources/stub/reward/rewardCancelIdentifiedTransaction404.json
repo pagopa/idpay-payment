@@ -1,7 +1,7 @@
 {
   "request": {
     "method": "DELETE",
-    "urlPathPattern": "/reward/IDENTIFIEDTRX_REWARDKO_[0-9]+"
+    "urlPathPattern": "/reward/initiative/initiative/INITIATIVEID[0-9]+"
   },
   "response": {
     "status": "404",
