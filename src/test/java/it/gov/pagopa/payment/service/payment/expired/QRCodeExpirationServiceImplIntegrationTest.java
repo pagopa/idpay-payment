@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.expired;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorRestClient;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -132,7 +133,9 @@ class QRCodeExpirationServiceImplIntegrationTest extends BaseIntegrationTest {
         checkNotExpiredTrxs();
 
         // verify call to rewardCalculator cancel for IDENTIFIED and REJECTED expired trxs
-        expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach(t -> Mockito.verify(rewardCalculatorRestClientSpy).cancelTransaction(t.getId()));
+        expiredTrxs.get(SyncTrxStatus.IDENTIFIED).forEach
+                (t -> Mockito.verify(rewardCalculatorRestClientSpy)
+                        .cancelTransaction(t.getInitiativeId(), new AuthPaymentRequestDTO()));
 
         // verify AUTHORIZED expired trxs to be notified in idpay-transaction queue
         checkConfirmEvents();
