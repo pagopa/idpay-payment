@@ -16,7 +16,9 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -63,5 +65,21 @@ class QRCodePaymentControllerTest {
             EXPECTED_PAYMENT_GENERIC_ERROR,
         result.getResponse().getContentAsString()
     );
+  }
+
+
+  @Test
+  void unrelateUser() throws Exception {
+    doNothing().when(qrCodePaymentServiceMock).unrelateUser(any(),any());
+    MvcResult result = mockMvc.perform(
+                    delete("/idpay/payment/qr-code/{trxCode}","TRXCODE")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header("x-user-id", "USER_ID"))
+            .andExpect(status().is2xxSuccessful())
+            .andReturn();
+
+    assertEquals(HttpStatus.OK, HttpStatus.resolve(result.getResponse().getStatus()));
+
+
   }
 }

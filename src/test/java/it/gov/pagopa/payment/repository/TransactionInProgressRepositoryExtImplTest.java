@@ -1,15 +1,12 @@
 package it.gov.pagopa.payment.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
+import it.gov.pagopa.common.mongo.config.MongoConfig;
+import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.BaseIntegrationTest;
+import it.gov.pagopa.common.web.exception.ErrorManager;
+import it.gov.pagopa.common.web.exception.MongoExceptionHandler;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -18,6 +15,21 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -32,19 +44,33 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestPropertySource(
+        properties = {
+                "de.flapdoodle.mongodb.embedded.version=4.2.24",
+
+                "spring.data.mongodb.database=idpay",
+                "spring.data.mongodb.config.connectionPool.maxSize: 100",
+                "spring.data.mongodb.config.connectionPool.minSize: 0",
+                "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
+                "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
+                "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
+                "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
+        })
+@ContextConfiguration(classes = {
+        ErrorManager.class,
+        MongoExceptionHandler.class,
+        MongoConfig.class,
+        MongoTestUtilitiesService.class,
+        MongoTestUtilitiesService.TestMongoConfiguration.class
+
+})
+@WebMvcTest(excludeAutoConfiguration = SecurityAutoConfiguration.class)
+@AutoConfigureSingleInstanceMongodb
 @Slf4j
-class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
+class TransactionInProgressRepositoryExtImplTest  {
 
     private static final String INITIATIVE_ID = "INITIATIVEID1";
     private static final String MERCHANT_ID = "MERCHANTID1";
@@ -57,6 +83,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     protected TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     protected MongoTemplate mongoTemplate;
+
 
     @AfterEach
     void clearTestData() {
