@@ -74,7 +74,7 @@ public abstract class CommonAuthServiceImpl {
         if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZATION_REQUESTED)){
 
             long sequenceNumber = timeoutSchedulerService.scheduleMessage(trx.getId());
-
+            log.info("[TRX_AUTHORIZATION] Scheduled timeout message with sequence number: {}",sequenceNumber);
             authPaymentDTO = rewardCalculatorConnector.authorizePayment(trx);
 
             Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities
