@@ -10,7 +10,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.messagescheduler.TimeoutSchedulerServiceImpl;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -30,14 +30,14 @@ public abstract class CommonAuthServiceImpl {
     private final WalletConnector walletConnector;
     private final CommonPreAuthServiceImpl commonPreAuthService;
 
-    private final TimeoutSchedulerServiceImpl timeoutSchedulerService;
+    private final AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService;
 
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities,
             WalletConnector walletConnector, @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
-            TimeoutSchedulerServiceImpl timeoutSchedulerService) {
+            AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.auditUtilities = auditUtilities;

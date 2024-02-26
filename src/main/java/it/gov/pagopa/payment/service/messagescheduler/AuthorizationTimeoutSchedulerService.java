@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.messagescheduler;
 
 
-public interface TimeoutSchedulerService {
+public interface AuthorizationTimeoutSchedulerService {
     long scheduleMessage(String body);
     void cancelScheduledMessage(long sequenceNumber);
 

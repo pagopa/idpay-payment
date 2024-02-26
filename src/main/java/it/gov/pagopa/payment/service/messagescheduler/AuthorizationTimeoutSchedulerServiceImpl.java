@@ -10,12 +10,12 @@ import java.time.OffsetDateTime;
 
 @Service
 @Slf4j
-public class TimeoutSchedulerServiceImpl implements TimeoutSchedulerService {
+public class AuthorizationTimeoutSchedulerServiceImpl implements AuthorizationTimeoutSchedulerService {
     private final MessageSchedulerService messageSchedulerService;
     private final int timeoutSeconds;
 
-    public TimeoutSchedulerServiceImpl(MessageSchedulerService messageSchedulerService,
-                                       @Value("${app.timeoutPayment.seconds}") int timeoutSeconds) {
+    public AuthorizationTimeoutSchedulerServiceImpl(MessageSchedulerService messageSchedulerService,
+                                                    @Value("${app.timeoutPayment.seconds}") int timeoutSeconds) {
         this.messageSchedulerService = messageSchedulerService;
         this.timeoutSeconds = timeoutSeconds;
     }

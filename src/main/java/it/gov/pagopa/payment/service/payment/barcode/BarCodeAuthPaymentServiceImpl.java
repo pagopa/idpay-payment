@@ -12,7 +12,7 @@ import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.messagescheduler.TimeoutSchedulerServiceImpl;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
@@ -40,7 +40,7 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
                                          WalletConnector walletConnector,
                                          MerchantConnector merchantConnector,
                                          @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
-                                         TimeoutSchedulerServiceImpl timeoutSchedulerService){
+                                         AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService){
         super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService, timeoutSchedulerService);
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;

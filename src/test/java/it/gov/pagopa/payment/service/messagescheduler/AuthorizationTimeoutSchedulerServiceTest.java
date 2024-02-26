@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -14,29 +15,31 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
-@ContextConfiguration(classes = TimeoutSchedulerServiceImpl.class)
+@ContextConfiguration(classes = AuthorizationTimeoutSchedulerServiceImpl.class)
 @TestPropertySource(
-        locations = "classpath:application.yml",
         properties = {
-                "app.timeoutPayment.seconds=30"
+                "app.timeoutPayment.seconds"
         })
-class TimeoutSchedulerServiceTest {
-    TimeoutSchedulerService timeoutSchedulerService;
+class AuthorizationTimeoutSchedulerServiceTest {
+    AuthorizationTimeoutSchedulerService authorizationTimeoutSchedulerService;
     @MockBean
     private MessageSchedulerService messageSchedulerServiceMock;
 
+    @Value("${app.timeoutPayment.seconds}")
+    private int timeoutSeconds;
+
     @BeforeEach
     void setUp() {
-        int timeoutSeconds = 30;
-        timeoutSchedulerService =
-                new TimeoutSchedulerServiceImpl(messageSchedulerServiceMock, timeoutSeconds);
+        authorizationTimeoutSchedulerService =
+                new AuthorizationTimeoutSchedulerServiceImpl(messageSchedulerServiceMock, timeoutSeconds);
     }
+
     @Test
     void scheduleMessage(){
         String body = "TRXID1";
 
         when(messageSchedulerServiceMock.scheduleMessage(Mockito.any(), Mockito.any())).thenReturn(1L);
-        long sequenceNumber = timeoutSchedulerService.scheduleMessage(body);
+        long sequenceNumber = authorizationTimeoutSchedulerService.scheduleMessage(body);
 
         assertEquals(1L, sequenceNumber);
     }
@@ -44,7 +47,7 @@ class TimeoutSchedulerServiceTest {
     @Test
     void cancelMessage(){
         doNothing().when(messageSchedulerServiceMock).cancelScheduledMessage(1L);
-        timeoutSchedulerService.cancelScheduledMessage(1L);
+        authorizationTimeoutSchedulerService.cancelScheduledMessage(1L);
 
         verify(messageSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
     }

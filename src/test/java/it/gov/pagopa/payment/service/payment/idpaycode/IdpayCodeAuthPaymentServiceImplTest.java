@@ -15,7 +15,7 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.messagescheduler.TimeoutSchedulerServiceImpl;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -33,7 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthPaymentServiceImplTest {
@@ -44,7 +44,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
     @Mock private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredServiceMock;
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
-    @Mock private TimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
+    @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
 
     private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
     private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
@@ -131,23 +131,30 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         when(commonPreAuthServiceMock.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(paymentDTO);
 
+        when(timeoutSchedulerServiceMock.scheduleMessage(trx.getId())).thenReturn(1L);
+
         when(rewardCalculatorConnectorMock.authorizePayment(trx)).thenReturn(authPaymentDTO);
+
         when(transactionInProgressRepositoryMock.updateTrxAuthorized(trx, authPaymentDTO,
                 CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), List.of())))
                 .thenReturn(UpdateResult.acknowledged(1, 1L, null));
+
+        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
 
         //When
        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);
+        verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(trx.getId());
+        verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
         Mockito.verifyNoMoreInteractions(
                 walletConnectorMock,
                 idpayCodeAuthorizationExpiredServiceMock,
                 commonPreAuthServiceMock,
-                rewardCalculatorConnectorMock
+                rewardCalculatorConnectorMock,
+                timeoutSchedulerServiceMock
         );
-
     }
 
     @Test
