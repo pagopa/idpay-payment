@@ -61,5 +61,22 @@ class QRCodeExpirationServiceImplTest{
 
     }
 
+    @Test
+    void forceAuthorizationTrxExpiration() {
+        // waitFor expired trxs deleted from db
+        Mockito.when(authorizationExpiredService.forceExpiration("INITIATIVEID")).thenReturn(1L);
+        qrCodeExpirationServiceImpl.forceAuthorizationTrxExpiration("INITIATIVEID");
+        Mockito.verify(authorizationExpiredService,Mockito.times(1)).forceExpiration("INITIATIVEID");
+
+    }
+    @Test
+    void scheduleCancelExpired() {
+        // waitFor expired trxs deleted from db
+        Mockito.when(cancelExpiredService.execute()).thenReturn(1L);
+        qrCodeExpirationServiceImpl.scheduleCancelExpired();
+        Mockito.verify(cancelExpiredService,Mockito.times(1)).execute();
+
+    }
+
 
 }
