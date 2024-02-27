@@ -1,11 +1,15 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PinBlockDTO;
+import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
+import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodePreAuthService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
+import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +23,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class IdpayCodePaymentServiceTest {
     private static final String MERCHANTID = "MERCHANTID";
+    private static final String FISCALCODE = "FISCALCODE";
 
     @Mock private IdpayCodePreAuthService idpayCodePreAuthServiceMock;
     @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
@@ -27,6 +32,23 @@ class IdpayCodePaymentServiceTest {
     @BeforeEach
     void setUp(){
         idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodePreAuthServiceMock, idpayCodeAuthPaymentServiceMock);
+    }
+
+    @Test
+    void relateUser() {
+        //Given
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        RelateUserResponseMapper mapper = new RelateUserResponseMapper();
+
+        RelateUserResponse resultUserResponse = mapper.transactionMapper(trx);
+        when(idpayCodePreAuthServiceMock.relateUser(trx.getId(), FISCALCODE))
+                .thenReturn(resultUserResponse);
+        //When
+        RelateUserResponse result = idpayCodePaymentService.relateUser(trx.getId(), FISCALCODE);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(resultUserResponse, result);
     }
 
     @Test
@@ -43,6 +65,25 @@ class IdpayCodePaymentServiceTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(preview, result);
     }
+
+    @Test
+    void authPayment() {
+        //Given
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,trx);
+        authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
+        PinBlockDTO pinBlockDTO = PinBlockDTOFaker.mockInstance();
+
+        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID,pinBlockDTO))
+                .thenReturn(authPaymentDTO);
+        //When
+        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID,pinBlockDTO);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(authPaymentDTO, result);
+    }
+
 
 
 }

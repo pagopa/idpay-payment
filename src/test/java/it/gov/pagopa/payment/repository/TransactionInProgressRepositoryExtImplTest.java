@@ -62,9 +62,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ContextConfiguration(classes = {
         ErrorManager.class,
         MongoExceptionHandler.class,
-        MongoConfig.class,
-        MongoTestUtilitiesService.class,
-        MongoTestUtilitiesService.TestMongoConfiguration.class
+        MongoConfig.class
 
 })
 @WebMvcTest(excludeAutoConfiguration = SecurityAutoConfiguration.class)
