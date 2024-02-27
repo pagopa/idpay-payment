@@ -59,14 +59,15 @@ public class CommonCancelServiceImpl {
                 throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
 
-            if(SyncTrxStatus.REWARDED.equals(trx.getStatus())){
-                throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel confirmed transaction with transactionId [%s]".formatted(trxId));
+            if(SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
+                repository.deleteById(trxId);
             }
-            if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
-                throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, "Cannot cancel expired transaction with transactionId [%s]".formatted(trxId));
-            }
+            else if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
 
-            if(!SyncTrxStatus.CREATED.equals(trx.getStatus())){
+                if(cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0){
+                    throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, "Cannot cancel expired transaction with transactionId [%s]".formatted(trxId));
+                }
+
                 AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
                 if(refund != null) {
                     trx.setStatus(SyncTrxStatus.CANCELLED);
@@ -76,11 +77,12 @@ public class CommonCancelServiceImpl {
 
                     sendCancelledTransactionNotification(trx);
                 }
+                repository.deleteById(trxId);
             }
-
+            else{
+                throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
+            }
             log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
-            repository.deleteById(trxId);
-
             auditUtilities.logCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons(), merchantId);
         } catch (RuntimeException e) {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);

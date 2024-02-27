@@ -1,17 +1,17 @@
 {
   "request": {
     "method": "DELETE",
-    "urlPathPattern": "/reward/initiative/INITIATIVEID21",
+    "urlPathPattern": "/reward/initiative/INITIATIVEID22",
     "bodyPatterns": [
       {
         "equalToJson": {
-          "transactionId": "${json-unit.any-string}",
+          "transactionId": "ID_CANCEL_NOT_FOUND",
           "userId": null,
           "merchantId": "${json-unit.regex}MERCHANTID[0-9]+",
           "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
           "vat": "${json-unit.regex}VAT[0-9]+",
           "trxDate": "${json-unit.any-number}",
-          "trxChargeDate": "${json-unit.any-number}",
+          "trxChargeDate": null,
           "amountCents":  "${json-unit.any-number}",
           "amountCurrency": "${json-unit.regex}AMOUNTCURRENCY[0-9]+",
           "mcc":  "${json-unit.regex}MCC[0-9]+",
@@ -25,37 +25,11 @@
     ]
   },
   "response": {
-    "status": "200",
+    "status": "404",
     "headers": {
       "Content-Type": "application/json"
     },
     "transformers": ["response-template"],
-    "jsonBody": {
-      "transactionId":  "TRXID",
-      "channel":  "CHANNEL",
-      "initiativeId": "INITIATIVEID",
-      "userId": "USERID",
-      "status": "REWARDED",
-      "effectiveAmount": "0",
-      "amount": "0.10",
-      "amountCents": "1000",
-      "reward": {
-        "initiativeId": "INITIATIVEID",
-        "organizationId": "ORGANIZATIONID",
-        "providedReward": -2.00,
-        "accruedReward": -2.00,
-        "capped": false,
-        "dailyCapped": false,
-        "monthlyCapped": false,
-        "yearlyCapped": false,
-        "weeklyCapped": false,
-        "counters": {
-          "version": 0,
-          "exhaustedBudget": false,
-          "initiativeBudget" : 80
-        }
-      },
-      "rejectionReasons": []
-    }
+    "jsonBody": {}
   }
 }
