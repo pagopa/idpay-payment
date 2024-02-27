@@ -184,7 +184,7 @@ class TransactionInProgressRepositoryExtImplTest  {
     void updateTrxAuthorized() {
         Long reward = 200L;
         TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId("USERID%d".formatted(1));
         transactionInProgressRepository.save(transaction);
 
@@ -212,7 +212,7 @@ class TransactionInProgressRepositoryExtImplTest  {
     void updateTrxAuthorized_barCode() {
         Long reward = 200L;
         TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId("USERID%d".formatted(1));
         transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);

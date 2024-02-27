@@ -3,35 +3,25 @@ package it.gov.pagopa.payment.service.messagescheduler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@ContextConfiguration(classes = AuthorizationTimeoutSchedulerServiceImpl.class)
-@TestPropertySource(
-        properties = {
-                "app.timeoutPayment.seconds"
-        })
+@ExtendWith(MockitoExtension.class)
 class AuthorizationTimeoutSchedulerServiceTest {
-    AuthorizationTimeoutSchedulerService authorizationTimeoutSchedulerService;
-    @MockBean
+    private AuthorizationTimeoutSchedulerService authorizationTimeoutSchedulerService;
+    @Mock
     private MessageSchedulerService messageSchedulerServiceMock;
 
-    @Value("${app.timeoutPayment.seconds}")
-    private int timeoutSeconds;
+    private final static int TIMEOUTSECONDS = 30;
 
     @BeforeEach
     void setUp() {
         authorizationTimeoutSchedulerService =
-                new AuthorizationTimeoutSchedulerServiceImpl(messageSchedulerServiceMock, timeoutSeconds);
+                new AuthorizationTimeoutSchedulerServiceImpl(messageSchedulerServiceMock, TIMEOUTSECONDS);
     }
 
     @Test
