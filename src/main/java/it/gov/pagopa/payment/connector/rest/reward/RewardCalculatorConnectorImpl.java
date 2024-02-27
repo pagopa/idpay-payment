@@ -70,7 +70,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
     public AuthPaymentDTO cancelTransaction(TransactionInProgress trx) {
         AuthPaymentDTO result;
         try {
-            result = performRequest(trx, () -> restClient.cancelTransaction(trx.getId()));
+            result = performCancel(trx, restClient::cancelTransaction);
         } catch (TransactionNotFoundOrExpiredException ex) {
             result = null;
         }
@@ -79,6 +79,9 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
 
     private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, PaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
         return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.preAuthRequestMap(trx)));
+    }
+    private AuthPaymentDTO performCancel(TransactionInProgress trx, BiFunction<String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.authRequestMap(trx)));
     }
     private AuthPaymentDTO performRequest(TransactionInProgress trx, TriFunction<Long,String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
         return performRequest(trx, ()-> requestExecutor.apply(trx.getCounterVersion(),trx.getInitiativeId(), requestMapper.authRequestMap(trx)));
