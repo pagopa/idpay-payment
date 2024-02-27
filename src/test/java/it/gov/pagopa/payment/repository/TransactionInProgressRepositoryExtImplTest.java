@@ -582,6 +582,50 @@ class TransactionInProgressRepositoryExtImplTest  {
     }
 
     @Test
+    void updateTrxPostTimeout_OK (){
+
+        TransactionInProgress transactionInProgress = TransactionInProgress.builder()
+                .id(TRX_ID)
+                .initiativeId(INITIATIVE_ID)
+                .initiatives(List.of(INITIATIVE_ID))
+                .status(SyncTrxStatus.AUTHORIZATION_REQUESTED)
+                .counterVersion(0L)
+                .build();
+        mongoTemplate.save(transactionInProgress);
+
+        // When
+        UpdateResult result = transactionInProgressRepository.updateTrxPostTimeout(TRX_ID);
+
+
+        assertNull(result.getUpsertedId());
+        assertEquals(1L, result.getMatchedCount());
+        assertEquals(1L, result.getModifiedCount());
+
+    }
+
+    @Test
+    void updateTrxPostTimeout_KO (){
+
+        TransactionInProgress transactionInProgress = TransactionInProgress.builder()
+                .id(TRX_ID)
+                .initiativeId(INITIATIVE_ID)
+                .initiatives(List.of(INITIATIVE_ID))
+                .status(SyncTrxStatus.REJECTED)
+                .counterVersion(0L)
+                .build();
+        mongoTemplate.save(transactionInProgress);
+
+        // When
+        UpdateResult result = transactionInProgressRepository.updateTrxPostTimeout(TRX_ID);
+
+
+        assertNull(result.getUpsertedId());
+        assertEquals(0L, result.getMatchedCount());
+        assertEquals(0L, result.getModifiedCount());
+
+    }
+
+    @Test
     void updateTrxRejected_barCodeChannel() {
         TransactionInProgress transactionInProgress2 =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
