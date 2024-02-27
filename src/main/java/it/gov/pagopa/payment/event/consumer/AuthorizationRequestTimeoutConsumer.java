@@ -16,7 +16,6 @@ public class AuthorizationRequestTimeoutConsumer {
         this.authorizationRequestTimeoutService = authorizationRequestTimeoutService;
     }
 
-
     @Bean
     public Consumer<Message<String>> paymentTimeoutConsumer() {
         return authorizationRequestTimeoutService::execute;
