@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.stream;
+package it.gov.pagopa.common.stream;
 
 
 import it.gov.pagopa.common.stream.service.ErrorPublisherImpl;
@@ -27,6 +27,6 @@ class ErrorPublisherImplTest {
         when(streamBridge.send("errors-out-0", mockMessage)).thenReturn(true);
         boolean result = errorPublisher.send(mockMessage);
         verify(streamBridge).send("errors-out-0", mockMessage);
-        assertTrue(result); // Assuming it returns true when successful
+        assertTrue(result);
     }
 }
