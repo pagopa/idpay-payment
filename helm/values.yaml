@@ -91,6 +91,7 @@ microservice-chart:
     PDV_ENCRYPT_API_KEY: pdv-api-key
     PDV_DECRYPT_API_KEY: pdv-api-key
     AZURE_SERVICEBUS_CONNECTION_STRING: idpay-service-bus-ns-manager-sas-key
+    SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING: idpay-payment-timeout-consumer-sas-key
 
   # nodeSelector: {}
 

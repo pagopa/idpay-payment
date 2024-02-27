@@ -311,6 +311,15 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         );
     }
 
+    @Override
+    public UpdateResult updateTrxPostTimeout(String trxId) {
+        Query query = new Query(Criteria.where(Fields.id).is(trxId).and(Fields.status).is(SyncTrxStatus.AUTHORIZATION_REQUESTED));
+        Update update = new Update()
+                .set(Fields.status, SyncTrxStatus.REJECTED)
+                .set(Fields.rejectionReasons, List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
+        return mongoTemplate.updateFirst(query, update, TransactionInProgress.class);
+    }
+
     private TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes, List<SyncTrxStatus> statusList) {
         OffsetDateTime now = OffsetDateTime.now();
 

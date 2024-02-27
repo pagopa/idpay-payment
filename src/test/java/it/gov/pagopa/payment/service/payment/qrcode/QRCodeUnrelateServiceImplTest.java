@@ -40,7 +40,6 @@ class QRCodeUnrelateServiceImplTest {
                 new QRCodeUnrelateServiceImpl(
                         repositoryMock,
                         qrCodeAuthorizationExpiredServiceMock,
-                        rewardCalculatorConnectorMock,
                         auditUtilitiesMock);
     }
 
@@ -96,24 +95,6 @@ class QRCodeUnrelateServiceImplTest {
                 .userId(USERID)
                 .build();
         when(repositoryMockFindInvocation()).thenReturn(trx);
-
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(new AuthPaymentDTO());
-
-        invokeService();
-
-        TransactionInProgress expectedTrx = trx.toBuilder().status(SyncTrxStatus.CREATED).userId(null).build();
-
-        Mockito.verify(repositoryMock).save(expectedTrx);
-    }
-
-    @Test
-    void testSuccessfulRewardCalculator404() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
-                .userId(USERID)
-                .build();
-        when(repositoryMockFindInvocation()).thenReturn(trx);
-
-        when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenThrow(new TransactionNotFoundOrExpiredException("msg"));
 
         invokeService();
 
