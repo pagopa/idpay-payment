@@ -95,14 +95,14 @@ public class AuditUtilities {
     public void logAuthorizedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS,
-                "User authorized the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString()
+                "User authorized the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons)
         );
     }
 
     public void logBarCodeAuthorizedPayment(String initiativeId, String trxId, String trxCode, String merchantId, Long reward, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_MERCHANT_REWARD_REJECTIONS,
-                "Merchant authorized the transaction", initiativeId, trxId, trxCode, merchantId, reward.toString(), rejectionReasons.toString()
+                "Merchant authorized the transaction", initiativeId, trxId, trxCode, merchantId, String.valueOf(reward), String.valueOf(rejectionReasons)
         );
     }
 
@@ -125,7 +125,7 @@ public class AuditUtilities {
     public void logConfirmedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
-                "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
+                "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons), merchantId
         );
     }
 
@@ -141,7 +141,7 @@ public class AuditUtilities {
     public void logCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
-                "Merchant cancelled the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString(), merchantId
+                "Merchant cancelled the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons), merchantId
         );
     }
 
@@ -155,7 +155,7 @@ public class AuditUtilities {
     public void logUnrelateTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS,
-                "User unrelated the transaction", initiativeId, trxId, trxCode, userId, reward.toString(), rejectionReasons.toString()
+                "User unrelated the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons)
         );
     }
 

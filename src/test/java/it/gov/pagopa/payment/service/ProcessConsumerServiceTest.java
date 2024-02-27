@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
 @ContextConfiguration(classes = ProcessConsumerServiceImpl.class)
 @TestPropertySource(
-        locations = "classpath:application.yml",
         properties = {
                 "app.delete.paginationSize=100",
                 "app.delete.delayTime=1000"

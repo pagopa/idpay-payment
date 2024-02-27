@@ -11,10 +11,12 @@ import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -57,6 +59,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     protected TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     protected MongoTemplate mongoTemplate;
+
+
 
     @AfterEach
     void clearTestData() {
@@ -159,7 +163,9 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         transaction.setUserId("USERID%d".formatted(1));
         transactionInProgressRepository.save(transaction);
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction, authPaymentDTO, CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
         TransactionInProgress result =
                 transactionInProgressRepository.findById(transaction.getId()).orElse(null);
 
@@ -175,7 +181,6 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "initiativeRejectionReasons");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
     }
 
     @Test
@@ -187,7 +192,9 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
+
+        transactionInProgressRepository.updateTrxAuthorized(transaction,authPaymentDTO, CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
         TransactionInProgress result =
                 transactionInProgressRepository.findById(transaction.getId()).orElse(null);
 
@@ -203,7 +210,6 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
                 "initiativeRejectionReasons");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction, reward, List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
     }
 
     @Test

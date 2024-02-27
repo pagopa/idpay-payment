@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
@@ -27,8 +28,9 @@ public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implemen
                                       RewardCalculatorConnector rewardCalculatorConnector,
                                       AuditUtilities auditUtilities,
                                       WalletConnector walletConnector,
-                                      @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService){
-    super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService);
+                                      @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
+                                      AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceImpl){
+    super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService, timeoutSchedulerServiceImpl);
     this.qrCodeAuthorizationExpiredService = qrCodeAuthorizationExpiredService;
   }
 
