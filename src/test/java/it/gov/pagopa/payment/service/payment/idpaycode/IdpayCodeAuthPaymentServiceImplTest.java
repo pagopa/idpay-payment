@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -14,12 +15,14 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +31,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.mockito.Mockito.when;
+import java.util.List;
+
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthPaymentServiceImplTest {
@@ -39,6 +44,8 @@ class IdpayCodeAuthPaymentServiceImplTest {
     @Mock private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredServiceMock;
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
+    @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
+
     private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
     private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
 
@@ -53,7 +60,8 @@ class IdpayCodeAuthPaymentServiceImplTest {
                     walletConnectorMock,
                     idpayCodeAuthorizationExpiredServiceMock,
                     paymentInstrumentConnectorMock,
-                    commonPreAuthServiceMock);
+                    commonPreAuthServiceMock,
+                    timeoutSchedulerServiceMock);
     }
 
     @Test
@@ -123,20 +131,30 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         when(commonPreAuthServiceMock.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(paymentDTO);
 
+        when(timeoutSchedulerServiceMock.scheduleMessage(trx.getId())).thenReturn(1L);
+
         when(rewardCalculatorConnectorMock.authorizePayment(trx)).thenReturn(authPaymentDTO);
+
+        when(transactionInProgressRepositoryMock.updateTrxAuthorized(trx, authPaymentDTO,
+                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), List.of())))
+                .thenReturn(UpdateResult.acknowledged(1, 1L, null));
+
+        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
 
         //When
        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);
+        verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(trx.getId());
+        verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
         Mockito.verifyNoMoreInteractions(
                 walletConnectorMock,
                 idpayCodeAuthorizationExpiredServiceMock,
                 commonPreAuthServiceMock,
-                rewardCalculatorConnectorMock
+                rewardCalculatorConnectorMock,
+                timeoutSchedulerServiceMock
         );
-
     }
 
     @Test

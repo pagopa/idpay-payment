@@ -47,7 +47,6 @@ import static org.mockito.Mockito.when;
                 WireMockServer.class
         })
 @TestPropertySource(
-        locations = "classpath:application.yml",
         properties = {"spring.application.name=idpay-reward-calculator",
         "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}"})
 @Slf4j

@@ -6,7 +6,10 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
+import org.springframework.stereotype.Service;
+
 @Slf4j
+@Service
 public class AuthorizationRequestTimeoutServiceImpl implements AuthorizationRequestTimeoutService {
     private final TransactionInProgressRepository transactionInProgressRepository;
 

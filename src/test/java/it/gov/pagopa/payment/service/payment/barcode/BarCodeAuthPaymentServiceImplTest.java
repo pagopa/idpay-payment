@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
@@ -17,6 +17,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
@@ -32,10 +33,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -54,6 +53,8 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock private WalletConnector walletConnectorMock;
     @Mock private MerchantConnector merchantConnector;
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
+
+    @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
     @Mock private CommonAuthServiceImpl commonAuthServiceMock;
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
@@ -68,6 +69,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
 
+
     @BeforeEach
     void setup(){
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
@@ -77,7 +79,8 @@ class BarCodeAuthPaymentServiceImplTest {
                 auditUtilitiesMock,
                 walletConnectorMock,
                 merchantConnector,
-                commonPreAuthServiceMock);
+                commonPreAuthServiceMock,
+                timeoutSchedulerServiceMock);
     }
 
     @Test
@@ -94,6 +97,7 @@ class BarCodeAuthPaymentServiceImplTest {
         reward.setCounters(new RewardCounters());
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
+        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
                 .thenReturn(transaction);
@@ -101,21 +105,15 @@ class BarCodeAuthPaymentServiceImplTest {
         when(merchantConnector.merchantDetail(MERCHANT_ID, transaction.getInitiativeId()))
                 .thenReturn(MerchantDetailDTO.builder().build());
 
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+        when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
 
         when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
+        when(repositoryMock.updateTrxAuthorized(transaction, authPaymentDTO,
+                CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of())))
+                .thenReturn(UpdateResult.acknowledged(1, 1L, null));
 
-        Mockito.doAnswer(
-                        invocationOnMock -> {
-                            transaction.setStatus(SyncTrxStatus.AUTHORIZED);
-                            transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
-                            transaction.setRejectionReasons(List.of());
-                            transaction.setTrxChargeDate(OffsetDateTime.now());
-                            return transaction;
-                        })
-                .when(repositoryMock)
-                .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
+        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
 
         // When
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
@@ -123,6 +121,8 @@ class BarCodeAuthPaymentServiceImplTest {
         // Then
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
         verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USER_ID);
+        verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+        verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
         assertEquals(authPaymentDTO, result);
         TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment",
                 "residualAmountCents");
