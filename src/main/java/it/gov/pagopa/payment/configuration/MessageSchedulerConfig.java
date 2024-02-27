@@ -9,10 +9,10 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MessageSchedulerConfig {
 
-    @Value("${spring.cloud.azure.servicebus.connection-string}")
+    @Value("${spring.cloud.azure.servicebus-ns-manager.connection-string}")
     private String connectionString;
 
-    @Value("${spring.cloud.azure.servicebus.queue-name}")
+    @Value("${spring.cloud.azure.servicebus-ns-manager.queue-name}")
     private String queueName;
 
     @Bean

@@ -20,7 +20,10 @@ spring:
   cloud:
     azure:
       servicebus:
-        connection-string: ${SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING:}
+        connection-string: ${AZURE_SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING:}
+      servicebus-ns-manager:
+        connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING}
+        queue-name: ${AZURE_SERVICEBUS_QUEUE_NAME:idpay-payment-timeout}
     function:
       definition: errors;transactionOutcome;consumerCommands;paymentTimeoutConsumer
     stream:
@@ -109,10 +112,6 @@ spring:
                   ms: ${KAFKA_COMMANDS_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
               standardHeaders: ${KAFKA_COMMANDS_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               startOffset: ${KAFKA_COMMANDS_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
-    azure:
-      servicebus:
-        connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING}
-        queue_name: ${AZURE_SERVICEBUS_QUEUE_NAME:idpay-payment-timeout}
   data:
     mongodb:
       database: ${MONGODB_DBNAME:idpay}
