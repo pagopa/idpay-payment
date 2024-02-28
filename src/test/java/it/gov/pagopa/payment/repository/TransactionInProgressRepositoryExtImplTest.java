@@ -1,12 +1,9 @@
 package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
-import it.gov.pagopa.common.mongo.config.MongoConfig;
-import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.web.exception.ErrorManager;
-import it.gov.pagopa.common.web.exception.MongoExceptionHandler;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -22,15 +19,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -48,29 +41,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
-
-@TestPropertySource(
-        properties = {
-                "de.flapdoodle.mongodb.embedded.version=4.2.24",
-
-                "spring.data.mongodb.database=idpay",
-                "spring.data.mongodb.config.connectionPool.maxSize: 100",
-                "spring.data.mongodb.config.connectionPool.minSize: 0",
-                "spring.data.mongodb.config.connectionPool.maxWaitTimeMS: 120000",
-                "spring.data.mongodb.config.connectionPool.maxConnectionLifeTimeMS: 0",
-                "spring.data.mongodb.config.connectionPool.maxConnectionIdleTimeMS: 120000",
-                "spring.data.mongodb.config.connectionPool.maxConnecting: 2",
-        })
-@ContextConfiguration(classes = {
-        ErrorManager.class,
-        MongoExceptionHandler.class,
-        MongoConfig.class
-
-})
-@WebMvcTest(excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@AutoConfigureSingleInstanceMongodb
+@MongoTest
 @Slf4j
-class TransactionInProgressRepositoryExtImplTest  {
+class TransactionInProgressRepositoryExtImplTest {
 
     private static final String INITIATIVE_ID = "INITIATIVEID1";
     private static final String MERCHANT_ID = "MERCHANTID1";
@@ -182,7 +155,6 @@ class TransactionInProgressRepositoryExtImplTest  {
 
     @Test
     void updateTrxAuthorized() {
-        Long reward = 200L;
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId("USERID%d".formatted(1));
@@ -210,7 +182,6 @@ class TransactionInProgressRepositoryExtImplTest  {
 
     @Test
     void updateTrxAuthorized_barCode() {
-        Long reward = 200L;
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId("USERID%d".formatted(1));
