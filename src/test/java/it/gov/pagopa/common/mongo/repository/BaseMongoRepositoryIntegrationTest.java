@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 @MongoTest
-public class BaseMongoRepositoryIntegrationTest {
+class BaseMongoRepositoryIntegrationTest {
 
     static {
         ((Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME)).setLevel(Level.INFO);
