@@ -1,10 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
@@ -23,8 +18,6 @@ import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -37,6 +30,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommonPaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
@@ -68,6 +69,7 @@ class CommonPaymentControllerTest {
     private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
     private static final String MERCHANT_ID = "MERCHANTID1";
     private static final String TRANSACTION_ID = "TRANSACTIONID1";
+    private static final String INITIATIVE_ID = "INITIATIVEID1";
 
     @Test
     void createCommonTransaction_testMandatoryFields() throws Exception {
@@ -227,5 +229,43 @@ class CommonPaymentControllerTest {
         Assertions.assertEquals(response,resultResponse);
         Mockito.verify(commonStatusTransactionServiceMock).getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
 
+    }
+
+    @Test
+    void forceConfirmTrxExpiration() throws Exception{
+
+
+        Mockito.when(qrCodeExpirationServiceMock.forceConfirmTrxExpiration(INITIATIVE_ID)).thenReturn(1L);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .put("/idpay/payment/force-expiration/confirm/{initiativeId}",
+                                INITIATIVE_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1L,Long.valueOf(result.getResponse().getContentAsString()));
+        Mockito.verify(qrCodeExpirationServiceMock).forceConfirmTrxExpiration(INITIATIVE_ID);
+    }
+
+    @Test
+    void forceAuthorizationTrxExpiration() throws Exception{
+
+
+        Mockito.when(qrCodeExpirationServiceMock.forceAuthorizationTrxExpiration(INITIATIVE_ID)).thenReturn(1L);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .put("/idpay/payment/force-expiration/authorization/{initiativeId}",
+                                INITIATIVE_ID)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(1L,Long.valueOf(result.getResponse().getContentAsString()));
+        Mockito.verify(qrCodeExpirationServiceMock).forceAuthorizationTrxExpiration(INITIATIVE_ID);
     }
 }

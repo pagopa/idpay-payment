@@ -16,14 +16,20 @@ import java.util.List;
 public class ProcessConsumerServiceImpl implements ProcessConsumerService{
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final AuditUtilities auditUtilities;
-    @Value("${app.delete.paginationSize}")
-    private int pageSize;
-    @Value("${app.delete.delayTime}")
-    private long delay;
 
-    public ProcessConsumerServiceImpl(TransactionInProgressRepository transactionInProgressRepository, AuditUtilities auditUtilities) {
+    private final int pageSize;
+
+    private final long delay;
+
+    public ProcessConsumerServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
+                                      AuditUtilities auditUtilities,
+                                      @Value("${app.delete.paginationSize}") int pageSize,
+                                      @Value("${app.delete.delayTime}") long delay) {
+
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.auditUtilities = auditUtilities;
+        this.pageSize = pageSize;
+        this.delay = delay;
     }
 
     @Override

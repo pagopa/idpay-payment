@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
@@ -30,8 +31,9 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
                                               WalletConnector walletConnector,
                                               IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService,
                                               PaymentInstrumentConnectorImpl paymentInstrumentConnector,
-                                              @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService) {
-        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService);
+                                              @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
+                                              AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceImpl) {
+        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService, timeoutSchedulerServiceImpl);
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
     }

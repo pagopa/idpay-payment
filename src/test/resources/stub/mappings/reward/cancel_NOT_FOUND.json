@@ -1,0 +1,35 @@
+{
+  "request": {
+    "method": "DELETE",
+    "urlPathPattern": "/reward/initiative/INITIATIVEID22",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "transactionId": "ID_CANCEL_NOT_FOUND",
+          "userId": null,
+          "merchantId": "${json-unit.regex}MERCHANTID[0-9]+",
+          "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
+          "vat": "${json-unit.regex}VAT[0-9]+",
+          "trxDate": "${json-unit.any-number}",
+          "trxChargeDate": null,
+          "amountCents":  "${json-unit.any-number}",
+          "amountCurrency": "${json-unit.regex}AMOUNTCURRENCY[0-9]+",
+          "mcc":  "${json-unit.regex}MCC[0-9]+",
+          "acquirerId":  "${json-unit.regex}ACQUIRERID[0-9]+",
+          "idTrxIssuer": "${json-unit.regex}IDTRXISSUER[0-9]+",
+          "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)",
+          "rewardCents": 100
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "404",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {}
+  }
+}

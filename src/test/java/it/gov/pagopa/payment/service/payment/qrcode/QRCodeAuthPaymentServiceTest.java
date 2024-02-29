@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
+import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -32,13 +33,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,10 +49,11 @@ class QRCodeAuthPaymentServiceTest {
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
   @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
-
+  @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
   QRCodeAuthPaymentService service;
 
   private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
+
 
   @BeforeEach
   void setUp() {
@@ -64,7 +64,8 @@ class QRCodeAuthPaymentServiceTest {
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
                     walletConnectorMock,
-                    commonPreAuthServiceMock);
+                    commonPreAuthServiceMock,
+                    timeoutSchedulerServiceMock);
   }
 
   @Test
@@ -75,38 +76,82 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
     authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+    authPaymentDTO.setRejectionReasons(Collections.emptyList());
 
     Reward reward = RewardFaker.mockInstance(1);
     reward.setCounters(new RewardCounters());
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
 
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+    when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
 
     when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
-    Mockito.doAnswer(
-            invocationOnMock -> {
-              transaction.setStatus(SyncTrxStatus.AUTHORIZED);
-              transaction.setReward(CommonUtilities.euroToCents(reward.getAccruedReward()));
-              transaction.setRejectionReasons(List.of());
-              transaction.setTrxChargeDate(OffsetDateTime.now());
-              return transaction;
-            })
-        .when(repositoryMock)
-        .updateTrxAuthorized(transaction, CommonUtilities.euroToCents(reward.getAccruedReward()), List.of(), CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
+    when(repositoryMock.updateTrxAuthorized(transaction, authPaymentDTO,
+            CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of())))
+            .thenReturn(UpdateResult.acknowledged(1, 1L, null));
+
+    doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
 
     AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+    verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+    verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
     assertEquals(authPaymentDTO, result);
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
             "residualAmountCents");
     assertEquals(transaction.getTrxCode(), result.getTrxCode());
+    assertTrue(result.getRejectionReasons().isEmpty());
+    assertEquals(Collections.emptyList(), result.getRejectionReasons());
+  }
+
+  @Test
+  void authPaymentButUpdateTrxFailed() {
+    TransactionInProgress transaction =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID1");
+
+    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+    authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+    authPaymentDTO.setRejectionReasons(Collections.emptyList());
+
+    Reward reward = RewardFaker.mockInstance(1);
+    reward.setCounters(new RewardCounters());
+
+    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+
+    when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
+            .thenReturn(transaction);
+
+    when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
+
+    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
+
+    when(repositoryMock.updateTrxAuthorized(transaction, authPaymentDTO,
+            CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of())))
+            .thenReturn(UpdateResult.acknowledged(0, 0L, null));
+
+    doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
+
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
+
+    verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
+    verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+    verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+    verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
+    assertEquals(transaction.getTrxCode(), result.getTrxCode());
+    assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
+    assertEquals(List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT), result.getRejectionReasons());
+    assertEquals(Collections.emptyMap(), result.getRewards());
+    assertNull(result.getReward());
+    assertNull(result.getCounters());
   }
 
   @Test
@@ -119,12 +164,14 @@ class QRCodeAuthPaymentServiceTest {
     authPaymentDTO.setRejectionReasons(List.of("DUMMYREJECTIONREASON"));
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
 
+    when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
+
     when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
 
@@ -138,12 +185,15 @@ class QRCodeAuthPaymentServiceTest {
         .when(repositoryMock)
         .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons);
 
+    doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
+
     TransactionRejectedException result =
             assertThrows(TransactionRejectedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(qrCodeAuthorizationExpiredServiceMock, times(1)).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
-
+    verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+    verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
     Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
   }
 
@@ -157,13 +207,14 @@ class QRCodeAuthPaymentServiceTest {
     authPaymentDTO.setRejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenReturn(transaction);
 
-    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
+    when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
 
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
     Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
 
@@ -177,12 +228,15 @@ class QRCodeAuthPaymentServiceTest {
             .when(repositoryMock)
             .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(),initiativeRejectionReasons);
 
+    doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
+
     BudgetExhaustedException result =
             assertThrows(BudgetExhaustedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
-
+    verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+    verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
     Assertions.assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
   }
 
@@ -193,16 +247,17 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-    authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH));
+    authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenReturn(transaction);
 
-    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
+    when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
 
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
 
     Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
 
@@ -216,13 +271,40 @@ class QRCodeAuthPaymentServiceTest {
             .when(repositoryMock)
             .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(),initiativeRejectionReasons);
 
-    TransactionVersionMismatchException result =
-            assertThrows(TransactionVersionMismatchException.class, () -> service.authPayment("USERID1", "trxcode1"));
+    doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
+
+    AuthPaymentDTO result = service.authPayment("USERID1", "trxcode1");
 
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+    verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+    verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
+    Assertions.assertNotNull(result);
+    Assertions.assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
+    Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
+  }
 
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_MISMATCH, result.getCode());
+  @Test
+  void authPaymentWhenRewardCalculatorReturn404() {
+    TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    transaction.setUserId("USERID1");
+
+    when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
+            .thenReturn(transaction);
+
+    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+
+    when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
+
+    when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenThrow(new TransactionNotFoundOrExpiredException("Resource not found on reward-calculator"));
+
+    assertThrows(TransactionNotFoundOrExpiredException.class, () -> service.authPayment("USERID1", "trxcode1"));
+
+    verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired("trxcode1");
+    verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
+    verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
+    verify(timeoutSchedulerServiceMock, times(0)).cancelScheduledMessage(1L);
   }
   @Test
   void authPaymentNotFound() {
@@ -258,16 +340,15 @@ class QRCodeAuthPaymentServiceTest {
     transaction.setRejectionReasons(Collections.emptyList());
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     TransactionAlreadyAuthorizedException result =
             assertThrows(TransactionAlreadyAuthorizedException.class, () -> service.authPayment("USERID1", "trxcode1"));
 
     verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), "USERID1");
-
     Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, result.getCode());
   }
 
@@ -279,11 +360,12 @@ class QRCodeAuthPaymentServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
         .thenReturn(transaction);
+
     when(commonPreAuthServiceMock.previewPayment(transaction,transaction.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(authPaymentDTO);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     OperationNotAllowedException result =
         assertThrows(OperationNotAllowedException.class, () -> service.authPayment("USERID1", "trxcode1"));
@@ -313,9 +395,10 @@ class QRCodeAuthPaymentServiceTest {
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, walletStatus);
 
+    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
+
     when(qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
             .thenReturn(transaction);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     try {
       service.authPayment("USERID1", "trxcode1");
