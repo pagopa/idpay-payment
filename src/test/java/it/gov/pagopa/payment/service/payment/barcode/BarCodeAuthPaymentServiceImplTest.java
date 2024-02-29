@@ -12,6 +12,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -27,6 +28,7 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -157,5 +159,30 @@ class BarCodeAuthPaymentServiceImplTest {
 
         // Then
         assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
+    }
+
+    @Test
+    void barCodeAuthPayment_TooManyRequestThrownByRewardCalculator() {
+        // Given
+        TransactionInProgress transaction =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        transaction.setUserId(USER_ID);
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+
+        Reward reward = RewardFaker.mockInstance(1);
+        reward.setCounters(new RewardCounters());
+
+
+        when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenThrow(new TooManyRequestsException("Too many request on the ms reward",true,null));
+
+
+        TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
+                () -> rewardCalculatorConnectorMock.authorizePayment(transaction));
+
+        // Then
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS, result.getCode());
+
     }
 }
