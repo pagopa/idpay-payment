@@ -1,15 +1,9 @@
 package it.gov.pagopa.payment.repository;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.BaseIntegrationTest;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -20,6 +14,17 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -34,19 +39,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
 
+import static org.junit.jupiter.api.Assertions.*;
+@MongoTest
 @Slf4j
-class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
+class TransactionInProgressRepositoryExtImplTest {
 
     private static final String INITIATIVE_ID = "INITIATIVEID1";
     private static final String MERCHANT_ID = "MERCHANTID1";
@@ -59,6 +56,7 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
     protected TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     protected MongoTemplate mongoTemplate;
+
 
 
 
@@ -157,9 +155,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     @Test
     void updateTrxAuthorized() {
-        Long reward = 200L;
         TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId("USERID%d".formatted(1));
         transactionInProgressRepository.save(transaction);
 
@@ -185,9 +182,8 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
 
     @Test
     void updateTrxAuthorized_barCode() {
-        Long reward = 200L;
         TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId("USERID%d".formatted(1));
         transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);
@@ -554,6 +550,50 @@ class TransactionInProgressRepositoryExtImplTest extends BaseIntegrationTest {
         Assertions.assertEquals(1, result.size());
         Assertions.assertEquals(transactionInProgress.getId(), result.get(0).getId());
         Assertions.assertEquals(transactionInProgress.getInitiativeId(), result.get(0).getInitiativeId());
+    }
+
+    @Test
+    void updateTrxPostTimeout_OK (){
+
+        TransactionInProgress transactionInProgress = TransactionInProgress.builder()
+                .id(TRX_ID)
+                .initiativeId(INITIATIVE_ID)
+                .initiatives(List.of(INITIATIVE_ID))
+                .status(SyncTrxStatus.AUTHORIZATION_REQUESTED)
+                .counterVersion(0L)
+                .build();
+        mongoTemplate.save(transactionInProgress);
+
+        // When
+        UpdateResult result = transactionInProgressRepository.updateTrxPostTimeout(TRX_ID);
+
+
+        assertNull(result.getUpsertedId());
+        assertEquals(1L, result.getMatchedCount());
+        assertEquals(1L, result.getModifiedCount());
+
+    }
+
+    @Test
+    void updateTrxPostTimeout_KO (){
+
+        TransactionInProgress transactionInProgress = TransactionInProgress.builder()
+                .id(TRX_ID)
+                .initiativeId(INITIATIVE_ID)
+                .initiatives(List.of(INITIATIVE_ID))
+                .status(SyncTrxStatus.REJECTED)
+                .counterVersion(0L)
+                .build();
+        mongoTemplate.save(transactionInProgress);
+
+        // When
+        UpdateResult result = transactionInProgressRepository.updateTrxPostTimeout(TRX_ID);
+
+
+        assertNull(result.getUpsertedId());
+        assertEquals(0L, result.getMatchedCount());
+        assertEquals(0L, result.getModifiedCount());
+
     }
 
     @Test

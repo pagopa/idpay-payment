@@ -2,14 +2,17 @@ package it.gov.pagopa.payment.connector.rest.reward;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
+import it.gov.pagopa.common.wiremock.BaseWireMockTest;
 import it.gov.pagopa.payment.configuration.FeignConfig;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
+import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.TransactionVersionPendingException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -17,49 +20,40 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import static it.gov.pagopa.common.wiremock.BaseWireMockTest.WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@AutoConfigureWireMock(stubs = "classpath:/stub", port = 0)
+
 @ContextConfiguration(
         classes = {
                 RewardCalculatorConnectorImpl.class,
                 FeignAutoConfiguration.class,
                 FeignConfig.class,
                 HttpMessageConvertersAutoConfiguration.class,
-                RewardCalculatorMapper.class,
-                WireMockServer.class
+                RewardCalculatorMapper.class
         })
 @TestPropertySource(
         properties = {"spring.application.name=idpay-reward-calculator",
-        "rest-client.reward.baseUrl=http://localhost:${wiremock.server.port}"})
+                WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX+"rest-client.reward.baseUrl="})
 @Slf4j
-class RewardCalculatorRestClientTest {
+class RewardCalculatorRestClientTest extends BaseWireMockTest {
 
     @Autowired
     private RewardCalculatorRestClient rewardCalculatorRestClient;
 
     @Autowired
     private RewardCalculatorConnector rewardCalculatorConnector;
-
-    @Autowired
-    private WireMockServer wireMockServer;
 
     @MockBean
     ObjectMapper objectMapper;

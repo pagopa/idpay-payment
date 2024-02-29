@@ -4,18 +4,14 @@ import it.gov.pagopa.payment.dto.event.QueueCommandOperationDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -24,25 +20,22 @@ import java.util.stream.Stream;
 
 import static org.mockito.Mockito.when;
 
-@ExtendWith({SpringExtension.class, MockitoExtension.class})
-@ContextConfiguration(classes = ProcessConsumerServiceImpl.class)
-@TestPropertySource(
-        properties = {
-                "app.delete.paginationSize=100",
-                "app.delete.delayTime=1000"
-        })
+@ExtendWith({MockitoExtension.class})
 class ProcessConsumerServiceTest {
-    @Autowired
     private ProcessConsumerService processConsumerService;
-    @MockBean
+    @Mock
     private TransactionInProgressRepository transactionInProgressRepository;
-    @MockBean
+    @Mock
     private AuditUtilities auditUtilities;
     public static final String OPERATION_TYPE_DELETE_INITIATIVE = "DELETE_INITIATIVE";
     private static final String TRX_ID = "TRX_ID";
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
-    @Value("${app.delete.paginationSize}")
-    private int pageSize;
+    private static final int PAGE_SIZE = 100;
+
+    @BeforeEach
+    public void setUp() {
+        processConsumerService = new ProcessConsumerServiceImpl(transactionInProgressRepository,auditUtilities,PAGE_SIZE, 1000);
+    }
 
     @ParameterizedTest
     @MethodSource("operationTypeAndInvocationTimes")
@@ -61,12 +54,12 @@ class ProcessConsumerServiceTest {
         final List<TransactionInProgress> deletedPage = List.of(trxInProgress);
 
         if(times == 2){
-            final List<TransactionInProgress> trxPage = createTransactionInProgressPage(pageSize);
-            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize))
+            final List<TransactionInProgress> trxPage = createTransactionInProgressPage(PAGE_SIZE);
+            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), PAGE_SIZE))
                     .thenReturn(trxPage)
                     .thenReturn(deletedPage);
         } else if (times == 1){
-            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize))
+            when(transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), PAGE_SIZE))
                     .thenReturn(deletedPage);
         }
 
@@ -77,7 +70,7 @@ class ProcessConsumerServiceTest {
         processConsumerService.processCommand(queueCommandOperationDTO);
 
         // Then
-        Mockito.verify(transactionInProgressRepository, Mockito.times(times)).deletePaged(queueCommandOperationDTO.getEntityId(), pageSize);
+        Mockito.verify(transactionInProgressRepository, Mockito.times(times)).deletePaged(queueCommandOperationDTO.getEntityId(), PAGE_SIZE);
     }
 
     private static Stream<Arguments> operationTypeAndInvocationTimes() {
@@ -88,10 +81,10 @@ class ProcessConsumerServiceTest {
         );
     }
 
-    private List<TransactionInProgress> createTransactionInProgressPage(int pageSize){
+    private List<TransactionInProgress> createTransactionInProgressPage(int PAGE_SIZE){
         List<TransactionInProgress> trxPage = new ArrayList<>();
 
-        for(int i=0;i<pageSize; i++){
+        for(int i=0;i<PAGE_SIZE; i++){
             trxPage.add(TransactionInProgress.builder()
                     .id(TRX_ID)
                     .initiativeId(INITIATIVE_ID)

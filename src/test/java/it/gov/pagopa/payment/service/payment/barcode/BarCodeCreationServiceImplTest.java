@@ -1,15 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
 import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
-import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
-import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
@@ -22,6 +13,10 @@ import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionIn
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
+import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -33,10 +28,6 @@ import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.stream.Stream;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +41,14 @@ import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodeCreationServiceImplTest {
@@ -272,6 +271,25 @@ class BarCodeCreationServiceImplTest {
 
         // Then
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, result.getCode());
+    }
+
+    @Test
+    void createTransaction_UserNotOnboarded() {
+        // Given
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
+                .initiativeId("INITIATIVEID")
+                .build();
+
+
+        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenThrow(new UserNotOnboardedException(String.format("The current user is not onboarded on initiative [%s]", "INITIATIVEID"),true,null));
+
+        // When
+        UserNotOnboardedException result = Assertions.assertThrows(UserNotOnboardedException.class,
+                () -> barCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
+
+        // Then
+        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED, result.getCode());
     }
 
     @ParameterizedTest
