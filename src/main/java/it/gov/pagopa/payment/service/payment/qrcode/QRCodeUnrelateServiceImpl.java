@@ -22,17 +22,14 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
 
     private final TransactionInProgressRepository repository;
     private final QRCodeAuthorizationExpiredService authorizationExpiredService;
-    private final RewardCalculatorConnector rewardCalculatorConnector;
     private final AuditUtilities auditUtilities;
 
     public QRCodeUnrelateServiceImpl(
             TransactionInProgressRepository repository,
             QRCodeAuthorizationExpiredService authorizationExpiredService,
-            RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities) {
         this.repository = repository;
         this.authorizationExpiredService = authorizationExpiredService;
-        this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.auditUtilities = auditUtilities;
     }
 
@@ -50,7 +47,6 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
                     throw new UserNotAllowedException(ExceptionCode.TRX_ALREADY_ASSIGNED, "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
                 }
 
-                callRewardCalculatorCancelTransaction(trx);
 
                 revertTrxToCreatedStatus(trx);
                 repository.save(trx);
@@ -74,13 +70,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
         trx.setChannel(null);
         trx.setRejectionReasons(Collections.emptyList());
         trx.setUpdateDate(LocalDateTime.now());
+        trx.setTrxChargeDate(null);
     }
 
-    private void callRewardCalculatorCancelTransaction(TransactionInProgress trx) {
-        try {
-            rewardCalculatorConnector.cancelTransaction(trx);
-        } catch (TransactionNotFoundOrExpiredException e) {
-            // do nothing
-        }
-    }
 }

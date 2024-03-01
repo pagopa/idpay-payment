@@ -16,13 +16,13 @@ import java.util.function.Supplier;
 @Component
 public class TransactionNotifierServiceImpl implements TransactionNotifierService {
 
-    @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.binder}")
     private String binder;
 
     private final StreamBridge streamBridge;
 
-    public TransactionNotifierServiceImpl(StreamBridge streamBridge) {
+    public TransactionNotifierServiceImpl(StreamBridge streamBridge,@Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.binder}") String binder ) {
         this.streamBridge = streamBridge;
+        this.binder=binder;
     }
 
     @Configuration

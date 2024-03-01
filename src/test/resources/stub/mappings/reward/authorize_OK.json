@@ -1,0 +1,63 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/reward/initiative/INITIATIVEID11",
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "transactionId": "${json-unit.any-string}",
+          "userId": null,
+          "merchantId": "${json-unit.regex}MERCHANTID[0-9]+",
+          "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
+          "vat": "${json-unit.regex}VAT[0-9]+",
+          "trxDate": "${json-unit.any-number}",
+          "trxChargeDate": null,
+          "amountCents":  "${json-unit.any-number}",
+          "amountCurrency": "${json-unit.regex}AMOUNTCURRENCY[0-9]+",
+          "mcc":  "${json-unit.regex}MCC[0-9]+",
+          "acquirerId":  "${json-unit.regex}ACQUIRERID[0-9]+",
+          "idTrxIssuer": "${json-unit.regex}IDTRXISSUER[0-9]+",
+          "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
+          "channel": "${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)",
+          "rewardCents": 100
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json",
+      "ETag": "1"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
+      "channel":  "{{jsonPath request.body '$.channel'}}",
+      "initiativeId": "INITIATIVEID11",
+      "userId": "USERID",
+      "status": "IDENTIFIED",
+      "effectiveAmount": "0.10",
+      "amount": "0.10",
+      "amountCents": "10",
+      "reward": {
+        "initiativeId": "INITIATIVEID11",
+        "organizationId": "ORGANIZATIONID11",
+        "providedReward": 2.00,
+        "accruedReward": 2.00,
+        "capped": false,
+        "dailyCapped": false,
+        "monthlyCapped": false,
+        "yearlyCapped": false,
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
+      },
+      "counterVersion": 1.00,
+      "rejectionReasons": []
+    }
+  }
+}

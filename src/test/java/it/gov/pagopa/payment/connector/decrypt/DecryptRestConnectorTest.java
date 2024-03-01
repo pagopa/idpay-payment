@@ -3,25 +3,21 @@ package it.gov.pagopa.payment.connector.decrypt;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.*;
 
-@ContextConfiguration(classes = {DecryptRestConnectorImpl.class, String.class})
-@ExtendWith(SpringExtension.class)
+@ExtendWith(MockitoExtension.class)
 class DecryptRestConnectorTest {
-    @MockBean
-    private DecryptRest decryptRest;
 
-    @Autowired
-    private DecryptRestConnectorImpl decryptRestConnectorImpl;
+    @Mock
+    private DecryptRest decryptRest;
 
     @Test
     void testGetPiiByToken() {
+        DecryptRestConnectorImpl decryptRestConnectorImpl = new DecryptRestConnectorImpl("apikey",decryptRest);
         DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
         when(decryptRest.getPiiByToken(any(), any())).thenReturn(decryptCfDTO);
         assertSame(decryptCfDTO, decryptRestConnectorImpl.getPiiByToken("ABC123"));

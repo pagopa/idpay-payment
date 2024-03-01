@@ -9,16 +9,18 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -36,8 +38,10 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
                                          RewardCalculatorConnector rewardCalculatorConnector,
                                          AuditUtilities auditUtilities,
                                          WalletConnector walletConnector,
-                                         MerchantConnector merchantConnector){
-        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
+                                         MerchantConnector merchantConnector,
+                                         @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
+                                         AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService){
+        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService, timeoutSchedulerService);
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
     }
@@ -59,12 +63,14 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
 
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
 
+            checkTrxStatusToInvokePreAuth(trx);
+
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(trx.getRewards()));
+            authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
             authPaymentDTO.setRejectionReasons(Collections.emptyList());
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), trx.getReward());
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getReward());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
@@ -82,11 +88,6 @@ public class BarCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl impleme
     @Override
     protected void logErrorAuthorizedPayment(String trxCode, String merchantId){
         auditUtilities.logBarCodeErrorAuthorizedPayment(trxCode, merchantId);
-    }
-
-    @Override
-    public SyncTrxStatus getSyncTrxStatus(){
-        return SyncTrxStatus.CREATED;
     }
 
     private static void setTrxFields(String merchantId, AuthBarCodePaymentDTO authBarCodePaymentDTO,

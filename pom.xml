@@ -12,13 +12,18 @@
     <artifactId>idpay-payment</artifactId>
     <name>idpay-payment</name>
     <description>IDPay Payment Microservice</description>
-    <version>1.8.0</version>
+    <version>1.9.0</version>
 
     <properties>
         <java.version>17</java.version>
     </properties>
 
     <dependencies>
+        <!-- Azure -->
+        <dependency>
+            <groupId>com.azure.spring</groupId>
+            <artifactId>spring-cloud-azure-stream-binder-servicebus</artifactId>
+        </dependency>
         <!--SB STARTER-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -164,14 +169,34 @@
             <version>4.2.0</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-messaging-servicebus</artifactId>
+            <version>7.14.7</version>
+        </dependency>
     </dependencies>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>com.azure.spring</groupId>
+                <artifactId>spring-cloud-azure-dependencies</artifactId>
+                <version>5.8.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>2022.0.4</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <!-- Forced to >= 4.1.100 due to https://nvd.nist.gov/vuln/detail/CVE-2023-44487 -->
+                <version>4.1.104.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

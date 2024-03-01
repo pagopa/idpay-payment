@@ -11,10 +11,13 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 @Slf4j
 @Service
@@ -27,8 +30,10 @@ public class IdpayCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl imple
                                               AuditUtilities auditUtilities,
                                               WalletConnector walletConnector,
                                               IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService,
-                                              PaymentInstrumentConnectorImpl paymentInstrumentConnector) {
-        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
+                                              PaymentInstrumentConnectorImpl paymentInstrumentConnector,
+                                              @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
+                                              AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceImpl) {
+        super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService, timeoutSchedulerServiceImpl);
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
     }

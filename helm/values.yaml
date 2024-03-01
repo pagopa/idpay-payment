@@ -59,6 +59,7 @@ microservice-chart:
     KAFKA_COMMANDS_GROUP_ID: "idpay-commands-payment-consumer-group"
     DELETE_PAGINATION_SIZE: "100"
     DELETE_DELAY_TIME: "1000"
+    TIMEOUT_PAYMENT_SECONDS: "30"
 
   externalConfigMapValues:
     idpay-common:
@@ -89,6 +90,8 @@ microservice-chart:
     KAFKA_COMMANDS_SASL_JAAS_CONFIG: evh-idpay-commands-idpay-commands-consumer-jaas-config-idpay-01
     PDV_ENCRYPT_API_KEY: pdv-api-key
     PDV_DECRYPT_API_KEY: pdv-api-key
+    AZURE_SERVICEBUS_CONNECTION_STRING: idpay-service-bus-ns-manager-sas-key
+    AZURE_SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING: idpay-payment-timeout-consumer-sas-key
 
   # nodeSelector: {}
 

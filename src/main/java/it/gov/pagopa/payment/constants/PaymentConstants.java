@@ -9,6 +9,9 @@ public class PaymentConstants {
 
   public static final String WALLET_STATUS_SUSPENDED = "SUSPENDED";
   public static final String WALLET_STATUS_UNSUBSCRIBED = "UNSUBSCRIBED";
+  public static final String PAYMENT_AUTHORIZATION_TIMEOUT = "PAYMENT_AUTHORIZATION_TIMEOUT";
+  public static final String TIMEOUT_PAYMENT = "TIMEOUT_PAYMENT";
+  public static final String MESSAGE_TOPIC = "MESSAGE_TOPIC";
 
 
   public static final class ExceptionCode {
@@ -38,6 +41,8 @@ public class PaymentConstants {
     public static final String IDPAYCODE_NOT_FOUND = "PAYMENT_IDPAYCODE_NOT_FOUND";
     public static final String MERCHANT_NOT_ONBOARDED = "PAYMENT_MERCHANT_NOT_ONBOARDED";
     public static final String PAYMENT_INVALID_REQUEST = "PAYMENT_INVALID_REQUEST";
+    public static final String PAYMENT_CANNOT_GUARANTEE_REWARD = "PAYMENT_CANNOT_GUARANTEE_REWARD";
+    public static final String PAYMENT_TRANSACTION_VERSION_PENDING = "PAYMENT_TRANSACTION_VERSION_PENDING";
 
     private ExceptionCode() {}
   }

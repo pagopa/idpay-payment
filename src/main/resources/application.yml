@@ -18,10 +18,18 @@ spring:
     activate:
       on-profile: default
   cloud:
+    azure:
+      servicebus:
+        connection-string: ${AZURE_SERVICEBUS_PAYMENT_TIMEOUT_CONNECTION_STRING:}
+      servicebus-ns-manager:
+        connection-string: ${AZURE_SERVICEBUS_CONNECTION_STRING}
+        queue-name: ${AZURE_SERVICEBUS_QUEUE_NAME:idpay-payment-timeout}
     function:
-      definition: errors;transactionOutcome;consumerCommands
+      definition: errors;transactionOutcome;consumerCommands;paymentTimeoutConsumer
     stream:
       binders:
+        servicebus-payment-timeout-request:
+          type: servicebus
         kafka-errors:
           type: kafka
           environment:
@@ -46,6 +54,10 @@ spring:
               configuration:
                 sasl.jaas.config: ${KAFKA_COMMANDS_SASL_JAAS_CONFIG:}
       bindings:
+        paymentTimeoutConsumer-in-0:
+          destination: ${SERVICEBUS_PAYMENT_TIMEOUT_REQUEST_TOPIC:idpay-payment-timeout}
+          binder: servicebus-payment-timeout-request
+          consumer.autoStartup: true
         errors-out-0:
           destination: ${KAFKA_ERRORS_TOPIC:idpay-errors}
           content-type: ${KAFKA_CONTENT_TYPE:application/json}
@@ -178,6 +190,8 @@ app:
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}
+  timeoutPayment:
+    seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
 
 management:
   health:

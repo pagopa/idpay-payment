@@ -1,0 +1,64 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPathPattern": "/reward/initiative/BARCODE_INITIATIVEID_REWARDED",
+    "headers" : {
+      "If-Match" : {
+        "equalTo" : "0"
+      }
+    },
+    "bodyPatterns": [
+      {
+        "equalToJson": {
+          "transactionId": "${json-unit.any-string}",
+          "userId": "${json-unit.regex}.*USERID",
+          "merchantId": "MERCHANTID",
+          "merchantFiscalCode":  "${json-unit.regex}MERCHANTFISCALCODE[0-9]+",
+          "vat": "${json-unit.regex}VAT[0-9]+",
+          "trxDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
+          "trxChargeDate": "${json-unit.regex}[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]+)?\\+[0-9]{2}:[0-9]{2}",
+          "amountCents":  "${json-unit.any-number}",
+          "amountCurrency": "EUR",
+          "acquirerId":  "ACQUIRERID",
+          "idTrxAcquirer": "${json-unit.regex}.*IDTRXACQUIRER[0-9]+",
+          "channel": "BARCODE",
+          "rewardCents": 200
+        }
+      }
+    ]
+  },
+  "response": {
+    "status": "200",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": ["response-template"],
+    "jsonBody": {
+      "transactionId":  "{{jsonPath request.body '$.transactionId'}}",
+      "channel":  "{{jsonPath request.body '$.channel'}}",
+      "initiativeId": "BARCODE_INITIATIVEID_REWARDED",
+      "userId": "USERID",
+      "status": "REWARDED",
+      "effectiveAmount": "0.10",
+      "amount": "0.10",
+      "amountCents": "10",
+      "reward": {
+        "initiativeId": "INITIATIVEID",
+        "organizationId": "ORGANIZATIONID",
+        "providedReward": 2.00,
+        "accruedReward": 2.00,
+        "capped": false,
+        "dailyCapped": false,
+        "monthlyCapped": false,
+        "yearlyCapped": false,
+        "weeklyCapped": false,
+        "counters": {
+          "version": 0,
+          "exhaustedBudget": false,
+          "initiativeBudget" : 80
+        }
+      },
+      "rejectionReasons": []
+    }
+  }
+}

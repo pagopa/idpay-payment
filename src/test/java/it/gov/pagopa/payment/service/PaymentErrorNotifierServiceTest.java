@@ -62,6 +62,23 @@ class PaymentErrorNotifierServiceTest {
     }
 
     @Test
+    void notifyCancelPayment() {
+        TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        Mockito.when(errorNotifierServiceMock.notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any())).thenReturn(false);
+
+        service.notifyCancelPayment(
+                buildMessage(trx, trx.getMerchantId()),
+                "[QR_CODE_CANCEL_PAYMENT] An error occurred while publishing the cancellation authorized result",
+                true,
+                new Throwable(ERROR_MESSAGE)
+        );
+
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
+
+    }
+
+    @Test
     void notifyConfirmPayment(){
         TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 

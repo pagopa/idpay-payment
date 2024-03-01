@@ -105,7 +105,7 @@ class CommonCancelServiceTest {
             Assertions.fail("Expected exception");
         } catch (OperationNotAllowedException e) {
             Assertions.assertEquals(ExceptionCode.TRX_DELETE_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("Cannot cancel confirmed transaction with transactionId [TRXID]", e.getMessage());
+            Assertions.assertEquals("Cannot cancel transaction with transactionId [TRXID]", e.getMessage());
         }
     }
 
