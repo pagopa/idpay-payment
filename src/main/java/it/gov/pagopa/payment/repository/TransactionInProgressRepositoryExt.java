@@ -20,6 +20,8 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason, String channel);
   void updateTrxRelateUserIdentified(String id, String userId, String channel);
+
+  //TODO: handle with suppresswarnings task
   @SuppressWarnings("squid:S00107")
   void updateTrxWithStatus(String id, String userId, Long reward, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReasons, Map<String, Reward> rewards, String channel, SyncTrxStatus status, long counterVersion, OffsetDateTime trxChargeDate, Long amountCents, String merchantId);
   UpdateResult updateTrxAuthorized(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO, Map<String, List<String>> initiativeRejectionReasons);
