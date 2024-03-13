@@ -111,7 +111,7 @@ class CommonPreAuthServiceTest {
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
     Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(), any(),anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(), any(),anyLong(),any(), anyLong());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
@@ -132,7 +132,7 @@ class CommonPreAuthServiceTest {
 
     assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(),anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(),anyLong(),any(), anyLong());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
@@ -153,7 +153,7 @@ class CommonPreAuthServiceTest {
     Assertions.assertEquals("PAYMENT_GENERIC_REJECTED", result.getCode());
     Assertions.assertEquals("Transaction with transactionId [MOCKEDTRANSACTION_qr-code_1] is rejected", result.getMessage());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(),anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(),anyLong(),any(), anyLong());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 

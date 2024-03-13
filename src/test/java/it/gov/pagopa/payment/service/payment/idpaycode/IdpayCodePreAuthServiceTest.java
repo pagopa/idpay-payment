@@ -166,7 +166,7 @@ class IdpayCodePreAuthServiceTest {
                         eq(RewardConstants.TRX_CHANNEL_IDPAYCODE),
                         eq(SyncTrxStatus.IDENTIFIED),
                         eq(authPaymentDTO.getCounterVersion()),
-                        Mockito.any());
+                        Mockito.any(), eq(authPaymentDTO.getAmountCents()));
 
         when(paymentInstrumentConnectorMock.getSecondFactor(trx.getUserId()))
                 .thenReturn(new SecondFactorDTO(SECOND_FACTOR));
@@ -179,7 +179,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(Collections.emptyList()), anyMap(), anyMap(),anyString(), any(),anyLong(),any());
+        verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(Collections.emptyList()), anyMap(), anyMap(),anyString(), any(),anyLong(),any(), anyLong());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 
@@ -266,7 +266,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong(),any());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong(),any(), anyLong());
         verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 
@@ -309,7 +309,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(1)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong(),any());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(),anyString(),any(),anyLong(),any(), anyLong());
         verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 
@@ -340,7 +340,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong(),any());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong(),any(), anyLong());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(),anyString());
     }
 
@@ -366,7 +366,7 @@ class IdpayCodePreAuthServiceTest {
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(rewardCalculatorConnectorMock, times(0)).previewTransaction(any());
-        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong(),any());
+        verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), anyLong(), eq(null), anyMap(), anyMap(), anyString(),any(),anyLong(),any(), anyLong());
         verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(),anyString(), anyList(), anyMap(), anyString());
     }
 }
