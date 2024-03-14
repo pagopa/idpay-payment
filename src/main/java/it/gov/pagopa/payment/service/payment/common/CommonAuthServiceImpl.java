@@ -170,7 +170,9 @@ public abstract class CommonAuthServiceImpl {
                 trx.getChannel(),
                 trx.getStatus(),
                 trx.getCounterVersion(),
-                trx.getTrxChargeDate());
+                trx.getTrxChargeDate(),
+                trx.getAmountCents(),
+                trx.getMerchantId());
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
