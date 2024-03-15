@@ -10,4 +10,4 @@
 
 ```sh
 helm dep build && helm upgrade --namespace idpay --install --values values-dev.yaml --wait --timeout 5m0s idpay-payment .
-```
+``` 
