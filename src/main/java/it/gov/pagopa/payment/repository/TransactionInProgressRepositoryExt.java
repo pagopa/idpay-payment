@@ -14,7 +14,6 @@ import java.util.Map;
 
 public interface TransactionInProgressRepositoryExt {
   UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
-  TransactionInProgress findByIdThrottled(String trxId);
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes);
   TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId, long authorizationExpirationMinutes);
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);

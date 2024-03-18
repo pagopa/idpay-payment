@@ -36,11 +36,9 @@ public class CommonConfirmServiceImpl {
 
     public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
         try {
-            TransactionInProgress trx = repository.findByIdThrottled(trxId);
+            TransactionInProgress trx = repository.findById(trxId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
-            }
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
                 throw new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
                         "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trxId,trx.getStatus()));
