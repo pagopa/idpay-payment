@@ -189,7 +189,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                 .set(Fields.rewards, authPaymentDTO.getRewards())
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
-                .set(Fields.counterVersion, authPaymentDTO.getCounterVersion())
+                .set(Fields.counterVersion, authPaymentDTO.getCounters().getVersion())
                 .currentDate(Fields.updateDate);
 
         if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
