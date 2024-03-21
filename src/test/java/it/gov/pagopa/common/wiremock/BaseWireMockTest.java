@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 @SpringBootTest
 @ContextConfiguration(
         initializers = {BaseWireMockTest.WireMockInitializer.class})
-@SuppressWarnings("squid:S2187")
+@SuppressWarnings("squid:S2187") //Class that configure WireMock for testing
 public class BaseWireMockTest {
     public static final String WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX =  "wireMock-test.prop2basePath.";
     public static final String WIREMOCK_TEST_PROP2BASEPATH_SECURE_MAP_PREFIX =  "wireMock-test.prop2basePath.secure.";

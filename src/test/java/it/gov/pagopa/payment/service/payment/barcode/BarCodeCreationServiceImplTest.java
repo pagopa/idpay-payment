@@ -1,7 +1,5 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -9,8 +7,6 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
@@ -21,14 +17,12 @@ import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,9 +32,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -53,20 +45,14 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BarCodeCreationServiceImplTest {
     public static final LocalDate TODAY = LocalDate.now();
-    @Mock
-    private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
+    @Mock private RewardRuleRepository rewardRuleRepository;
+    @Mock private AuditUtilities auditUtilitiesMock;
     @Mock
     private TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     @Mock
-    private TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
-    @Mock
     private TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
-    @Mock private RewardRuleRepository rewardRuleRepository;
-    @Mock private TransactionInProgressRepository transactionInProgressRepository;
-    @Mock private TrxCodeGenUtil trxCodeGenUtil;
-    @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock private MerchantConnector merchantConnector;
     @Mock private WalletConnector walletConnector;
+    @Mock private TransactionInProgressService transactionInProgressServiceMock;
 
     private static final String INITIATIVE_NAME = "INITIATIVE_NAME";
 
@@ -75,16 +61,13 @@ class BarCodeCreationServiceImplTest {
     @BeforeEach
     void setUp() {
         barCodeCreationService =
-                new BarCodeCreationServiceImpl(transactionInProgress2TransactionResponseMapper,
-                        transactionCreationRequest2TransactionInProgressMapper,
+                new BarCodeCreationServiceImpl(
                         rewardRuleRepository,
-                        transactionInProgressRepository,
-                        trxCodeGenUtil,
                         auditUtilitiesMock,
-                        merchantConnector,
                         transactionBarCodeCreationRequest2TransactionInProgressMapper,
                         transactionBarCodeInProgress2TransactionResponseMapper,
-                        walletConnector);
+                        walletConnector,
+                        transactionInProgressServiceMock);
     }
 
     @Test
@@ -109,9 +92,6 @@ class BarCodeCreationServiceImplTest {
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
-        when(trxCodeGenUtil.get()).thenReturn("trxcode1");
-        when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
-                .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
         TransactionBarCodeResponse result =
                 barCodeCreationService.createTransaction(
@@ -157,19 +137,6 @@ class BarCodeCreationServiceImplTest {
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
-        when(trxCodeGenUtil.get())
-                .thenAnswer(
-                        new Answer<String>() {
-                            private int count = 0;
-
-                            public String answer(InvocationOnMock invocation) {
-                                return "trxcode%d".formatted(++count);
-                            }
-                        });
-        when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
-                .thenReturn(UpdateResult.acknowledged(1L, 0L, null));
-        when(transactionInProgressRepository.createIfExists(trx, "trxcode2"))
-                .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
         TransactionBarCodeResponse result =
                 barCodeCreationService.createTransaction(

@@ -16,7 +16,6 @@ public class PaymentErrorNotifierServiceImpl implements PaymentErrorNotifierServ
     private final String transactionOutcomeServer;
     private final String transactionOutcomeTopic;
 
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters constructor alert
     public PaymentErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
 
                                            @Value("${spring.cloud.stream.binders.transaction-outcome.type}") String transactionOutcomeMessagingServiceType,
