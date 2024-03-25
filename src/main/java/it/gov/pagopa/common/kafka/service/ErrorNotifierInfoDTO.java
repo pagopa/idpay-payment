@@ -1,10 +1,10 @@
 package it.gov.pagopa.common.kafka.service;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import org.springframework.messaging.Message;
 
-@Data
+@Getter
 @AllArgsConstructor
 public class ErrorNotifierInfoDTO {
     private String srcType;
