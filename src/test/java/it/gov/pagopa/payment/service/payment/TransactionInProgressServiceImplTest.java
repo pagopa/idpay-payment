@@ -14,6 +14,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,10 +32,19 @@ class TransactionInProgressServiceImplTest {
 
     @Test
     void generateTrxCodeAndSave() {
+        AtomicInteger[] count = {new AtomicInteger(0)};
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         when(trxCodeGenUtilMock.get()).thenReturn("trxcode1");
+
         when(transactionInProgressRepositoryMock.createIfExists(trx, "trxcode1"))
-                .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
+                .thenAnswer(a -> {
+                    a.getArguments();
+                    if(count[0].get() < 1){
+                        count[0].incrementAndGet();
+                        return UpdateResult.acknowledged(1L, 0L, null);
+                    }
+                    return UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId()));
+                });
 
         transactionInProgressService.generateTrxCodeAndSave(trx, "DUMMY_FLOW_NAME");
 
