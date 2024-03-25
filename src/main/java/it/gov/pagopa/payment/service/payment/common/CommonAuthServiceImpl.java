@@ -163,19 +163,7 @@ public class CommonAuthServiceImpl {
         } else if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
-        transactionInProgressRepository.updateTrxWithStatus(
-                trx.getId(),
-                trx.getUserId(),
-                trx.getReward(),
-                trx.getRejectionReasons(),
-                trx.getInitiativeRejectionReasons(),
-                trx.getRewards(),
-                trx.getChannel(),
-                trx.getStatus(),
-                trx.getCounterVersion(),
-                trx.getTrxChargeDate(),
-                trx.getAmountCents(),
-                trx.getMerchantId());
+        transactionInProgressRepository.updateTrxWithStatus(trx);
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {

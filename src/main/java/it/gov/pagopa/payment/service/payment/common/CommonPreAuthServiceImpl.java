@@ -77,18 +77,11 @@ public class CommonPreAuthServiceImpl{
     } else {
       preview.setRejectionReasons(Collections.emptyList());
       preview.setStatus(status);
-      transactionInProgressRepository.updateTrxWithStatus(trx.getId(),
-              trx.getUserId(),
-              preview.getReward(),
-              preview.getRejectionReasons(),
+      transactionInProgressRepository.updateTrxWithStatusForPreview(trx,
+              preview,
               CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
-              preview.getRewards(),
               channel,
-              status,
-              preview.getCounterVersion(),
-              trx.getTrxChargeDate(),
-              trx.getAmountCents(),
-              trx.getMerchantId());
+              status);
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?

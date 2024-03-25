@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.support.KafkaHeaders;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
@@ -27,27 +26,27 @@ public class ErrorNotifierServiceImpl implements ErrorNotifierService {
     }
 
     @Override
-    public boolean notify(String srcType, String srcServer, String srcTopic, String group, Message<?> message, String description, boolean retryable,boolean resendApplication, Throwable exception) {
-        log.info("[ERROR_NOTIFIER] notifying error: {}", description, exception);
-        final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(message)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE, srcType)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER, srcServer)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC, srcTopic)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_DESCRIPTION, description)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_RETRYABLE, retryable)
-                .setHeader(KafkaConstants.ERROR_MSG_HEADER_STACKTRACE, ExceptionUtils.getStackTrace(exception));
+    public boolean notify(ErrorNotifierInfoDTO errorNotifierInfoDTO) {
+        log.info("[ERROR_NOTIFIER] notifying error: {}", errorNotifierInfoDTO.getDescription(), errorNotifierInfoDTO.getException());
+        final MessageBuilder<?> errorMessage = MessageBuilder.fromMessage(errorNotifierInfoDTO.getMessage())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TYPE, errorNotifierInfoDTO.getSrcType())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_SERVER, errorNotifierInfoDTO.getSrcServer())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_SRC_TOPIC, errorNotifierInfoDTO.getSrcTopic())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_DESCRIPTION, errorNotifierInfoDTO.getDescription())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_RETRYABLE, errorNotifierInfoDTO.isRetryable())
+                .setHeader(KafkaConstants.ERROR_MSG_HEADER_STACKTRACE, ExceptionUtils.getStackTrace(errorNotifierInfoDTO.getException()));
 
-        addExceptionInfo(errorMessage, "rootCause", ExceptionUtils.getRootCause(exception));
-        addExceptionInfo(errorMessage, "cause", exception.getCause());
+        addExceptionInfo(errorMessage, "rootCause", ExceptionUtils.getRootCause(errorNotifierInfoDTO.getException()));
+        addExceptionInfo(errorMessage, "cause", errorNotifierInfoDTO.getException().getCause());
 
-        byte[] receivedKey = message.getHeaders().get(KafkaHeaders.RECEIVED_KEY, byte[].class);
+        byte[] receivedKey = errorNotifierInfoDTO.getMessage().getHeaders().get(KafkaHeaders.RECEIVED_KEY, byte[].class);
         if(receivedKey!=null){
             errorMessage.setHeader(KafkaHeaders.KEY, new String(receivedKey, StandardCharsets.UTF_8));
         }
 
-        if (resendApplication){
+        if (errorNotifierInfoDTO.isResendApplication()){
             errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_APPLICATION_NAME, applicationName);
-            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_GROUP, group);
+            errorMessage.setHeader(KafkaConstants.ERROR_MSG_HEADER_GROUP, errorNotifierInfoDTO.getGroup());
         }
 
         if (!errorPublisher.send(errorMessage.build())) {

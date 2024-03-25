@@ -85,7 +85,7 @@ class ErrorNotifierServiceTest {
         ))).thenReturn(expectedResult);
 
         // When
-        boolean result = service.notify(SRC_TYPE, SRC_SERVER, SRC_TOPIC, GROUP, message, DESCRIPTION, expectedRetryable, expectedResend, expectedException);
+        boolean result = service.notify(new ErrorNotifierInfoDTO(SRC_TYPE, SRC_SERVER, SRC_TOPIC, GROUP, message, DESCRIPTION, expectedRetryable, expectedResend, expectedException));
 
         // Then
         Assertions.assertEquals(expectedResult, result);
