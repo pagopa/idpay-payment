@@ -208,7 +208,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                 .set(Fields.rewards, authPaymentDTO.getRewards())
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
-                .set(Fields.counterVersion, authPaymentDTO.getCounterVersion())
+                .set(Fields.counterVersion, authPaymentDTO.getCounters().getVersion())
                 .currentDate(Fields.updateDate);
 
         if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
@@ -258,27 +258,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 TransactionInProgress.class);
     }
 
-    @Override
-    public TransactionInProgress findByIdThrottled(String trxId) {
-        TransactionInProgress trx = mongoTemplate.findAndModify(
-                Query.query(criteriaById(trxId)
-                        .orOperator(
-                                Criteria.where(Fields.elaborationDateTime).is(null),
-                                Criteria.expr(
-                                        ComparisonOperators.Lt.valueOf(Fields.elaborationDateTime)
-                                                .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * trxThrottlingSeconds))))
-                ),
-                new Update()
-                        .currentDate(Fields.elaborationDateTime)
-                        .currentDate(Fields.updateDate),
-                FindAndModifyOptions.options().returnNew(true),
-                TransactionInProgress.class);
-        if (trx == null && mongoTemplate.exists(Query.query(criteriaById(trxId)), TransactionInProgress.class)) {
-            throw new TooManyRequestsException("Too many requests on trx having id: " + trxId);
-        }
-
-        return trx;
-    }
 
     private Criteria criteriaById(String trxId) {
         return Criteria.where(Fields.id).is(trxId);

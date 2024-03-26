@@ -50,11 +50,9 @@ public class CommonCancelServiceImpl {
 
     public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
         try {
-            TransactionInProgress trx = repository.findByIdThrottled(trxId);
+            TransactionInProgress trx = repository.findById(trxId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
-            }
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
                 throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }

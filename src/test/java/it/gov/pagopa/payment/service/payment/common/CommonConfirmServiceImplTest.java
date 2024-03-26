@@ -22,6 +22,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 @ExtendWith(MockitoExtension.class)
 class CommonConfirmServiceImplTest {
 
@@ -59,8 +61,8 @@ class CommonConfirmServiceImplTest {
 
     @Test
     void testMerchantIdNotValid() {
-        when(repositoryMock.findByIdThrottled("TRXID"))
-                .thenReturn(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED));
+        when(repositoryMock.findById("TRXID"))
+                .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
 
         try {
             service.confirmPayment("TRXID", "MERCHID", "ACQID");
@@ -76,7 +78,7 @@ class CommonConfirmServiceImplTest {
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
             service.confirmPayment("TRXID", "MERCHID_2", "ACQID");
@@ -92,7 +94,7 @@ class CommonConfirmServiceImplTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
             service.confirmPayment("TRXID", "MERCHID", "ACQID");
@@ -120,7 +122,7 @@ class CommonConfirmServiceImplTest {
         trx.setAcquirerId("ACQID");
         trx.setReward(1000L);
 
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);
 

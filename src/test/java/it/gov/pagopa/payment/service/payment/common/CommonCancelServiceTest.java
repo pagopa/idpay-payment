@@ -24,6 +24,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
+import java.util.Optional;
 
 import static org.mockito.Mockito.when;
 
@@ -65,8 +66,8 @@ class CommonCancelServiceTest {
 
     @Test
     void testMerchantIdNotValid() {
-        when(repositoryMock.findByIdThrottled("TRXID"))
-                .thenReturn(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED));
+        when(repositoryMock.findById("TRXID"))
+                .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
 
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
@@ -82,7 +83,7 @@ class CommonCancelServiceTest {
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
             service.cancelTransaction("TRXID", "MERCHID_1", "ACQID");
@@ -98,7 +99,7 @@ class CommonCancelServiceTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.REWARDED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
@@ -115,7 +116,7 @@ class CommonCancelServiceTest {
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setTrxDate(OffsetDateTime.now().minusMinutes(cancelExpirationMinutes+1));
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
             service.cancelTransaction("TRXID", "MERCHID", "ACQID");
@@ -139,7 +140,7 @@ class CommonCancelServiceTest {
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setReward(1000L);
-        when(repositoryMock.findByIdThrottled("TRXID")).thenReturn(trx);
+        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         boolean expectedNotify = SyncTrxStatus.AUTHORIZED.equals(status);
 

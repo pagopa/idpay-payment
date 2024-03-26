@@ -410,57 +410,6 @@ class TransactionInProgressRepositoryExtImplTest {
     }
 
     @Test
-    void testFindByIdThrottled() {
-        TransactionInProgress notFoundResult =
-                transactionInProgressRepository.findByIdThrottled("DUMMYID");
-        Assertions.assertNull(notFoundResult);
-
-        TransactionInProgress stored =
-                transactionInProgressRepository.save(
-                        TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED));
-        String trxId = stored.getId();
-
-        TransactionInProgress result = transactionInProgressRepository.findByIdThrottled(trxId);
-
-        Assertions.assertNotNull(result.getElaborationDateTime());
-        result.setElaborationDateTime(null);
-
-        stored.setUpdateDate(stored.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
-        result.setUpdateDate(result.getUpdateDate().truncatedTo(ChronoUnit.MINUTES));
-        Assertions.assertEquals(stored, result);
-
-        try {
-            transactionInProgressRepository.findByIdThrottled(trxId);
-            Assertions.fail("Expected exception");
-        } catch (TooManyRequestsException e) {
-          assertEquals(ExceptionCode.TOO_MANY_REQUESTS, e.getCode());
-          assertEquals("Too many requests on trx having id: MOCKEDTRANSACTION_qr-code_0", e.getMessage());
-        }
-    }
-
-    @Test
-    void testFindByIdThrottled_Concurrent() {
-        int N = 10;
-        TransactionInProgress stored =
-                transactionInProgressRepository.save(
-                        TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED));
-
-        Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> mongoCommandsByType = executeConcurrentLocks(N,
-                () -> {
-                    try {
-                        transactionInProgressRepository.findByIdThrottled(stored.getId());
-                        return true;
-                    } catch (TooManyRequestsException e) {
-                      assertEquals(ExceptionCode.TOO_MANY_REQUESTS, e.getCode());
-                      assertEquals("Too many requests on trx having id: MOCKEDTRANSACTION_qr-code_0", e.getMessage());
-                        return false;
-                    }
-                }
-        );
-        Assertions.assertEquals(N-1, mongoCommandsByType.get("aggregate").get(0).getValue());
-    }
-
-    @Test
     void findByFilter() {
         TransactionInProgress transactionInProgress =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
