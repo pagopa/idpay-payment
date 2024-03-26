@@ -7,9 +7,9 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 
-@Getter
+@Data
 @Configuration
-@ConfigurationProperties(prefix = "spring.cloud.stream")
+@ConfigurationProperties(prefix = "spring.cloud")
 public class KafkaConfiguration {
     private Stream stream;
     @Data
