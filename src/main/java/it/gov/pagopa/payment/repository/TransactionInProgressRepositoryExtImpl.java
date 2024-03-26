@@ -258,11 +258,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 TransactionInProgress.class);
     }
 
-
-    private Criteria criteriaById(String trxId) {
-        return Criteria.where(Fields.id).is(trxId);
-    }
-
     @Override
     public Criteria getCriteria(String merchantId, String initiativeId, String userId, String status) {
         Criteria criteria = Criteria.where(Fields.merchantId).is(merchantId).and(Fields.initiativeId).is(initiativeId);
