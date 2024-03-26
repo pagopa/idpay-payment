@@ -1,51 +1,43 @@
 package it.gov.pagopa.payment.service;
 
-import it.gov.pagopa.common.kafka.service.ErrorNotifierInfoDTO;
+import it.gov.pagopa.common.config.KafkaConfiguration;
 import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class PaymentErrorNotifierServiceImpl implements PaymentErrorNotifierService {
+    private static final String BINDING_NAME_TRANSACTION_OUTCOME = "transactionOutcome-out-0";
 
     private final ErrorNotifierService errorNotifierService;
-
-    private final String transactionOutcomeMessagingServiceType;
-    private final String transactionOutcomeServer;
-    private final String transactionOutcomeTopic;
+    private final KafkaConfiguration kafkaConfiguration;
 
     public PaymentErrorNotifierServiceImpl(ErrorNotifierService errorNotifierService,
-
-                                           @Value("${spring.cloud.stream.binders.transaction-outcome.type}") String transactionOutcomeMessagingServiceType,
-                                           @Value("${spring.cloud.stream.binders.transaction-outcome.environment.spring.cloud.stream.kafka.binder.brokers}") String transactionOutcomeServer,
-                                           @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.destination}") String transactionOutcomeTopic) {
+                                           KafkaConfiguration kafkaConfiguration) {
         this.errorNotifierService = errorNotifierService;
 
-        this.transactionOutcomeMessagingServiceType= transactionOutcomeMessagingServiceType;
-        this.transactionOutcomeServer = transactionOutcomeServer;
-        this.transactionOutcomeTopic = transactionOutcomeTopic;
+        this.kafkaConfiguration = kafkaConfiguration;
     }
 
     @Override
     public boolean notifyAuthPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(new ErrorNotifierInfoDTO(transactionOutcomeMessagingServiceType, transactionOutcomeServer, transactionOutcomeTopic, null, message, description, retryable, false, exception));
+        return notify(kafkaConfiguration.getStream().getBindings().get(BINDING_NAME_TRANSACTION_OUTCOME), message, description, retryable, false, exception);
     }
 
     @Override
     public boolean notifyConfirmPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(new ErrorNotifierInfoDTO(transactionOutcomeMessagingServiceType, transactionOutcomeServer, transactionOutcomeTopic,null,message,description,retryable,false,exception));
+        return notify(kafkaConfiguration.getStream().getBindings().get(BINDING_NAME_TRANSACTION_OUTCOME), message, description, retryable, false, exception);
     }
 
     @Override
     public boolean notifyCancelPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
-        return notify(new ErrorNotifierInfoDTO(transactionOutcomeMessagingServiceType, transactionOutcomeServer, transactionOutcomeTopic, null,message, description, retryable, false, exception));
+        return notify(kafkaConfiguration.getStream().getBindings().get(BINDING_NAME_TRANSACTION_OUTCOME), message, description, retryable, false, exception);
     }
 
     @Override
-    public boolean notify(ErrorNotifierInfoDTO errorNotifierInfoDTO) {
-        return errorNotifierService.notify(errorNotifierInfoDTO);
+    public boolean notify(KafkaConfiguration.BaseKafkaInfoDTO kafkaInfoDTO, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception) {
+        return errorNotifierService.notify(kafkaInfoDTO, message, description, retryable, resendApplication, exception);
     }
 }
