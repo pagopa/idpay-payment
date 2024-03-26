@@ -7,18 +7,21 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Map;
 
-@Data
+@Getter
+@Setter
 @Configuration
 @ConfigurationProperties(prefix = "spring.cloud")
 public class KafkaConfiguration {
     private Stream stream;
-    @Data
+    @Getter
+    @Setter
     public static class Stream {
         private Map<String, KafkaInfoDTO> bindings;
         private Map<String,Binders> binders;
     }
 
-    @Data
+    @Getter
+    @Setter
     @AllArgsConstructor
     @NoArgsConstructor
     public static class BaseKafkaInfoDTO {
@@ -28,8 +31,8 @@ public class KafkaConfiguration {
         private String brokers;
     }
 
-    @EqualsAndHashCode(callSuper = true)
-    @Data
+    @Getter
+    @Setter
     public static class KafkaInfoDTO extends BaseKafkaInfoDTO{
         private String binder;
     }
@@ -41,37 +44,44 @@ public class KafkaConfiguration {
         });
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Binders{
         private String type;
         private Environment environment;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Environment {
         private Spring spring;
     }
-    @Data
+    @Getter
+    @Setter
     public static class Spring{
         private Cloud cloud;
     }
 
-    @Data
+    @Getter
+    @Setter
     public  static class Cloud{
         private StreamBinder stream;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class StreamBinder{
         private Kafka kafka;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Kafka{
         private Binder binder;
     }
 
-    @Data
+    @Getter
+    @Setter
     public static  class Binder{
         private String brokers;
     }
