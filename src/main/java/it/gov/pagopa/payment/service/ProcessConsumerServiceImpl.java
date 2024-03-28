@@ -10,9 +10,10 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 @Service
 @Slf4j
-@SuppressWarnings("BusyWait")
 public class ProcessConsumerServiceImpl implements ProcessConsumerService{
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final AuditUtilities auditUtilities;
@@ -44,7 +45,7 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
                 fetchedTrx = transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize);
                 deletedTrx.addAll(fetchedTrx);
                 try{
-                    Thread.sleep(delay);
+                    TimeUnit.MILLISECONDS.sleep(delay);
                 } catch (InterruptedException e){
                     log.error("An error has occurred while waiting {}", e.getMessage());
                     Thread.currentThread().interrupt();
