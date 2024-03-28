@@ -1,10 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
-import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnectorImpl;
-import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
-import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -14,15 +10,10 @@ import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedExcept
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
-import it.gov.pagopa.payment.utils.AuditUtilities;
-import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,37 +22,22 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthPaymentServiceImplTest {
-    @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
-    @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-    @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock private WalletConnector walletConnectorMock;
     @Mock private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredServiceMock;
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
-    @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
-    @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
+    @Mock private CommonAuthServiceImpl commonAuthServiceMock;
 
     private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
-    private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
-
 
         @BeforeEach
     void setUp() {
-        long authorizationExpirationMinutes = 4350;
             idpayCodeAuthPaymentService = new IdpayCodeAuthPaymentServiceImpl(
-                transactionInProgressRepositoryMock,
-                    rewardCalculatorConnectorMock,
-                    auditUtilitiesMock,
-                    walletConnectorMock,
                     idpayCodeAuthorizationExpiredServiceMock,
                     paymentInstrumentConnectorMock,
-                    commonPreAuthServiceMock,
-                    timeoutSchedulerServiceMock);
+                    commonAuthServiceMock);
     }
 
     @Test
@@ -115,45 +91,23 @@ class IdpayCodeAuthPaymentServiceImplTest {
         trx.setReward(null);
         trx.setUserId("USERID");
 
-        AuthPaymentDTO paymentDTO = AuthPaymentDTOFaker.mockInstance(1,trx);
-        paymentDTO.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,trx);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
-        WalletDTO wallet = WalletDTOFaker.mockInstance(1,WALLET_STATUS_REFUNDABLE);
-
-        when(walletConnectorMock.getWallet(trx.getInitiativeId(), trx.getUserId()))
-                .thenReturn(wallet);
-
         when(idpayCodeAuthorizationExpiredServiceMock.findByTrxIdAndAuthorizationNotExpired(trx.getId()))
                 .thenReturn(trx);
 
-        when(commonPreAuthServiceMock.previewPayment(trx,trx.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(paymentDTO);
-
-        when(timeoutSchedulerServiceMock.scheduleMessage(trx.getId())).thenReturn(1L);
-
-        when(rewardCalculatorConnectorMock.authorizePayment(trx)).thenReturn(authPaymentDTO);
-
-        when(transactionInProgressRepositoryMock.updateTrxAuthorized(trx, authPaymentDTO,
-                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), List.of())))
-                .thenReturn(UpdateResult.acknowledged(1, 1L, null));
-
-        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
-
+        when(commonAuthServiceMock.authPayment(trx, trx.getUserId(), trx.getTrxCode()))
+                .thenReturn(authPaymentDTO);
         //When
        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);
-        verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(trx.getId());
-        verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
         Mockito.verifyNoMoreInteractions(
-                walletConnectorMock,
                 idpayCodeAuthorizationExpiredServiceMock,
-                commonPreAuthServiceMock,
-                rewardCalculatorConnectorMock,
-                timeoutSchedulerServiceMock
+                commonAuthServiceMock
         );
     }
 
@@ -167,12 +121,9 @@ class IdpayCodeAuthPaymentServiceImplTest {
         trx.setUserId("USERID");
         trx.setMerchantId("MERCHANTID");
 
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
         when(idpayCodeAuthorizationExpiredServiceMock.findByTrxIdAndAuthorizationNotExpired(trxId))
                 .thenReturn(trx);
-
-
 
         //When
         MerchantOrAcquirerNotAllowedException result = Assertions.assertThrows(MerchantOrAcquirerNotAllowedException.class, () ->

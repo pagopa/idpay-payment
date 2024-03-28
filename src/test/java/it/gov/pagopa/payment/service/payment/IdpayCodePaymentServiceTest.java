@@ -7,7 +7,8 @@ import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodeAuthPaymentService;
-import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodePreAuthService;
+import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodePreviewService;
+import it.gov.pagopa.payment.service.payment.idpaycode.IdpayCodeRelateUserService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -25,13 +26,14 @@ class IdpayCodePaymentServiceTest {
     private static final String MERCHANTID = "MERCHANTID";
     private static final String FISCALCODE = "FISCALCODE";
 
-    @Mock private IdpayCodePreAuthService idpayCodePreAuthServiceMock;
+    @Mock private IdpayCodeRelateUserService idpayCodeRelateUserServiceMock;
+    @Mock private IdpayCodePreviewService idpayCodePreviewServiceMock;
     @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
     private IdpayCodePaymentService idpayCodePaymentService;
 
     @BeforeEach
     void setUp(){
-        idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodePreAuthServiceMock, idpayCodeAuthPaymentServiceMock);
+        idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodeRelateUserServiceMock, idpayCodePreviewServiceMock, idpayCodeAuthPaymentServiceMock);
     }
 
     @Test
@@ -41,7 +43,7 @@ class IdpayCodePaymentServiceTest {
         RelateUserResponseMapper mapper = new RelateUserResponseMapper();
 
         RelateUserResponse resultUserResponse = mapper.transactionMapper(trx);
-        when(idpayCodePreAuthServiceMock.relateUser(trx.getId(), FISCALCODE))
+        when(idpayCodeRelateUserServiceMock.relateUser(trx.getId(), FISCALCODE))
                 .thenReturn(resultUserResponse);
         //When
         RelateUserResponse result = idpayCodePaymentService.relateUser(trx.getId(), FISCALCODE);
@@ -56,7 +58,7 @@ class IdpayCodePaymentServiceTest {
         //Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1,trx);
-        when(idpayCodePreAuthServiceMock.previewPayment(trx.getId(), MERCHANTID))
+        when(idpayCodePreviewServiceMock.previewPayment(trx.getId(), MERCHANTID))
                 .thenReturn(preview);
         //When
         AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), MERCHANTID);

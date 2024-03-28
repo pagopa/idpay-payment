@@ -1,14 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
-
-import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
-import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -18,22 +9,20 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import java.time.LocalDate;
-import java.util.Optional;
-import java.util.stream.Stream;
-import org.bson.BsonString;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,9 +31,14 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.stubbing.Answer;
+
+import java.time.LocalDate;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCreationServiceImplTest {
@@ -56,12 +50,10 @@ class CommonCreationServiceImplTest {
   @Mock
   private TransactionCreationRequest2TransactionInProgressMapper
       transactionCreationRequest2TransactionInProgressMapper;
-
   @Mock private RewardRuleRepository rewardRuleRepository;
-  @Mock private TransactionInProgressRepository transactionInProgressRepository;
-  @Mock private TrxCodeGenUtil trxCodeGenUtil;
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private MerchantConnector merchantConnectorMock;
+  @Mock private TransactionInProgressService transactionInProgressServiceMock;
 
   CommonCreationServiceImpl CommonCreationService;
 
@@ -70,12 +62,11 @@ class CommonCreationServiceImplTest {
     CommonCreationService =
         new CommonCreationServiceImpl(
                 transactionInProgress2TransactionResponseMapper,
-            transactionCreationRequest2TransactionInProgressMapper,
-            rewardRuleRepository,
-            transactionInProgressRepository,
-            trxCodeGenUtil,
-            auditUtilitiesMock,
-            merchantConnectorMock);
+                transactionCreationRequest2TransactionInProgressMapper,
+                rewardRuleRepository,
+                auditUtilitiesMock,
+                merchantConnectorMock,
+                transactionInProgressServiceMock);
   }
 
   @Test
@@ -98,9 +89,6 @@ class CommonCreationServiceImplTest {
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
-    when(trxCodeGenUtil.get()).thenReturn("trxcode1");
-    when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
-        .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result =
         CommonCreationService.createTransaction(
@@ -145,19 +133,6 @@ class CommonCreationServiceImplTest {
         .thenReturn(trx);
     when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
         .thenReturn(trxCreated);
-    when(trxCodeGenUtil.get())
-        .thenAnswer(
-            new Answer<String>() {
-              private int count = 0;
-
-              public String answer(InvocationOnMock invocation) {
-                return "trxcode%d".formatted(++count);
-              }
-            });
-    when(transactionInProgressRepository.createIfExists(trx, "trxcode1"))
-        .thenReturn(UpdateResult.acknowledged(1L, 0L, null));
-    when(transactionInProgressRepository.createIfExists(trx, "trxcode2"))
-        .thenReturn(UpdateResult.acknowledged(0L, 0L, new BsonString(trx.getId())));
 
     TransactionResponse result =
             CommonCreationService.createTransaction(

@@ -24,9 +24,8 @@ public class ServiceExceptionHandler {
     this.transcodeMap = transcodeMap;
   }
 
-  @SuppressWarnings("squid:S1452")
   @ExceptionHandler(ServiceException.class)
-  protected ResponseEntity<? extends ServiceExceptionPayload> handleException(ServiceException error, HttpServletRequest request) {
+  protected Object handleException(ServiceException error, HttpServletRequest request) {
     if (null != error.getPayload()) {
       return handleBodyProvidedException(error, request);
     }

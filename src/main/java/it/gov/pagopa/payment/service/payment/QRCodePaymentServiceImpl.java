@@ -11,7 +11,6 @@ public class QRCodePaymentServiceImpl implements QRCodePaymentService {
   private final QRCodeAuthPaymentService qrCodeAuthPaymentService;
   private final QRCodeUnrelateService qrCodeUnrelateService;
 
-  @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
   public QRCodePaymentServiceImpl(
           QRCodePreAuthService qrCodePreAuthService,
           QRCodeAuthPaymentService qrCodeAuthPaymentService,
