@@ -95,10 +95,11 @@ public class KafkaConfiguration {
         }
         return null;
     }
+
     public String getBrokersForBinder(String binderName) {
         if (stream != null && stream.getBinders() != null) {
             Binders binders = stream.getBinders().get(binderName);
-            if (binders != null) {
+            if(binders != null && (binders.getEnvironment() != null)) {
                 return binders.getEnvironment().getSpring().getCloud().getStream().getKafka().getBinder().getBrokers();
             }
         }
