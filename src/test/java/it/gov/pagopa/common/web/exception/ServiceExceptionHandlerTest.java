@@ -3,9 +3,6 @@ package it.gov.pagopa.common.web.exception;
 
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.MemoryAppender;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,20 +54,8 @@ class ServiceExceptionHandlerTest {
         String test() {
             throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE");
         }
-
-        @GetMapping("/test/customBody")
-        String testCustomBody() {
-            throw new ServiceException("DUMMY_CODE", "DUMMY_MESSAGE", new ErrorPayloadTest("RESPONSE",0), true, null);
-        }
     }
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    static class ErrorPayloadTest implements ServiceExceptionPayload {
-        private String stringCode;
-        private long longCode;
-    }
     @Test
     void testSimpleException() throws Exception{
         mockMvc.perform(MockMvcRequestBuilders.get("/test")
@@ -81,21 +66,5 @@ class ServiceExceptionHandlerTest {
 
         ErrorManagerTest.checkStackTraceSuppressedLog(memoryAppender, "A ServiceException occurred handling request GET /test: HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE at it.gov.pagopa.common.web.exception.ServiceExceptionHandlerTest\\$TestController.test\\(ServiceExceptionHandlerTest.java:[0-9]+\\)");
     }
-
-    @Test
-    void testCustomBodyException() throws Exception{
-        mockMvc.perform(MockMvcRequestBuilders.get("/test/customBody")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-                .andExpect(MockMvcResultMatchers.content().json("{\"stringCode\":\"RESPONSE\",\"longCode\":0}", false));
-
-        ErrorManagerTest.checkLog(memoryAppender,
-                "Something went wrong handling request GET /test/customBody: HttpStatus 500 INTERNAL_SERVER_ERROR - DUMMY_CODE: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.web.exception.ServiceException: DUMMY_MESSAGE",
-                "it.gov.pagopa.common.web.exception.ServiceExceptionHandlerTest$TestController.testCustomBody"
-
-        );
-    }
-
 
 }

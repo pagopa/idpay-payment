@@ -62,7 +62,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (ServiceException e) {
                 if (! (e instanceof TransactionNotFoundOrExpiredException)) {
-                    throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR, "An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()), null, true, e);
+                    throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR, "An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()), true, e);
                 }
             }
         }
