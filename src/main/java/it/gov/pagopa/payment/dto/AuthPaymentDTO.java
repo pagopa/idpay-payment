@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import it.gov.pagopa.common.web.exception.ServiceExceptionPayload;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import lombok.AllArgsConstructor;
@@ -19,7 +18,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class AuthPaymentDTO implements ServiceExceptionPayload {
+public class AuthPaymentDTO {
 
   private String id;
   private String trxCode;
