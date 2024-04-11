@@ -289,38 +289,49 @@ components:
       properties:
         initiativeId:
           type: string
+          description: Id of the initiative
           example: 661626073785876cb5aa7601
         organizationId:
           type: string
+          description: Identifier of the organization associated with the initiative
           example: c326cac6-a38c-416c-a3c3-f6a407b77950
         providedReward:
           type: number
           format: double
+          description: reward calculated by rule engine
           example: 300.00
         accruedReward:
           type: number
           format: double
+          description: reward updated after evaluation of any limits (budget, ecc...)
           example: 300.00
         capped:
           type: boolean
+          description: If the premium has been limited due to the beneficiary's budget
           example: false
         dailyCapped:
           type: boolean
+          description: If the premium has been reached, it causes a daily limit
           example: false
         monthlyCapped:
           type: boolean
+          description: If the premium has been reached, it causes a monthly limit
           example: false
         yearlyCapped:
           type: boolean
+          description: If the premium has been reached, it causes an annual limit
           example: false
         weeklyCapped:
           type: boolean
+          description: If the premium has been reached due to weekly limit
           example: false
         refund:
           type: boolean
+          description: If the user has been refunded
           example: false
         completeRefund:
           type: boolean
+          description: If the user has been fully refunded
           example: false
         counters:
           $ref: "#/components/schemas/Counter"
@@ -331,24 +342,30 @@ components:
         trxNumber:
           type: integer
           format: int64
+          description: transaction number
           example: 1
         totalReward:
           type: number
           format: double
+          description: total reward
           example: 300.00
         totalAmount:
           type: number
           format: double
+          description: total amount
           example: 9000000.00
         exhaustedBudget:
           type: boolean
+          description: if the budget is exhausted
         initiativeBudget:
           type: integer
           format: int64
+          description: initiative budget
           example: 300
         version:
           type: integer
           format: int64
+          description: sequence operation number
           example: 1
 
     TransactionInProgress:
