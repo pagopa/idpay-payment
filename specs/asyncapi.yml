@@ -3,193 +3,232 @@ info:
   title: Payment Service
   version: 1.0.0
   description: >-
-    Its purpose is to notify other systems of transaction confirmation and cancellation events and any    
+    Its purpose is to notify other systems of transaction confirmation and cancellation events and any  
     errors
 tags:
-  - name: "tkm"
-    description: "Token manager related"
-  - name: "enrollment"
-    description: "Payment instruments enroll related"
-  - name: "export"
-    description: "Acquirer file export related"
+  - name: "confirm"
+    description: "Transaction REWARDED"
+  - name: "cancellation"
+    description: "Transaction CANCELLED"
 
 channels:
   payment-confirm-transaction:
     subscribe:
       message:
-        $ref: '#/components/messages/TransactionInProgressConfirmed'
+        $ref: '#/components/messages/TransactionInProgressConfirm'
       bindings:
         kafka:
           topic: idpay-transaction
       tags:
-        - name: "enrollment"
-  payment-instrument-deleted:
+        - name: "confirm"
+  payment-cancelled-transaction:
     subscribe:
       message:
-        $ref: '#/components/messages/PaymentInstrumentRevoked'
+        $ref: '#/components/messages/TransactionInProgressCancelled'
       bindings:
         kafka:
-          topic: rtd-to-app
+          topic: idpay-transaction
       tags:
-        - name: "enrollment"
-  payment-instrument-exported:
+        - name: "cancellation"
+  payment-confirm-transaction-error:
     subscribe:
       message:
-        $ref: '#/components/messages/PaymentInstrumentExported'
+        $ref: '#/components/messages/TransactionInProgressConfirmError'
       bindings:
         kafka:
-          topic: rtd-to-app
+          topic: idpay-errors
       tags:
-        - name: "enrollment"
-        - name: "export"
+        - name: "confirm"
+  payment-cancelled-transaction-error:
+    subscribe:
+      message:
+        $ref: '#/components/messages/TransactionInProgressCancelledError'
+      bindings:
+        kafka:
+          topic: idpay-errors
+      tags:
+        - name: "cancellation"
 
 components:
   messages:
-    TransactionInProgressConfirmed:
-      contentType: application/json
-      name: TransactionInProgressConfirmed
-      payload:
-        $ref: "#/components/schemas/TransactionInProgressConfirmed"
-    PaymentInstrumentExported:
+    TransactionInProgressConfirm:
       contentType: application/json
       description: >-
-        Event sent to application when a payment instrument is successfully
-        added to acquirer file.
-      summary: >-
-        Informs applications of the success of adding the payment insturment to
-        the acquirer file
-      payload:
+        Event sent to application when a transaction has REWARDED status
+      summary: Informs applications of transaction confirm
+      headers:
         type: object
         properties:
-          type:
+          key:
             type: string
-            enum:
-              - PaymentInstrumentExported
-            example: PaymentInstrumentExported
-          data:
-            type: object
-            properties:
-              hpan:
-                $ref: '#/components/schemas/PaymentInstrumentId'
-              timestamp:
-                type: string
-                format: date-time
-                example: '2022-11-11T12:47:18.575+00:00'
-    PaymentInstrumentRevoked:
+            description: "merchant id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
+    TransactionInProgressCancelled:
       contentType: application/json
       description: >-
-        Event sent to application when a payment instrument is delete from
-        Payment Manager side
-      summary: Informs applications of deletion of a payment instrument
-      payload:
+        Event sent to application when a transaction has CANCELLED status
+      summary: Informs applications of transaction cancellation
+      headers:
         type: object
         properties:
-          type:
+          key:
             type: string
-            enum:
-              - RevokeCard
-            example: RevokeCard
-          data:
-            type: object
-            properties:
-              hpan:
-                $ref: '#/components/schemas/PaymentInstrumentId'
-              applications:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Application'
-                example:
-                  - ID_PAY
-                  - FA
-              timestamp:
-                type: string
-                format: date-time
-                example: '2022-11-11T12:47:18.575+00:00'
-    TokenManagerUpdate:
-      contentType: application/json
-      description: "Emit when a par is discovered or a new token or when a payment instrument is revoked"
+            description: "user id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
       payload:
-        $ref: '#/components/schemas/TokenManagerUpdateSchema'
+        $ref: "#/components/schemas/TransactionInProgress"
+    TransactionInProgressConfirmError:
+      contentType: application/json
+      description: >-
+        Event sent when an error occurred while publishing the confirmation
+      summary: Informs of transaction confirm error
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "merchant id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+          applicationName:
+            type: string
+            description: The name of the application that generated the error.
+            example: "idpay-payment"
+          group:
+            type: string
+            description: The Kafka group to which the error message belongs.
+            example: ""
+          srcType:
+            type: string
+            description: The type of the source of the error message.
+            example: "kafka"
+          srcServer:
+            type: string
+            description: The source server of the error message.
+            example: cstar-u-idpay-evh-ns-00.servicebus.windows.net:9093
+          srcTopic:
+            type: string
+            description: The Kafka topic of the source of the error message.
+            example: idpay-transaction
+          description:
+            type: string
+            description: Description of the error.
+            example: "[CONFIRM_PAYMENT] An error occurred while publishing the 
+                      confirmation Payment result ->  trxId 123 - merchantId 124 - 
+                      acquirerId PAGOPA"
+          retryable:
+            type: boolean
+            description: Indicates whether the error is retryable or not.
+          stacktrace:
+            type: string
+            description: The stack trace of the error.
+            example: "InternalServerErrorException -> Something gone wrong while Confirm Payment notify"
+          rootCauseClass:
+            type: string
+            description: Cause of the error.
+            example: "java.lang.InternalServerErrorException"
+          rootCauseMessage:
+            type: string
+            description: Message of the error.
+            example: "Something gone wrong while Confirm Payment notify"
+
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
+    TransactionInProgressCancelledError:
+      contentType: application/json
+      description: >-
+        Event sent when an error occurred while publishing the cancellation
+      summary: Informs of transaction cancellation error
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "user id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+          applicationName:
+            type: string
+            description: The name of the application that generated the error.
+            example: "idpay-payment"
+          group:
+            type: string
+            description: The Kafka group to which the error message belongs.
+            example: ""
+          srcType:
+            type: string
+            description: The type of the source of the error message.
+            example: "kafka"
+          srcServer:
+            type: string
+            description: The source server of the error message.
+            example: cstar-u-idpay-evh-ns-00.servicebus.windows.net:9093
+          srcTopic:
+            type: string
+            description: The Kafka topic of the source of the error message.
+            example: idpay-transaction
+          description:
+            type: string
+            description: Description of the error.
+            example: "[CANCEL_TRANSACTION] An error occurred while publishing the cancellation  
+                      authorized result: trxId 123 - merchantId 124 - acquirerId PAGOPA"
+          retryable:
+            type: boolean
+            description: Indicates whether the error is retryable or not.
+          stacktrace:
+            type: string
+            description: The stack trace of the error.
+            example: "InternalServerErrorException -> Something gone wrong while cancelling Authorized Payment notify"
+          rootCauseClass:
+            type: string
+            description: Cause of the error.
+            example: "java.lang.InternalServerErrorException"
+          rootCauseMessage:
+            type: string
+            description: Message of the error.
+            example: "Something gone wrong while cancelling Authorized Payment notify"
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
 
   schemas:
-    PaymentInstrumentId:
-      type: string
-      example: b133a0c0e9bee3be20163d2ad31d6248db292aa6dcb1ee087a2aa50e0fc75ae2
-    Application:
-      type: string
-      enum:
-        - ID_PAY
-        - FA
-      example: ID_PAY
-    CorrelationId:
-      type: string
-      example: '1234'
-      description: Correlation id to corellate request to response
-    TokenManagerUpdateSchema:
-      type: object
-      properties:
-        type:
-          type: string
-          enum:
-            - "TokenManagerCardChanged"
-          example: TokenManagerCardChanged
-        data:
-          type: object
-          properties:
-            hashPan:
-              $ref: '#/components/schemas/PaymentInstrumentId'
-            taxCode:
-              type: string
-              example: "AABBC123SAD"
-            par:
-              type: string
-              example: "asmdfkemasd241"
-            changeType:
-              type: string
-              enum:
-                - "INSERT_UPDATE"
-                - "REVOKE"
-            timestamp:
-              type: string
-              format: date-time
-            hashTokens:
-              type: array
-              items:
-                type: object
-                properties:
-                  hashToken:
-                    type: string
-                    example: "03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4"
-                  changeType:
-                    type: string
-                    enum:
-                      - "INSERT_UPDATE"
-                      - "DELETED"
     Reward:
       type: object
       properties:
         initiativeId:
           type: string
+          example: 661626073785876cb5aa7601
         organizationId:
           type: string
+          example: c326cac6-a38c-416c-a3c3-f6a407b77950
         providedReward:
-          type: integer
+          type: number
+          format: double
+          example: 300.00
         accruedReward:
-          type: integer
+          type: number
+          format: double
+          example: 300.00
         capped:
           type: boolean
+          example: false
         dailyCapped:
           type: boolean
+          example: false
         monthlyCapped:
           type: boolean
+          example: false
         yearlyCapped:
           type: boolean
+          example: false
         weeklyCapped:
           type: boolean
+          example: false
         refund:
           type: boolean
+          example: false
         completeRefund:
           type: boolean
+          example: false
         counters:
           $ref: "#/components/schemas/Counter"
 
@@ -198,69 +237,92 @@ components:
       properties:
         trxNumber:
           type: integer
+          format: int64
+          example: 1
         totalReward:
-          type: integer
+          type: number
+          format: double
+          example: 300.00
         totalAmount:
-          type: integer
+          type: number
+          format: double
+          example: 9000000.00
         exhaustedBudget:
           type: boolean
         initiativeBudget:
           type: integer
+          format: int64
+          example: 300
         version:
           type: integer
+          format: int64
+          example: 1
 
-    TransactionInProgressConfirmed:
+    TransactionInProgress:
       type: object
       properties:
         id:
           type: string
           description: ID of the reward transaction
+          example: ad300230-3f80-41f5-a5fc-70b1d47312d4_1712727698644
         trxCode:
           type: string
           description: Transaction code
+          example: ghcworvs
         idTrxAcquirer:
           type: string
           description: ID of the acquiring trx
+          example: "198937549309371755007410777179935955803"
         trxDate:
           type: string
           format: date-time
           description: Transaction date
+          example: "2024-04-10T07:41:38.644+02:00"
         trxChargeDate:
           type: string
           format: date-time
           description: Transaction charge date
+          example: "2024-04-10T07:41:39.22+02:00"
         elaborationDateTime:
           type: string
           format: date-time
           description: Elaboration date and time
+          example: "2024-04-10T07:41:46.773672195"
         operationType:
           type: string
           description: Operation type code
+          example: "00"
         operationTypeTranscoded:
           type: string
           enum:
             - "CHARGE"
             - "REFUND"
+          example: "CHARGE"
         idTrxIssuer:
           type: string
           description: Transaction issuer ID
+          example: "APIMREQUESTID"
         correlationId:
           type: string
           description: transaction ID correlated
+          example: "ad300230-3f80-41f5-a5fc-70b1d47312d4_1712727698644"
         amountCents:
           type: integer
           format: int64
           description: Remaining amount to be paid if the authorized sum is less than the requested sum
+          example: 900000000
         effectiveAmount:
           type: number
+          format: double
           description: Transaction amount
+          example: 9000000.00
         amountCurrency:
           type: string
           example: EUR
         mcc:
           type: string
           description: Merchant category code
-          example: 1234
+          example: "1234"
         acquirerId:
           type: string
           description: id aquirer
@@ -272,11 +334,11 @@ components:
         merchantFiscalCode:
           type: string
           description: merchant fiscal code
-          example: 82186210454
+          example: "82186210454"
         vat:
           type: string
           description: vat code of the merchant
-          example: 82186210454
+          example: "82186210454"
         initiativeId:
           type: string
           description: ID of the initiative
@@ -330,3 +392,17 @@ components:
           properties:
             ${payload.properties.initiativeId}:
               $ref: "#/components/schemas/Reward"
+        updateDate:
+          type: string
+          description: Update Date
+          format: date-time
+          example: "2024-04-10T07:41:39.47"
+        initiatives:
+          type: array
+          description: inititativeId list
+          format: string
+          example: [661626073785876cb5aa7601]
+        initiativeRejectionReasons:
+          type: object
+          description: inititative rejection reasons
+          format: string
