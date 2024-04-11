@@ -16,6 +16,8 @@ tags:
     description: "Transaction cancellation error"
   - name: "deleteInitiative"
     description: "Delete initiative process"
+  - name: "handleTimeout"
+    description: "Handle schedulation and delete transaction after timeout"
 channels:
   payment-confirm-transaction:
     publish:
@@ -62,6 +64,23 @@ channels:
           topic: idpay-commands
       tags:
         - name: "deleteInitiative"
+  payment-transaction-handle-timeout:
+    publish:
+      message:
+        $ref: '#/components/messages/ScheduleMessage'
+      bindings:
+        servicebus:
+          topic: idpay-payment-timeout
+      tags:
+        - name: "handleTimeout"
+    subscribe:
+      message:
+        $ref: '#/components/messages/AuthorizationRequestTimeoutMessage'
+      bindings:
+        servicebus:
+          topic: idpay-payment-timeout
+      tags:
+        - name: "handleTimeout"
 components:
   messages:
     TransactionInProgressConfirm:
@@ -209,6 +228,61 @@ components:
       summary: Delete documents of the initiative
       payload:
         $ref: "#/components/schemas/QueueCommandOperationDTO"
+
+    ScheduleMessage:
+      contentType: application/json
+      description: >-
+        Event published for schedule message countdown
+      summary: Schedule message countdown
+      payload:
+        type: object
+        properties:
+          message:
+            type: object
+            properties:
+              body:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: transaction id
+                    example: "79d00240-5171-481a-8c96-76ddfe946573_BARCODE_1712811935281"
+              applicationProperties:
+                type: object
+                properties:
+                  MESSAGE_TOPIC:
+                    type: string
+                    description: Identify the topic subject of a scheduled message
+                    example: "TIMEOUT_PAYMENT"
+              enqueuedTimeUtc:
+                type: string
+                format: date-time
+                description: timeout
+                example: "2019-08-31T23:49:05.629+08:00"
+          scheduledEnqueueTime:
+            type: string
+            format: date-time
+            description: timeout
+            example: "2019-08-31T23:49:05.629+08:00"
+    AuthorizationRequestTimeoutMessage:
+      contentType: application/json
+      description: >-
+        Event consumed about authorization timeout message
+      summary: Authorization timeout message
+      headers:
+        type: object
+        properties:
+          MESSAGE_TOPIC:
+            type: string
+            description: Identify the topic subject of a scheduled message
+            example: "TIMEOUT_PAYMENT"
+      payload:
+        type: string
+        description: transaction id
+        example: "79d00240-5171-481a-8c96-76ddfe946573_BARCODE_1712811935281"
+
+
+
   schemas:
     Reward:
       type: object
