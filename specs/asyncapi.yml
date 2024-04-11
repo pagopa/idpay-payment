@@ -1,0 +1,534 @@
+asyncapi: 2.0.0
+info:
+  title: Payment Service
+  version: 1.0.0
+  description: >-
+    Its purpose is to notify other systems of transaction confirmation and cancellation events and any  
+    errors
+tags:
+  - name: "confirmTransaction"
+    description: "Transaction REWARDED"
+  - name: "cancellationTransaction"
+    description: "Transaction CANCELLED"
+  - name: "confirmTransactionError"
+    description: "Transaction confirm error"
+  - name: "cancellationTransactionError"
+    description: "Transaction cancellation error"
+  - name: "deleteInitiative"
+    description: "Delete initiative process"
+  - name: "handleTimeout"
+    description: "Handle schedulation and delete transaction after timeout"
+channels:
+  payment-confirm-transaction:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInProgressConfirm'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "confirmTransaction"
+  payment-cancelled-transaction:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInProgressCancelled'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "cancellationTransaction"
+  payment-confirm-transaction-error:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInProgressConfirmError'
+      bindings:
+        kafka:
+          topic: idpay-errors
+      tags:
+        - name: "confirmTransactionError"
+  payment-cancelled-transaction-error:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInProgressCancelledError'
+      bindings:
+        kafka:
+          topic: idpay-errors
+      tags:
+        - name: "cancellationTransactionError"
+  payment-delete-initiative:
+    subscribe:
+      message:
+        $ref: '#/components/messages/QueueCommandOperationDTO'
+      bindings:
+        kafka:
+          topic: idpay-commands
+      tags:
+        - name: "deleteInitiative"
+  payment-transaction-handle-timeout:
+    publish:
+      message:
+        $ref: '#/components/messages/ScheduleMessage'
+      bindings:
+        servicebus:
+          topic: idpay-payment-timeout
+      tags:
+        - name: "handleTimeout"
+    subscribe:
+      message:
+        $ref: '#/components/messages/AuthorizationRequestTimeoutMessage'
+      bindings:
+        servicebus:
+          topic: idpay-payment-timeout
+      tags:
+        - name: "handleTimeout"
+components:
+  messages:
+    TransactionInProgressConfirm:
+      contentType: application/json
+      description: >-
+        Event sent to application when a transaction has REWARDED status
+      summary: Informs applications of transaction confirm
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "merchant id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
+    TransactionInProgressCancelled:
+      contentType: application/json
+      description: >-
+        Event sent to application when a transaction has CANCELLED status
+      summary: Informs applications of transaction cancellation
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "user id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
+    TransactionInProgressConfirmError:
+      contentType: application/json
+      description: >-
+        Event sent when an error occurred while publishing the confirmation
+      summary: Informs of transaction confirm error
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "merchant id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+          applicationName:
+            type: string
+            description: The name of the application that generated the error.
+            example: "idpay-payment"
+          group:
+            type: string
+            description: The Kafka group to which the error message belongs.
+            example: ""
+          srcType:
+            type: string
+            description: The type of the source of the error message.
+            example: "kafka"
+          srcServer:
+            type: string
+            description: The source server of the error message.
+            example: cstar-u-idpay-evh-ns-00.servicebus.windows.net:9093
+          srcTopic:
+            type: string
+            description: The Kafka topic of the source of the error message.
+            example: idpay-transaction
+          description:
+            type: string
+            description: Description of the error.
+            example: "[CONFIRM_PAYMENT] An error occurred while publishing the 
+                      confirmation Payment result ->  trxId 123 - merchantId 124 - 
+                      acquirerId PAGOPA"
+          retryable:
+            type: boolean
+            description: Indicates whether the error is retryable or not.
+          stacktrace:
+            type: string
+            description: The stack trace of the error.
+            example: "InternalServerErrorException -> Something gone wrong while Confirm Payment notify"
+          rootCauseClass:
+            type: string
+            description: Cause of the error.
+            example: "java.lang.InternalServerErrorException"
+          rootCauseMessage:
+            type: string
+            description: Message of the error.
+            example: "Something gone wrong while Confirm Payment notify"
+
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
+    TransactionInProgressCancelledError:
+      contentType: application/json
+      description: >-
+        Event sent when an error occurred while publishing the cancellation
+      summary: Informs of transaction cancellation error
+      headers:
+        type: object
+        properties:
+          key:
+            type: string
+            description: "user id"
+            example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
+          applicationName:
+            type: string
+            description: The name of the application that generated the error.
+            example: "idpay-payment"
+          group:
+            type: string
+            description: The Kafka group to which the error message belongs.
+            example: ""
+          srcType:
+            type: string
+            description: The type of the source of the error message.
+            example: "kafka"
+          srcServer:
+            type: string
+            description: The source server of the error message.
+            example: cstar-u-idpay-evh-ns-00.servicebus.windows.net:9093
+          srcTopic:
+            type: string
+            description: The Kafka topic of the source of the error message.
+            example: idpay-transaction
+          description:
+            type: string
+            description: Description of the error.
+            example: "[CANCEL_TRANSACTION] An error occurred while publishing the cancellation  
+                      authorized result: trxId 123 - merchantId 124 - acquirerId PAGOPA"
+          retryable:
+            type: boolean
+            description: Indicates whether the error is retryable or not.
+          stacktrace:
+            type: string
+            description: The stack trace of the error.
+            example: "InternalServerErrorException -> Something gone wrong while cancelling Authorized Payment notify"
+          rootCauseClass:
+            type: string
+            description: Cause of the error.
+            example: "java.lang.InternalServerErrorException"
+          rootCauseMessage:
+            type: string
+            description: Message of the error.
+            example: "Something gone wrong while cancelling Authorized Payment notify"
+      payload:
+        $ref: "#/components/schemas/TransactionInProgress"
+    QueueCommandOperationDTO:
+      contentType: application/json
+      description: >-
+        Event consumed from application when a delete initiative command has published
+      summary: Delete documents of the initiative
+      payload:
+        $ref: "#/components/schemas/QueueCommandOperationDTO"
+
+    ScheduleMessage:
+      contentType: application/json
+      description: >-
+        Event published for schedule message countdown
+      summary: Schedule message countdown
+      payload:
+        type: object
+        properties:
+          message:
+            type: object
+            properties:
+              body:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: transaction id
+                    example: "79d00240-5171-481a-8c96-76ddfe946573_BARCODE_1712811935281"
+              applicationProperties:
+                type: object
+                properties:
+                  MESSAGE_TOPIC:
+                    type: string
+                    description: Identify the topic subject of a scheduled message
+                    example: "TIMEOUT_PAYMENT"
+              enqueuedTimeUtc:
+                type: string
+                format: date-time
+                description: timeout
+                example: "2019-08-31T23:49:05.629+08:00"
+          scheduledEnqueueTime:
+            type: string
+            format: date-time
+            description: timeout
+            example: "2019-08-31T23:49:05.629+08:00"
+    AuthorizationRequestTimeoutMessage:
+      contentType: application/json
+      description: >-
+        Event consumed about authorization timeout message
+      summary: Authorization timeout message
+      headers:
+        type: object
+        properties:
+          MESSAGE_TOPIC:
+            type: string
+            description: Identify the topic subject of a scheduled message
+            example: "TIMEOUT_PAYMENT"
+      payload:
+        type: string
+        description: transaction id
+        example: "79d00240-5171-481a-8c96-76ddfe946573_BARCODE_1712811935281"
+
+
+
+  schemas:
+    Reward:
+      type: object
+      properties:
+        initiativeId:
+          type: string
+          description: Id of the initiative
+          example: 661626073785876cb5aa7601
+        organizationId:
+          type: string
+          description: Identifier of the organization associated with the initiative
+          example: c326cac6-a38c-416c-a3c3-f6a407b77950
+        providedReward:
+          type: number
+          format: double
+          description: reward calculated by rule engine
+          example: 300.00
+        accruedReward:
+          type: number
+          format: double
+          description: reward updated after evaluation of any limits (budget, ecc...)
+          example: 300.00
+        capped:
+          type: boolean
+          description: If the premium has been limited due to the beneficiary's budget
+          example: false
+        dailyCapped:
+          type: boolean
+          description: If the premium has been reached, it causes a daily limit
+          example: false
+        monthlyCapped:
+          type: boolean
+          description: If the premium has been reached, it causes a monthly limit
+          example: false
+        yearlyCapped:
+          type: boolean
+          description: If the premium has been reached, it causes an annual limit
+          example: false
+        weeklyCapped:
+          type: boolean
+          description: If the premium has been reached due to weekly limit
+          example: false
+        refund:
+          type: boolean
+          description: If the user has been refunded
+          example: false
+        completeRefund:
+          type: boolean
+          description: If the user has been fully refunded
+          example: false
+        counters:
+          $ref: "#/components/schemas/Counter"
+
+    Counter:
+      type: object
+      properties:
+        trxNumber:
+          type: integer
+          format: int64
+          description: transaction number
+          example: 1
+        totalReward:
+          type: number
+          format: double
+          description: total reward
+          example: 300.00
+        totalAmount:
+          type: number
+          format: double
+          description: total amount
+          example: 9000000.00
+        exhaustedBudget:
+          type: boolean
+          description: if the budget is exhausted
+        initiativeBudget:
+          type: integer
+          format: int64
+          description: initiative budget
+          example: 300
+        version:
+          type: integer
+          format: int64
+          description: sequence operation number
+          example: 1
+
+    TransactionInProgress:
+      type: object
+      properties:
+        id:
+          type: string
+          description: ID of the reward transaction
+          example: ad300230-3f80-41f5-a5fc-70b1d47312d4_1712727698644
+        trxCode:
+          type: string
+          description: Transaction code
+          example: ghcworvs
+        idTrxAcquirer:
+          type: string
+          description: ID of the acquiring trx
+          example: "198937549309371755007410777179935955803"
+        trxDate:
+          type: string
+          format: date-time
+          description: Transaction date
+          example: "2024-04-10T07:41:38.644+02:00"
+        trxChargeDate:
+          type: string
+          format: date-time
+          description: Transaction charge date
+          example: "2024-04-10T07:41:39.22+02:00"
+        elaborationDateTime:
+          type: string
+          format: date-time
+          description: Elaboration date and time
+          example: "2024-04-10T07:41:46.773672195"
+        operationType:
+          type: string
+          description: Operation type code
+          example: "00"
+        operationTypeTranscoded:
+          type: string
+          enum:
+            - "CHARGE"
+            - "REFUND"
+          example: "CHARGE"
+        idTrxIssuer:
+          type: string
+          description: Transaction issuer ID
+          example: "APIMREQUESTID"
+        correlationId:
+          type: string
+          description: transaction ID correlated
+          example: "ad300230-3f80-41f5-a5fc-70b1d47312d4_1712727698644"
+        amountCents:
+          type: integer
+          format: int64
+          description: Remaining amount to be paid if the authorized sum is less than the requested sum
+          example: 900000000
+        effectiveAmount:
+          type: number
+          format: double
+          description: Transaction amount
+          example: 9000000.00
+        amountCurrency:
+          type: string
+          example: EUR
+        mcc:
+          type: string
+          description: Merchant category code
+          example: "1234"
+        acquirerId:
+          type: string
+          description: id aquirer
+          example: PAGOPA
+        merchantId:
+          type: string
+          description: id merchant
+          example: b0d4c930-3f77-3959-8609-8c1e177966a0
+        merchantFiscalCode:
+          type: string
+          description: merchant fiscal code
+          example: "82186210454"
+        vat:
+          type: string
+          description: vat code of the merchant
+          example: "82186210454"
+        initiativeId:
+          type: string
+          description: ID of the initiative
+          example: 661626073785876cb5aa7601
+        initiativeName:
+          type: string
+          description: Name of the initiative
+          example: Initiative Name
+        businessName:
+          type: string
+          description: The name of the merchant
+          example: Esercente
+        reward:
+          type: integer
+          format: int64
+          description: Reward
+          example: 30000
+        counterVersion:
+          type: integer
+          format: int64
+          description: counter version
+          example: 1
+        rejectionReasons:
+          type: array
+          description: array of rejection Reasons
+          example: []
+        userId:
+          type: string
+          description: id of user
+          example: bcf3651c-d2d3-4998-81a9-5f24302ab674
+        status:
+          type: string
+          enum:
+            - REJECTED
+            - REWARDED
+            - CANCELLED
+          description: Status of the transaction
+          example: REWARDED
+        channel:
+          type: string
+          enum:
+            - RTD
+            - QRCODE
+            - IDPAYCODE
+            - BARCODE
+          description: Channel from which the transaction takes place
+          example: BARCODE
+        rewards:
+          type: object
+          additionalProperties: false
+          properties:
+            ${payload.properties.initiativeId}:
+              $ref: "#/components/schemas/Reward"
+        updateDate:
+          type: string
+          description: Update Date
+          format: date-time
+          example: "2024-04-10T07:41:39.47"
+        initiatives:
+          type: array
+          description: inititativeId list
+          format: string
+          example: [661626073785876cb5aa7601]
+        initiativeRejectionReasons:
+          type: object
+          description: inititative rejection reasons
+          format: string
+    QueueCommandOperationDTO:
+      type: object
+      properties:
+        operationType:
+          type: string
+          description: Constant that define operation type
+          example: DELETE_INITIATIVE
+        entityId:
+          type: string
+          description: familyId if the initiative is family-based or userId otherwise
+          example: 66176f4e3785876cb5aa764d
+        operationTime:
+          type: string
+          format: date-time
+          description: operation time
+          example: "2024-04-11T07:23:08.874869466"
