@@ -1,11 +1,11 @@
 package it.gov.pagopa.common.web.exception;
 
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,12 +24,8 @@ public class ServiceExceptionHandler {
     this.transcodeMap = transcodeMap;
   }
 
-  @SuppressWarnings("squid:S1452")
   @ExceptionHandler(ServiceException.class)
-  protected ResponseEntity<? extends ServiceExceptionPayload> handleException(ServiceException error, HttpServletRequest request) {
-    if (null != error.getPayload()) {
-      return handleBodyProvidedException(error, request);
-    }
+  protected ResponseEntity<ErrorDTO> handleException(ServiceException error, HttpServletRequest request) {
     return errorManager.handleException(transcodeException(error), request);
   }
 
@@ -42,14 +38,5 @@ public class ServiceExceptionHandler {
     }
 
     return new ClientExceptionWithBody(httpStatus, error.getCode(), error.getMessage(), error.isPrintStackTrace(), error);
-  }
-
-  private ResponseEntity<? extends ServiceExceptionPayload> handleBodyProvidedException(ServiceException error, HttpServletRequest request) {
-    ClientException clientException = transcodeException(error);
-    ErrorManager.logClientException(clientException, request);
-
-    return ResponseEntity.status(clientException.getHttpStatus())
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(error.getPayload());
   }
 }

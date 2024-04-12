@@ -1,62 +1,57 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
-import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
+import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
+import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import static it.gov.pagopa.common.utils.CommonUtilities.euroToCents;
+import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeType;
+import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeValidPeriod;
 
 @Slf4j
 @Service
-public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implements BarCodeCreationService {
+public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
+    private static final String BAR_CODE_CREATE_TRANSACTION = "BAR_CODE_CREATE_TRANSACTION";
     private final TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
+    private final RewardRuleRepository rewardRuleRepository;
     private final WalletConnector walletConnector;
-    @SuppressWarnings("squid:S00107") // suppressing too many parameters alert
-    protected BarCodeCreationServiceImpl(TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
-                                         TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
-                                         RewardRuleRepository rewardRuleRepository,
-                                         TransactionInProgressRepository transactionInProgressRepository,
-                                         TrxCodeGenUtil trxCodeGenUtil,
+    private final AuditUtilities auditUtilities;
+    private final TransactionInProgressService transactionInProgressService;
+    protected BarCodeCreationServiceImpl(RewardRuleRepository rewardRuleRepository,
                                          AuditUtilities auditUtilities,
-                                         MerchantConnector merchantConnector,
                                          TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
-                                         TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper, WalletConnector walletConnector) {
-        super(transactionInProgress2TransactionResponseMapper,
-                transactionCreationRequest2TransactionInProgressMapper,
-                rewardRuleRepository,
-                transactionInProgressRepository,
-                trxCodeGenUtil,
-                auditUtilities,
-                merchantConnector);
+                                         TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper,
+                                         WalletConnector walletConnector,
+                                         TransactionInProgressService transactionInProgressService) {
+
         this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
         this.walletConnector = walletConnector;
+        this.rewardRuleRepository = rewardRuleRepository;
+        this.auditUtilities = auditUtilities;
+        this.transactionInProgressService = transactionInProgressService;
     }
-    @Override
+
     public TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
                                                         String channel,
                                                         String userId) {
@@ -68,16 +63,16 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
                     .map(RewardRule::getInitiativeConfig)
                     .orElse(null);
 
-            checkInitiativeType(trxBarCodeCreationRequest.getInitiativeId(), initiative);
+            checkInitiativeType(trxBarCodeCreationRequest.getInitiativeId(), initiative, getFlow());
 
-            checkInitiativeValidPeriod(today, initiative);
+            checkInitiativeValidPeriod(today, initiative, getFlow());
 
             Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                             trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null);
-            generateTrxCodeAndSave(trx);
+            transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
 
             logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
 
@@ -90,19 +85,16 @@ public class BarCodeCreationServiceImpl extends CommonCreationServiceImpl implem
         }
     }
 
-    @Override
-    protected void logCreatedTransaction(String initiativeId, String id, String trxCode, String userId) {
+    private void logCreatedTransaction(String initiativeId, String id, String trxCode, String userId) {
         auditUtilities.logBarCodeCreatedTransaction(initiativeId, id, trxCode, userId);
     }
 
-    @Override
-    protected  void logErrorCreatedTransaction(String initiativeId,String userId){
+    private  void logErrorCreatedTransaction(String initiativeId,String userId){
         auditUtilities.logBarCodeErrorCreatedTransaction(initiativeId,userId);
     }
 
-    @Override
-    public String getFlow(){
-        return "BAR_CODE_CREATE_TRANSACTION";
+    private String getFlow(){
+        return BAR_CODE_CREATE_TRANSACTION;
     }
 
     private Long checkWallet(String initiativeId, String userId){

@@ -15,6 +15,9 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+
 @Slf4j
 @Service("commonConfirm")
 public class CommonConfirmServiceImpl {
@@ -36,11 +39,9 @@ public class CommonConfirmServiceImpl {
 
     public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
         try {
-            TransactionInProgress trx = repository.findByIdThrottled(trxId);
+            TransactionInProgress trx = repository.findById(trxId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            if (trx == null) {
-                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
-            }
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
                 throw new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
                         "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trxId,trx.getStatus()));
@@ -62,6 +63,7 @@ public class CommonConfirmServiceImpl {
 
     public void confirmAuthorizedPayment(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.REWARDED);
+        trx.setElaborationDateTime(LocalDateTime.now());
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
         sendConfirmPaymentNotification(trx);
 

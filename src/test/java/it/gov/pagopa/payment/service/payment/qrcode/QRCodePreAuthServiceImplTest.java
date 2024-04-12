@@ -79,7 +79,7 @@ class QRCodePreAuthServiceImplTest {
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
             "residualAmountCents");
 
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatusForPreview(any(), any(), any(),anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet("INITIATIVEID1", USER_ID1);
   }
@@ -103,7 +103,7 @@ class QRCodePreAuthServiceImplTest {
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
             "residualAmountCents");
 
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
@@ -128,7 +128,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
@@ -154,7 +154,7 @@ class QRCodePreAuthServiceImplTest {
 
     assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(),any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(),any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
@@ -177,7 +177,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result.getCode());
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
@@ -197,7 +197,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result);
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(),any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(),any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), "USERID2");
   }
@@ -211,7 +211,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result);
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
   }
 
@@ -231,7 +231,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result);
 
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatus(anyString(), anyString(), any(), any(), any(), any(), anyString(),any(), anyLong(),any());
+    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }

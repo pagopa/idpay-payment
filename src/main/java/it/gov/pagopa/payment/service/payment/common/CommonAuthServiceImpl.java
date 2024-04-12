@@ -17,16 +17,18 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public abstract class CommonAuthServiceImpl {
+@Service
+public class CommonAuthServiceImpl {
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
-    protected final AuditUtilities auditUtilities;
+    private final AuditUtilities auditUtilities;
     private final WalletConnector walletConnector;
     private final CommonPreAuthServiceImpl commonPreAuthService;
 
@@ -36,7 +38,8 @@ public abstract class CommonAuthServiceImpl {
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities,
-            WalletConnector walletConnector, @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
+            WalletConnector walletConnector,
+            @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
             AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
@@ -46,7 +49,7 @@ public abstract class CommonAuthServiceImpl {
         this.timeoutSchedulerService = timeoutSchedulerService;
     }
 
-    protected AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
+    public AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
         try {
             checkAuth(trxCode,trx);
 
@@ -68,7 +71,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected AuthPaymentDTO invokeRuleEngine(TransactionInProgress trx) {
+    public AuthPaymentDTO invokeRuleEngine(TransactionInProgress trx) {
 
         AuthPaymentDTO authPaymentDTO;
         if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZATION_REQUESTED)){
@@ -129,7 +132,7 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected void checkWalletStatus(String initiativeId, String userId){
+    public void checkWalletStatus(String initiativeId, String userId){
         String walletStatus = walletConnector.getWallet(initiativeId, userId).getStatus();
 
         if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
@@ -141,14 +144,14 @@ public abstract class CommonAuthServiceImpl {
         }
     }
 
-    protected void checkAuth(String trxCode, TransactionInProgress trx){
+    public void checkAuth(String trxCode, TransactionInProgress trx){
         if (trx == null) {
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
         }
 
     }
 
-    protected void checkTrxStatusToInvokePreAuth(TransactionInProgress trx) {
+    public void checkTrxStatusToInvokePreAuth(TransactionInProgress trx) {
         if ((trx.getStatus().equals(SyncTrxStatus.CREATED) && trx.getUserId() != null) ||
                 (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED) && trx.getReward() == null)){
             AuthPaymentDTO preAuth = commonPreAuthService.previewPayment(trx, trx.getChannel(), SyncTrxStatus.AUTHORIZATION_REQUESTED);
@@ -160,17 +163,7 @@ public abstract class CommonAuthServiceImpl {
         } else if(trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
-        transactionInProgressRepository.updateTrxWithStatus(
-                trx.getId(),
-                trx.getUserId(),
-                trx.getReward(),
-                trx.getRejectionReasons(),
-                trx.getInitiativeRejectionReasons(),
-                trx.getRewards(),
-                trx.getChannel(),
-                trx.getStatus(),
-                trx.getCounterVersion(),
-                trx.getTrxChargeDate());
+        transactionInProgressRepository.updateTrxWithStatus(trx);
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {

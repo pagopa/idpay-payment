@@ -1,10 +1,9 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.common.config.KafkaConfiguration;
 import it.gov.pagopa.common.kafka.service.ErrorNotifierService;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,19 +15,19 @@ import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PaymentErrorNotifierServiceTest {
 
-    public static final String BUILDER_MESSAGING_SERVICE = "builderMessagingService";
-    public static final String NOTIFICATIONBUILDER = "notificationbuilder";
-    public static final String TOPIC = "topic";
     public static final String ERROR_MESSAGE = "test";
     @Mock
     private ErrorNotifierService errorNotifierServiceMock;
+    @Mock
+    private KafkaConfiguration kafkaConfigurationMock;
 
     private PaymentErrorNotifierService service;
 
@@ -36,67 +35,83 @@ class PaymentErrorNotifierServiceTest {
     void setUp() {
         service = new PaymentErrorNotifierServiceImpl(
                 errorNotifierServiceMock,
-                BUILDER_MESSAGING_SERVICE,
-                NOTIFICATIONBUILDER,
-                TOPIC
-        );
+                kafkaConfigurationMock);
     }
 
     @Test
     void notifyAuthPayment() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transaction.setUserId("USERID1");
+        Message<TransactionInProgress> message = buildMessage(transaction, transaction.getUserId());
 
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
-        authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+        KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = mockKafkaConfig();
 
-        Mockito.when(errorNotifierServiceMock.notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any())).thenReturn(false);
+        Mockito.when(errorNotifierServiceMock.notify(eq(kafkaInfoDTO), eq(message), any(), eq(true), eq(false), any())).thenReturn(false);
 
-        service.notifyAuthPayment(buildMessage(transaction, transaction.getUserId()),
+        service.notifyAuthPayment(message,
                 "[QR_CODE_AUTHORIZE_TRANSACTION] An error occurred while publishing the Authorization Payment result",
                 true,
                 new Throwable(ERROR_MESSAGE)
         );
 
-        verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), anyBoolean(), anyBoolean(), any());
     }
 
     @Test
     void notifyCancelPayment() {
         TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Message<TransactionInProgress> message = buildMessage(trx, trx.getUserId());
 
-        Mockito.when(errorNotifierServiceMock.notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any())).thenReturn(false);
+        KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = mockKafkaConfig();
+
+        Mockito.when(errorNotifierServiceMock.notify(eq(kafkaInfoDTO), eq(message), any(), eq(true), eq(false), any())).thenReturn(false);
 
         service.notifyCancelPayment(
-                buildMessage(trx, trx.getMerchantId()),
+                message,
                 "[QR_CODE_CANCEL_PAYMENT] An error occurred while publishing the cancellation authorized result",
                 true,
                 new Throwable(ERROR_MESSAGE)
         );
 
-        verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), anyBoolean(), anyBoolean(), any());
 
     }
 
     @Test
     void notifyConfirmPayment(){
         TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        Message<TransactionInProgress> message = buildMessage(trx, trx.getUserId());
 
-        Mockito.when(errorNotifierServiceMock.notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any())).thenReturn(false);
+        KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = mockKafkaConfig();
+
+        Mockito.when(errorNotifierServiceMock.notify(eq(kafkaInfoDTO), eq(message), any(), eq(false), eq(false), any())).thenReturn(false);
 
         service.notifyConfirmPayment(
-                buildMessage(trx, trx.getMerchantId()),
+                message,
                 "[QR_CODE_CONFIRM_PAYMENT] An error occurred while publishing the Confirm Payment result",
-                true,
+                false,
                 new Throwable(ERROR_MESSAGE)
         );
 
-        verify(errorNotifierServiceMock).notify(any(), any(), any(), any(), any(), any(), anyBoolean(), anyBoolean(), any());
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), anyBoolean(), anyBoolean(), any());
     }
 
     private Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
         return MessageBuilder.withPayload(trx)
             .setHeader(KafkaHeaders.KEY, key)
             .build();
+    }
+
+    private KafkaConfiguration.KafkaInfoDTO mockKafkaConfig() {
+        KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = new KafkaConfiguration.KafkaInfoDTO();
+        kafkaInfoDTO.setDestination("destination");
+        kafkaInfoDTO.setGroup("group");
+        kafkaInfoDTO.setType("type");
+        kafkaInfoDTO.setBrokers("brokers");
+
+        KafkaConfiguration.Stream cloudStream = new KafkaConfiguration.Stream();
+        cloudStream.setBindings(Map.of("transactionOutcome-out-0", kafkaInfoDTO));
+        Mockito.when(kafkaConfigurationMock.getStream()).thenReturn(cloudStream);
+        return kafkaInfoDTO;
     }
 }

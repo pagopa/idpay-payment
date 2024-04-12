@@ -1,37 +1,25 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
-import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implements QRCodeAuthPaymentService {
+public class QRCodeAuthPaymentServiceImpl implements QRCodeAuthPaymentService {
 
   private final QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService;
+  private final CommonAuthServiceImpl commonAuthService;
 
-  public QRCodeAuthPaymentServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
-                                      QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService,
-                                      RewardCalculatorConnector rewardCalculatorConnector,
-                                      AuditUtilities auditUtilities,
-                                      WalletConnector walletConnector,
-                                      @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
-                                      AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceImpl){
-    super(transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, commonPreAuthService, timeoutSchedulerServiceImpl);
+  public QRCodeAuthPaymentServiceImpl(QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredService, CommonAuthServiceImpl commonAuthService){
     this.qrCodeAuthorizationExpiredService = qrCodeAuthorizationExpiredService;
+    this.commonAuthService = commonAuthService;
   }
 
   @Override
@@ -41,7 +29,7 @@ public class QRCodeAuthPaymentServiceImpl extends CommonAuthServiceImpl implemen
       throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
     }
     checkUser(trxCode,userId,trx);
-    return super.authPayment(trx,userId,trxCode);
+    return commonAuthService.authPayment(trx,userId,trxCode);
   }
 
   private void checkUser(String trxCode,String userId, TransactionInProgress trx){

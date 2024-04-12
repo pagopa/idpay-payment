@@ -77,16 +77,11 @@ public class CommonPreAuthServiceImpl{
     } else {
       preview.setRejectionReasons(Collections.emptyList());
       preview.setStatus(status);
-      transactionInProgressRepository.updateTrxWithStatus(trx.getId(),
-              trx.getUserId(),
-              preview.getReward(),
-              preview.getRejectionReasons(),
+      transactionInProgressRepository.updateTrxWithStatusForPreview(trx,
+              preview,
               CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
-              preview.getRewards(),
               channel,
-              status,
-              preview.getCounterVersion(),
-              trx.getTrxChargeDate());
+              status);
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
@@ -100,7 +95,7 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  protected void checkPreAuth(String userId, TransactionInProgress trx) {
+  public void checkPreAuth(String userId, TransactionInProgress trx) {
     String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
       throw new UserSuspendedException("The user has been suspended for initiative [%s]".formatted(trx.getInitiativeId()));
@@ -127,7 +122,7 @@ public class CommonPreAuthServiceImpl{
     }
   }
 
-  protected void auditLogRelateUser(TransactionInProgress trx, String channel){
+  public void auditLogRelateUser(TransactionInProgress trx, String channel){
     auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), channel);
   }
 }
