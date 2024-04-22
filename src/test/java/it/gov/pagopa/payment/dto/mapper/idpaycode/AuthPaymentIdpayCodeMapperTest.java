@@ -23,7 +23,7 @@ class AuthPaymentIdpayCodeMapperTest {
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(authPayment.getId(), result.getId());
-        Assertions.assertEquals(authPayment.getReward(), result.getReward());
+        Assertions.assertEquals(authPayment.getRewardCents(), result.getRewardCents());
         Assertions.assertEquals(authPayment.getInitiativeId(), result.getInitiativeId());
         Assertions.assertEquals(authPayment.getInitiativeName(), result.getInitiativeName());
         Assertions.assertEquals(authPayment.getBusinessName(), result.getBusinessName());

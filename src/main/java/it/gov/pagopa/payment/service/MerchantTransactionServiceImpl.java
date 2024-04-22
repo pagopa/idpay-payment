@@ -78,13 +78,13 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
-    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
+    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getRewardCents());
 
     return new MerchantTransactionDTO(transaction.getTrxCode(),
                 transaction.getCorrelationId(),
                 transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                 transaction.getAmountCents(),
-                transaction.getReward() != null ? transaction.getReward() : Long.valueOf(0),
+                transaction.getRewardCents() != null ? transaction.getRewardCents() : Long.valueOf(0),
                 transaction.getTrxDate().toLocalDateTime(),
                 CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),

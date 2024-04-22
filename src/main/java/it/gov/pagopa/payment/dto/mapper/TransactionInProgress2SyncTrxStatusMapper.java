@@ -21,7 +21,7 @@ public class TransactionInProgress2SyncTrxStatusMapper {
 
     public SyncTrxStatusDTO transactionInProgressMapper(TransactionInProgress transaction){
 
-        Pair<Boolean, Long> splitAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getReward());
+        Pair<Boolean, Long> splitAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getRewardCents());
 
         SyncTrxStatusDTO response = SyncTrxStatusDTO.builder()
                 .id(transaction.getId())
@@ -36,7 +36,7 @@ public class TransactionInProgress2SyncTrxStatusMapper {
                 .acquirerId(transaction.getAcquirerId())
                 .merchantId(transaction.getMerchantId())
                 .initiativeId(transaction.getInitiativeId())
-                .rewardCents(transaction.getReward())
+                .rewardCents(transaction.getRewardCents())
                 .rejectionReasons(transaction.getRejectionReasons())
                 .status(transaction.getStatus())
                 .splitPayment(splitAndResidualAmountCents.getKey())

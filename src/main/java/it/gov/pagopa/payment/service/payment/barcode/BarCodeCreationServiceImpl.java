@@ -19,10 +19,8 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import static it.gov.pagopa.common.utils.CommonUtilities.euroToCents;
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeType;
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeValidPeriod;
 
@@ -100,7 +98,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     private Long checkWallet(String initiativeId, String userId){
         WalletDTO wallet = walletConnector.getWallet(initiativeId, userId);
 
-        if (wallet.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (wallet.getAmountCents() <= 0L) {
             throw new BudgetExhaustedException(String.format("Budget exhausted for the current user and initiative [%s]", initiativeId));
         }
 
@@ -108,6 +106,6 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
             throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
 
-        return euroToCents(wallet.getAmount());
+        return wallet.getAmountCents();
     }
 }

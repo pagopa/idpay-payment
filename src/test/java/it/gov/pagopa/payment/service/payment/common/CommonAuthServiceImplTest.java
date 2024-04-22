@@ -130,7 +130,7 @@ class CommonAuthServiceImplTest {
         assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
         assertEquals(List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT), result.getRejectionReasons());
         assertEquals(Collections.emptyMap(), result.getRewards());
-        assertNull(result.getReward());
+        assertNull(result.getRewardCents());
         assertNull(result.getCounters());
     }
 
@@ -230,7 +230,7 @@ class CommonAuthServiceImplTest {
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         transaction.setUserId("USERID%d".formatted(1));
-        transaction.setReward(10L);
+        transaction.setRewardCents(10L);
         transaction.setRejectionReasons(Collections.emptyList());
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);

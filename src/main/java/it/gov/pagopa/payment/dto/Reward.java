@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.dto;
 
 import it.gov.pagopa.payment.model.counters.RewardCounters;
-import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,9 +15,9 @@ public class Reward {
     private String organizationId;
 
     /** The ruleEngine reward calculated */
-    private BigDecimal providedReward;
+    private Long providedRewardCents;
     /** The effective reward after CAP and REFUND evaluation */
-    private BigDecimal accruedReward;
+    private Long accruedRewardCents;
     /** True, if the reward has been capped due to budget threshold */
     private boolean capped;
 
@@ -39,22 +38,22 @@ public class Reward {
     /** Counters */
     private RewardCounters counters;
 
-    public Reward(String initiativeId, String organizationId, BigDecimal reward){
-        this(initiativeId, organizationId, reward, false);
+    public Reward(String initiativeId, String organizationId, Long rewardCents){
+        this(initiativeId, organizationId, rewardCents, false);
     }
-    public Reward(String initiativeId, String organizationId, BigDecimal reward, boolean refund){
-        this(initiativeId, organizationId, reward, reward, false, refund);
-    }
-
-    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward){
-        this(initiativeId, organizationId, providedReward, accruedReward, providedReward.compareTo(accruedReward)!=0, false);
+    public Reward(String initiativeId, String organizationId, Long rewardCents, boolean refund){
+        this(initiativeId, organizationId, rewardCents, rewardCents, false, refund);
     }
 
-    public Reward(String initiativeId, String organizationId, BigDecimal providedReward, BigDecimal accruedReward, boolean capped, boolean refund){
+    public Reward(String initiativeId, String organizationId, Long providedRewardCents, Long accruedRewardCents){
+        this(initiativeId, organizationId, providedRewardCents, accruedRewardCents, providedRewardCents.compareTo(accruedRewardCents)!=0, false);
+    }
+
+    public Reward(String initiativeId, String organizationId, Long providedRewardCents, Long accruedRewardCents, boolean capped, boolean refund){
         this.initiativeId=initiativeId;
         this.organizationId=organizationId;
-        this.providedReward=providedReward;
-        this.accruedReward=accruedReward;
+        this.providedRewardCents=providedRewardCents;
+        this.accruedRewardCents=accruedRewardCents;
         this.capped=capped;
         this.refund = refund;
     }

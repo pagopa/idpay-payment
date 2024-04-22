@@ -115,7 +115,7 @@ class IdpayCodePreviewServiceImplTest {
         //Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result,
-                "reward",
+                "rewardCents",
                 "counters",
                 "residualBudget",
                 "secondFactor",

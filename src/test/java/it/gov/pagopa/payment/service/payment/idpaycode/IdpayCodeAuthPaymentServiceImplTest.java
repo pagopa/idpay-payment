@@ -88,7 +88,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
         PinBlockDTO pinBlockDTO = new PinBlockDTO("PINBLOCK", "KEY");
 
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        trx.setReward(null);
+        trx.setRewardCents(null);
         trx.setUserId("USERID");
 
 

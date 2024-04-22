@@ -98,7 +98,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 "userId",
                 "authDate",
                 "elaborationDateTime",
-                "reward",
+                "rewardCents",
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
@@ -223,7 +223,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 "userId",
                 "authDate",
                 "elaborationDateTime",
-                "reward",
+                "rewardCents",
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
@@ -285,7 +285,7 @@ class TransactionInProgressRepositoryExtImplTest {
         TestUtils.checkNotNullFields(resultUpdate,
                 "authDate",
                 "elaborationDateTime",
-                "reward",
+                "rewardCents",
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
@@ -308,14 +308,14 @@ class TransactionInProgressRepositoryExtImplTest {
                 "userId",
                 "authDate",
                 "elaborationDateTime",
-                "reward",
+                "rewardCents",
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
                 "initiativeRejectionReasons");
 
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
-        preview.setReward(500L);
+        preview.setRewardCents(500L);
         preview.setRejectionReasons(List.of("REASON"));
         preview.setRewards(Map.of("ID", new Reward()));
 
@@ -350,7 +350,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 "userId",
                 "authDate",
                 "elaborationDateTime",
-                "reward",
+                "rewardCents",
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
@@ -358,7 +358,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
         transactionInProgress.setStatus(SyncTrxStatus.IDENTIFIED);
         transactionInProgress.setUserId("USERID1");
-        transactionInProgress.setReward(500L);
+        transactionInProgress.setRewardCents(500L);
         transactionInProgress.setRejectionReasons(List.of("REASON"));
         transactionInProgress.setInitiativeRejectionReasons(Map.of(transactionInProgress.getInitiativeId(), List.of("REASON")));
         transactionInProgress.setRewards(Map.of("ID", new Reward()));
@@ -393,7 +393,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 "userId",
                 "authDate",
                 "elaborationDateTime",
-                "reward",
+                "rewardCents",
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
@@ -611,7 +611,7 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgress.setAcquirerId(null);
         transactionInProgress.setAmountCents(null);
-        transactionInProgress.setEffectiveAmount(null);
+        transactionInProgress.setEffectiveAmountCents(null);
         transactionInProgress.setAmountCurrency(null);
         transactionInProgress.setMerchantFiscalCode(null);
         transactionInProgress.setMerchantId(null);
@@ -626,8 +626,8 @@ class TransactionInProgressRepositoryExtImplTest {
         Assertions.assertNotNull(resultFirstSave);
         TestUtils.checkNotNullFields(
                 resultFirstSave,
-                "authDate", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "trxChargeDate",
-                "acquirerId", "amountCents", "effectiveAmount", "amountCurrency", "merchantFiscalCode", "merchantId",
+                "authDate", "elaborationDateTime", "rewardCents", "rejectionReasons", "rewards", "trxChargeDate",
+                "acquirerId", "amountCents", "effectiveAmountCents", "amountCurrency", "merchantFiscalCode", "merchantId",
                 "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName", "initiativeRejectionReasons");
 
         transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"), Map.of(transactionInProgress.getInitiativeId(), List.of("REJECTIONREASON1")));
