@@ -117,7 +117,7 @@ class IdpayCodePreviewServiceImplTest {
         TestUtils.checkNotNullFields(result,
                 "rewardCents",
                 "counters",
-                "residualBudget",
+                "residualBudgetCents",
                 "secondFactor",
                 "splitPayment",
                 "residualAmountCents"
