@@ -184,13 +184,13 @@
                                   "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                                   "pm.collectionVariables.set('...', _.random(0, 180));\r",
                                   "*/\r",
-                                  "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                                  "pm.collectionVariables.set('budget', 500);\r",
+                                  "//_.random(1.0, 100000.0, true)\r",
+                                  "pm.collectionVariables.set('budgetCents', 500);\r",
                                   "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                                   "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                                   "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                                   "pm.collectionVariables.set('rankingEnabled', false);\r",
-                                  "pm.collectionVariables.set('beneficiaryBudget', 100);//default max 1000\r",
+                                  "pm.collectionVariables.set('beneficiaryBudgetCents', 100);//default max 1000\r",
                                   "pm.collectionVariables.set('rankingStartDate', today);\r",
                                   "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                                   "pm.collectionVariables.set('startDate', today);\r",
@@ -237,7 +237,7 @@
                             ],
                             "body": {
                               "mode": "raw",
-                              "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                              "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                               "options": {
                                 "raw": {
                                   "language": "json"
@@ -344,8 +344,8 @@
                                   "\r",
                                   "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                                   "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                                  "pm.collectionVariables.set('trxThresholdFrom', 10);\r",
-                                  "pm.collectionVariables.set('trxThresholdTo', 50);\r",
+                                  "pm.collectionVariables.set('trxThresholdFromCents', 10);\r",
+                                  "pm.collectionVariables.set('trxThresholdToCents', 50);\r",
                                   "pm.collectionVariables.set('trxCountFrom', 3);\r",
                                   "pm.collectionVariables.set('trxCountTo', 11);\r",
                                   "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -1550,10 +1550,10 @@
                               "\r",
                               "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                              "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                              "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                               "});\r",
                               "\r",
                               ""
@@ -1705,10 +1705,10 @@
                               "\r",
                               "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                              "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                              "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                               "});\r",
                               "\r",
                               ""
@@ -1773,13 +1773,13 @@
                               "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                              "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                              "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                              "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                               "});\r",
                               "\r",
-                              "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                              "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                              "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                              "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                               "\r",
                               ""
                             ],
@@ -1845,14 +1845,14 @@
                               "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                              "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                              "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                              "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                               "    pm.expect(jsonResponse.counterVersion).to.eql(2);\r",
                               "});\r",
                               "\r",
-                              "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                              "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                              "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                              "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                               "\r",
                               ""
                             ],
@@ -1915,11 +1915,11 @@
                               "\r",
                               "pm.test(\"Payment - Happy case - Get merchant transactions list - checking effectiveAmount,rewardAmount,qrcodePngUrl and qrcodeTxtUrl values\", function () {\r",
                               "    let jsonResponse = pm.response.json()\r",
-                              "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmount\");\r",
-                              "    const rewardAmount = pm.collectionVariables.get(\"rewardAmount\");\r",
+                              "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmountCents\");\r",
+                              "    const rewardAmount = pm.collectionVariables.get(\"rewardAmountCents\");\r",
                               "    let trxCode = jsonResponse.content[0].trxCode;\r",
-                              "    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
-                              "    pm.expect(jsonResponse.content[0].rewardAmount).equals(parseInt(`${rewardAmount}`));\r",
+                              "    pm.expect(jsonResponse.content[0].effectiveAmountCents).equals(parseInt(`${effectiveAmount}`));\r",
+                              "    pm.expect(jsonResponse.content[0].rewardAmountCents).equals(parseInt(`${rewardAmount}`));\r",
                               "    pm.expect(jsonResponse.content[0].qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
                               "    pm.expect(jsonResponse.content[0].qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
                               "});"
@@ -2170,13 +2170,13 @@
                               "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                               "pm.collectionVariables.set('...', _.random(0, 180));\r",
                               "*/\r",
-                              "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                              "pm.collectionVariables.set('budget', 500);\r",
+                              "//_.random(1.0, 100000.0, true)\r",
+                              "pm.collectionVariables.set('budgetCents', 500);\r",
                               "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                               "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                               "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                               "pm.collectionVariables.set('rankingEnabled', false);\r",
-                              "pm.collectionVariables.set('beneficiaryBudget', 100);//default max 1000\r",
+                              "pm.collectionVariables.set('beneficiaryBudgetCents', 100);//default max 1000\r",
                               "pm.collectionVariables.set('rankingStartDate', today);\r",
                               "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                               "pm.collectionVariables.set('startDate', today);\r",
@@ -2223,7 +2223,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                          "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -2330,8 +2330,8 @@
                               "\r",
                               "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                               "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                              "pm.collectionVariables.set('trxThresholdFrom', 10);\r",
-                              "pm.collectionVariables.set('trxThresholdTo', 50);\r",
+                              "pm.collectionVariables.set('trxThresholdFromCents', 10);\r",
+                              "pm.collectionVariables.set('trxThresholdToCents', 50);\r",
                               "pm.collectionVariables.set('trxCountFrom', 3);\r",
                               "pm.collectionVariables.set('trxCountTo', 11);\r",
                               "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -3537,10 +3537,10 @@
                           "\r",
                           "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
-                          "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                          "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                          "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                           "});\r",
                           ""
                         ],
@@ -3604,13 +3604,13 @@
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                          "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                          "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                          "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                           "});\r",
                           "\r",
-                          "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                          "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                          "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                          "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                           ""
                         ],
                         "type": "text/javascript"
@@ -3998,10 +3998,10 @@
                           "\r",
                           "pm.test(\"Payment - Happy case: Cancel transaction by citizen - [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
-                          "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                          "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                          "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                           "});\r",
                           ""
                         ],
@@ -4381,10 +4381,10 @@
                           "\r",
                           "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
-                          "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                          "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                          "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                           "});\r",
                           "\r",
                           ""
@@ -4451,13 +4451,13 @@
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                          "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                          "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                          "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                           "});\r",
                           "\r",
-                          "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                          "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                          "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                          "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                           "\r",
                           ""
                         ],
@@ -4520,11 +4520,11 @@
                           "\r",
                           "pm.test(\"Payment - Happy case - Get merchant transactions list - checking effectiveAmount,rewardAmount,qrcodePngUrl and qrcodeTxtUrl values\", function () {\r",
                           "    let jsonResponse = pm.response.json()\r",
-                          "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmount\");\r",
-                          "    const rewardAmount = pm.collectionVariables.get(\"rewardAmount\");\r",
+                          "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmountCents\");\r",
+                          "    const rewardAmount = pm.collectionVariables.get(\"rewardAmountCents\");\r",
                           "    let trxCode = jsonResponse.content[0].trxCode;\r",
-                          "    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
-                          "    pm.expect(jsonResponse.content[0].rewardAmount).equals(parseInt(`${rewardAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].effectiveAmountCents).equals(parseInt(`${effectiveAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].rewardAmountCents).equals(parseInt(`${rewardAmount}`));\r",
                           "    pm.expect(jsonResponse.content[0].qrcodePngUrl).equals(`https://continua.io.pagopa.it/qrcode.png?feat=idpay&trxcode=${trxCode}`);\r",
                           "    pm.expect(jsonResponse.content[0].qrcodeTxtUrl).equals(`https://continua.io.pagopa.it/idpay/auth/${trxCode}`);\r",
                           "});"
@@ -4858,10 +4858,10 @@
                           "\r",
                           "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
-                          "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                          "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                          "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                           "});\r",
                           "\r",
                           ""
@@ -4928,13 +4928,13 @@
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                          "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                          "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                          "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                           "});\r",
                           "\r",
-                          "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                          "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                          "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                          "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                           "\r",
                           ""
                         ],
@@ -4997,10 +4997,10 @@
                           "\r",
                           "pm.test(\"Payment - Happy case - Get merchant transactions list - checking effectiveAmount and rewardAmount values\", function () {\r",
                           "     let jsonResponse = pm.response.json()\r",
-                          "     const effectiveAmount = pm.collectionVariables.get(\"effectiveAmount\");\r",
-                          "     const rewardAmount = pm.collectionVariables.get(\"rewardAmount\");\r",
-                          "    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
-                          "    pm.expect(jsonResponse.content[0].rewardAmount).equals(parseInt(`${rewardAmount}`));\r",
+                          "     const effectiveAmount = pm.collectionVariables.get(\"effectiveAmountCents\");\r",
+                          "     const rewardAmount = pm.collectionVariables.get(\"rewardAmountCents\");\r",
+                          "    pm.expect(jsonResponse.content[0].effectiveAmountCents).equals(parseInt(`${effectiveAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].rewardAmountCents).equals(parseInt(`${rewardAmount}`));\r",
                           "});"
                         ],
                         "type": "text/javascript"
@@ -5287,13 +5287,13 @@
                                   "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                                   "pm.collectionVariables.set('...', _.random(0, 180));\r",
                                   "*/\r",
-                                  "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                                  "pm.collectionVariables.set('budget', 500);\r",
+                                  "//_.random(1.0, 100000.0, true)\r",
+                                  "pm.collectionVariables.set('budgetCents', 500);\r",
                                   "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                                   "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                                   "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                                   "pm.collectionVariables.set('rankingEnabled', false);\r",
-                                  "pm.collectionVariables.set('beneficiaryBudget', 100);//default max 1000\r",
+                                  "pm.collectionVariables.set('beneficiaryBudgetCents', 100);//default max 1000\r",
                                   "pm.collectionVariables.set('rankingStartDate', today);\r",
                                   "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                                   "pm.collectionVariables.set('startDate', today);\r",
@@ -5340,7 +5340,7 @@
                             ],
                             "body": {
                               "mode": "raw",
-                              "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                              "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                               "options": {
                                 "raw": {
                                   "language": "json"
@@ -5447,8 +5447,8 @@
                                   "\r",
                                   "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                                   "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                                  "pm.collectionVariables.set('trxThresholdFrom', 10);\r",
-                                  "pm.collectionVariables.set('trxThresholdTo', 50);\r",
+                                  "pm.collectionVariables.set('trxThresholdFromCents', 10);\r",
+                                  "pm.collectionVariables.set('trxThresholdToCents', 50);\r",
                                   "pm.collectionVariables.set('trxCountFrom', 3);\r",
                                   "pm.collectionVariables.set('trxCountTo', 11);\r",
                                   "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -6653,10 +6653,10 @@
                               "\r",
                               "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                              "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                              "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                               "});\r",
                               "\r",
                               ""
@@ -6808,10 +6808,10 @@
                               "\r",
                               "pm.test(\"Payment - Happy case: [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                              "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                              "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                               "});\r",
                               "\r",
                               ""
@@ -6876,13 +6876,13 @@
                               "pm.test(\"Payment - Happy case: [IO] Authorize transaction [QR-CODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                              "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                              "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                              "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                               "});\r",
                               "\r",
-                              "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                              "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                              "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                              "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                               "\r",
                               ""
                             ],
@@ -7199,13 +7199,13 @@
                               "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                               "pm.collectionVariables.set('...', _.random(0, 180));\r",
                               "*/\r",
-                              "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                              "pm.collectionVariables.set('budget', 1200);\r",
+                              "//_.random(1.0, 100000.0, true)\r",
+                              "pm.collectionVariables.set('budgetCents', 1200);\r",
                               "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                               "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                               "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                               "pm.collectionVariables.set('rankingEnabled', false);\r",
-                              "pm.collectionVariables.set('beneficiaryBudget', 400);//default max 1000\r",
+                              "pm.collectionVariables.set('beneficiaryBudgetCents', 400);//default max 1000\r",
                               "pm.collectionVariables.set('rankingStartDate', today);\r",
                               "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                               "pm.collectionVariables.set('startDate', today);\r",
@@ -7252,7 +7252,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                          "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -7360,8 +7360,8 @@
                               "\r",
                               "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                               "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                              "pm.collectionVariables.set('trxThresholdFrom', 50);\r",
-                              "pm.collectionVariables.set('trxThresholdTo', 80);\r",
+                              "pm.collectionVariables.set('trxThresholdFromCents', 50);\r",
+                              "pm.collectionVariables.set('trxThresholdToCents', 80);\r",
                               "pm.collectionVariables.set('trxCountFrom', 3);\r",
                               "pm.collectionVariables.set('trxCountTo', 11);\r",
                               "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -7395,7 +7395,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"from\": {{trxThresholdFrom}},\n      \"fromIncluded\": true,\n      \"to\": {{trxThresholdTo}},\n      \"toIncluded\": true\n    }\n  }\n}",
+                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"fromCents\": {{trxThresholdFromCents}},\n      \"fromIncluded\": true,\n      \"toCents\": {{trxThresholdToCents}},\n      \"toIncluded\": true\n    }\n  }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -10472,10 +10472,10 @@
                               "\r",
                               "pm.test(\"Payment - Unhappy case: Another user try to cancel transaction - Cancel transaction by citizen - [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                              "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                              "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                               "});\r",
                               "\r",
                               ""
@@ -13156,7 +13156,7 @@
                               "\r",
                               "pm.collectionVariables.set(\"trxCode\", pm.response.json().trxCode);\r",
                               "pm.collectionVariables.set(\"transactionId\", pm.response.json().id);\r",
-                              "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);"
+                              "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);"
                             ],
                             "type": "text/javascript"
                           }
@@ -13349,9 +13349,9 @@
                               "\r",
                               "pm.test(\"Payment - Unhappy case - Budget exhausted - Get merchant transactions list - checking effectiveAmount and rewardAmount values\", function () {\r",
                               "     let jsonResponse = pm.response.json()\r",
-                              "     const effectiveAmount = pm.collectionVariables.get(\"effectiveAmount\");\r",
-                              "    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
-                              "    pm.expect(jsonResponse.content[0].rewardAmount).equals(0);\r",
+                              "     const effectiveAmount = pm.collectionVariables.get(\"effectiveAmountCents\");\r",
+                              "    pm.expect(jsonResponse.content[0].effectiveAmountCents).equals(parseInt(`${effectiveAmount}`));\r",
+                              "    pm.expect(jsonResponse.content[0].rewardAmountCents).equals(0);\r",
                               "});"
                             ],
                             "type": "text/javascript"
@@ -13759,10 +13759,10 @@
                               "\r",
                               "pm.test(\"Payment - Unhappy case: Another user try to cancel transaction - Cancel transaction by citizen - [IO] Pre-Authorize transaction [QR-CODE] - Verify response status is IDENTIFIED and residualBudget is: (initiativeBudget-totalReward+reward)\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
-                              "    let initiativeBudgetEuro= jsonResponse.counters.initiativeBudget*100;\r",
-                              "    let totalRewardEuro= jsonResponse.counters.totalReward*100;\r",
+                              "    let initiativeBudgetCents= jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"IDENTIFIED\");\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro+jsonResponse.reward);\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents+jsonResponse.rewardAmountCents);\r",
                               "});"
                             ],
                             "type": "text/javascript"
@@ -14141,13 +14141,13 @@
                                   "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                                   "pm.collectionVariables.set('...', _.random(0, 180));\r",
                                   "*/\r",
-                                  "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                                  "pm.collectionVariables.set('budget', 1200);\r",
+                                  "//_.random(1.0, 100000.0, true)\r",
+                                  "pm.collectionVariables.set('budgetCents', 1200);\r",
                                   "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                                   "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                                   "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                                   "pm.collectionVariables.set('rankingEnabled', false);\r",
-                                  "pm.collectionVariables.set('beneficiaryBudget', 400);//default max 1000\r",
+                                  "pm.collectionVariables.set('beneficiaryBudgetCents', 400);//default max 1000\r",
                                   "pm.collectionVariables.set('rankingStartDate', today);\r",
                                   "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                                   "pm.collectionVariables.set('startDate', todayP1);\r",
@@ -14194,7 +14194,7 @@
                             ],
                             "body": {
                               "mode": "raw",
-                              "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                              "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                               "options": {
                                 "raw": {
                                   "language": "json"
@@ -14305,8 +14305,8 @@
                                   "\r",
                                   "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                                   "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                                  "pm.collectionVariables.set('trxThresholdFrom', 50);\r",
-                                  "pm.collectionVariables.set('trxThresholdTo', 80);\r",
+                                  "pm.collectionVariables.set('trxThresholdFromCents', 50);\r",
+                                  "pm.collectionVariables.set('trxThresholdToCents', 80);\r",
                                   "pm.collectionVariables.set('trxCountFrom', 3);\r",
                                   "pm.collectionVariables.set('trxCountTo', 11);\r",
                                   "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -14340,7 +14340,7 @@
                             ],
                             "body": {
                               "mode": "raw",
-                              "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n    \"threshold\": {\n    \"from\": {{trxThresholdFrom}},\n    \"fromIncluded\": true,\n    \"to\": {{trxThresholdTo}},\n    \"toIncluded\": true\n    }\n  }\n}",
+                              "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n    \"threshold\": {\n    \"fromCents\": {{trxThresholdFromCents}},\n    \"fromIncluded\": true,\n    \"toCents\": {{trxThresholdToCents}},\n    \"toIncluded\": true\n    }\n  }\n}",
                               "options": {
                                 "raw": {
                                   "language": "json"
@@ -15373,13 +15373,13 @@
                               "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                               "pm.collectionVariables.set('...', _.random(0, 180));\r",
                               "*/\r",
-                              "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                              "pm.collectionVariables.set('budget', 500);\r",
+                              "//_.random(1.0, 100000.0, true)\r",
+                              "pm.collectionVariables.set('budgetCents', 500);\r",
                               "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                               "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                               "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                               "pm.collectionVariables.set('rankingEnabled', false);\r",
-                              "pm.collectionVariables.set('beneficiaryBudget', 100);//default max 1000\r",
+                              "pm.collectionVariables.set('beneficiaryBudgetCents', 100);//default max 1000\r",
                               "pm.collectionVariables.set('rankingStartDate', today);\r",
                               "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                               "pm.collectionVariables.set('startDate', today);\r",
@@ -15426,7 +15426,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                          "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -15533,8 +15533,8 @@
                               "\r",
                               "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                               "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                              "pm.collectionVariables.set('trxThresholdFrom', 50);\r",
-                              "pm.collectionVariables.set('trxThresholdTo', 80);\r",
+                              "pm.collectionVariables.set('trxThresholdFromCents', 50);\r",
+                              "pm.collectionVariables.set('trxThresholdToCents', 80);\r",
                               "pm.collectionVariables.set('trxCountFrom', 3);\r",
                               "pm.collectionVariables.set('trxCountTo', 11);\r",
                               "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -15568,7 +15568,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"from\": {{trxThresholdFrom}},\n      \"fromIncluded\": true,\n      \"to\": {{trxThresholdTo}},\n      \"toIncluded\": true\n    }\n  }\n}",
+                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"fromCents\": {{trxThresholdFromCents}},\n      \"fromIncluded\": true,\n      \"toCents\": {{trxThresholdToCents}},\n      \"toIncluded\": true\n    }\n  }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -16652,13 +16652,13 @@
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                          "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                          "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                          "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                           "});\r",
                           "\r",
-                          "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                          "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                          "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                          "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                           "pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
                         ],
                         "type": "text/javascript"
@@ -16731,11 +16731,11 @@
                           "\r",
                           "pm.test(\"Payment - Happy case - Get merchant transactions list - checking effectiveAmount, rewardAmount and status values\", function () {\r",
                           "    let jsonResponse = pm.response.json()\r",
-                          "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmount\");\r",
-                          "    const rewardAmount = pm.collectionVariables.get(\"rewardAmount\");\r",
+                          "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmountCents\");\r",
+                          "    const rewardAmount = pm.collectionVariables.get(\"rewardAmountCents\");\r",
                           "    let trxCode = jsonResponse.content[0].trxCode;\r",
-                          "    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
-                          "    pm.expect(jsonResponse.content[0].rewardAmount).equals(parseInt(`${rewardAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].effectiveAmountCents).equals(parseInt(`${effectiveAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].rewardAmountCents).equals(parseInt(`${rewardAmount}`));\r",
                           "    pm.expect(jsonResponse.content[0].status).equals(\"AUTHORIZED\");\r",
                           "});"
                         ],
@@ -16996,13 +16996,13 @@
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                          "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                          "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                          "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                           "});\r",
                           "\r",
-                          "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                          "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                          "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                          "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                           "pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
                         ],
                         "type": "text/javascript"
@@ -17075,11 +17075,11 @@
                           "\r",
                           "pm.test(\"Payment - Happy case - Get merchant transactions list - checking effectiveAmount, rewardAmount and status values\", function () {\r",
                           "    let jsonResponse = pm.response.json()\r",
-                          "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmount\");\r",
-                          "    const rewardAmount = pm.collectionVariables.get(\"rewardAmount\");\r",
+                          "    const effectiveAmount = pm.collectionVariables.get(\"effectiveAmountCents\");\r",
+                          "    const rewardAmount = pm.collectionVariables.get(\"rewardAmountCents\");\r",
                           "    let trxCode = jsonResponse.content[0].trxCode;\r",
-                          "    pm.expect(jsonResponse.content[0].effectiveAmount).equals(parseInt(`${effectiveAmount}`));\r",
-                          "    pm.expect(jsonResponse.content[0].rewardAmount).equals(parseInt(`${rewardAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].effectiveAmountCents).equals(parseInt(`${effectiveAmount}`));\r",
+                          "    pm.expect(jsonResponse.content[0].rewardAmountCents).equals(parseInt(`${rewardAmount}`));\r",
                           "    pm.expect(jsonResponse.content[0].status).equals(\"AUTHORIZED\");\r",
                           "});"
                         ],
@@ -17722,13 +17722,13 @@
                           "pm.test(\"Payment - Happy case: [IO] Authorize transaction [BARCODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                          "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                          "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                          "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                          "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                          "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                          "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                           "});\r",
                           "\r",
-                          "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                          "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);\r",
+                          "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                          "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);\r",
                           "pm.collectionVariables.set(\"transactionId\", pm.response.json().id);"
                         ],
                         "type": "text/javascript"
@@ -18081,13 +18081,13 @@
                               "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                               "pm.collectionVariables.set('...', _.random(0, 180));\r",
                               "*/\r",
-                              "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                              "pm.collectionVariables.set('budget', 1200);\r",
+                              "//_.random(1.0, 100000.0, true)\r",
+                              "pm.collectionVariables.set('budgetCents', 1200);\r",
                               "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                               "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                               "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                               "pm.collectionVariables.set('rankingEnabled', false);\r",
-                              "pm.collectionVariables.set('beneficiaryBudget', 400);//default max 1000\r",
+                              "pm.collectionVariables.set('beneficiaryBudgetCents', 400);//default max 1000\r",
                               "pm.collectionVariables.set('rankingStartDate', today);\r",
                               "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                               "pm.collectionVariables.set('startDate', today);\r",
@@ -18134,7 +18134,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                          "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -18242,8 +18242,8 @@
                               "\r",
                               "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                               "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                              "pm.collectionVariables.set('trxThresholdFrom', 50);\r",
-                              "pm.collectionVariables.set('trxThresholdTo', 80);\r",
+                              "pm.collectionVariables.set('trxThresholdFromCents', 50);\r",
+                              "pm.collectionVariables.set('trxThresholdToCents', 80);\r",
                               "pm.collectionVariables.set('trxCountFrom', 3);\r",
                               "pm.collectionVariables.set('trxCountTo', 11);\r",
                               "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -18277,7 +18277,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"from\": {{trxThresholdFrom}},\n      \"fromIncluded\": true,\n      \"to\": {{trxThresholdTo}},\n      \"toIncluded\": true\n    }\n  }\n}",
+                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"fromCents\": {{trxThresholdFromCents}},\n      \"fromIncluded\": true,\n      \"toCents\": {{trxThresholdToCents}},\n      \"toIncluded\": true\n    }\n  }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -20392,13 +20392,13 @@
                               "pm.test(\"Payment - Unhappy case - BarCode - Authorize transaction - Already authorized - [IO] Authorize transaction [BARCODE] - Verify response status is AUTHORIZED and residualBudget is: initiativeBudget subtract totalReward\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
                               "    pm.expect(jsonResponse.status).to.eql(\"AUTHORIZED\");\r",
-                              "    let initiativeBudgetEuro = jsonResponse.counters.initiativeBudget * 100;\r",
-                              "    let totalRewardEuro = jsonResponse.counters.totalReward * 100;\r",
-                              "    pm.expect(jsonResponse.residualBudget).to.eql(initiativeBudgetEuro-totalRewardEuro);\r",
+                              "    let initiativeBudgetCents = jsonResponse.counters.initiativeBudgetCents;\r",
+                              "    let totalRewardCents = jsonResponse.counters.totalRewardCents;\r",
+                              "    pm.expect(jsonResponse.residualBudgetCents).to.eql(initiativeBudgetCents-totalRewardCents);\r",
                               "});\r",
                               "\r",
-                              "pm.collectionVariables.set(\"effectiveAmount\", pm.response.json().amountCents);\r",
-                              "pm.collectionVariables.set(\"rewardAmount\", pm.response.json().reward);"
+                              "pm.collectionVariables.set(\"effectiveAmountCents\", pm.response.json().amountCents);\r",
+                              "pm.collectionVariables.set(\"rewardAmountCents\", pm.response.json().rewardAmountCents);"
                             ],
                             "type": "text/javascript"
                           }
@@ -22210,13 +22210,13 @@
                                   "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                                   "pm.collectionVariables.set('...', _.random(0, 180));\r",
                                   "*/\r",
-                                  "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                                  "pm.collectionVariables.set('budget', 1200);\r",
+                                  "//_.random(1.0, 100000.0, true)\r",
+                                  "pm.collectionVariables.set('budgetCents', 1200);\r",
                                   "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                                   "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                                   "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                                   "pm.collectionVariables.set('rankingEnabled', false);\r",
-                                  "pm.collectionVariables.set('beneficiaryBudget', 400);//default max 1000\r",
+                                  "pm.collectionVariables.set('beneficiaryBudgetCents', 400);//default max 1000\r",
                                   "pm.collectionVariables.set('rankingStartDate', today);\r",
                                   "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                                   "pm.collectionVariables.set('startDate', todayP1);\r",
@@ -22263,7 +22263,7 @@
                             ],
                             "body": {
                               "mode": "raw",
-                              "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                              "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                               "options": {
                                 "raw": {
                                   "language": "json"
@@ -22371,8 +22371,8 @@
                                   "\r",
                                   "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                                   "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                                  "pm.collectionVariables.set('trxThresholdFrom', 50);\r",
-                                  "pm.collectionVariables.set('trxThresholdTo', 80);\r",
+                                  "pm.collectionVariables.set('trxThresholdFromCents', 50);\r",
+                                  "pm.collectionVariables.set('trxThresholdToCents', 80);\r",
                                   "pm.collectionVariables.set('trxCountFrom', 3);\r",
                                   "pm.collectionVariables.set('trxCountTo', 11);\r",
                                   "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -22406,7 +22406,7 @@
                             ],
                             "body": {
                               "mode": "raw",
-                              "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n    \"threshold\": {\n    \"from\": {{trxThresholdFrom}},\n    \"fromIncluded\": true,\n    \"to\": {{trxThresholdTo}},\n    \"toIncluded\": true\n    }\n  }\n}",
+                              "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n    \"threshold\": {\n    \"fromCents\": {{trxThresholdFromCents}},\n    \"fromIncluded\": true,\n    \"toCents\": {{trxThresholdToCents}},\n    \"toIncluded\": true\n    }\n  }\n}",
                               "options": {
                                 "raw": {
                                   "language": "json"
@@ -23384,13 +23384,13 @@
                               "var futureDate = pm.variables.replaceIn('{{$$randomDateFuture}}');\r",
                               "pm.collectionVariables.set('...', _.random(0, 180));\r",
                               "*/\r",
-                              "//_.floor(_.random(1.0, 100000.0, true),2)\r",
-                              "pm.collectionVariables.set('budget', 500);\r",
+                              "//_.random(1.0, 100000.0, true)\r",
+                              "pm.collectionVariables.set('budgetCents', 500);\r",
                               "pm.collectionVariables.set('beneficiaryType', 'PF');\r",
                               "//pm.collectionVariables.set('beneficiaryKnown', pm.variables.replaceIn('{{$randomBoolean}}'));\r",
                               "pm.collectionVariables.set('beneficiaryKnown', false);\r",
                               "pm.collectionVariables.set('rankingEnabled', false);\r",
-                              "pm.collectionVariables.set('beneficiaryBudget', 100);//default max 1000\r",
+                              "pm.collectionVariables.set('beneficiaryBudgetCents', 100);//default max 1000\r",
                               "pm.collectionVariables.set('rankingStartDate', today);\r",
                               "pm.collectionVariables.set('rankingEndDate', todayP1);\r",
                               "pm.collectionVariables.set('startDate', today);\r",
@@ -23437,7 +23437,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n    \"budget\": {{budget}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudget\": {{beneficiaryBudget}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
+                          "raw": "{\n    \"budgetCents\": {{budgetCents}},\n    \"beneficiaryType\": \"{{beneficiaryType}}\",\n    \"beneficiaryKnown\": {{beneficiaryKnown}},\n    \"rankingEnabled\": {{rankingEnabled}},\n    \"beneficiaryBudgetCents\": {{beneficiaryBudgetCents}},\n    \"startDate\": \"{{startDate}}\",\n    \"endDate\": \"{{endDate}}\",\n    \"descriptionMap\": {\n        \"it\": \"it\"\n    }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -23544,8 +23544,8 @@
                               "\r",
                               "pm.collectionVariables.set('trxDaysOfWeek', pm.variables.replaceIn('{{$randomWeekday}}').toString().toUpperCase());\r",
                               "pm.collectionVariables.set('trxDayEndTime', endTime[0]);\r",
-                              "pm.collectionVariables.set('trxThresholdFrom', 50);\r",
-                              "pm.collectionVariables.set('trxThresholdTo', 80);\r",
+                              "pm.collectionVariables.set('trxThresholdFromCents', 50);\r",
+                              "pm.collectionVariables.set('trxThresholdToCents', 80);\r",
                               "pm.collectionVariables.set('trxCountFrom', 3);\r",
                               "pm.collectionVariables.set('trxCountTo', 11);\r",
                               "pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
@@ -23579,7 +23579,7 @@
                         ],
                         "body": {
                           "mode": "raw",
-                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"from\": {{trxThresholdFrom}},\n      \"fromIncluded\": true,\n      \"to\": {{trxThresholdTo}},\n      \"toIncluded\": true\n    }\n  }\n}",
+                          "raw": "{\n  \"initiativeRewardType\": \"DISCOUNT\",\n  \"rewardRule\": {\n    \"_type\": \"{{rewardRuleType}}\",\n    \"rewardValue\": {{rewardRuleValue}},\n    \"rewardValueType\": \"{{rewardValueType}}\"\n  },\n  \"trxRule\": {\n      \"threshold\": {\n      \"fromCents\": {{trxThresholdFromCents}},\n      \"fromIncluded\": true,\n      \"toCents\": {{trxThresholdToCents}},\n      \"toIncluded\": true\n    }\n  }\n}",
                           "options": {
                             "raw": {
                               "language": "json"
@@ -24935,8 +24935,8 @@
                           "pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Preview transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
-                          "    pm.expect(jsonResponse).have.property(\"reward\");\r",
-                          "    pm.expect(jsonResponse).have.property(\"residualBudget\");\r",
+                          "    pm.expect(jsonResponse).have.property(\"rewardCents\");\r",
+                          "    pm.expect(jsonResponse).have.property(\"residualBudgetCents\");\r",
                           "    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
                           "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
                           "    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
@@ -25228,8 +25228,8 @@
                           "pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Preview transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
-                          "    pm.expect(jsonResponse).have.property(\"reward\");\r",
-                          "    pm.expect(jsonResponse).have.property(\"residualBudget\");\r",
+                          "    pm.expect(jsonResponse).have.property(\"rewardCents\");\r",
+                          "    pm.expect(jsonResponse).have.property(\"residualBudgetCents\");\r",
                           "    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
                           "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
                           "    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
@@ -25921,8 +25921,8 @@
                               "pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Preview transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
                               "    let jsonResponse = pm.response.json();\r",
                               "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
-                              "    pm.expect(jsonResponse).have.property(\"reward\");\r",
-                              "    pm.expect(jsonResponse).have.property(\"residualBudget\");\r",
+                              "    pm.expect(jsonResponse).have.property(\"rewardCents\");\r",
+                              "    pm.expect(jsonResponse).have.property(\"residualBudgetCents\");\r",
                               "    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
                               "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
                               "    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
@@ -28019,8 +28019,8 @@
                           "pm.test(\"Payment - IdpayCode - Pre-Authorize transaction -  Preview transaction [IDPAYCODE] - Verify response body contains fields\", function () {\r",
                           "    let jsonResponse = pm.response.json();\r",
                           "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
-                          "    pm.expect(jsonResponse).have.property(\"reward\");\r",
-                          "    pm.expect(jsonResponse).have.property(\"residualBudget\");\r",
+                          "    pm.expect(jsonResponse).have.property(\"rewardCents\");\r",
+                          "    pm.expect(jsonResponse).have.property(\"residualBudgetCents\");\r",
                           "    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
                           "    pm.expect(jsonResponse).have.property(\"trxCode\");\r",
                           "    pm.expect(jsonResponse).have.property(\"secondFactor\");\r",
@@ -28750,8 +28750,8 @@
       "value": "http://ebba.info"
     },
     {
-      "key": "budget",
-      "value": 500
+      "key": "budgetCents",
+      "value": 50000
     },
     {
       "key": "beneficiaryType",
@@ -28766,8 +28766,8 @@
       "value": false
     },
     {
-      "key": "beneficiaryBudget",
-      "value": 100
+      "key": "beneficiaryBudgetCents",
+      "value": 10000
     },
     {
       "key": "rankingStartDate",
@@ -28806,12 +28806,12 @@
       "value": "15:01:46.587"
     },
     {
-      "key": "trxThresholdFrom",
-      "value": 50
+      "key": "trxThresholdFromCents",
+      "value": 5000
     },
     {
-      "key": "trxThresholdTo",
-      "value": 80
+      "key": "trxThresholdToCents",
+      "value": 8000
     },
     {
       "key": "trxCountFrom",
@@ -28861,11 +28861,11 @@
       "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE3MDI0Nzk3MzUsImV4cCI6MTcwMjUwODUzNSwiYXVkIjoiaWRwYXkubWVyY2hhbnQud2VsZmFyZS5wYWdvcGEuaXQiLCJpc3MiOiJodHRwczovL2FwaS1pby5kZXYuY3N0YXIucGFnb3BhLml0IiwidWlkIjoiMmY5ZDk3MGQtMzFmYi00MzkzLTg3MjEtMmNhOTIxYmIyYmJjIiwibmFtZSI6ImVzZXJjZW50ZSIsImZhbWlseV9uYW1lIjoidGVzdCIsImVtYWlsIjoiZXNlcmNlbnRlX2RldkB0ZXN0LmVtYWlsLml0IiwiYWNxdWlyZXJfaWQiOiJQQUdPUEEiLCJtZXJjaGFudF9pZCI6IjNhNjAyYjE3LWFjMWMtMzAyOS05ZTc4LTBhNGJiYjg2OTNkNCIsIm9yZ19pZCI6IjJiNDhiZjk2LWZkNzQtNDc3ZS1hNzBhLTI4NmI0MTBmMDIwYSIsIm9yZ192YXQiOiIzMzQ0NDQzMzQ4OCIsIm9yZ19uYW1lIjoiRXNlcmNlbnRlIGRpIHRlc3QgSWRQYXkiLCJvcmdfcGFydHlfcm9sZSI6Ik1BTkFHRVIiLCJvcmdfcm9sZSI6ImFkbWluIn0.o7mPKH0fLnO8c91dYf_xVmT37y-TzEW8KxEXJdZ2aXRi5jKYgGr3GVe5xvtBS7LjXW0dVQrRgWNflntzotGT9PfUZQrImFZDXvj2MwQE-2MnDkpZEf0unMMrXes4MZyo_xLhUQlue7xhQKuOqfOtVxukFEsJk4eAjJYksa84TOaQzgaGmVaSp8LZjH0wOqMQ2o6xx8y3FDlnUrdYZIQRLclKE6N_AXhHgrMk5G5Qco2gzECQ6kcn0SIugV7EbwtDTwPo5bkRgtnDRVDWYIAkjYyNLG6rb502dO-QUuDw3BUuf1ksM0cb4GEVJGXmXGSGihMdDFnDLElpt2Gibsxjsg"
     },
     {
-      "key": "effectiveAmount",
+      "key": "effectiveAmountCents",
       "value": 7000
     },
     {
-      "key": "rewardAmount",
+      "key": "rewardAmountCents",
       "value": 3000
     },
     {
