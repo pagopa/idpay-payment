@@ -32,7 +32,7 @@ public class TransactionInProgress2TransactionResponseMapper
 
   @Override
   public TransactionResponse apply(TransactionInProgress transactionInProgress) {
-    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transactionInProgress.getAmountCents(), transactionInProgress.getReward());
+    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transactionInProgress.getAmountCents(), transactionInProgress.getRewardCents());
 
     return TransactionResponse.builder()
             .acquirerId(transactionInProgress.getAcquirerId())

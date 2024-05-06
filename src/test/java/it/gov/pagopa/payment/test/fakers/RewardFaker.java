@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
-import java.math.BigDecimal;
 
 public class RewardFaker {
 
@@ -16,7 +15,7 @@ public class RewardFaker {
 
     public static Reward.RewardBuilder mockInstanceBuilder(Integer bias) {
         return Reward.builder()
-                .accruedReward(BigDecimal.TEN)
+                .accruedRewardCents(1000L)
                 .capped(true)
                 .completeRefund(true)
                 .initiativeId("INITIATIVEID%d".formatted(bias))

@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
@@ -52,7 +51,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
                 repository.save(trx);
 
                 log.info("[TRX_STATUS][UNRELATED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
-                auditUtilities.logUnrelateTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons());
+                auditUtilities.logUnrelateTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getRewardCents(), 0L), trx.getRejectionReasons());
             } else {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, "Cannot unrelate transaction with transactionId [%s] not in status identified".formatted(trx.getId()));
             }
@@ -65,7 +64,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
     private static void revertTrxToCreatedStatus(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.CREATED);
         trx.setUserId(null);
-        trx.setReward(null);
+        trx.setRewardCents(null);
         trx.setRewards(null);
         trx.setChannel(null);
         trx.setRejectionReasons(Collections.emptyList());

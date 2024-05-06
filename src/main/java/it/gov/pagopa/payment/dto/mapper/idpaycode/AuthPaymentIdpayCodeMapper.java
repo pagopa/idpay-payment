@@ -9,7 +9,7 @@ public class AuthPaymentIdpayCodeMapper {
     public AuthPaymentIdpayCodeDTO authPaymentMapper(AuthPaymentDTO authPaymentDTO, String secondFactor) {
         return AuthPaymentIdpayCodeDTO.builder()
                 .id(authPaymentDTO.getId())
-                .reward(authPaymentDTO.getReward())
+                .rewardCents(authPaymentDTO.getRewardCents())
                 .initiativeId(authPaymentDTO.getInitiativeId())
                 .initiativeName(authPaymentDTO.getInitiativeName())
                 .businessName(authPaymentDTO.getBusinessName())
@@ -20,7 +20,7 @@ public class AuthPaymentIdpayCodeMapper {
                 .amountCents(authPaymentDTO.getAmountCents())
                 .counters(authPaymentDTO.getCounters())
                 .rewards(authPaymentDTO.getRewards())
-                .residualBudget(authPaymentDTO.getResidualBudget())
+                .residualBudgetCents(authPaymentDTO.getResidualBudgetCents())
                 .secondFactor(secondFactor)
                 .counterVersion(authPaymentDTO.getCounterVersion())
                 .build();
