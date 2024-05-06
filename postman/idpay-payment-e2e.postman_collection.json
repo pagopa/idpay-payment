@@ -946,7 +946,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+																	"src": "./postman/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -3086,7 +3086,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+															"src": "./postman/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -6466,7 +6466,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+																	"src": "./postman/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -8533,7 +8533,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+															"src": "./postman/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -16039,7 +16039,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+																	"src": "./postman/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -17351,7 +17351,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+															"src": "./postman/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -20287,7 +20287,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+															"src": "./postman/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -24789,7 +24789,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "/C:/Users/anvitolo/Progetti/IDPAY/idpay-payment/postman/Esercente di test IdPay.csv"
+																	"src": "./postman/Esercente di test IdPay.csv"
 																}
 															]
 														},
