@@ -24,7 +24,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     void applyTest() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
                 .acquirerId("PAGOPA")
-                .reward(1000L)
+                .rewardCents(1000L)
                 .build();
         TransactionResponse result = mapper.apply(trx);
 
@@ -40,7 +40,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     void splitPaymentTrueTest() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
                 .acquirerId("PAGOPA")
-                .reward(200L)
+                .rewardCents(200L)
                 .build();
         TransactionResponse result = mapper.apply(trx);
 
@@ -55,7 +55,7 @@ class TransactionInProgress2TransactionResponseMapperTest {
     @Test
     void applyCommonTest(){
         TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.CREATED)
-                .reward(1000L)
+                .rewardCents(1000L)
                 .build();
         TransactionResponse result = mapper.apply(trx);
 
@@ -81,8 +81,8 @@ class TransactionInProgress2TransactionResponseMapperTest {
         Assertions.assertEquals(trx.getStatus(), result.getStatus());
         Assertions.assertEquals(trx.getMerchantFiscalCode(), result.getMerchantFiscalCode());
         Assertions.assertEquals(trx.getVat(), result.getVat());
-        Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
-        Assertions.assertEquals(trx.getAmountCents()- trx.getReward(), result.getResidualAmountCents());
+        Assertions.assertEquals(trx.getAmountCents()- trx.getRewardCents(), result.getResidualAmountCents());
+        Assertions.assertEquals(trx.getAmountCents()- trx.getRewardCents(), result.getResidualAmountCents());
 
         if (trx.getChannel().equals("QRCODE")){
             Assertions.assertEquals(QRCODE_IMG_BASEURL.concat("?trxcode=%s".formatted(trx.getTrxCode())), result.getQrcodePngUrl());

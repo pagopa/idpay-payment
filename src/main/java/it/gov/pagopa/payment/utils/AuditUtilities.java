@@ -92,17 +92,17 @@ public class AuditUtilities {
     // endregion
 
     // region authPayment
-    public void logAuthorizedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
+    public void logAuthorizedPayment(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS,
-                "User authorized the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons)
+                "User authorized the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons)
         );
     }
 
-    public void logBarCodeAuthorizedPayment(String initiativeId, String trxId, String trxCode, String merchantId, Long reward, List<String> rejectionReasons) {
+    public void logBarCodeAuthorizedPayment(String initiativeId, String trxId, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_MERCHANT_REWARD_REJECTIONS,
-                "Merchant authorized the transaction", initiativeId, trxId, trxCode, merchantId, String.valueOf(reward), String.valueOf(rejectionReasons)
+                "Merchant authorized the transaction", initiativeId, trxId, trxCode, merchantId, String.valueOf(rewardCents), String.valueOf(rejectionReasons)
         );
     }
 
@@ -122,10 +122,10 @@ public class AuditUtilities {
     // endregion
 
     // region confirmPayment
-    public void logConfirmedPayment(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
+    public void logConfirmedPayment(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
-                "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons), merchantId
+                "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons), merchantId
         );
     }
 
@@ -138,10 +138,10 @@ public class AuditUtilities {
     // endregion
 
     // region confirmPayment
-    public void logCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons, String merchantId) {
+    public void logCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
-                "Merchant cancelled the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons), merchantId
+                "Merchant cancelled the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons), merchantId
         );
     }
 
@@ -152,10 +152,10 @@ public class AuditUtilities {
         );
     }
 
-    public void logUnrelateTransaction(String initiativeId, String trxId, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
+    public void logUnrelateTransaction(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS,
-                "User unrelated the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(reward), String.valueOf(rejectionReasons)
+                "User unrelated the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons)
         );
     }
 

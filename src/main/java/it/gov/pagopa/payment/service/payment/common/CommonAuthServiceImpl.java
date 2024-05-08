@@ -59,9 +59,9 @@ public class CommonAuthServiceImpl {
 
             AuthPaymentDTO authPaymentDTO = invokeRuleEngine(trx);
 
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
+            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, userId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
             if(authPaymentDTO.getRejectionReasons() == null || authPaymentDTO.getRejectionReasons().isEmpty()) {
-                authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
+                authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
                 authPaymentDTO.setRejectionReasons(Collections.emptyList());
             }
             return authPaymentDTO;
@@ -123,7 +123,7 @@ public class CommonAuthServiceImpl {
             authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
             authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
             authPaymentDTO.setRewards(Collections.emptyMap());
-            authPaymentDTO.setReward(null);
+            authPaymentDTO.setRewardCents(null);
             authPaymentDTO.setCounters(null);
             authPaymentDTO.setCounterVersion(0);
         } else {
@@ -153,10 +153,10 @@ public class CommonAuthServiceImpl {
 
     public void checkTrxStatusToInvokePreAuth(TransactionInProgress trx) {
         if ((trx.getStatus().equals(SyncTrxStatus.CREATED) && trx.getUserId() != null) ||
-                (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED) && trx.getReward() == null)){
+                (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED) && trx.getRewardCents() == null)){
             AuthPaymentDTO preAuth = commonPreAuthService.previewPayment(trx, trx.getChannel(), SyncTrxStatus.AUTHORIZATION_REQUESTED);
             trx.setStatus(preAuth.getStatus());
-            trx.setReward(preAuth.getReward());
+            trx.setRewardCents(preAuth.getRewardCents());
             trx.setRewards(preAuth.getRewards());
             trx.setRejectionReasons(preAuth.getRejectionReasons());
             trx.setCounterVersion(preAuth.getCounterVersion());
@@ -166,8 +166,8 @@ public class CommonAuthServiceImpl {
         transactionInProgressRepository.updateTrxWithStatus(trx);
     }
 
-    protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long reward, List<String> rejectionReasons) {
-        auditUtilities.logAuthorizedPayment(initiativeId, id, trxCode, userId, reward, rejectionReasons);
+    protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {
+        auditUtilities.logAuthorizedPayment(initiativeId, id, trxCode, userId, rewardCents, rejectionReasons);
     }
 
     protected  void logErrorAuthorizedPayment(String trxCode, String userId){

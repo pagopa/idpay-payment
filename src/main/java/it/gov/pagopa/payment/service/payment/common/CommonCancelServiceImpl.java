@@ -69,7 +69,7 @@ public class CommonCancelServiceImpl {
                 AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
                 if(refund != null) {
                     trx.setStatus(SyncTrxStatus.CANCELLED);
-                    trx.setReward(refund.getReward());
+                    trx.setRewardCents(refund.getRewardCents());
                     trx.setRewards(refund.getRewards());
                     trx.setElaborationDateTime(LocalDateTime.now());
 
@@ -81,7 +81,7 @@ public class CommonCancelServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
             }
             log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
-            auditUtilities.logCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getReward(), 0L), trx.getRejectionReasons(), merchantId);
+            auditUtilities.logCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getRewardCents(), 0L), trx.getRejectionReasons(), merchantId);
         } catch (RuntimeException e) {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);
             throw e;

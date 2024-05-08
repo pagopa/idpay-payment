@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.utils;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,13 +19,13 @@ public class CommonPaymentUtilities {
         Reward reward = rewards.values().stream().findFirst().orElse(null);
         RewardCounters rewardCounters = reward != null ? reward.getCounters() : null;
         if (reward != null && rewardCounters != null) {
-            residualBudget = CommonUtilities.euroToCents(rewardCounters.getInitiativeBudget().subtract(rewardCounters.getTotalReward()));
+            residualBudget = rewardCounters.getInitiativeBudgetCents() - rewardCounters.getTotalRewardCents();
         }
         return residualBudget;
     }
-    public static Pair<Boolean, Long> getSplitPaymentAndResidualAmountCents(Long amountCents, Long reward) {
-        if (reward != null) {
-            long residualAmountCents = amountCents - reward;
+    public static Pair<Boolean, Long> getSplitPaymentAndResidualAmountCents(Long amountCents, Long rewardCents) {
+        if (rewardCents != null) {
+            long residualAmountCents = amountCents - rewardCents;
             if (residualAmountCents >= 0L) {
                 return Pair.of(residualAmountCents > 0L, residualAmountCents);
             }

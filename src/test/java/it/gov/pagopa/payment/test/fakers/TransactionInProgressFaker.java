@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.test.fakers;
 
-import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
@@ -8,8 +7,6 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -29,12 +26,12 @@ public class TransactionInProgressFaker {
     String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
     String initiativeId = "INITIATIVEID%d".formatted(bias);
 
-    Long reward=null;
+    Long rewardCents=null;
     Map<String, Reward> rewards;
     if(!status.equals(SyncTrxStatus.CREATED)){
-      reward=1_00L;
-      Reward rewardObj = new Reward(initiativeId, "ORGID", TestUtils.bigDecimalValue(1));
-      rewardObj.setCounters(RewardCounters.builder().exhaustedBudget(false).initiativeBudget(TestUtils.bigDecimalValue(100)).totalReward(TestUtils.bigDecimalValue(50)).build());
+      rewardCents=1_00L;
+      Reward rewardObj = new Reward(initiativeId, "ORGID", 100L);
+      rewardObj.setCounters(RewardCounters.builder().exhaustedBudget(false).initiativeBudgetCents(10000L).totalRewardCents(5000L).build());
       rewards=new HashMap<>(Map.of(initiativeId, rewardObj));
     } else {
       rewards = Collections.emptyMap();
@@ -55,7 +52,7 @@ public class TransactionInProgressFaker {
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
         .trxChargeDate(trxStatus ? OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS) : null)
         .amountCents(1000L)
-        .effectiveAmount(BigDecimal.TEN.setScale(2, RoundingMode.UNNECESSARY))
+        .effectiveAmountCents(1000L)
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
         .mcc("MCC%d".formatted(bias))
         .acquirerId("ACQUIRERID%d".formatted(bias))
@@ -66,7 +63,7 @@ public class TransactionInProgressFaker {
         .operationTypeTranscoded(OperationType.CHARGE)
         .status(status)
         .channel("CHANNEL%d".formatted(bias))
-        .reward(reward)
+        .rewardCents(rewardCents)
         .counterVersion(0L)
         .rewards(rewards)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));

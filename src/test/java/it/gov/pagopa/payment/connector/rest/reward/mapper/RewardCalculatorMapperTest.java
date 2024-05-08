@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
@@ -56,13 +55,13 @@ import static org.junit.jupiter.api.Assertions.*;
     AuthPaymentResponseDTO responseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transaction.setRejectionReasons(List.of());
-    transaction.setReward(0L);
+    transaction.setRewardCents(0L);
 
     AuthPaymentDTO result = mapper.rewardResponseMap(responseDTO, transaction);
     assertAll(() -> {
       assertNotNull(result);
       assertEquals(responseDTO.getTransactionId(), result.getId());
-      assertEquals(CommonUtilities.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
+      assertEquals(responseDTO.getReward().getAccruedRewardCents(), result.getRewardCents());
       assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
       assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
       assertEquals(responseDTO.getStatus(), result.getStatus());
@@ -70,7 +69,7 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
       assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
       assertEquals(responseDTO.getCounterVersion(),result.getCounterVersion());
-        TestUtils.checkNotNullFields(result,"residualBudget", "secondFactor","splitPayment",
+        TestUtils.checkNotNullFields(result,"residualBudgetCents", "secondFactor","splitPayment",
                 "residualAmountCents");
     });
   }
@@ -88,14 +87,14 @@ import static org.junit.jupiter.api.Assertions.*;
      assertAll(() -> {
        assertNotNull(result);
        assertEquals(responseDTO.getTransactionId(), result.getId());
-       assertEquals(0L, result.getReward());
+       assertEquals(0L, result.getRewardCents());
        assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
        assertEquals(responseDTO.getRejectionReasons(), result.getRejectionReasons());
        assertEquals(responseDTO.getStatus(), result.getStatus());
        assertEquals(transaction.getTrxCode(), result.getTrxCode());
        assertNull(result.getCounters());
        assertEquals(Collections.emptyMap(), result.getRewards());
-       TestUtils.checkNotNullFields(result, "counters","residualBudget", "secondFactor","splitPayment",
+       TestUtils.checkNotNullFields(result, "counters","residualBudgetCents", "secondFactor","splitPayment",
                "residualAmountCents");
      });
    }
@@ -112,14 +111,14 @@ import static org.junit.jupiter.api.Assertions.*;
          assertAll(() -> {
              assertNotNull(result);
              assertEquals(responseDTO.getTransactionId(), result.getId());
-             assertEquals(CommonUtilities.euroToCents(responseDTO.getReward().getAccruedReward()), result.getReward());
+             assertEquals(responseDTO.getReward().getAccruedRewardCents(), result.getRewardCents());
              assertEquals(responseDTO.getInitiativeId(), result.getInitiativeId());
              assertEquals(Collections.emptyList(), result.getRejectionReasons());
              assertEquals(responseDTO.getStatus(), result.getStatus());
              assertEquals(transaction.getTrxCode(), result.getTrxCode());
              assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
              assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
-             TestUtils.checkNotNullFields(result, "residualBudget", "secondFactor","splitPayment",
+             TestUtils.checkNotNullFields(result, "residualBudgetCents", "secondFactor","splitPayment",
                      "residualAmountCents");
          });
      }

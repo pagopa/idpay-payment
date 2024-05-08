@@ -40,7 +40,7 @@ class CommonStatusTransactionServiceImplTest {
     void getStatusTransaction() {
         //given
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
@@ -56,7 +56,7 @@ class CommonStatusTransactionServiceImplTest {
     void getStatusTransactionQRCode() {
         //given
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
 
@@ -76,7 +76,7 @@ class CommonStatusTransactionServiceImplTest {
     void getStatusTransactionNotAuthorized() {
         //given
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));

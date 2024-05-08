@@ -14,7 +14,7 @@ public class AuthPaymentMapper {
   public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
     return AuthPaymentDTO.builder()
             .id(transaction.getId())
-            .reward(transaction.getReward())
+            .rewardCents(transaction.getRewardCents())
             .initiativeId(transaction.getInitiativeId())
             .initiativeName(transaction.getInitiativeName())
             .businessName(transaction.getBusinessName())

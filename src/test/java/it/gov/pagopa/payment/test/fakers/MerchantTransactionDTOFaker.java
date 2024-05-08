@@ -18,16 +18,16 @@ public class MerchantTransactionDTOFaker {
 
         String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
 
-        Long reward=null;
+        Long rewardCents=null;
         if(!status.equals(SyncTrxStatus.CREATED)){
-            reward=100L;
+            rewardCents=100L;
         }
 
         return MerchantTransactionDTO.builder()
                 .trxId(id)
                 .fiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
-                .effectiveAmount(1000L)
-                .rewardAmount(reward != null ? reward : Long.valueOf(0))
+                .effectiveAmountCents(1000L)
+                .rewardAmountCents(rewardCents != null ? rewardCents : Long.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))
                 .trxDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS))
                 .trxExpirationSeconds(CommonUtilities.minutesToSeconds(4320))

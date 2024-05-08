@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -59,10 +58,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
             AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(trx);
 
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getReward(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudget(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
+            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
+            authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
             authPaymentDTO.setRejectionReasons(Collections.emptyList());
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getReward());
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
@@ -72,8 +71,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
     }
 
-    private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId,Long reward, List<String> rejectionReasons){
-        auditUtilities.logBarCodeAuthorizedPayment(initiativeId, id, trxCode, merchantId, reward, rejectionReasons);
+    private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId,Long rewardCents, List<String> rejectionReasons){
+        auditUtilities.logBarCodeAuthorizedPayment(initiativeId, id, trxCode, merchantId, rewardCents, rejectionReasons);
     }
 
     private void logErrorAuthorizedPayment(String trxCode, String merchantId){
@@ -83,7 +82,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private static void setTrxFields(String merchantId, AuthBarCodePaymentDTO authBarCodePaymentDTO,
                                      TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId) {
         trx.setAmountCents(authBarCodePaymentDTO.getAmountCents());
-        trx.setEffectiveAmount(CommonUtilities.centsToEuro(authBarCodePaymentDTO.getAmountCents()));
+        trx.setEffectiveAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setIdTrxAcquirer(authBarCodePaymentDTO.getIdTrxAcquirer());
         trx.setMerchantId(merchantId);
         trx.setBusinessName(merchantDetail.getBusinessName());

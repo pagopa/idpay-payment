@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.connector.rest.reward.mapper;
 
-import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
@@ -49,14 +48,14 @@ public class RewardCalculatorMapper {
                 .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
                 .trxChargeDate(transactionInProgress.getTrxChargeDate())
                 .channel(transactionInProgress.getChannel())
-                .rewardCents(transactionInProgress.getReward())
+                .rewardCents(transactionInProgress.getRewardCents())
                 .build();
     }
 
     public AuthPaymentDTO rewardResponseMap(AuthPaymentResponseDTO responseDTO, TransactionInProgress transactionInProgress) {
         AuthPaymentDTO out = AuthPaymentDTO.builder()
                 .id(responseDTO.getTransactionId())
-                .reward(0L)
+                .rewardCents(0L)
                 .initiativeId(responseDTO.getInitiativeId())
                 .rejectionReasons(
                         ObjectUtils.firstNonNull(
@@ -72,7 +71,7 @@ public class RewardCalculatorMapper {
                 .build();
 
         if (responseDTO.getReward() != null) {
-            out.setReward(CommonUtilities.euroToCents(responseDTO.getReward().getAccruedReward()));
+            out.setRewardCents(responseDTO.getReward().getAccruedRewardCents());
             out.setCounters(responseDTO.getReward().getCounters());
             out.setRewards(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()));
         } else {

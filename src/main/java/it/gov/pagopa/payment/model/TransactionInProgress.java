@@ -13,7 +13,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -48,7 +47,7 @@ public class TransactionInProgress {
   private String idTrxIssuer;
   private String correlationId;
   private Long amountCents;
-  private BigDecimal effectiveAmount;
+  private Long effectiveAmountCents;
   private String amountCurrency;
   private String mcc;
   private String acquirerId;
@@ -58,7 +57,7 @@ public class TransactionInProgress {
   private String initiativeId;
   private String initiativeName;
   private String businessName;
-  private Long reward;
+  private Long rewardCents;
   private long counterVersion;
   @Builder.Default
   private List<String> rejectionReasons = new ArrayList<>();

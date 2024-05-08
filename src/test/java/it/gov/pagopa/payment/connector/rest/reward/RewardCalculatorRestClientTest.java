@@ -187,7 +187,7 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
     void testCancelTransactionOk() {
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(21, SyncTrxStatus.AUTHORIZED);
-        trx.setReward(100L);
+        trx.setRewardCents(100L);
         AuthPaymentDTO response =
                 rewardCalculatorConnector.cancelTransaction(trx);
         log.info(String.valueOf(response));
@@ -197,7 +197,7 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
     void testCancelTransaction_404() {
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(22, SyncTrxStatus.CREATED);
-        trx.setReward(100L);
+        trx.setRewardCents(100L);
         trx.setId("ID_CANCEL_NOT_FOUND");
         AuthPaymentDTO response =
                 rewardCalculatorConnector.cancelTransaction(trx);

@@ -21,8 +21,8 @@ public class MerchantTransactionDTO {
     private String trxId;
     private String fiscalCode;
     @NotNull
-    private Long effectiveAmount;
-    private Long rewardAmount;
+    private Long effectiveAmountCents;
+    private Long rewardAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime trxDate;
     private Long trxExpirationSeconds;
