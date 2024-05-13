@@ -12,7 +12,8 @@ public class PaymentConstants {
   public static final String PAYMENT_AUTHORIZATION_TIMEOUT = "PAYMENT_AUTHORIZATION_TIMEOUT";
   public static final String TIMEOUT_PAYMENT = "TIMEOUT_PAYMENT";
   public static final String MESSAGE_TOPIC = "MESSAGE_TOPIC";
-
+  public static final String REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED = "REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED";
+  public static final String REWARD_CALCULATOR_TRX_ALREADY_CANCELLED = "REWARD_CALCULATOR_TRX_ALREADY_CANCELLED";
 
   public static final class ExceptionCode {
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_OR_EXPIRED";
@@ -20,6 +21,7 @@ public class PaymentConstants {
     public static final String TRX_ALREADY_ASSIGNED = "PAYMENT_ALREADY_ASSIGNED";
     public static final String USER_UNSUBSCRIBED = "PAYMENT_USER_UNSUBSCRIBED";
     public static final String TRX_ALREADY_AUTHORIZED = "PAYMENT_ALREADY_AUTHORIZED";
+    public static final String TRX_ALREADY_CANCELLED = "PAYMENT_ALREADY_CANCELLED";
     public static final String TRX_STATUS_NOT_VALID = "PAYMENT_STATUS_NOT_VALID";
     public static final String TRX_OPERATION_NOT_ALLOWED = "PAYMENT_NOT_ALLOWED_FOR_TRX_STATUS";
     public static final String TRX_DELETE_NOT_ALLOWED = "PAYMENT_DELETE_NOT_ALLOWED_FOR_TRX_STATUS";

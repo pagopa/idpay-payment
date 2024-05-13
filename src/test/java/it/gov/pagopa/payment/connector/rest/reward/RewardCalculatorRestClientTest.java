@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.connector.rest.reward;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.wiremock.BaseWireMockTest;
 import it.gov.pagopa.payment.configuration.FeignConfig;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
@@ -9,10 +10,7 @@ import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationException;
-import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.exception.custom.TransactionVersionPendingException;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -29,6 +27,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 
 import static it.gov.pagopa.common.wiremock.BaseWireMockTest.WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRX_ALREADY_CANCELLED;
+import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED;
+import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_CANCELLED;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -59,12 +61,17 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
     ObjectMapper objectMapper;
 
     @Test
-    void testAuthThenReturnTransactionVersionMismatchException(){
+    void testAuthThenReturnTransactionVersionMismatchException() throws JsonProcessingException {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
         trx.setVat("MISMATCH");
         trx.setChannel("QRCODE");
         trx.setInitiativeId("INITIATIVEID_VERSION_MISMATCH");
         trx.setUserId("USERID1");
+
+        ErrorDTO errorDTO = new ErrorDTO();
+        errorDTO.setCode("Nothing");
+        errorDTO.setMessage("Nothing");
+        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
 
         AuthPaymentDTO result = rewardCalculatorConnector.authorizePayment(trx);
 
@@ -73,6 +80,66 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
         Assertions.assertEquals(SyncTrxStatus.REJECTED,result.getStatus());
     }
 
+    @Test
+    void testAuthThenThrowTransactionAlreadyAuthorizedException() throws JsonProcessingException {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        trx.setVat("MISMATCH");
+        trx.setChannel("QRCODE");
+        trx.setInitiativeId("INITIATIVEID_ALREADY_AUTHORIZED");
+        trx.setUserId("USERID1");
+
+        ErrorDTO errorDTO = new ErrorDTO();
+        errorDTO.setMessage(REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED);
+        errorDTO.setCode(REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED);
+
+        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
+
+        TransactionAlreadyAuthorizedException exception =
+                assertThrows(TransactionAlreadyAuthorizedException.class, () -> {
+                    rewardCalculatorConnector.authorizePayment(trx);
+                });
+
+        assertEquals(TRX_ALREADY_AUTHORIZED, exception.getCode());
+    }
+    
+
+    @Test
+    void testAuthThenThrowTransactionAlreadyCancellededException() throws JsonProcessingException {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        trx.setVat("MISMATCH");
+        trx.setChannel("QRCODE");
+        trx.setInitiativeId("INITIATIVEID_ALREADY_CANCELLED");
+        trx.setUserId("USERID1");
+
+        ErrorDTO errorDTO = new ErrorDTO();
+        errorDTO.setMessage(REWARD_CALCULATOR_TRX_ALREADY_CANCELLED);
+        errorDTO.setCode(REWARD_CALCULATOR_TRX_ALREADY_CANCELLED);
+
+        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
+
+        TransactionAlreadyCancelledException exception =
+                assertThrows(TransactionAlreadyCancelledException.class, () -> {
+                    rewardCalculatorConnector.cancelTransaction(trx);
+                });
+        assertEquals(TRX_ALREADY_CANCELLED, exception.getCode());
+    }
+
+    @Test
+    
+    void testObjectMapperExceptionWhenReceived412() throws JsonProcessingException {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        trx.setVat("MISMATCH");
+        trx.setChannel("QRCODE");
+        trx.setInitiativeId("INITIATIVEID_ALREADY_CANCELLED");
+        trx.setUserId("USERID1");
+
+        doThrow(JsonProcessingException.class)
+                .when(objectMapper).readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class));
+
+        RewardCalculatorInvocationException exception = assertThrows(RewardCalculatorInvocationException.class,
+                () -> rewardCalculatorConnector.cancelTransaction(trx));
+        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
+    }
     @Test
     void testAuthThenReturnTransactionVersionPendingException(){
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
