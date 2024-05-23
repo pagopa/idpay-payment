@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
@@ -23,6 +24,9 @@ import org.apache.commons.lang3.function.TriFunction;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED;
+import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_CANCELLED;
 
 @Service
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
@@ -104,10 +108,26 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                 case 404 -> throw new TransactionNotFoundOrExpiredException(
                         "Resource not found on reward-calculator", true, e);
                 case 412 ->{
-                        responseDTO = new AuthPaymentResponseDTO();
-                        responseDTO.setStatus(SyncTrxStatus.REJECTED);
-                        responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
-                        responseDTO.setInitiativeId(trx.getInitiativeId());
+
+                        ErrorDTO errorDTO ;
+                        try {
+                            errorDTO = objectMapper.readValue(e.contentUTF8(), ErrorDTO.class);
+                        } catch (JsonProcessingException ex) {
+                            throw new RewardCalculatorInvocationException("Something went wrong", true, ex);
+                        }
+
+                        if(errorDTO.getCode().equals(REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED)){
+                            throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
+                        }
+                        else if (errorDTO.getCode().equals(REWARD_CALCULATOR_TRX_ALREADY_CANCELLED)){
+                            throw new TransactionAlreadyCancelledException("Transaction with transactionId [%s] is already cancelled".formatted(trx.getId()));
+                        }
+                        else{
+                            responseDTO = new AuthPaymentResponseDTO();
+                            responseDTO.setStatus(SyncTrxStatus.REJECTED);
+                            responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
+                            responseDTO.setInitiativeId(trx.getInitiativeId());
+                        }
                 }
                 case 423 -> throw new TransactionVersionPendingException(
                         "The transaction version is actually locked", true,e);
