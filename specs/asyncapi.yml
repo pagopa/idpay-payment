@@ -58,7 +58,7 @@ channels:
   payment-delete-initiative:
     subscribe:
       message:
-        $ref: '#/components/messages/QueueCommandOperationDTO'
+        $ref: '#/components/messages/DeleteInitiative'
       bindings:
         kafka:
           topic: idpay-commands
@@ -221,14 +221,13 @@ components:
             example: "Something gone wrong while cancelling Authorized Payment notify"
       payload:
         $ref: "#/components/schemas/TransactionInProgress"
-    QueueCommandOperationDTO:
+    DeleteInitiative:
       contentType: application/json
       description: >-
         Event consumed from application when a delete initiative command has published
       summary: Delete documents of the initiative
       payload:
-        $ref: "#/components/schemas/QueueCommandOperationDTO"
-
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
     ScheduleMessage:
       contentType: application/json
       description: >-
