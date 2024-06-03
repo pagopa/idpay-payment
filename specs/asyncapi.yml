@@ -515,19 +515,3 @@ components:
           type: object
           description: inititative rejection reasons
           format: string
-    QueueCommandOperationDTO:
-      type: object
-      properties:
-        operationType:
-          type: string
-          description: Constant that define operation type
-          example: DELETE_INITIATIVE
-        entityId:
-          type: string
-          description: familyId if the initiative is family-based or userId otherwise
-          example: 66176f4e3785876cb5aa764d
-        operationTime:
-          type: string
-          format: date-time
-          description: operation time
-          example: "2024-04-11T07:23:08.874869466"
