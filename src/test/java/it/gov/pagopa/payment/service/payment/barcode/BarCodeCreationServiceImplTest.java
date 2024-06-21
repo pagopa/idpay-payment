@@ -34,7 +34,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.math.BigDecimal;
+
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -80,7 +80,7 @@ class BarCodeCreationServiceImplTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.TEN);
+        walletDTO.setAmountCents(1000L);
 
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
@@ -124,7 +124,7 @@ class BarCodeCreationServiceImplTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.TEN);
+        walletDTO.setAmountCents(1000L);
 
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
@@ -156,7 +156,7 @@ class BarCodeCreationServiceImplTest {
                 .build();
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.TEN);
+        walletDTO.setAmountCents(1000L);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.empty());
 
@@ -202,7 +202,7 @@ class BarCodeCreationServiceImplTest {
                 .build();
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmount(BigDecimal.valueOf(budgetAmount));
+        walletDTO.setAmountCents(budgetAmount);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
@@ -227,7 +227,7 @@ class BarCodeCreationServiceImplTest {
                 .build();
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
-        walletDTO.setAmount(BigDecimal.TEN);
+        walletDTO.setAmountCents(1000L);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);

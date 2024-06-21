@@ -139,7 +139,7 @@ class CommonCancelServiceTest {
                 TransactionInProgressFaker.mockInstance(0, status);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
-        trx.setReward(1000L);
+        trx.setRewardCents(1000L);
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         boolean expectedNotify = SyncTrxStatus.AUTHORIZED.equals(status);

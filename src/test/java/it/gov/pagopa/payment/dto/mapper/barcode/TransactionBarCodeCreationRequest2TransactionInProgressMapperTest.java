@@ -34,9 +34,9 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                         trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME");
 
         TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
-                "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmount", "amountCurrency",
+                "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmountCents", "amountCurrency",
                 "mcc", "acquirerId", "merchantId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
-                "reward", "rejectionReasons", "rewards", "initiativeRejectionReasons");
+                "rewardCents", "rejectionReasons", "rewards", "initiativeRejectionReasons");
         assertResponse(trxCreationReq, now, result);
     }
     void assertResponse(TransactionBarCodeCreationRequest trxCreationReq, OffsetDateTime now, TransactionInProgress result){

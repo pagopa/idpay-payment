@@ -120,7 +120,7 @@ class CommonConfirmServiceImplTest {
                 TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
-        trx.setReward(1000L);
+        trx.setRewardCents(1000L);
 
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 

@@ -30,7 +30,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
     @Test
     void transactionInProgressMapper() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
@@ -42,7 +42,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
     @Test
     void transactionInProgressMapper_StatusCreated() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
@@ -55,7 +55,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
     @Test
     void transactionInProgressMapperQRCode_StatusCreated() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
@@ -69,7 +69,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
     @Test
     void transactionInProgressMapperQRCode_StatusAuthorized() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
@@ -83,7 +83,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
     @Test
     void transactionInProgressMapperBarCode_StatusAuthorized() {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1,SyncTrxStatus.REJECTED)
-                .reward(0L)
+                .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
@@ -102,7 +102,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
-        transaction.setReward(transaction.getAmountCents());
+        transaction.setRewardCents(transaction.getAmountCents());
 
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
 
@@ -116,7 +116,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
                 .build();
         transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
-        transaction.setReward(null);
+        transaction.setRewardCents(null);
 
         SyncTrxStatusDTO result= transactionInProgress2SyncTrxStatusMapper.transactionInProgressMapper(transaction);
 
@@ -139,7 +139,7 @@ public class TransactionInProgress2SyncTrxStatusMapperTest {
             assertEquals(transaction.getAcquirerId(), result.getAcquirerId());
             assertEquals(transaction.getMerchantId(), result.getMerchantId());
             assertEquals(transaction.getInitiativeId(), result.getInitiativeId());
-            assertEquals(transaction.getReward(), result.getRewardCents());
+            assertEquals(transaction.getRewardCents(), result.getRewardCents());
             assertEquals(transaction.getRejectionReasons(), result.getRejectionReasons());
             assertEquals(transaction.getStatus(), result.getStatus());
         });

@@ -58,7 +58,7 @@ channels:
   payment-delete-initiative:
     subscribe:
       message:
-        $ref: '#/components/messages/QueueCommandOperationDTO'
+        $ref: '#/components/messages/DeleteInitiative'
       bindings:
         kafka:
           topic: idpay-commands
@@ -221,14 +221,13 @@ components:
             example: "Something gone wrong while cancelling Authorized Payment notify"
       payload:
         $ref: "#/components/schemas/TransactionInProgress"
-    QueueCommandOperationDTO:
+    DeleteInitiative:
       contentType: application/json
       description: >-
         Event consumed from application when a delete initiative command has published
       summary: Delete documents of the initiative
       payload:
-        $ref: "#/components/schemas/QueueCommandOperationDTO"
-
+        $ref: "https://raw.githubusercontent.com/pagopa/idpay-portal-welfare-backend-initiative/main/specs/asyncapi.yml#/components/schemas/QueueCommandOperationDTO"
     ScheduleMessage:
       contentType: application/json
       description: >-
@@ -295,16 +294,16 @@ components:
           type: string
           description: Identifier of the organization associated with the initiative
           example: c326cac6-a38c-416c-a3c3-f6a407b77950
-        providedReward:
-          type: number
-          format: double
+        providedRewardCents:
+          type: integer
+          format: int64
           description: reward calculated by rule engine
-          example: 300.00
-        accruedReward:
-          type: number
-          format: double
+          example: 30000
+        accruedRewardCents:
+          type: integer
+          format: int64
           description: reward updated after evaluation of any limits (budget, ecc...)
-          example: 300.00
+          example: 30000
         capped:
           type: boolean
           description: If the premium has been limited due to the beneficiary's budget
@@ -344,24 +343,24 @@ components:
           format: int64
           description: transaction number
           example: 1
-        totalReward:
-          type: number
-          format: double
+        totalRewardCents:
+          type: integer
+          format: int64
           description: total reward
-          example: 300.00
-        totalAmount:
-          type: number
-          format: double
+          example: 30000
+        totalAmountCents:
+          type: integer
+          format: int64
           description: total amount
-          example: 9000000.00
+          example: 900000
         exhaustedBudget:
           type: boolean
           description: if the budget is exhausted
-        initiativeBudget:
+        initiativeBudgetCents:
           type: integer
           format: int64
           description: initiative budget
-          example: 300
+          example: 30000
         version:
           type: integer
           format: int64
@@ -421,9 +420,9 @@ components:
           format: int64
           description: Remaining amount to be paid if the authorized sum is less than the requested sum
           example: 900000000
-        effectiveAmount:
-          type: number
-          format: double
+        effectiveAmountCents:
+          type: integer
+          format: int64
           description: Transaction amount
           example: 9000000.00
         amountCurrency:
@@ -461,7 +460,7 @@ components:
           type: string
           description: The name of the merchant
           example: Esercente
-        reward:
+        rewardCents:
           type: integer
           format: int64
           description: Reward
@@ -516,19 +515,3 @@ components:
           type: object
           description: inititative rejection reasons
           format: string
-    QueueCommandOperationDTO:
-      type: object
-      properties:
-        operationType:
-          type: string
-          description: Constant that define operation type
-          example: DELETE_INITIATIVE
-        entityId:
-          type: string
-          description: familyId if the initiative is family-based or userId otherwise
-          example: 66176f4e3785876cb5aa764d
-        operationTime:
-          type: string
-          format: date-time
-          description: operation time
-          example: "2024-04-11T07:23:08.874869466"

@@ -26,6 +26,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(MerchantOrAcquirerNotAllowedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(PinBlockInvalidException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(TransactionAlreadyAuthorizedException.class, HttpStatus.FORBIDDEN);
+    exceptionMap.put(TransactionAlreadyCancelledException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(TransactionRejectedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(UserNotAllowedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(UserNotOnboardedException.class, HttpStatus.FORBIDDEN);

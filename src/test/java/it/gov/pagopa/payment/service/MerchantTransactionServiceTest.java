@@ -56,7 +56,7 @@ class MerchantTransactionServiceTest {
         merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
         merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
         merchantTransaction1.setSplitPayment(true);
-        merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getReward());
+        merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getRewardCents());
 
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -102,7 +102,7 @@ class MerchantTransactionServiceTest {
         merchantTransaction1.setQrcodePngUrl(QRCODE_IMGURL);
         merchantTransaction1.setQrcodeTxtUrl(QRCODE_TXTURL);
         merchantTransaction1.setSplitPayment(true);
-        merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getReward());
+        merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getRewardCents());
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());

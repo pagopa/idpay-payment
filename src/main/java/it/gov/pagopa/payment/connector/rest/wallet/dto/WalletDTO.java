@@ -5,7 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -22,9 +21,9 @@ public class WalletDTO {
     private String iban;
     private LocalDate endDate;
     private int nInstr;
-    private BigDecimal amount;
-    private BigDecimal accrued;
-    private BigDecimal refunded;
+    private Long amountCents;
+    private Long accruedCents;
+    private Long refundedCents;
     private LocalDateTime lastCounterUpdate;
     private String initiativeRewardType;
     private String logoURL;

@@ -85,8 +85,8 @@ public class CommonPreAuthServiceImpl{
     }
 
     Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
-            Long.sum(CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()), preview.getReward()) : null;
-    preview.setResidualBudget(residualBudget);
+            Long.sum(CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()), preview.getRewardCents()) : null;
+    preview.setResidualBudgetCents(residualBudget);
 
     return preview;
     } catch (RuntimeException e) {
