@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.kafka.utils.KafkaConstants;
 import it.gov.pagopa.common.utils.TestUtils;
+import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.admin.RecordsToDelete;
 import org.apache.kafka.clients.admin.TopicListing;
@@ -78,28 +79,30 @@ public class KafkaTestUtilitiesService {
 
     @AfterTestClass
     void clearTopics() {
-        kafkaBroker.doWithAdmin(admin -> {
-            try {
-                Collection<TopicListing> topics = admin.listTopics().listings().get();
-                admin.deleteRecords(
-                                admin.listOffsets(
-                                                topics.stream()
-                                                        .filter(topicListing -> !topicListing.isInternal())
-                                                        .flatMap(t -> IntStream.range(0, kafkaBroker.getPartitionsPerTopic())
-                                                                .boxed()
-                                                                .map(p -> new TopicPartition(t.name(), p)))
-                                                        .collect(Collectors.toMap(tp -> tp,
-                                                                tp -> OffsetSpec.latest()))
-                                        ).all().get().entrySet().stream()
-                                        .filter(e -> e.getValue().offset() > 0)
-                                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                                e -> RecordsToDelete.beforeOffset(e.getValue().offset()))))
-                        .all().get();
+        Map<String, Object> brokerConfig = Map.of(
+                "bootstrap.servers", kafkaBroker.getBrokersAsString()
+        );
 
-            } catch (InterruptedException | ExecutionException e) {
-                throw new IllegalStateException("Something gone wrong while emptying topics", e);
-            }
-        });
+        try (AdminClient admin = AdminClient.create(brokerConfig)) {
+            Collection<TopicListing> topics = admin.listTopics().listings().get();
+            admin.deleteRecords(
+                            admin.listOffsets(
+                                            topics.stream()
+                                                    .filter(topicListing -> !topicListing.isInternal())
+                                                    .flatMap(t -> IntStream.range(0, kafkaBroker.getPartitionsPerTopic())
+                                                            .boxed()
+                                                            .map(p -> new TopicPartition(t.name(), p)))
+                                                    .collect(Collectors.toMap(tp -> tp,
+                                                            tp -> OffsetSpec.latest()))
+                                    ).all().get().entrySet().stream()
+                                    .filter(e -> e.getValue().offset() > 0)
+                                    .collect(Collectors.toMap(Map.Entry::getKey,
+                                            e -> RecordsToDelete.beforeOffset(e.getValue().offset()))))
+                    .all().get();
+
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IllegalStateException("Something went wrong while clearing topics", e);
+        }
     }
 
     /** It will return usefull URLs related to embedded kafka */
