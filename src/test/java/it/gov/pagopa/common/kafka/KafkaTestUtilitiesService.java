@@ -221,10 +221,10 @@ public class KafkaTestUtilitiesService {
             headers = Stream.concat(
                             Arrays.stream(additionalHeaders),
                             StreamSupport.stream(headers.spliterator(), false))
-                    .collect(Collectors.toList());
+                    .toList();
         }
-        ProducerRecord<byte[], byte[]> record = new ProducerRecord<>(topic, partition, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
-        template.send(record);
+        ProducerRecord<byte[], byte[]> rec = new ProducerRecord<>(topic, partition, key == null ? null : key.getBytes(StandardCharsets.UTF_8), payload.getBytes(StandardCharsets.UTF_8), headers);
+        template.send(rec);
     }
 //endregion
 
@@ -280,13 +280,13 @@ public class KafkaTestUtilitiesService {
     //region error topic
     public void checkErrorsPublished(String topicErrors, Pattern errorUseCaseIdPatternMatch, int expectedErrorMessagesNumber, long maxWaitingMs, List<Pair<Supplier<String>, java.util.function.Consumer<ConsumerRecord<String, String>>>> errorUseCases) {
         final List<ConsumerRecord<String, String>> errors = consumeMessages(topicErrors, expectedErrorMessagesNumber, maxWaitingMs);
-        for (final ConsumerRecord<String, String> record : errors) {
-            final Matcher matcher = errorUseCaseIdPatternMatch.matcher(record.value());
+        for (final ConsumerRecord<String, String> rec : errors) {
+            final Matcher matcher = errorUseCaseIdPatternMatch.matcher(rec.value());
             int useCaseId = matcher.find() ? Integer.parseInt(matcher.group(1)) : -1;
             if (useCaseId == -1) {
-                throw new IllegalStateException("UseCaseId not recognized! " + record.value());
+                throw new IllegalStateException("UseCaseId not recognized! " + rec.value());
             }
-            errorUseCases.get(useCaseId).getSecond().accept(record);
+            errorUseCases.get(useCaseId).getSecond().accept(rec);
         }
     }
 
