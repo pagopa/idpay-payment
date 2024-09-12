@@ -9,7 +9,7 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.stereotype.Component;
 
     @Component
-    public class MongoDBHealthCheck implements HealthIndicator {
+    public class CustomMongoHealthIndicator implements HealthIndicator {
 
         @Value("${spring.data.mongodb.uri}")  // Legge l'URI di MongoDB dal file di configurazione
         private String mongoUri;
