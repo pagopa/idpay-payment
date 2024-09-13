@@ -194,10 +194,15 @@ app:
     seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
 
 management:
+  prometheus:
+    metrics:
+      export:
+        enabled: true
   health:
     redis.enabled: ${REDIS_CACHE_ENABLED:false}
     mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
   endpoint:
+    metrics.enabled: true
     health:
       probes.enabled: true
       group:
@@ -208,4 +213,4 @@ management:
     jmx:
       exposure.include: "*"
     web:
-      exposure.include: info, health
+      exposure.include: info, health, metrics
