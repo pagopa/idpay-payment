@@ -192,7 +192,7 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
                 <!-- Forced to >= 4.1.100 due to https://nvd.nist.gov/vuln/detail/CVE-2023-44487 -->
-                <version>4.1.101.Final</version>
+                <version>4.1.104.Final</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -216,7 +216,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.3</version>
                 <configuration>
-                    <argLine>@{argLine} -Duser.timezone=Europe/Rome</argLine>
+                    <argLine>-Duser.timezone=Europe/Rome</argLine>
                 </configuration>
             </plugin>
             <plugin>
