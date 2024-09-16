@@ -26,7 +26,6 @@ import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.test.EmbeddedKafkaBroker;
-import org.springframework.kafka.test.EmbeddedKafkaKraftBroker;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Service;
@@ -53,7 +52,7 @@ public class KafkaTestUtilitiesService {
 
     public static final String GROUPID_TEST_CHECK = "idpay-group-test-check";
     @Autowired
-    private EmbeddedKafkaKraftBroker kafkaBroker;
+    private EmbeddedKafkaBroker kafkaBroker;
     @Autowired
     private KafkaTemplate<byte[], byte[]> template;
 
