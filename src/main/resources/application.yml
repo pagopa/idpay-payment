@@ -196,7 +196,7 @@ app:
 management:
   health:
     redis.enabled: ${REDIS_CACHE_ENABLED:false}
-    mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
+    mongo.enabled: ${HEALTH_MONGO_ENABLED:false}
   endpoint:
     health:
       probes.enabled: true
@@ -204,6 +204,7 @@ management:
         readiness.include: "*"
         liveness.include: livenessState,diskSpace,ping,binders,streams
       logging.slow-indicator-threshold: ${HEALTH_ACTUATOR_LOGGER_TIMEOUT_DURATION:PT1S}
+      show-details: always
   endpoints:
     jmx:
       exposure.include: "*"
