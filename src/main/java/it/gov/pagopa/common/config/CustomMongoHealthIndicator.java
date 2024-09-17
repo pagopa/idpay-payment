@@ -29,7 +29,7 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
             if (result.getDouble("ok") == 1.0) {
                 builder.up().withDetail("Ping result", "OK");
-                log.info("[HEALTH MONGODB - UP] Ping result: OK");
+                log.debug("[HEALTH MONGODB - UP] Ping result: OK");
 
             } else {
                 builder.down().withDetail("Ping result", "Failed");
