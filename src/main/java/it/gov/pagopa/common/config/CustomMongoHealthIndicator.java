@@ -1,7 +1,6 @@
 package it.gov.pagopa.common.config;
 
 import com.mongodb.client.MongoDatabase;
-import it.gov.pagopa.common.web.exception.ErrorManager;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.boot.actuate.data.mongo.MongoHealthIndicator;
@@ -23,7 +22,6 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
     @Override
     protected void doHealthCheck(Health.Builder builder) throws Exception {
         try {
-            // Esegui un comando MongoDB personalizzato, ad esempio un ping
             MongoDatabase database = mongoTemplate.getDb();
             Document result = database.runCommand(new Document("ping", 1));
 
