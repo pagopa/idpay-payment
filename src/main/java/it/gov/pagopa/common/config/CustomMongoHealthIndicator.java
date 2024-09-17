@@ -1,6 +1,8 @@
 package it.gov.pagopa.common.config;
 
 import com.mongodb.client.MongoDatabase;
+import it.gov.pagopa.common.web.exception.ErrorManager;
+import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.springframework.boot.actuate.data.mongo.MongoHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
@@ -8,6 +10,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
     private final MongoTemplate mongoTemplate;
@@ -26,8 +29,11 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
             if (result.getDouble("ok") == 1.0) {
                 builder.up().withDetail("Ping result", "OK");
+                log.info("[HEALTH MONGODB - UP] Ping result: OK");
+
             } else {
                 builder.down().withDetail("Ping result", "Failed");
+                log.error("[HEALTH MONGODB - DOWN] Ping result: Failed");
             }
         } catch (Exception e) {
             builder.down(e);
