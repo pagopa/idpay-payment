@@ -204,7 +204,6 @@ management:
         readiness.include: "*"
         liveness.include: livenessState,diskSpace,ping,binders,streams
       logging.slow-indicator-threshold: ${HEALTH_ACTUATOR_LOGGER_TIMEOUT_DURATION:PT1S}
-      show-details: always
   endpoints:
     jmx:
       exposure.include: "*"
