@@ -60,7 +60,6 @@ microservice-chart:
     DELETE_PAGINATION_SIZE: "100"
     DELETE_DELAY_TIME: "1000"
     TIMEOUT_PAYMENT_SECONDS: "30"
-    HEALTH_MONGO_ENABLED: "false"
 
   externalConfigMapValues:
     idpay-common:
