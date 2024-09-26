@@ -13,8 +13,9 @@ import org.springframework.stereotype.Component;
 public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
     private final MongoTemplate mongoTemplate;
-
-    private int i = 0;
+    private Health cachedHealth = null;
+    private long lastCheckTime = 0;
+    private static final long CACHE_TTL_MS = 10000; // Cache valida per 10 secondi
 
     public CustomMongoHealthIndicator(MongoTemplate mongoTemplate) {
         super(mongoTemplate);
@@ -23,23 +24,34 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
     @Override
     protected void doHealthCheck(Health.Builder builder) throws Exception {
+        long currentTime = System.currentTimeMillis();
+
+        // Restituisci risultato cache se non scaduto
+        if (cachedHealth != null && (currentTime - lastCheckTime) < CACHE_TTL_MS) {
+            builder.status(cachedHealth.getStatus()).withDetails(cachedHealth.getDetails());
+            log.debug("[HEALTH MONGODB - CACHED] Restituito risultato dalla cache.");
+            return;
+        }
+
+        // Esegui controllo Mongo e aggiorna cache
+        lastCheckTime = currentTime;
         try {
             MongoDatabase database = mongoTemplate.getDb();
-            // Esecuzione del comando ping che verificherà l'effettiva risposta dal db
             Document result = database.runCommand(new Document("ping", 1));
 
             if (result.getDouble("ok") == 1.0) {
                 builder.up().withDetail("Ping result", "OK");
-                i =i +1;
-                log.info("[HEALTH MONGODB - UP] Ping result: OK"+ i);
-
+                log.info("[HEALTH MONGODB - UP] Ping result: OK");
             } else {
                 builder.down().withDetail("Ping result", "Failed");
                 log.error("[HEALTH MONGODB - DOWN] Ping result: Failed");
             }
+
         } catch (Exception e) {
             builder.down(e);
-            log.error("[HEALTH MONGODB - DOWN] Ping result: Failed");
         }
+
+        // Aggiorna la cache con il nuovo risultato
+        cachedHealth = builder.build();
     }
 }
