@@ -8,13 +8,13 @@ import org.springframework.boot.actuate.health.Health;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-
 @Component
 @Slf4j
 public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
     private final MongoTemplate mongoTemplate;
+
+    private int i = 0;
 
     public CustomMongoHealthIndicator(MongoTemplate mongoTemplate) {
         super(mongoTemplate);
@@ -30,7 +30,8 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
             if (result.getDouble("ok") == 1.0) {
                 builder.up().withDetail("Ping result", "OK");
-                log.info("[HEALTH MONGODB - UP] Ping result: OK"+ new Date());
+                i =i +1;
+                log.info("[HEALTH MONGODB - UP] Ping result: OK"+ i);
 
             } else {
                 builder.down().withDetail("Ping result", "Failed");
