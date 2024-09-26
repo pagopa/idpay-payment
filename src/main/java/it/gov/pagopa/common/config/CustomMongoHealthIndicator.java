@@ -15,6 +15,7 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
         this.mongoTemplate = mongoTemplate;
     }
 
+
     @Override
     public void doHealthCheck(Health.Builder builder) throws Exception {
         try {
@@ -22,11 +23,18 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
             Document pingResult = mongoTemplate.executeCommand(new Document("ping", 1));
 
             // Controlla se il ping ha avuto successo
-            if (pingResult != null && pingResult.getInteger("ok", 0) == 1) {
-                builder.up().withDetail("pingResult", pingResult);
-                log.info("Ping OK: {}", pingResult);
+            if (!pingResult.isEmpty()) {
+                // Verifica se il campo "ok" è presente e uguale a 1.0
+                Double okValue = pingResult.getDouble("ok");
+                if (okValue != null && okValue.equals(1.0)) {
+                    builder.up().withDetail("pingResult", pingResult);
+                    log.info("Ping OK: {}",pingResult);
+                } else {
+                    log.error("Ping failed: {}", pingResult);
+                    builder.down();
+                }
             } else {
-                log.error("Ping failed: {}", pingResult);
+                log.error("Ping returned null.");
                 builder.down();
             }
         } catch (Exception e) {
