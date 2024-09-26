@@ -3,14 +3,15 @@ package it.gov.pagopa.common.config;
 import com.mongodb.client.MongoDatabase;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
-import org.springframework.boot.actuate.data.mongo.MongoHealthIndicator;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.util.Assert;
 
 @Component
 @Slf4j
-public class CustomMongoHealthIndicator extends MongoHealthIndicator {
+public class CustomMongoHealthIndicator extends AbstractHealthIndicator {
 
     private final MongoTemplate mongoTemplate;
     private Health cachedHealth = null;
@@ -18,7 +19,8 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
     private static final long CACHE_TTL_MS = 10000; // Cache valida per 10 secondi
 
     public CustomMongoHealthIndicator(MongoTemplate mongoTemplate) {
-        super(mongoTemplate);
+        super("MongoDB health check failed");
+        Assert.notNull(mongoTemplate, "MongoTemplate must not be null");
         this.mongoTemplate = mongoTemplate;
     }
 
@@ -26,12 +28,12 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
     protected void doHealthCheck(Health.Builder builder) throws Exception {
         long currentTime = System.currentTimeMillis();
 
-        // Restituisci risultato cache se non scaduto
+   /*     // Restituisci risultato cache se non scaduto
         if (cachedHealth != null && (currentTime - lastCheckTime) < CACHE_TTL_MS) {
             builder.status(cachedHealth.getStatus()).withDetails(cachedHealth.getDetails());
             log.debug("[HEALTH MONGODB - CACHED] Restituito risultato dalla cache.");
             return;
-        }
+        } */
 
         // Esegui controllo Mongo e aggiorna cache
         lastCheckTime = currentTime;
