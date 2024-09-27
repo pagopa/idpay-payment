@@ -17,7 +17,7 @@ microservice-chart:
       port: 8080
     initialDelaySeconds: 125
     failureThreshold: 15
-    periodSeconds: 10
+    periodSeconds: 15
 
   deployment:
     create: true
