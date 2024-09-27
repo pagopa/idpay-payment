@@ -16,7 +16,7 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
     }
 
 
-    @Override
+ /*   @Override
     public void doHealthCheck(Health.Builder builder) throws Exception {
         try {
             // Esecuzione del comando ping
@@ -41,5 +41,14 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
             log.error("Error executing ping command: {}", e.getMessage());
             builder.down();
         }
+    } */
+
+    @Override
+    protected void doHealthCheck(Health.Builder builder) throws Exception {
+
+        Document result = this.mongoTemplate.executeCommand("{ buildInfo: 1 }");
+        builder.up().withDetail("version", result.getString("version"));
+        log.info("MONGO UP");
     }
+
 }
