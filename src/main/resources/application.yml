@@ -197,6 +197,8 @@ management:
   health:
     redis.enabled: ${REDIS_CACHE_ENABLED:false}
     mongo.enabled: ${HEALTH_MONGO_ENABLED:true}
+    cache:
+      time-to-live: 10s
   endpoint:
     health:
       probes.enabled: true
