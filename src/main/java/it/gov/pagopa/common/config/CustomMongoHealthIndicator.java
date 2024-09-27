@@ -2,22 +2,24 @@ package it.gov.pagopa.common.config;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
-import org.springframework.boot.actuate.data.mongo.MongoHealthIndicator;
+import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.util.Assert;
+
 @Slf4j
-public class CustomMongoHealthIndicator extends MongoHealthIndicator {
+public class CustomMongoHealthIndicator extends AbstractHealthIndicator {
 
     private final MongoTemplate mongoTemplate;
 
-    public CustomMongoHealthIndicator(MongoTemplate mongoTemplate){
-        super(mongoTemplate);
+    public CustomMongoHealthIndicator(MongoTemplate mongoTemplate) {
+        super("MongoDB health check failed");
+        Assert.notNull(mongoTemplate, "MongoTemplate must not be null");
         this.mongoTemplate = mongoTemplate;
     }
 
-
- /*   @Override
-    public void doHealthCheck(Health.Builder builder) throws Exception {
+    @Override
+    protected void doHealthCheck(Health.Builder builder) throws Exception {
         try {
             // Esecuzione del comando ping
             Document pingResult = mongoTemplate.executeCommand(new Document("ping", 1));
@@ -28,7 +30,7 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
                 Double okValue = pingResult.getDouble("ok");
                 if (okValue != null && okValue.equals(1.0)) {
                     builder.up().withDetail("pingResult", pingResult);
-                    log.info("Ping OK: {}",pingResult);
+                    log.info("Ping OK: {}", pingResult);
                 } else {
                     log.error("Ping failed: {}", pingResult);
                     builder.down();
@@ -41,14 +43,6 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
             log.error("Error executing ping command: {}", e.getMessage());
             builder.down();
         }
-    } */
-
-    @Override
-    protected void doHealthCheck(Health.Builder builder) throws Exception {
-
-        Document result = this.mongoTemplate.executeCommand("{ buildInfo: 1 }");
-        builder.up().withDetail("version", result.getString("version"));
-        log.info("MONGO UP");
     }
 
 }
