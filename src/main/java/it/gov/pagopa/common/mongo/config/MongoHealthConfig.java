@@ -18,12 +18,10 @@ public class MongoHealthConfig    {
 
     @Bean
     public HealthIndicatorLogger healthIndicatorLogger(List<HealthIndicator> healthIndicatorList) {
-        // Assicurati che non ci sia duplicazione della classe CustomMongoHealthIndicator
         healthIndicatorList.removeIf(this::isCustomMongoHealthIndicator);
         return new HealthIndicatorLogger(healthIndicatorList);
     }
 
-    // Method to check if an indicator is an instance of CustomMongoHealthIndicator
     private boolean isCustomMongoHealthIndicator(HealthIndicator indicator) {
         return indicator instanceof CustomMongoHealthIndicator;
     }
