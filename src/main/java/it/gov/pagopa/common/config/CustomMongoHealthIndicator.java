@@ -22,9 +22,9 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
             // Esecuzione del comando ping
             Document pingResult = mongoTemplate.executeCommand(new Document("ping", 1));
 
-            // Controllare se il ping ha avuto successo
+            // Si controlla se il ping ha avuto successo
             if (!pingResult.isEmpty()) {
-                // Verificare se il campo "ok" è presente e uguale a 1.0
+                // Si verifica se il campo "ok" è presente e uguale a 1.0
                 Double okValue = pingResult.getDouble("ok");
                 if (okValue != null && okValue.equals(1.0)) {
                     builder.up().withDetail("pingResult", pingResult);
