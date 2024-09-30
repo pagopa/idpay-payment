@@ -24,50 +24,38 @@ class CustomMongoHealthIndicatorTest {
         @MockBean
         private MongoTemplate mongoTemplate;
 
-        @Test
-        void testHealthCheckUp() throws Exception {
-            Document pingResult = new Document("ok", 1.0);
-            when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
+    @Test
+    void testHealthUp() throws Exception {
+        Document pingResult = new Document("ok", 1.0);
+        when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
 
-            Health.Builder builder = new Health.Builder();
-            customMongoHealthIndicator.doHealthCheck(builder);
+        Health.Builder builder = new Health.Builder();
+        customMongoHealthIndicator.doHealthCheck(builder);
 
-            Health health = builder.build();
-            assertEquals(Health.up().withDetail("pingResult", pingResult).build(), health);
-        }
+        Health health = builder.build();
+        assertEquals(Health.up().withDetail("pingResult", pingResult).build(), health);
+    }
 
-        @Test
-        void testHealthCheckDownInvalidOk() throws Exception {
-            Document pingResult = new Document("ok", 0.0);
-            when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
+    @Test
+    void testHealthDownPingFailed() throws Exception {
+        Document pingResult = new Document("ok", 0.0);
+        when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
 
-            Health.Builder builder = new Health.Builder();
-            customMongoHealthIndicator.doHealthCheck(builder);
+        Health.Builder builder = new Health.Builder();
+        customMongoHealthIndicator.doHealthCheck(builder);
 
-            Health health = builder.build();
-            assertEquals(Health.down().build(), health);
-        }
+        Health health = builder.build();
+        assertEquals(Health.down().withDetail("pingResult", pingResult).withDetail("error", "Ping failed").build(), health);
+    }
 
-        @Test
-        void testHealthCheckDownEmptyPingResult() throws Exception {
-            Document pingResult = new Document();
-            when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
+    @Test
+    void testHealthDownException() throws Exception {
+        when(mongoTemplate.executeCommand(new Document("ping", 1))).thenThrow(new RuntimeException("Connection error"));
 
-            Health.Builder builder = new Health.Builder();
-            customMongoHealthIndicator.doHealthCheck(builder);
+        Health.Builder builder = new Health.Builder();
+        customMongoHealthIndicator.doHealthCheck(builder);
 
-            Health health = builder.build();
-            assertEquals(Health.down().build(), health);
-        }
-
-        @Test
-        void testHealthCheckDownException() throws Exception {
-            when(mongoTemplate.executeCommand(new Document("ping", 1))).thenThrow(new RuntimeException("Connection error"));
-
-            Health.Builder builder = new Health.Builder();
-            customMongoHealthIndicator.doHealthCheck(builder);
-
-            Health health = builder.build();
-            assertEquals(Health.down().build(), health);
-        }
+        Health health = builder.build();
+        assertEquals(Health.down().withDetail("error", "Exception occurred: Connection error").build(), health);
+    }
     }
