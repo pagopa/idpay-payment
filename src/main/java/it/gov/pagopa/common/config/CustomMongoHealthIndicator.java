@@ -28,7 +28,7 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
                 Double okValue = pingResult.getDouble("ok");
                 if (okValue != null && okValue.equals(1.0)) {
                     builder.up().withDetail("pingResult", pingResult);
-                    log.info("[MONGODB]: UP");
+                    log.debug("[MONGODB]: UP");
                 } else {
                     log.error("[MONGODB]: DOWN - Ping failed: {}", pingResult);
                     builder.down();
