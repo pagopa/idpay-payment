@@ -188,8 +188,8 @@ app:
     expirations:
       authorizationMinutes: ${BAR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
   delete:
-    paginationSize: ${DELETE_PAGINATION_SIZE:100}
-    delayTime: ${DELETE_DELAY_TIME:1000}
+      paginationSize: ${DELETE_PAGINATION_SIZE:100}
+      delayTime: ${DELETE_DELAY_TIME:1000}
   timeoutPayment:
     seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
 
