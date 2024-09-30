@@ -1,61 +1,43 @@
 package it.gov.pagopa.common.config;
 
-import it.gov.pagopa.common.mongo.config.MongoHealthConfig;
+import com.mongodb.MongoException;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {MongoHealthConfig.class})
+
 class CustomMongoHealthIndicatorTest {
 
-        @Autowired
-        private CustomMongoHealthIndicator customMongoHealthIndicator;
-
-        @MockBean
-        private MongoTemplate mongoTemplate;
 
     @Test
-    void testHealthUp() throws Exception {
-        Document pingResult = new Document("ok", 1.0);
-        when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
-
-        Health.Builder builder = new Health.Builder();
-        customMongoHealthIndicator.doHealthCheck(builder);
-
-        Health health = builder.build();
-        assertEquals(Health.up().withDetail("pingResult", pingResult).build(), health);
+    void mongoIsUp() {
+        Document commandResult = mock(Document.class);
+        given(commandResult.getInteger("maxWireVersion")).willReturn(10);
+        MongoTemplate mongoTemplate = mock(MongoTemplate.class);
+        given(mongoTemplate.executeCommand("{ isMaster: 1 }")).willReturn(commandResult);
+        CustomMongoHealthIndicator healthIndicator = new CustomMongoHealthIndicator(mongoTemplate);
+        Health health = healthIndicator.health();
+        assertThat(health.getStatus()).isEqualTo(Status.UP);
+        assertThat(health.getDetails()).containsEntry("maxWireVersion", 10);
+        then(commandResult).should().getInteger("maxWireVersion");
+        then(mongoTemplate).should().executeCommand("{ isMaster: 1 }");
     }
 
     @Test
-    void testHealthDownPingFailed() throws Exception {
-        Document pingResult = new Document("ok", 0.0);
-        when(mongoTemplate.executeCommand(new Document("ping", 1))).thenReturn(pingResult);
-
-        Health.Builder builder = new Health.Builder();
-        customMongoHealthIndicator.doHealthCheck(builder);
-
-        Health health = builder.build();
-        assertEquals(Health.down().withDetail("pingResult", pingResult).withDetail("error", "Ping failed").build(), health);
+    void mongoIsDown() {
+        MongoTemplate mongoTemplate = mock(MongoTemplate.class);
+        given(mongoTemplate.executeCommand("{ isMaster: 1 }")).willThrow(new MongoException("Connection failed"));
+        CustomMongoHealthIndicator healthIndicator = new CustomMongoHealthIndicator(mongoTemplate);
+        Health health = healthIndicator.health();
+        assertThat(health.getStatus()).isEqualTo(Status.DOWN);
+        assertThat((String) health.getDetails().get("error")).contains("Connection failed");
+        then(mongoTemplate).should().executeCommand("{ isMaster: 1 }");
     }
-
-    @Test
-    void testHealthDownException() throws Exception {
-        when(mongoTemplate.executeCommand(new Document("ping", 1))).thenThrow(new RuntimeException("Connection error"));
-
-        Health.Builder builder = new Health.Builder();
-        customMongoHealthIndicator.doHealthCheck(builder);
-
-        Health health = builder.build();
-        assertEquals(Health.down().withDetail("error", "Exception occurred: Connection error").build(), health);
-    }
-    }
+}

@@ -17,17 +17,8 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
 
     @Override
     protected void doHealthCheck(Health.Builder builder) throws Exception {
-        try {
-            Document pingResult = mongoTemplate.executeCommand(new Document("ping", 1));
-            Double okValue = pingResult.getDouble("ok");
-            if (okValue != null && okValue.equals(1.0)) {
-                builder.up().withDetail("pingResult", pingResult);
-            } else {
-                builder.down().withDetail("pingResult", pingResult).withDetail("error", "Ping failed");
-            }
-        } catch (Exception e) {
-            builder.down().withDetail("error", "Exception occurred: " + e.getMessage());
-        }
+       Document result = this.mongoTemplate.executeCommand("{ isMaster: 1 }");
+       builder.up().withDetail("maxWireVersion", result.getInteger("maxWireVersion"));
     }
 
 
