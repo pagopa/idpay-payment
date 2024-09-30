@@ -19,28 +19,17 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
     @Override
     protected void doHealthCheck(Health.Builder builder) throws Exception {
         try {
-            // Esecuzione del comando ping
             Document pingResult = mongoTemplate.executeCommand(new Document("ping", 1));
-
-            // Si controlla se il ping ha avuto successo
-            if (!pingResult.isEmpty()) {
-                // Si verifica se il campo "ok" è presente e uguale a 1.0
-                Double okValue = pingResult.getDouble("ok");
-                if (okValue != null && okValue.equals(1.0)) {
-                    builder.up().withDetail("pingResult", pingResult);
-                    log.debug("[MONGODB]: UP");
-                } else {
-                    log.error("[MONGODB]: DOWN - Ping failed: {}", pingResult);
-                    builder.down();
-                }
+            Double okValue = pingResult.getDouble("ok");
+            if (okValue != null && okValue.equals(1.0)) {
+                builder.up().withDetail("pingResult", pingResult);
             } else {
-                log.error("[MONGODB]: DOWN - Ping returned null.");
-                builder.down();
+                builder.down().withDetail("pingResult", pingResult).withDetail("error", "Ping failed");
             }
         } catch (Exception e) {
-            log.error("[MONGODB]: DOWN - Error executing ping command: {}", e.getMessage());
-            builder.down();
+            builder.down().withDetail("error", "Exception occurred: " + e.getMessage());
         }
     }
+
 
 }
