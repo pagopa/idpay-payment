@@ -28,17 +28,17 @@ public class CustomMongoHealthIndicator extends MongoHealthIndicator {
                 Double okValue = pingResult.getDouble("ok");
                 if (okValue != null && okValue.equals(1.0)) {
                     builder.up().withDetail("pingResult", pingResult);
-                    log.debug("MONGO DB: UP");
+                    log.debug("[MONGODB]: UP");
                 } else {
-                    log.error("Ping failed: {}", pingResult);
+                    log.error("[MONGODB]: DOWN - Ping failed: {}", pingResult);
                     builder.down();
                 }
             } else {
-                log.error("Ping returned null.");
+                log.error("[MONGODB]: DOWN - Ping returned null.");
                 builder.down();
             }
         } catch (Exception e) {
-            log.error("Error executing ping command: {}", e.getMessage());
+            log.error("[MONGODB]: DOWN - Error executing ping command: {}", e.getMessage());
             builder.down();
         }
     }
