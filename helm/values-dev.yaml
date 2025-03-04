@@ -21,7 +21,7 @@ microservice-chart:
     maxReplica: 2
     pollingInterval: 30 # seconds
     triggers:
-        type: cpu
+      - type: cpu
         metadata:
           type: Utilization # Allowed types are 'Utilization' or 'AverageValue'
           value: "70"
