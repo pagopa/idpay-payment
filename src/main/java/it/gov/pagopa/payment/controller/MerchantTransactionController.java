@@ -16,4 +16,5 @@ public interface MerchantTransactionController {
                                                         @RequestParam(required = false) String fiscalCode,
                                                         @RequestParam(required = false) String status,
                                                         @PageableDefault(sort="updateDate", direction = Sort.Direction.DESC) Pageable pageable);
+
 }
