@@ -147,6 +147,7 @@ logging:
     org.mongodb.driver: ${LOG_LEVEL_MONGODB_DRIVER:WARN}
     org.apache.kafka: WARN
     org.springframework.boot.autoconfigure: WARN
+    c.a.c.a.i.ActiveClientTokenManager: WARN
 
 rest-client:
   reward:
