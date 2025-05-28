@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "ed0d1792-21c0-4b05-ad9d-d401881dc738",
+		"_postman_id": "925fdd6a-1dec-4946-a081-c1ee0ac57926",
 		"name": "IDPay Payment - e2e Last version",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "32491499"
+		"_exporter_id": "16161662"
 	},
 	"item": [
 		{
@@ -30,7 +30,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -48,7 +49,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -74,9 +76,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -103,7 +105,8 @@
 																	"pm.collectionVariables.set('channel_type', 'web');\r",
 																	"pm.collectionVariables.set('channel_contact', 'https://www.google.it');"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -126,7 +129,8 @@
 																	"    pm.expect(jsonResponse).have.property(\"initiativeId\");\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -162,11 +166,12 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlInitiative}}/info",
+															"raw": "{{baseUrlIdPay}}/initiative/info",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																"info"
 															]
 														},
@@ -207,7 +212,8 @@
 																	"pm.collectionVariables.set('startDate', today);\r",
 																	"pm.collectionVariables.set('endDate', todayP3);"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -220,7 +226,8 @@
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -256,11 +263,12 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlInitiative}}/:initiativeId_exhausted/general",
+															"raw": "{{baseUrlIdPay}}/initiative/:initiativeId_exhausted/general",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																":initiativeId_exhausted",
 																"general"
 															],
@@ -288,7 +296,8 @@
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -315,11 +324,12 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlInitiative}}/{{initiativeId}}/beneficiary",
+															"raw": "{{baseUrlIdPay}}/initiative/{{initiativeId}}/beneficiary",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																"{{initiativeId}}",
 																"beneficiary"
 															]
@@ -340,7 +350,8 @@
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -372,7 +383,8 @@
 																	"pm.collectionVariables.set('trxRewardLimitFrequency', 'DAILY');\r",
 																	"pm.collectionVariables.set('trxRewardLimitValue', 3);"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -408,11 +420,12 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlInitiative}}/:initiativeId_exhausted/reward",
+															"raw": "{{baseUrlIdPay}}/initiative/:initiativeId_exhausted/reward",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																":initiativeId_exhausted",
 																"reward"
 															],
@@ -439,7 +452,8 @@
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -501,7 +515,8 @@
 																	"pm.collectionVariables.set('body', JSON.stringify(body));\r",
 																	"*/"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -537,11 +552,12 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlInitiative}}/:initiativeId_exhausted/refund",
+															"raw": "{{baseUrlIdPay}}/initiative/:initiativeId_exhausted/refund",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																":initiativeId_exhausted",
 																"refund"
 															],
@@ -569,7 +585,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -587,7 +604,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -613,9 +631,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -639,7 +657,8 @@
 																	"    pm.response.to.have.status(204);\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -648,7 +667,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -675,11 +695,12 @@
 															}
 														],
 														"url": {
-															"raw": "{{baseUrlInitiative}}/{{initiativeId}}/approved",
+															"raw": "{{baseUrlIdPay}}/initiative/{{initiativeId}}/approved",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																"{{initiativeId}}",
 																"approved"
 															]
@@ -701,7 +722,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -719,7 +741,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -745,9 +768,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -773,7 +796,8 @@
 																	"\r",
 																	"waitDroolsRuleSync(setTimeout);"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -801,7 +825,8 @@
 																	"}\r",
 																	"*/"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -822,11 +847,12 @@
 														"method": "PUT",
 														"header": [],
 														"url": {
-															"raw": "{{baseUrlInitiative}}/{{initiativeId}}/published",
+															"raw": "{{baseUrlIdPay}}/initiative/{{initiativeId}}/published",
 															"host": [
-																"{{baseUrlInitiative}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
+																"initiative",
 																"{{initiativeId}}",
 																"published"
 															]
@@ -848,7 +874,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -866,7 +893,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -892,9 +920,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -923,7 +951,8 @@
 																	"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -951,9 +980,9 @@
 															]
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+															"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId}}/upload",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"merchant",
@@ -2988,7 +3017,8 @@
 														"exec": [
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												},
 												{
@@ -3006,7 +3036,8 @@
 															"});\r",
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -3032,9 +3063,9 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"raw": "{{baseUrlIdPay}}/welfare/token/test",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"welfare",
@@ -3063,7 +3094,8 @@
 															"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 															"});"
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -3091,9 +3123,9 @@
 													]
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId_exhausted}}/upload",
+													"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId_exhausted}}/upload",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"merchant",
@@ -6368,7 +6400,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -6386,7 +6419,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -6412,9 +6446,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -6443,7 +6477,8 @@
 																	"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -6471,9 +6506,9 @@
 															]
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+															"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId}}/upload",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"merchant",
@@ -8435,7 +8470,8 @@
 														"exec": [
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												},
 												{
@@ -8453,7 +8489,8 @@
 															"});\r",
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -8479,9 +8516,9 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"raw": "{{baseUrlIdPay}}/welfare/token/test",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"welfare",
@@ -8510,7 +8547,8 @@
 															"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 															"});"
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -8538,9 +8576,9 @@
 													]
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+													"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId}}/upload",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"merchant",
@@ -15941,7 +15979,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -15959,7 +15998,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -15985,9 +16025,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -16016,7 +16056,8 @@
 																	"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -16044,9 +16085,9 @@
 															]
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId_not_started}}/upload",
+															"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId_not_started}}/upload",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"merchant",
@@ -17253,7 +17294,8 @@
 														"exec": [
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												},
 												{
@@ -17271,7 +17313,8 @@
 															"});\r",
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -17297,9 +17340,9 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"raw": "{{baseUrlIdPay}}/welfare/token/test",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"welfare",
@@ -17328,7 +17371,8 @@
 															"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 															"});"
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -17356,9 +17400,9 @@
 													]
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId_exhausted}}/upload",
+													"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId_exhausted}}/upload",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"merchant",
@@ -20189,7 +20233,8 @@
 														"exec": [
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												},
 												{
@@ -20207,7 +20252,8 @@
 															"});\r",
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -20233,9 +20279,9 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"raw": "{{baseUrlIdPay}}/welfare/token/test",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"welfare",
@@ -20264,7 +20310,8 @@
 															"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 															"});"
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -20292,9 +20339,9 @@
 													]
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+													"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId}}/upload",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"merchant",
@@ -24691,7 +24738,8 @@
 																"exec": [
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														},
 														{
@@ -24709,7 +24757,8 @@
 																	"});\r",
 																	""
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -24735,9 +24784,9 @@
 															}
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/welfare/token/test",
+															"raw": "{{baseUrlIdPay}}/welfare/token/test",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"welfare",
@@ -24766,7 +24815,8 @@
 																	"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 																	"});"
 																],
-																"type": "text/javascript"
+																"type": "text/javascript",
+																"packages": {}
 															}
 														}
 													],
@@ -24794,9 +24844,9 @@
 															]
 														},
 														"url": {
-															"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+															"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId}}/upload",
 															"host": [
-																"{{baseUrlToken}}"
+																"{{baseUrlIdPay}}"
 															],
 															"path": [
 																"merchant",
@@ -25958,7 +26008,8 @@
 														"exec": [
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												},
 												{
@@ -25976,7 +26027,8 @@
 															"});\r",
 															""
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -26002,9 +26054,9 @@
 													}
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/welfare/token/test",
+													"raw": "{{baseUrlIdPay}}/welfare/token/test",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"welfare",
@@ -26033,7 +26085,8 @@
 															"    pm.expect(jsonResponse.status).eql(\"VALIDATED\");\r",
 															"});"
 														],
-														"type": "text/javascript"
+														"type": "text/javascript",
+														"packages": {}
 													}
 												}
 											],
@@ -26061,9 +26114,9 @@
 													]
 												},
 												"url": {
-													"raw": "{{baseUrlToken}}/merchant/initiative/{{initiativeId}}/upload",
+													"raw": "{{baseUrlIdPay}}/merchant/initiative/{{initiativeId}}/upload",
 													"host": [
-														"{{baseUrlToken}}"
+														"{{baseUrlIdPay}}"
 													],
 													"path": [
 														"merchant",
