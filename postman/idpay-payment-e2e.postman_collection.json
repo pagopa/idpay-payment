@@ -2,6 +2,7 @@
 	"info": {
 		"_postman_id": "05cc736f-102d-4608-b7e2-10f99675e0f3",
 		"name": "IDPay Payment - e2e Last version",
+		"description": "Description TBD",
 		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
 		"_exporter_id": "37939936"
 	},
