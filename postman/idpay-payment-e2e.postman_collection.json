@@ -865,7 +865,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "./postman/Esercente di test IdPay.csv"
+																	"src": "{{basePath}}/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -2774,7 +2774,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "./postman/Esercente di test IdPay.csv"
+															"src": "{{basePath}}/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -5797,7 +5797,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "./postman/Esercente di test IdPay.csv"
+																	"src": "{{basePath}}/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -7644,7 +7644,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "./postman/Esercente di test IdPay.csv"
+															"src": "{{basePath}}/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -14370,7 +14370,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "./postman/Esercente di test IdPay.csv"
+																	"src": "{{basePath}}/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -15533,7 +15533,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "./postman/Esercente di test IdPay.csv"
+															"src": "{{basePath}}/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -18100,7 +18100,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "./postman/Esercente di test IdPay.csv"
+															"src": "{{basePath}}/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -22114,7 +22114,7 @@
 																{
 																	"key": "file",
 																	"type": "file",
-																	"src": "./postman/Esercente di test IdPay.csv"
+																	"src": "{{basePath}}/Esercente di test IdPay.csv"
 																}
 															]
 														},
@@ -23255,7 +23255,7 @@
 														{
 															"key": "file",
 															"type": "file",
-															"src": "./postman/Esercente di test IdPay.csv"
+															"src": "{{basePath}}/Esercente di test IdPay.csv"
 														}
 													]
 												},
@@ -27490,6 +27490,10 @@
 		{
 			"key": "rewardCents",
 			"value": ""
-		}
+		},
+        {
+          "key": "basePath",
+          "value": "./"
+        }
 	]
 }
