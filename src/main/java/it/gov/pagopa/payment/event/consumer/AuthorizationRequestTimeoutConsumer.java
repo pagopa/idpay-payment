@@ -13,7 +13,9 @@ public class AuthorizationRequestTimeoutConsumer {
     private final AuthorizationRequestTimeoutService authorizationRequestTimeoutService;
 
     public AuthorizationRequestTimeoutConsumer(AuthorizationRequestTimeoutService authorizationRequestTimeoutService) {
+
         this.authorizationRequestTimeoutService = authorizationRequestTimeoutService;
+
     }
 
     @Bean
