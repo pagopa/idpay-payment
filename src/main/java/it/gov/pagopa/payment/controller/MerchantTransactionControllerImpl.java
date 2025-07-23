@@ -14,6 +14,7 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
     public MerchantTransactionControllerImpl(MerchantTransactionService merchantTransactionService) {
         this.merchantTransactionService = merchantTransactionService;
     }
+
     @Override
     @PerformanceLog("GET_MERCHANT_TRANSACTIONS")
     public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable) {
