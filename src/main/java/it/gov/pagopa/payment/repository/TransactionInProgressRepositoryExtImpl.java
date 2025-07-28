@@ -54,6 +54,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.amountCurrency, trx.getAmountCurrency())
                         .setOnInsert(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
                         .setOnInsert(Fields.merchantId, trx.getMerchantId())
+                        .setOnInsert(Fields.pointOfSaleId, trx.getPointOfSaleId())
                         .setOnInsert(Fields.idTrxAcquirer, trx.getIdTrxAcquirer())
                         .setOnInsert(Fields.idTrxIssuer, trx.getIdTrxIssuer())
                         .setOnInsert(Fields.initiativeId, trx.getInitiativeId())
@@ -259,10 +260,13 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public Criteria getCriteria(String merchantId, String initiativeId, String userId, String status) {
+    public Criteria getCriteria(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status) {
         Criteria criteria = Criteria.where(Fields.merchantId).is(merchantId).and(Fields.initiativeId).is(initiativeId);
         if (userId != null) {
             criteria.and(Fields.userId).is(userId);
+        }
+            if (pointOfSaleId != null) {
+            criteria.and(Fields.pointOfSaleId).is(pointOfSaleId);
         }
         if (status != null) {
             if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString())

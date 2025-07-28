@@ -52,6 +52,7 @@ public class TransactionInProgress {
   private String mcc;
   private String acquirerId;
   private String merchantId;
+  private String pointOfSaleId;
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;

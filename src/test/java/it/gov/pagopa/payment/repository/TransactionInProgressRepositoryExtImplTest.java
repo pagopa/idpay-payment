@@ -47,6 +47,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
     private static final String INITIATIVE_ID = "INITIATIVEID1";
     private static final String MERCHANT_ID = "MERCHANTID1";
+    private static final String POINT_OF_SALE_ID = "POINTOFSALEID1";
     private static final String USER_ID = "USERID1";
     public static final int EXPIRATION_MINUTES = 4350;
     public static final int EXPIRATION_MINUTES_IDPAY_CODE= 5;
@@ -415,7 +416,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transactionInProgress.setUserId(USER_ID);
         transactionInProgressRepository.save(transactionInProgress);
-        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString());
+        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString());
         Pageable paging = PageRequest.of(0, 10);
         List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, paging);
         assertEquals(transactionInProgress, transactionInProgressList.get(0));
@@ -430,23 +431,31 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress2.setInitiativeId(INITIATIVE_ID);
         transactionInProgress2.setInitiatives(List.of(INITIATIVE_ID));
         transactionInProgress2.setMerchantId(MERCHANT_ID);
+        transactionInProgress2.setPointOfSaleId(POINT_OF_SALE_ID);
         TransactionInProgress transactionInProgress3 =
                 TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
         transactionInProgress3.setInitiativeId(INITIATIVE_ID);
         transactionInProgress3.setInitiatives(List.of(INITIATIVE_ID));
         transactionInProgress3.setMerchantId(MERCHANT_ID);
+        transactionInProgress3.setPointOfSaleId(POINT_OF_SALE_ID);
         transactionInProgressRepository.save(transactionInProgress1);
         transactionInProgressRepository.save(transactionInProgress2);
         transactionInProgressRepository.save(transactionInProgress3);
-        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, null, null);
+        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID, null, null);
         long count = transactionInProgressRepository.getCount(criteria);
         assertEquals(3, count);
     }
 
     @Test
     void getCriteria() {
-        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
+        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, null, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
         assertEquals(4, criteria.getCriteriaObject().size());
+    }
+
+    @Test
+    void getCriteria1() {
+        Criteria criteria1 = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
+        assertEquals(5, criteria1.getCriteriaObject().size());
     }
 
     @Test

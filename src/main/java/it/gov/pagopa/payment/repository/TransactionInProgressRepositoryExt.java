@@ -21,7 +21,7 @@ public interface TransactionInProgressRepositoryExt {
   void updateTrxWithStatusForPreview(TransactionInProgress trx, AuthPaymentDTO preview, Map<String, List<String>> initiativeRejectionReasons, String channel, SyncTrxStatus status);
   UpdateResult updateTrxAuthorized(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO, Map<String, List<String>> initiativeRejectionReasons);
   void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason);
-  Criteria getCriteria(String merchantId, String initiativeId, String userId, String status);
+  Criteria getCriteria(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status);
   List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable);
   long getCount(Criteria criteria);
   TransactionInProgress findCancelExpiredTransaction(String initiativeId, long cancelExpirationMinutes);

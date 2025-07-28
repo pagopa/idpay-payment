@@ -3,18 +3,11 @@ package it.gov.pagopa.payment.service;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
-import it.gov.pagopa.payment.dto.CFDTO;
-import it.gov.pagopa.payment.dto.DecryptCfDTO;
-import it.gov.pagopa.payment.dto.EncryptedCfDTO;
-import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
-import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
+import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import java.util.ArrayList;
-import java.util.List;
-
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.apache.commons.lang3.StringUtils;
@@ -26,8 +19,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Service
-public class MerchantTransactionServiceImpl implements MerchantTransactionService {
+public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransactionService {
 
     private final int authorizationExpirationMinutes;
 
@@ -36,7 +32,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
-    public MerchantTransactionServiceImpl(
+    public PointOfSaleTransactionServiceImpl(
             @Value("${app.common.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
 
             DecryptRestConnector decryptRestConnector,
@@ -51,26 +47,27 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     }
 
     @Override
-    public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable) {
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, Pageable pageable) {
         String userId = null;
         if (StringUtils.isNotBlank(fiscalCode)) {
             userId = encryptCF(fiscalCode);
         }
-        Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, null, initiativeId, userId, status);
+        Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status);
         List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, pageable);
-        List<MerchantTransactionDTO> merchantTransactions = new ArrayList<>();
+        List<PointOfSaleTransactionDTO> pointOfSaleTransactions = new ArrayList<>();
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
                     transaction ->
-                            merchantTransactions.add(populateMerchantTransactionDTO(transaction)));
+                            pointOfSaleTransactions.add(populatePointOfSaleTransactionDTO(transaction)));
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
                 CommonUtilities.getPageable(pageable), () -> count);
-        return new MerchantTransactionsListDTO(merchantTransactions, result.getNumber(), result.getSize(),
+        return new PointOfSaleTransactionsListDTO(pointOfSaleTransactions, result.getNumber(), result.getSize(),
                 (int) result.getTotalElements(), result.getTotalPages());
     }
-private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgress transaction){
+
+    private PointOfSaleTransactionDTO populatePointOfSaleTransactionDTO(TransactionInProgress transaction){
         String trxCodeImgUrl = null;
         String trxCodeTxtUrl = null;
 
@@ -78,9 +75,9 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
-    Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getRewardCents());
+        Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getRewardCents());
 
-    return new MerchantTransactionDTO(transaction.getTrxCode(),
+        return new PointOfSaleTransactionDTO(transaction.getTrxCode(),
                 transaction.getCorrelationId(),
                 transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                 transaction.getAmountCents(),
@@ -94,8 +91,8 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 transaction.getChannel(),
                 trxCodeImgUrl,
                 trxCodeTxtUrl
-                );
-        }
+        );
+    }
 
     private String decryptCF(String userId) {
         String fiscalCode;
@@ -118,5 +115,4 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
         }
         return userId;
     }
-
 }
