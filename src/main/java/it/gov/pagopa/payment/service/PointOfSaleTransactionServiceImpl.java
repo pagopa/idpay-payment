@@ -55,17 +55,16 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
         Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status);
         List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, pageable);
         List<PointOfSaleTransactionDTO> pointOfSaleTransactions = new ArrayList<>();
-        if (!transactionInProgressList.isEmpty()) {
-            transactionInProgressList.forEach(
-                    transaction ->
-                            pointOfSaleTransactions.add(
-                                    populatePointOfSaleTransactionDTO(
-                                            transaction,
-                                            StringUtils.isNotBlank(fiscalCode) ? fiscalCode : decryptCF(transaction.getUserId())
-                                    )
-                            )
-            );
-        }
+        transactionInProgressList.forEach(
+                transaction ->
+                        pointOfSaleTransactions.add(
+                                populatePointOfSaleTransactionDTO(
+                                        transaction,
+                                        StringUtils.isNotBlank(fiscalCode) ? fiscalCode : decryptCF(transaction.getUserId())
+                                )
+                        )
+        );
+
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
                 CommonUtilities.getPageable(pageable), () -> count);
