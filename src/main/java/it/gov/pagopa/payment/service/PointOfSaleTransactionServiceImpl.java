@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransactionService {
@@ -100,24 +101,20 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
     }
 
     private String decryptCF(String userId) {
-        String fiscalCode;
-        try {
-            DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
-            fiscalCode = decryptedCfDTO.getPii();
-        } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during decryption", true, e);
-        }
-        return fiscalCode;
+        return wrapPDVCall(() -> decryptRestConnector.getPiiByToken(userId).getPii(),
+                "An error occurred during decryption");
     }
 
     private String encryptCF(String fiscalCode) {
-        String userId;
+        return wrapPDVCall(() -> encryptRestConnector.upsertToken(new CFDTO(fiscalCode)).getToken(),
+                "An error occurred during encryption");
+    }
+
+    private <T> T wrapPDVCall(Supplier<T> action, String errorMessage) {
         try {
-            EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
-            userId = encryptedCfDTO.getToken();
+            return action.get();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during encryption", true, e);
+            throw new PDVInvocationException(errorMessage, true, e);
         }
-        return userId;
     }
 }
