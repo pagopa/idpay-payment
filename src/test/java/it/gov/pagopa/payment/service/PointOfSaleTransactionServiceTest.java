@@ -22,7 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -54,20 +55,22 @@ class PointOfSaleTransactionServiceTest {
 
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1, transaction2));
 
-        PointOfSaleTransactionDTO expectedDto1 = buildExpectedDTO(transaction1, true, false);
-        PointOfSaleTransactionDTO expectedDto2 = buildExpectedDTO(transaction2, false, false);
+        PointOfSaleTransactionDTO expectedDto1 = buildExpectedDTO(transaction1, true, false, "USERFISCALCODE1");
+        PointOfSaleTransactionDTO expectedDto2 = buildExpectedDTO(transaction2, true, false, "USERFISCALCODE1");
 
         PointOfSaleTransactionsListDTO pointOfSaleTransactionsListDTO_expected = PointOfSaleTransactionsListDTO.builder()
                 .content(List.of(expectedDto1, expectedDto2))
                 .pageSize(10).totalElements(2).totalPages(1).build();
 
-        mockEncryptDecrypt();
+        EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
+        when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
 
-        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
+        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "USERFISCALCODE1", null, null);
 
         assertEquals(2, result.getContent().size());
         assertEquals(pointOfSaleTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
+        Mockito.verify(decryptRestConnector, Mockito.never()).getPiiByToken(Mockito.any());
     }
 
     @Test
@@ -84,26 +87,58 @@ class PointOfSaleTransactionServiceTest {
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(QRCODE_TXTURL);
 
-        PointOfSaleTransactionDTO expectedDto1 = buildExpectedDTO(transaction1, true, true);
-        PointOfSaleTransactionDTO expectedDto2 = buildExpectedDTO(transaction2, false, true);
+        EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
+        when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
+
+        PointOfSaleTransactionDTO expectedDto1 = buildExpectedDTO(transaction1, true, true, "USERFISCALCODE1");
+        PointOfSaleTransactionDTO expectedDto2 = buildExpectedDTO(transaction2, true, true, "USERFISCALCODE1");
 
         PointOfSaleTransactionsListDTO pointOfSaleTransactionsListDTO_expected = PointOfSaleTransactionsListDTO.builder()
                 .content(List.of(expectedDto1, expectedDto2))
                 .pageSize(10).totalElements(2).totalPages(1).build();
 
-        mockEncryptDecrypt();
-
-        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
+        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "USERFISCALCODE1", null, null);
 
         assertEquals(2, result.getContent().size());
         assertEquals(pointOfSaleTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
+        Mockito.verify(decryptRestConnector, Mockito.never()).getPiiByToken(Mockito.any());
+    }
+
+    @Test
+    void getPointOfSaleTransactionList_twoDifferentFiscalCodes_viaDecrypt() {
+        TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        transaction1.setUserId("USERID1");
+
+        TransactionInProgress transaction2 = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
+        transaction2.setUserId("USERID2");
+
+        when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1, transaction2));
+
+        when(decryptRestConnector.getPiiByToken("USERID1")).thenReturn(new DecryptCfDTO("FISCALCODE1"));
+        when(decryptRestConnector.getPiiByToken("USERID2")).thenReturn(new DecryptCfDTO("FISCALCODE2"));
+
+        PointOfSaleTransactionDTO expectedDto1 = buildExpectedDTO(transaction1, true, false, "FISCALCODE1");
+        PointOfSaleTransactionDTO expectedDto2 = buildExpectedDTO(transaction2, true, false, "FISCALCODE2");
+
+        PointOfSaleTransactionsListDTO expectedResult = PointOfSaleTransactionsListDTO.builder()
+                .content(List.of(expectedDto1, expectedDto2))
+                .pageSize(10).totalElements(2).totalPages(1).build();
+
+        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", null, null, null);
+
+        assertEquals(2, result.getContent().size());
+        assertEquals(expectedResult.getContent().get(0).getFiscalCode(), result.getContent().get(0).getFiscalCode());
+        assertEquals(expectedResult.getContent().get(1).getFiscalCode(), result.getContent().get(1).getFiscalCode());
+
+        Mockito.verify(decryptRestConnector).getPiiByToken("USERID1");
+        Mockito.verify(decryptRestConnector).getPiiByToken("USERID2");
     }
 
     @Test
     void getPointOfSaleTransactionList_ko_encrypt() {
         try {
-            pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
+            pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "USERFISCALCODE1", null, null);
         } catch (PDVInvocationException e) {
             assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
             assertEquals("An error occurred during encryption", e.getMessage());
@@ -117,47 +152,56 @@ class PointOfSaleTransactionServiceTest {
 
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
 
-        EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
+        RuntimeException simulatedException = new RuntimeException("Simulated decryption error");
+        when(decryptRestConnector.getPiiByToken("USERID1")).thenThrow(simulatedException);
 
-        Mockito.when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
+        PDVInvocationException exception = assertThrows(PDVInvocationException.class, () ->
+                pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", null, null, null)
+        );
 
-        try {
-            pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
-        } catch (PDVInvocationException e) {
-            assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
-            assertEquals("An error occurred during decryption", e.getMessage());
-        }
+        assertEquals("PAYMENT_GENERIC_ERROR", exception.getCode());
+        assertEquals("An error occurred during decryption", exception.getMessage());
+        assertSame(simulatedException, exception.getCause());
     }
 
     @Test
     void getPointOfSaleTransactionList_NoFiscalCode_QRCODE() {
         TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transaction1.setUserId("USERID1");
         transaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
+
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
 
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(QRCODE_TXTURL);
 
-        PointOfSaleTransactionDTO pointOfSaleTransaction = buildExpectedDTO(transaction1, false, true);
+        mockEncryptDecrypt();
 
-        PointOfSaleTransactionsListDTO pointOfSaleTransactionsListDTO_expected = PointOfSaleTransactionsListDTO.builder()
+        PointOfSaleTransactionDTO pointOfSaleTransaction = buildExpectedDTO(transaction1, true, true, "USERFISCALCODE1");
+
+        PointOfSaleTransactionsListDTO expectedResult = PointOfSaleTransactionsListDTO.builder()
                 .content(List.of(pointOfSaleTransaction))
                 .pageSize(10).totalElements(1).totalPages(1).build();
 
         PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", null, null, null);
 
         assertEquals(1, result.getContent().size());
-        assertEquals(pointOfSaleTransactionsListDTO_expected, result);
+        assertEquals(expectedResult, result);
         TestUtils.checkNotNullFields(result);
+        Mockito.verify(decryptRestConnector).getPiiByToken("USERID1");
     }
 
     @Test
     void getPointOfSaleTransactionList_NoFiscalCode() {
         TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transaction1.setUserId("USERID1");
 
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
 
-        PointOfSaleTransactionDTO pointOfSaleTransaction = buildExpectedDTO(transaction1, false, false);
+        DecryptCfDTO decryptCfDTO = new DecryptCfDTO("USERFISCALCODE1");
+        when(decryptRestConnector.getPiiByToken("USERID1")).thenReturn(decryptCfDTO);
+
+        PointOfSaleTransactionDTO pointOfSaleTransaction = buildExpectedDTO(transaction1, true, false, "USERFISCALCODE1");
 
         PointOfSaleTransactionsListDTO pointOfSaleTransactionsListDTO_expected = PointOfSaleTransactionsListDTO.builder()
                 .content(List.of(pointOfSaleTransaction))
@@ -168,6 +212,8 @@ class PointOfSaleTransactionServiceTest {
         assertEquals(1, result.getContent().size());
         assertEquals(pointOfSaleTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
+        Mockito.verify(decryptRestConnector).getPiiByToken("USERID1");
+        Mockito.verifyNoInteractions(encryptRestConnector);
     }
 
     @Test
@@ -183,7 +229,7 @@ class PointOfSaleTransactionServiceTest {
 
         Mockito.when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
 
-        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
+        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "USERFISCALCODE1", null, null);
 
         assertEquals(0, result.getContent().size());
         assertEquals(pointOfSaleTransactionsListDTO_expected, result);
@@ -194,12 +240,16 @@ class PointOfSaleTransactionServiceTest {
     void getPointOfSaleTransactionList_NullChannel() {
         TransactionInProgress transaction1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         transaction1.setChannel(null);
+        transaction1.setUserId("USERID1");
+
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
 
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
         when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(QRCODE_TXTURL);
 
-        PointOfSaleTransactionDTO expectedDto = buildExpectedDTO(transaction1, false, true);
+        when(decryptRestConnector.getPiiByToken("USERID1")).thenReturn(new DecryptCfDTO("FISCALCODE1"));
+
+        PointOfSaleTransactionDTO expectedDto = buildExpectedDTO(transaction1, true, true, "FISCALCODE1");
 
         PointOfSaleTransactionsListDTO expectedResult = PointOfSaleTransactionsListDTO.builder()
                 .content(List.of(expectedDto))
@@ -210,16 +260,18 @@ class PointOfSaleTransactionServiceTest {
         assertEquals(1, result.getContent().size());
         assertEquals(expectedResult, result);
         TestUtils.checkNotNullFields(result);
+        Mockito.verify(decryptRestConnector).getPiiByToken("USERID1");
+        Mockito.verifyNoInteractions(encryptRestConnector);
     }
 
     private void mockEncryptDecrypt() {
         EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("USERID1");
-        DecryptCfDTO decryptCfDTO = new DecryptCfDTO("MERCHANTFISCALCODE1");
-        when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
+        DecryptCfDTO decryptCfDTO = new DecryptCfDTO("USERFISCALCODE1");
+        lenient().when(encryptRestConnector.upsertToken(Mockito.any())).thenReturn(encryptedCfDTO);
         when(decryptRestConnector.getPiiByToken("USERID1")).thenReturn(decryptCfDTO);
     }
 
-    private PointOfSaleTransactionDTO buildExpectedDTO(TransactionInProgress trx, boolean includeFiscalCode, boolean isQRCode) {
+    private PointOfSaleTransactionDTO buildExpectedDTO(TransactionInProgress trx, boolean includeFiscalCode, boolean isQRCode, String fiscalCode) {
         PointOfSaleTransactionDTO.PointOfSaleTransactionDTOBuilder builder =
                 PointOfSaleTransactionDTOFaker.mockInstanceBuilder(1, trx.getStatus());
 
@@ -231,7 +283,9 @@ class PointOfSaleTransactionServiceTest {
             builder.splitPayment(true);
             builder.residualAmountCents(trx.getAmountCents() - trx.getRewardCents());
         }
-        if (!includeFiscalCode) {
+        if (includeFiscalCode) {
+            builder.fiscalCode(fiscalCode);
+        } else {
             builder.fiscalCode(null);
         }
         if (isQRCode) {

@@ -25,7 +25,7 @@ public class PointOfSaleTransactionDTOFaker {
 
         return PointOfSaleTransactionDTO.builder()
                 .trxId(id)
-                .fiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
+                .fiscalCode("USERFISCALCODE%d".formatted(bias))
                 .effectiveAmountCents(1000L)
                 .rewardAmountCents(rewardCents != null ? rewardCents : Long.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))

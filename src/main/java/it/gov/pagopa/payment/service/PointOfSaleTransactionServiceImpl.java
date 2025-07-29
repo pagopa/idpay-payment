@@ -58,7 +58,13 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
         if (!transactionInProgressList.isEmpty()) {
             transactionInProgressList.forEach(
                     transaction ->
-                            pointOfSaleTransactions.add(populatePointOfSaleTransactionDTO(transaction)));
+                            pointOfSaleTransactions.add(
+                                    populatePointOfSaleTransactionDTO(
+                                            transaction,
+                                            StringUtils.isNotBlank(fiscalCode) ? fiscalCode : decryptCF(transaction.getUserId())
+                                    )
+                            )
+            );
         }
         long count = transactionInProgressRepository.getCount(criteria);
         final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
@@ -67,11 +73,11 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
                 (int) result.getTotalElements(), result.getTotalPages());
     }
 
-    private PointOfSaleTransactionDTO populatePointOfSaleTransactionDTO(TransactionInProgress transaction){
+    private PointOfSaleTransactionDTO populatePointOfSaleTransactionDTO(TransactionInProgress transaction, String fiscalCode) {
         String trxCodeImgUrl = null;
         String trxCodeTxtUrl = null;
 
-        if(null == transaction.getChannel() || RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) {
+        if (null == transaction.getChannel() || RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(transaction.getChannel())) {
             trxCodeImgUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(transaction.getTrxCode());
             trxCodeTxtUrl = transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(transaction.getTrxCode());
         }
@@ -79,7 +85,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
 
         return new PointOfSaleTransactionDTO(transaction.getTrxCode(),
                 transaction.getCorrelationId(),
-                transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
+                fiscalCode,
                 transaction.getAmountCents(),
                 transaction.getRewardCents() != null ? transaction.getRewardCents() : Long.valueOf(0),
                 transaction.getTrxDate().toLocalDateTime(),
@@ -100,7 +106,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
             DecryptCfDTO decryptedCfDTO = decryptRestConnector.getPiiByToken(userId);
             fiscalCode = decryptedCfDTO.getPii();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during decryption",true,e);
+            throw new PDVInvocationException("An error occurred during decryption", true, e);
         }
         return fiscalCode;
     }
@@ -111,7 +117,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
             EncryptedCfDTO encryptedCfDTO = encryptRestConnector.upsertToken(new CFDTO(fiscalCode));
             userId = encryptedCfDTO.getToken();
         } catch (Exception e) {
-            throw new PDVInvocationException("An error occurred during encryption",true,e);
+            throw new PDVInvocationException("An error occurred during encryption", true, e);
         }
         return userId;
     }
