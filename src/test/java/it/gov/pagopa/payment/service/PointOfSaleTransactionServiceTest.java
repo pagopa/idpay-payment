@@ -28,12 +28,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PointOfSaleTransactionServiceTest {
 
-    private final String QRCODE_IMGURL ="QRCODE_IMGURL";
-    private final String QRCODE_TXTURL ="QRCODE_TXTURL";
-    @Mock private EncryptRestConnector encryptRestConnector;
-    @Mock private DecryptRestConnector decryptRestConnector;
-    @Mock private TransactionInProgressRepository repositoryMock;
-    @Mock private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock;
+    private final String QRCODE_IMGURL = "QRCODE_IMGURL";
+    private final String QRCODE_TXTURL = "QRCODE_TXTURL";
+    @Mock
+    private EncryptRestConnector encryptRestConnector;
+    @Mock
+    private DecryptRestConnector decryptRestConnector;
+    @Mock
+    private TransactionInProgressRepository repositoryMock;
+    @Mock
+    private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock;
 
     private PointOfSaleTransactionService pointOfSaleTransactionService;
 
@@ -100,7 +104,7 @@ class PointOfSaleTransactionServiceTest {
     void getPointOfSaleTransactionList_ko_encrypt() {
         try {
             pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
-        } catch (PDVInvocationException e){
+        } catch (PDVInvocationException e) {
             assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
             assertEquals("An error occurred during encryption", e.getMessage());
         }
@@ -119,7 +123,7 @@ class PointOfSaleTransactionServiceTest {
 
         try {
             pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", "MERCHANTFISCALCODE1", null, null);
-        } catch (PDVInvocationException e){
+        } catch (PDVInvocationException e) {
             assertEquals("PAYMENT_GENERIC_ERROR", e.getCode());
             assertEquals("An error occurred during decryption", e.getMessage());
         }
@@ -140,7 +144,7 @@ class PointOfSaleTransactionServiceTest {
                 .content(List.of(pointOfSaleTransaction))
                 .pageSize(10).totalElements(1).totalPages(1).build();
 
-        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1","POINTOFSALEID1", null, null, null);
+        PointOfSaleTransactionsListDTO result = pointOfSaleTransactionService.getPointOfSaleTransactions("MERCHANTID1", "INITIATIVEID1", "POINTOFSALEID1", null, null, null);
 
         assertEquals(1, result.getContent().size());
         assertEquals(pointOfSaleTransactionsListDTO_expected, result);

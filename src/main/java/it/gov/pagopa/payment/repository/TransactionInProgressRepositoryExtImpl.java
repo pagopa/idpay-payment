@@ -89,7 +89,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         return mongoTemplate.findOne(
                 Query.query(
                         criteriaByTrxIdAndDateGreaterThan(trxId, OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes))),
-                        TransactionInProgress.class);
+                TransactionInProgress.class);
     }
 
     @Override
@@ -119,6 +119,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     private Criteria criteriaByTrxCodeAndDateGreaterThan(String trxCode, OffsetDateTime trxDate) {
         return Criteria.where(Fields.trxCode).is(trxCode).and(Fields.trxDate).gte(trxDate);
     }
+
     private Criteria criteriaByTrxIdAndDateGreaterThan(String trxId, OffsetDateTime trxDate) {
         return Criteria.where(Fields.id).is(trxId).and(Fields.trxDate).gte(trxDate);
     }
@@ -129,7 +130,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         Criteria.where(Fields.trxChargeDate).is(null),
                         Criteria.expr(
                                 ComparisonOperators.Lt.valueOf(Fields.trxChargeDate)
-                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000*trxThrottlingSeconds))));
+                                        .lessThan(ArithmeticOperators.Subtract.valueOf(MongoConstants.AGGREGATION_EXPRESSION_VARIABLE_NOW).subtract(1000 * trxThrottlingSeconds))));
     }
 
     @Override
@@ -159,6 +160,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
+
     @Override
     public void updateTrxWithStatus(TransactionInProgress trx) {
         mongoTemplate.updateFirst(
@@ -171,10 +173,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.initiativeRejectionReasons, trx.getInitiativeRejectionReasons())
                         .set(Fields.rewards, trx.getRewards())
                         .set(Fields.channel, trx.getChannel())
-                        .set(Fields.counterVersion,trx.getCounterVersion())
+                        .set(Fields.counterVersion, trx.getCounterVersion())
                         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                         .set(Fields.amountCents, trx.getAmountCents())
-                        .set(Fields.merchantId,trx.getMerchantId())
+                        .set(Fields.merchantId, trx.getMerchantId())
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
@@ -191,10 +193,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.initiativeRejectionReasons, initiativeRejectionReasons)
                         .set(Fields.rewards, preview.getRewards())
                         .set(Fields.channel, channel)
-                        .set(Fields.counterVersion,preview.getCounterVersion())
+                        .set(Fields.counterVersion, preview.getCounterVersion())
                         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                         .set(Fields.amountCents, trx.getAmountCents())
-                        .set(Fields.merchantId,trx.getMerchantId())
+                        .set(Fields.merchantId, trx.getMerchantId())
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }
@@ -212,7 +214,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.counterVersion, authPaymentDTO.getCounters().getVersion())
                 .currentDate(Fields.updateDate);
 
-        if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
+        if (RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())) {
             update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
                     .set(Fields.amountCents, trx.getAmountCents())
                     .set(Fields.effectiveAmountCents, trx.getEffectiveAmountCents())
@@ -241,7 +243,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                 .currentDate(Fields.updateDate);
 
-        if(RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())){
+        if (RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())) {
             update.set(Fields.amountCurrency, PaymentConstants.CURRENCY_EUR)
                     .set(Fields.amountCents, trx.getAmountCents())
                     .set(Fields.effectiveAmountCents, trx.getEffectiveAmountCents())
@@ -265,7 +267,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         if (userId != null) {
             criteria.and(Fields.userId).is(userId);
         }
-            if (pointOfSaleId != null) {
+        if (pointOfSaleId != null) {
             criteria.and(Fields.pointOfSaleId).is(pointOfSaleId);
         }
         if (status != null) {

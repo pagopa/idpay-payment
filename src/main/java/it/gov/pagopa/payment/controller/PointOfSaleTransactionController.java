@@ -17,5 +17,5 @@ public interface PointOfSaleTransactionController {
                                                               @PathVariable("pointOfSaleId") String pointOfSaleId,
                                                               @RequestParam(required = false) String fiscalCode,
                                                               @RequestParam(required = false) String status,
-                                                              @PageableDefault(sort="updateDate", direction = Sort.Direction.DESC) Pageable pageable);
+                                                              @PageableDefault(sort = "updateDate", direction = Sort.Direction.DESC) Pageable pageable);
 }
