@@ -12,6 +12,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
@@ -21,6 +22,7 @@ import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.support.PageableExecutionUtils;
 
 import java.time.OffsetDateTime;
 import java.util.Collections;
@@ -290,6 +292,17 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     @Override
     public long getCount(Criteria criteria) {
         return mongoTemplate.count(Query.query(criteria), TransactionInProgress.class);
+    }
+
+    @Override
+    public Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, Pageable pageable) {
+        Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status);
+        Query query = Query.query(criteria).with(CommonUtilities.getPageable(pageable));
+
+        List<TransactionInProgress> transactions = mongoTemplate.find(query, TransactionInProgress.class);
+        long count = mongoTemplate.count(Query.query(criteria), TransactionInProgress.class);
+
+        return PageableExecutionUtils.getPage(transactions, pageable, () -> count);
     }
 
     @Override
