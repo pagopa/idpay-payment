@@ -56,7 +56,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         if (StringUtils.isNotBlank(fiscalCode)) {
             userId = encryptCF(fiscalCode);
         }
-        Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, initiativeId, userId, status);
+        Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, null, initiativeId, userId, status);
         List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, pageable);
         List<MerchantTransactionDTO> merchantTransactions = new ArrayList<>();
         if (!transactionInProgressList.isEmpty()) {

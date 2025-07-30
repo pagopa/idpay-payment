@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -21,11 +22,12 @@ public interface TransactionInProgressRepositoryExt {
   void updateTrxWithStatusForPreview(TransactionInProgress trx, AuthPaymentDTO preview, Map<String, List<String>> initiativeRejectionReasons, String channel, SyncTrxStatus status);
   UpdateResult updateTrxAuthorized(TransactionInProgress trx, AuthPaymentDTO authPaymentDTO, Map<String, List<String>> initiativeRejectionReasons);
   void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason);
-  Criteria getCriteria(String merchantId, String initiativeId, String userId, String status);
+  Criteria getCriteria(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status);
   List<TransactionInProgress> findByFilter(Criteria criteria, Pageable pageable);
   long getCount(Criteria criteria);
   TransactionInProgress findCancelExpiredTransaction(String initiativeId, long cancelExpirationMinutes);
   TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId, long authorizationExpirationMinutes);
   List<TransactionInProgress> deletePaged(String initiativeId, int pageSize);
   UpdateResult updateTrxPostTimeout(String trxId);
+  Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, Pageable pageable);
 }
