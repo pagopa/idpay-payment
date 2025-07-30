@@ -31,7 +31,7 @@ public class PDVServiceImpl implements PDVService {
                 "An error occurred during decryption");
     }
 
-    private <T> T wrapPDVCall(Supplier<T> action, String errorMessage) {
+    private String wrapPDVCall(Supplier<String> action, String errorMessage) {
         try {
             return action.get();
         } catch (Exception e) {
