@@ -31,7 +31,7 @@ class PerformanceLoggerTest {
     private MemoryAppender memoryAppender;
 
     @BeforeEach
-    public void setup() {
+    void setup() {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(PerformanceLogger.class.getName());
         memoryAppender = new MemoryAppender();
         memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
