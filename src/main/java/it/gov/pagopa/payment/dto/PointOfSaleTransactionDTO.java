@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 public class PointOfSaleTransactionDTO {
 
     private String trxCode;
+    @JsonProperty("id")
     private String trxId;
     private String fiscalCode;
     @NotNull
