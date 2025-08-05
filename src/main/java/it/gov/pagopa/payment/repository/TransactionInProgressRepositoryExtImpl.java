@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -272,7 +273,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         if (pointOfSaleId != null) {
             criteria.and(Fields.pointOfSaleId).is(pointOfSaleId);
         }
-        if (status != null) {
+        if (StringUtils.isNotBlank(status)) {
             if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString())
                     .contains(status)) {
                 criteria.orOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
