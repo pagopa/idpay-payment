@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,9 +18,11 @@ public class PreviewPaymentDTO {
 
   private String trxCode;
   private OffsetDateTime trxDate;
+  private SyncTrxStatus status;
   private Long rewardCents;
   private Long amountCents;
   private Long residualBudgetCents;
+  private Long residualAmountCents;
   private String userId;
 
 
