@@ -29,6 +29,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -156,5 +158,26 @@ class BarCodeAuthPaymentServiceImplTest {
         // Then
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS, result.getCode());
 
+    }
+
+
+    @Test
+    void previewPayment_ok(){
+        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
+        when(commonAuthServiceMock.previewPayment(any(),any(),any())).thenReturn(authPaymentDTO);
+
+        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode"));
+    }
+
+    @Test
+    void previewPayment_TransactionIsNull(){
+        when(transaction.findByTrxCode(any())).thenReturn(Optional.empty());
+
+        TransactionNotFoundOrExpiredException exceptionResult = assertThrows(TransactionNotFoundOrExpiredException.class, () -> barCodeAuthPaymentService.previewPayment("trxCode"));
+
+        assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
     }
 }

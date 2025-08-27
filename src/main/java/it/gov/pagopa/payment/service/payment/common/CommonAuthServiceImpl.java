@@ -53,7 +53,17 @@ public class CommonAuthServiceImpl {
         checkAuth(trxCode,trx);
         checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
 
-        return commonPreAuthService.previewPayment(trx, trx.getChannel(), trx.getStatus());
+        AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
+        Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
+                Long.sum(CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()), preview.getRewardCents()) : null;
+        preview.setResidualBudgetCents(residualBudget);
+
+        if(preview.getRejectionReasons() == null || preview.getRejectionReasons().isEmpty()) {
+            preview.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()));
+            preview.setRejectionReasons(Collections.emptyList());
+        }
+
+        return preview;
     }
 
     public AuthPaymentDTO authPayment(TransactionInProgress trx, String userId, String trxCode) {
