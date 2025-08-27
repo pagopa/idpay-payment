@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
+import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -39,6 +40,7 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private MerchantConnector merchantConnector;
     @Mock private CommonAuthServiceImpl commonAuthServiceMock;
+    @Mock private TransactionInProgressRepository transaction;
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
     private static final String TRX_CODE1 = "trxcode1";
@@ -58,6 +60,7 @@ class BarCodeAuthPaymentServiceImplTest {
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
                 barCodeAuthorizationExpiredServiceMock,
                 merchantConnector,
+                transaction,
                 commonAuthServiceMock,
                 auditUtilitiesMock);
     }

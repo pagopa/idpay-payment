@@ -1,0 +1,26 @@
+package it.gov.pagopa.payment.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
+
+import java.time.OffsetDateTime;
+
+@Data
+@SuperBuilder
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class PreviewPaymentDTO {
+
+  private String trxCode;
+  private OffsetDateTime trxDate;
+  private Long rewardCents;
+  private Long amountCents;
+  private Long residualBudgetCents;
+  private String userId;
+
+
+}

@@ -5,9 +5,12 @@ import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -25,16 +29,41 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
+    private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonAuthServiceImpl commonAuthService;
     protected final AuditUtilities auditUtilities;
     public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
+                                         TransactionInProgressRepository transactionInProgressRepository,
                                          CommonAuthServiceImpl commonAuthService,
                                          AuditUtilities auditUtilities){
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
+        this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonAuthService = commonAuthService;
         this.auditUtilities = auditUtilities;
+    }
+
+    @Override
+    public PreviewPaymentDTO previewPayment(String trxCode){
+        Optional<TransactionInProgress> transactionInProgress = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase());
+        if(transactionInProgress.isEmpty()){
+            throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
+        }
+        AuthPaymentDTO preview = commonAuthService.previewPayment(transactionInProgress.get(),transactionInProgress.get().getUserId(),transactionInProgress.get().getTrxCode());
+
+        return buildPreviewPaymentDTO(preview, transactionInProgress.get().getUserId());
+    }
+    
+    private PreviewPaymentDTO buildPreviewPaymentDTO(AuthPaymentDTO preview, String userId){
+        return PreviewPaymentDTO.builder()
+                .trxCode(preview.getTrxCode())
+                .trxDate(preview.getTrxDate())
+                .rewardCents(preview.getRewardCents())
+                .amountCents(preview.getAmountCents())
+                .residualBudgetCents(preview.getResidualBudgetCents())
+                .userId(userId)
+                .build();
     }
 
     @Override
