@@ -16,6 +16,7 @@
 
     <properties>
         <java.version>21</java.version>
+        <argLine>-Duser.timezone=Europe/Rome</argLine> <!-- placeholder to make works both the remote pipeline with sonar cloud and locally -->
     </properties>
 
     <dependencies>
@@ -248,10 +249,8 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.3</version>
                 <configuration>
                     <argLine>@{argLine} -Duser.timezone=Europe/Rome</argLine>
-                    <argLine>-Xmx1024m</argLine>
                 </configuration>
             </plugin>
             <plugin>
