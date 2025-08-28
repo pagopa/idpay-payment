@@ -43,13 +43,13 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
 
     @Override
     @PerformanceLog(
-            value = "BAR_CODE_GET_PREVIEW_PAYMENT",
+            value = "BAR_CODE_PREVIEW_PAYMENT",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public PreviewPaymentDTO previewPayment(String trxCode, PreviewPaymentRequestDTO previewPaymentRequestDTO) {
-        log.info("[BAR_CODE_PREVIEW_PAYMENT] Retrieve preview payment having trxCode {}", trxCode);
-        PreviewPaymentDTO previewPaymentDTO = barCodePaymentService.previewPayment(trxCode);
+    public PreviewPaymentDTO previewPayment(PreviewPaymentRequestDTO previewPaymentRequestDTO) {
+        log.info("[BAR_CODE_PREVIEW_PAYMENT] Retrieve preview payment having trxCode {}", previewPaymentRequestDTO.getTrxCode());
+        PreviewPaymentDTO previewPaymentDTO = barCodePaymentService.previewPayment(previewPaymentRequestDTO.getTrxCode());
         previewPaymentDTO.setProduct(previewPaymentRequestDTO.getProduct());
-        return barCodePaymentService.previewPayment(trxCode);
+        return previewPaymentDTO;
     }
 
 }

@@ -29,10 +29,9 @@ public interface BarCodePaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId
     );
 
-    @PostMapping("/{trxCode}")
+    @PostMapping("/preview")
     @ResponseStatus(code = HttpStatus.OK)
     PreviewPaymentDTO previewPayment(
-            @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid PreviewPaymentRequestDTO previewPaymentRequestDTO
     );
 
