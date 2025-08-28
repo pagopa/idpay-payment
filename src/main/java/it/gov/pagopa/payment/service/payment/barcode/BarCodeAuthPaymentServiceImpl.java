@@ -62,8 +62,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .status(preview.getStatus())
                 .rewardCents(preview.getRewardCents())
                 .amountCents(preview.getAmountCents())
-                .residualBudgetCents(preview.getResidualBudgetCents())
-                .residualAmountCents(preview.getResidualAmountCents())
                 .userId(userId)
                 .build();
     }

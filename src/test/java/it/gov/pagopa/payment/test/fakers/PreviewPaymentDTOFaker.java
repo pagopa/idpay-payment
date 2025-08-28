@@ -18,7 +18,6 @@ public class PreviewPaymentDTOFaker {
             .trxCode("trxCode")
             .amountCents(100L)
             .trxDate(OffsetDateTime.now())
-            .residualBudgetCents(100L)
             .rewardCents(100L);
   }
 }

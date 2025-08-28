@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -44,8 +45,10 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_GET_PREVIEW_PAYMENT",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public PreviewPaymentDTO previewPayment(String trxCode) {
-        log.info("[BAR_CODE_GET_PREVIEW_PAYMENT] Retrieve preview payment having trxCode {}", trxCode);
+    public PreviewPaymentDTO previewPayment(String trxCode, PreviewPaymentRequestDTO previewPaymentRequestDTO) {
+        log.info("[BAR_CODE_PREVIEW_PAYMENT] Retrieve preview payment having trxCode {}", trxCode);
+        PreviewPaymentDTO previewPaymentDTO = barCodePaymentService.previewPayment(trxCode);
+        previewPaymentDTO.setProduct(previewPaymentRequestDTO.getProduct());
         return barCodePaymentService.previewPayment(trxCode);
     }
 

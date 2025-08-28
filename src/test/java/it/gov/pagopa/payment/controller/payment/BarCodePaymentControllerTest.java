@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -30,7 +31,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BarCodePaymentControllerImpl.class)
@@ -183,11 +185,13 @@ class BarCodePaymentControllerTest {
     @Test
     void previewPayment_ok() throws Exception {
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
+        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
 
         when(barCodePaymentService.previewPayment(any())).thenReturn(previewPaymentDTO);
         MvcResult result = mockMvc.perform(
-                        get("/idpay/payment/bar-code/{trxCode}","trxCode")
-                                .contentType(MediaType.APPLICATION_JSON))
+                        post("/idpay/payment/bar-code/{trxCode}","trxCode")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn();
 

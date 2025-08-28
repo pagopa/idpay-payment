@@ -21,9 +21,8 @@ public class PreviewPaymentDTO {
   private SyncTrxStatus status;
   private Long rewardCents;
   private Long amountCents;
-  private Long residualBudgetCents;
-  private Long residualAmountCents;
   private String userId;
+  private String product;
 
 
 }
