@@ -13,6 +13,8 @@ import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeRespons
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
+import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
+
 @Slf4j
 @RestController
 public class BarCodePaymentControllerImpl implements BarCodePaymentController {
@@ -46,10 +48,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             value = "BAR_CODE_PREVIEW_PAYMENT",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
     public PreviewPaymentDTO previewPayment(PreviewPaymentRequestDTO previewPaymentRequestDTO) {
-        String sanitizedTrxCode = previewPaymentRequestDTO.getTrxCode() != null
-                ? previewPaymentRequestDTO.getTrxCode().replaceAll("[\\r\\n]", "")
-                : null;
-        log.info("[BAR_CODE_PREVIEW_PAYMENT] Retrieve preview payment having trxCode {}", sanitizedTrxCode);
+        String sanitizedTrxCode = sanitizeString(previewPaymentRequestDTO.getTrxCode());
         PreviewPaymentDTO previewPaymentDTO = barCodePaymentService.previewPayment(sanitizedTrxCode);
         previewPaymentDTO.setProduct(previewPaymentRequestDTO.getProduct());
         return previewPaymentDTO;
