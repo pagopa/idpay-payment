@@ -21,7 +21,7 @@ import java.lang.annotation.*;
 @ExtendWith(SpringExtension.class)
 @TestPropertySource(
         properties = {
-                "de.flapdoodle.mongodb.embedded.version=4.2.24",
+                "de.flapdoodle.mongodb.embedded.version=4.4.13",
 
                 "spring.data.mongodb.database=idpay",
                 "spring.data.mongodb.config.connectionPool.maxSize: 100",
