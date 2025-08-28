@@ -26,9 +26,4 @@ public class PreviewPaymentRequestDTO {
   @JsonProperty("amount")
   private BigDecimal amount;
 
-  @NotBlank(message = "trxCode must not be blank")
-  @JsonProperty("trxCode")
-  private String trxCode;
-
-
 }
