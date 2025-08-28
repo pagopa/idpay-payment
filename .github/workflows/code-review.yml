@@ -20,7 +20,7 @@ permissions:
 jobs:
   sonarcloud:
     name: SonarCloud Analysis
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout code
@@ -41,11 +41,6 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-
-
-      - name: Install missing libraries
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libssl1.1 libcrypto++6
 
       - name: Build and test with Maven
         run: mvn clean org.jacoco:jacoco-maven-plugin:0.8.12:prepare-agent verify org.jacoco:jacoco-maven-plugin:0.8.12:report org.jacoco:jacoco-maven-plugin:0.8.12:report-aggregate -B
