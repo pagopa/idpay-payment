@@ -167,7 +167,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
-        when(commonAuthServiceMock.previewPayment(any(),any(),any())).thenReturn(authPaymentDTO);
+        when(commonAuthServiceMock.previewPayment(any(),any())).thenReturn(authPaymentDTO);
 
         assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode"));
     }

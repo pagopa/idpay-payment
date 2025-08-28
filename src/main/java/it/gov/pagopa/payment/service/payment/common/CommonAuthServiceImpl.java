@@ -49,8 +49,7 @@ public class CommonAuthServiceImpl {
         this.timeoutSchedulerService = timeoutSchedulerService;
     }
 
-    public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId, String trxCode) {
-        checkAuth(trxCode,trx);
+    public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId) {
         checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
 
         return rewardCalculatorConnector.previewTransaction(trx);

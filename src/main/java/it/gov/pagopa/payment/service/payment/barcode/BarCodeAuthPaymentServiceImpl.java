@@ -50,7 +50,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         if(transactionInProgress.isEmpty()){
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
         }
-        AuthPaymentDTO preview = commonAuthService.previewPayment(transactionInProgress.get(),transactionInProgress.get().getUserId(),transactionInProgress.get().getTrxCode());
+        AuthPaymentDTO preview = commonAuthService.previewPayment(transactionInProgress.get(),transactionInProgress.get().getUserId());
 
         return buildPreviewPaymentDTO(preview, transactionInProgress.get().getUserId());
     }
