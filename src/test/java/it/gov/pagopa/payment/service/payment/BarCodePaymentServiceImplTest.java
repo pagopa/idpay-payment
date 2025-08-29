@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -8,10 +9,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodePaymentServiceImplTest {
@@ -79,5 +79,20 @@ class BarCodePaymentServiceImplTest {
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
         Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerID);
         Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
+    }
+
+
+    @Test
+    void previewPayment_ok(){
+        PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
+
+        Mockito.when(barCodeAuthPaymentService.previewPayment(any()))
+                .thenReturn(previewPaymentDTO);
+
+        // When
+        PreviewPaymentDTO result = barCodePaymentService.previewPayment("trxCode");
+
+        // Then
+        Assertions.assertNotNull(result);
     }
 }
