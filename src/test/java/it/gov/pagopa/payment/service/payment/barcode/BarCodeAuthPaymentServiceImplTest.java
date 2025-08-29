@@ -70,23 +70,23 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment(){
         // Given
-        TransactionInProgress transaction =
+        TransactionInProgress transactionInProgress =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        transaction.setUserId(USER_ID);
+        transactionInProgress.setUserId(USER_ID);
 
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
         Reward reward = RewardFaker.mockInstance(1);
         reward.setCounters(new RewardCounters());
 
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
-                .thenReturn(transaction);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transactionInProgress.getTrxCode()))
+                .thenReturn(transactionInProgress);
 
-        when(merchantConnector.merchantDetail(MERCHANT_ID, transaction.getInitiativeId()))
+        when(merchantConnector.merchantDetail(MERCHANT_ID, transactionInProgress.getInitiativeId()))
                 .thenReturn(MerchantDetailDTO.builder().build());
-        when(commonAuthServiceMock.invokeRuleEngine(transaction))
+        when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenReturn(authPaymentDTO);
         // When
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
@@ -97,7 +97,7 @@ class BarCodeAuthPaymentServiceImplTest {
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
         TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment",
                 "residualAmountCents");
-        assertEquals(transaction.getTrxCode(), result.getTrxCode());
+        assertEquals(transactionInProgress.getTrxCode(), result.getTrxCode());
     }
 
     @ParameterizedTest
@@ -136,20 +136,20 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment_TooManyRequestThrownByRewardCalculator() {
         // Given
-        TransactionInProgress transaction =
+        TransactionInProgress transactionInProgress =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        transaction.setUserId(USER_ID);
+        transactionInProgress.setUserId(USER_ID);
 
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
-                .thenReturn(transaction);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transactionInProgress.getTrxCode()))
+                .thenReturn(transactionInProgress);
 
-        when(merchantConnector.merchantDetail(MERCHANT_ID, transaction.getInitiativeId()))
+        when(merchantConnector.merchantDetail(MERCHANT_ID, transactionInProgress.getInitiativeId()))
                 .thenReturn(MerchantDetailDTO.builder().build());
 
-        when(commonAuthServiceMock.invokeRuleEngine(transaction))
+        when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward",true,null));
 
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
