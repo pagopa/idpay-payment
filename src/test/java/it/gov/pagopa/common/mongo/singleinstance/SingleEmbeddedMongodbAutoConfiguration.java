@@ -133,7 +133,9 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
 
     private static MongodWrapper createMongodWrapper(Constructor<? extends AbstractServerFactory<?>> unprotectedSyncClientServerFactoryConstructor, IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments) {
         try {
-            return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(unprotectedSyncClientServerFactoryConstructor.newInstance(properties).createWrapper(version, mongod, mongodArguments));
+            return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(
+                    unprotectedSyncClientServerFactoryConstructor.newInstance(properties)
+                            .createWrapper(version, mongod, mongodArguments, java.util.Collections.emptyList()));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("Cannot call protected constructor", e);
         }
