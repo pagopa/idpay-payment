@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -25,6 +27,13 @@ public interface BarCodePaymentController {
             @RequestBody @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId
+    );
+
+    @PutMapping("/preview/{trxCode}")
+    @ResponseStatus(code = HttpStatus.OK)
+    PreviewPaymentDTO previewPayment(
+            @PathVariable("trxCode") String trxCode,
+            @RequestBody @Valid PreviewPaymentRequestDTO previewPaymentRequestDTO
     );
 
 }

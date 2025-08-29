@@ -2,10 +2,11 @@ package it.gov.pagopa.payment.service.payment;
 
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
-import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -35,4 +36,10 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId) {
         return barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerId);
     }
+
+    @Override
+    public PreviewPaymentDTO previewPayment(String trxCode) {
+        return barCodeAuthPaymentService.previewPayment(trxCode);
+    }
+
 }
