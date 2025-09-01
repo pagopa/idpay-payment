@@ -7,19 +7,17 @@ import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -31,6 +29,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -55,7 +55,7 @@ class BarCodePaymentControllerTest {
 
 
         TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
-        Mockito.when(barCodePaymentService.createTransaction(trxCreationReq,"USER_ID")).thenReturn(txrResponse);
+        when(barCodePaymentService.createTransaction(trxCreationReq,"USER_ID")).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(
                         post("/idpay/payment/bar-code")
@@ -122,7 +122,7 @@ class BarCodePaymentControllerTest {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         authPaymentDTO.setRewards(null);
 
-        Mockito.when(barCodePaymentService.authPayment(trx.getTrxCode(),authBarCodePaymentDTO,"MERCHANTID1","ACQUIRERID1")).thenReturn(authPaymentDTO);
+        when(barCodePaymentService.authPayment(trx.getTrxCode(),authBarCodePaymentDTO,"MERCHANTID1","ACQUIRERID1")).thenReturn(authPaymentDTO);
 
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/{trxCode}/authorize",trx.getTrxCode())
@@ -181,4 +181,21 @@ class BarCodePaymentControllerTest {
                 + "'x-merchant-id' for method parameter type String is not present\"}";
         assertEquals(actual, result.getResponse().getContentAsString());
     }
+
+    @Test
+    void previewPayment_ok() throws Exception {
+        PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
+        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
+
+        when(barCodePaymentService.previewPayment(any())).thenReturn(previewPaymentDTO);
+        MvcResult result = mockMvc.perform(
+                        put("/idpay/payment/bar-code/preview/{trxCode}","trxCode")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        assertNotNull(result.getResponse().getContentAsString());
+    }
+
 }

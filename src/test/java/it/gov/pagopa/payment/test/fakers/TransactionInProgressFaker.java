@@ -47,6 +47,7 @@ public class TransactionInProgressFaker {
         .initiativeName("INITIATIVENAME%d".formatted(bias))
         .businessName("BUSINESSNAME%d".formatted(bias))
         .merchantId("MERCHANTID%d".formatted(bias))
+        .pointOfSaleId("POINTOFSALEID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
         .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
