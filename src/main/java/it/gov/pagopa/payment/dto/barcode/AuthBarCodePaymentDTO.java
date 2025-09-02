@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.dto.barcode;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,4 +18,6 @@ public class AuthBarCodePaymentDTO {
     private Long amountCents;
     @NotBlank
     private String idTrxAcquirer;
+
+    private Map<String, String> additionalProperties;
 }

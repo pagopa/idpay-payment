@@ -39,6 +39,10 @@ public class TransactionInProgressFaker {
 
     boolean trxStatus = status.equals(SyncTrxStatus.REJECTED) || status.equals(SyncTrxStatus.REWARDED) || status.equals(SyncTrxStatus.AUTHORIZED);
 
+    Map<String, String> additionalProperties = new HashMap<>();
+
+    additionalProperties.put("description", "Additional description");
+
     return TransactionInProgress.builder()
         .id(id)
         .correlationId(id)
@@ -67,6 +71,7 @@ public class TransactionInProgressFaker {
         .rewardCents(rewardCents)
         .counterVersion(0L)
         .rewards(rewards)
+        .additionalProperties(additionalProperties)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }
