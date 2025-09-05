@@ -86,11 +86,11 @@ class BarCodePaymentServiceImplTest {
     void previewPayment_ok(){
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
 
-        Mockito.when(barCodeAuthPaymentService.previewPayment(any()))
+        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any()))
                 .thenReturn(previewPaymentDTO);
 
         // When
-        PreviewPaymentDTO result = barCodePaymentService.previewPayment("trxCode");
+        PreviewPaymentDTO result = barCodePaymentService.previewPayment("trxCode", 500L);
 
         // Then
         Assertions.assertNotNull(result);

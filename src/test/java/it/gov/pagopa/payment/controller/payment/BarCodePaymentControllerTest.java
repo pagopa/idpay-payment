@@ -187,7 +187,7 @@ class BarCodePaymentControllerTest {
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
         PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
 
-        when(barCodePaymentService.previewPayment(any())).thenReturn(previewPaymentDTO);
+        when(barCodePaymentService.previewPayment(any(), any())).thenReturn(previewPaymentDTO);
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/preview/{trxCode}","trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)

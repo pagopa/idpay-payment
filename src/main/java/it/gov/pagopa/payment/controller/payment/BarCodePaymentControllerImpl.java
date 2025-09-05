@@ -49,9 +49,9 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
     public PreviewPaymentDTO previewPayment(String trxCode, PreviewPaymentRequestDTO previewPaymentRequestDTO) {
         String sanitizedTrxCode = sanitizeString(trxCode);
-        PreviewPaymentDTO previewPaymentDTO = barCodePaymentService.previewPayment(sanitizedTrxCode);
-        previewPaymentDTO.setProduct(previewPaymentRequestDTO.getProduct());
-        return previewPaymentDTO;
+        PreviewPaymentDTO previewPaymentDTO = barCodePaymentService
+                .previewPayment(sanitizedTrxCode, previewPaymentRequestDTO.getAmountCents().longValue());
+        return previewPaymentDTO.withProductName(previewPaymentRequestDTO.getProductName());
     }
 
 }

@@ -18,12 +18,16 @@ import java.math.BigDecimal;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class PreviewPaymentRequestDTO {
 
-  @NotBlank(message = "product must not be blank")
-  @JsonProperty("product")
-  private String product;
+  @NotBlank(message = "productName must not be blank")
+  @JsonProperty("productName")
+  private String productName;
 
-  @NotNull(message = "amount must not be blank")
-  @JsonProperty("amount")
-  private BigDecimal amount;
+  @NotBlank(message = "productGtin must not be blank")
+  @JsonProperty("productGtin")
+  private String productGtin;
+
+  @NotNull(message = "amountCents must not be blank")
+  @JsonProperty("amountCents")
+  private BigDecimal amountCents;
 
 }

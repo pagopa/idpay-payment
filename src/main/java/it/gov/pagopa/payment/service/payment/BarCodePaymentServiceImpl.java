@@ -38,8 +38,8 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String trxCode) {
-        return barCodeAuthPaymentService.previewPayment(trxCode);
+    public PreviewPaymentDTO previewPayment(String trxCode, Long amountCents) {
+        return barCodeAuthPaymentService.previewPayment(trxCode, amountCents);
     }
 
 }

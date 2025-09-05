@@ -45,24 +45,25 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String trxCode){
-        Optional<TransactionInProgress> transactionInProgress = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase());
-        if(transactionInProgress.isEmpty()){
-            throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
-        }
-        AuthPaymentDTO preview = commonAuthService.previewPayment(transactionInProgress.get(),transactionInProgress.get().getUserId());
+    public PreviewPaymentDTO previewPayment(String trxCode, Long amountCents) {
+        final Optional<TransactionInProgress> transactionInProgressResponse =
+                transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase());
+        final TransactionInProgress transactionInProgress =
+                transactionInProgressResponse.orElseThrow(() ->
+                        new TransactionNotFoundOrExpiredException(
+                                "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+        transactionInProgress.setAmountCents(amountCents);
+        final AuthPaymentDTO preview = commonAuthService.
+                previewPayment(transactionInProgress, transactionInProgress.getUserId());
 
-        return buildPreviewPaymentDTO(preview, transactionInProgress.get().getUserId());
-    }
-    
-    private PreviewPaymentDTO buildPreviewPaymentDTO(AuthPaymentDTO preview, String userId){
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
                 .status(preview.getStatus())
+                .originalAmountCents(amountCents)
                 .rewardCents(preview.getRewardCents())
-                .amountCents(preview.getAmountCents())
-                .userId(userId)
+                .residualAmountCents(preview.getAmountCents())
+                .userId(transactionInProgress.getUserId())
                 .build();
     }
 

@@ -9,6 +9,8 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 public interface BarCodePaymentService {
 
     TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
+
     AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePayment, String merchantId, String acquirerId);
-    PreviewPaymentDTO previewPayment(String trxCode);
+
+    PreviewPaymentDTO previewPayment(String trxCode, Long amountCents);
 }
