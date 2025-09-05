@@ -40,8 +40,7 @@ public class TransactionInProgressFaker {
     boolean trxStatus = status.equals(SyncTrxStatus.REJECTED) || status.equals(SyncTrxStatus.REWARDED) || status.equals(SyncTrxStatus.AUTHORIZED);
 
     Map<String, String> additionalProperties = new HashMap<>();
-
-    additionalProperties.put("description", "Additional description");
+    additionalProperties.put("description", "test 1234");
 
     return TransactionInProgress.builder()
         .id(id)

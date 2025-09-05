@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -18,7 +19,8 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
             TransactionBarCodeCreationRequest transactionBarCodeCreationRequest,
             String channel,
             String userId,
-            String initiativeName
+            String initiativeName,
+            Map<String, String> additionalProperties
     ) {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
@@ -38,6 +40,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
                 .channel(channel)
                 .userId(userId)
                 .updateDate(now.toLocalDateTime())
+                .additionalProperties(additionalProperties)
                 .build();
     }
 }

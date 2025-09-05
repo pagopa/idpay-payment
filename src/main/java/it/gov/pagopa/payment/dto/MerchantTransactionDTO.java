@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import org.springframework.integration.config.xml.AbstractInboundGatewayParser;
 
 @Data
 @AllArgsConstructor
@@ -34,4 +36,5 @@ public class MerchantTransactionDTO {
     private String channel;
     private String qrcodePngUrl;
     private String qrcodeTxtUrl;
+    private Map<String, String> additionalProperties;
 }
