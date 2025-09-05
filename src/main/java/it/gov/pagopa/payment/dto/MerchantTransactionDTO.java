@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import org.springframework.integration.config.xml.AbstractInboundGatewayParser;
 
 @Data
 @AllArgsConstructor
