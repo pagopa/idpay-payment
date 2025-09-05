@@ -53,7 +53,8 @@ public class PointOfSaleTransactionMapper {
                 splitPaymentAndResidualAmountCents.getValue(),
                 trx.getChannel(),
                 trxCodeImgUrl,
-                trxCodeTxtUrl
+                trxCodeTxtUrl,
+                trx.getAdditionalProperties()
         );
     }
 }
