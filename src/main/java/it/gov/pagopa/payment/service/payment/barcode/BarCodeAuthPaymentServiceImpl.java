@@ -46,15 +46,15 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
     @Override
     public PreviewPaymentDTO previewPayment(String trxCode, Long amountCents) {
-        final Optional<TransactionInProgress> transactionInProgressResponse =
-                transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase());
+
         final TransactionInProgress transactionInProgress =
-                transactionInProgressResponse.orElseThrow(() ->
-                        new TransactionNotFoundOrExpiredException(
+                transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
+                        .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                                 "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
         transactionInProgress.setAmountCents(amountCents);
-        final AuthPaymentDTO preview = commonAuthService.
-                previewPayment(transactionInProgress, transactionInProgress.getUserId());
+
+        final AuthPaymentDTO preview = commonAuthService
+                .previewPayment(transactionInProgress, transactionInProgress.getUserId());
 
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
