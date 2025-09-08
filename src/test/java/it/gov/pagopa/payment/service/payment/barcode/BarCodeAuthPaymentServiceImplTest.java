@@ -173,10 +173,12 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
-    void previewPayment_TransactionIsNull(){
+    void previewPayment_TransactionIsNull() {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.empty());
 
-        TransactionNotFoundOrExpiredException exceptionResult = assertThrows(TransactionNotFoundOrExpiredException.class, () -> barCodeAuthPaymentService.previewPayment("trxCode", 950L));
+        TransactionNotFoundOrExpiredException exceptionResult =
+                assertThrows(TransactionNotFoundOrExpiredException.class, () ->
+                        barCodeAuthPaymentService.previewPayment("trxCode", 950L));
 
         assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
     }
