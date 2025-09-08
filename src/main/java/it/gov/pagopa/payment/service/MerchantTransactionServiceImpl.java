@@ -93,7 +93,8 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 splitPaymentAndResidualAmountCents.getValue(),
                 transaction.getChannel(),
                 trxCodeImgUrl,
-                trxCodeTxtUrl
+                trxCodeTxtUrl,
+                transaction.getAdditionalProperties()
                 );
         }
 
