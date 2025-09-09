@@ -119,5 +119,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         trx.setVat(merchantDetail.getVatNumber());
         trx.setAcquirerId(acquirerId);
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
+        trx.setAdditionalProperties(authBarCodePaymentDTO.getAdditionalProperties());
     }
 }
