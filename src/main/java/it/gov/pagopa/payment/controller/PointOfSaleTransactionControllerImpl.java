@@ -26,7 +26,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
 
     @Override
     public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, Pageable pageable) {
-        log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", ""));
+        log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : sanitizeForLog(pointOfSaleId));
 
         Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
                 merchantId, initiativeId, pointOfSaleId, fiscalCode, status, pageable);
@@ -42,5 +42,14 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
                 (int) page.getTotalElements(),
                 page.getTotalPages()
         );
+    }
+
+    /**
+     * Sanitize user input before logging to prevent log injection.
+     * Removes all control and non-printable characters.
+     */
+    private static String sanitizeForLog(String input) {
+        if (input == null) return null;
+        return input.replaceAll("[\\p{Cntrl}]", "");
     }
 }
