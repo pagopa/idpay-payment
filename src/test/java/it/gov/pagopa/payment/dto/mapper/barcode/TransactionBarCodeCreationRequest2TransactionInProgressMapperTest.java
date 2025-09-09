@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2Transa
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
         OffsetDateTime now = OffsetDateTime.now();
         TransactionInProgress result =
                 mapper.apply(
-                        trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME");
+                        trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>());
 
         TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
                 "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmountCents", "amountCurrency",
