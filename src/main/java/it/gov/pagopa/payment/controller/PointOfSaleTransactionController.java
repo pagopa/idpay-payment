@@ -7,7 +7,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/idpay/merchant/portal")
+@RequestMapping("/idpay")
 public interface PointOfSaleTransactionController {
 
     @GetMapping("/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions")
