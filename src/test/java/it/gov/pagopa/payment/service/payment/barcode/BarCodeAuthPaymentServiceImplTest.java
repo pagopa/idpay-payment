@@ -38,11 +38,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class BarCodeAuthPaymentServiceImplTest {
 
-    @Mock private BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredServiceMock;
-    @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock private MerchantConnector merchantConnector;
-    @Mock private CommonAuthServiceImpl commonAuthServiceMock;
-    @Mock private TransactionInProgressRepository transaction;
+    @Mock
+    private BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredServiceMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private MerchantConnector merchantConnector;
+    @Mock
+    private CommonAuthServiceImpl commonAuthServiceMock;
+    @Mock
+    private TransactionInProgressRepository transaction;
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
     private static final String TRX_CODE1 = "trxcode1";
@@ -58,7 +63,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
 
     @BeforeEach
-    void setup(){
+    void setup() {
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
                 barCodeAuthorizationExpiredServiceMock,
                 merchantConnector,
@@ -68,7 +73,7 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
-    void barCodeAuthPayment(){
+    void barCodeAuthPayment() {
         // Given
         TransactionInProgress transactionInProgress =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
@@ -95,7 +100,7 @@ class BarCodeAuthPaymentServiceImplTest {
         assertNotNull(result);
         assertEquals(authPaymentDTO, result);
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
-        TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment",
+        TestUtils.checkNotNullFields(result, "rejectionReasons", "splitPayment",
                 "residualAmountCents");
         assertEquals(transactionInProgress.getTrxCode(), result.getTrxCode());
     }
@@ -150,7 +155,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(MerchantDetailDTO.builder().build());
 
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
-                .thenThrow(new TooManyRequestsException("Too many request on the ms reward",true,null));
+                .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
 
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
                 () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID));
@@ -162,21 +167,49 @@ class BarCodeAuthPaymentServiceImplTest {
 
 
     @Test
-    void previewPayment_ok(){
+    void previewPayment_ok() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
-        when(commonAuthServiceMock.previewPayment(any(),any())).thenReturn(authPaymentDTO);
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
-        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode"));
+        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", 90000L));
     }
 
     @Test
-    void previewPayment_TransactionIsNull(){
+    void previewPayment_negativeReward() {
+        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
+        authPaymentDTO.setRewardCents(-100L);
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        assertThrows(TransactionInvalidException.class, () ->
+                barCodeAuthPaymentService.previewPayment("trxCode", 90000L));
+    }
+
+    @Test
+    void previewPayment_negativeResidualAmount() {
+        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
+        authPaymentDTO.setRewardCents(100L);
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        assertThrows(TransactionInvalidException.class, () ->
+                barCodeAuthPaymentService.previewPayment("trxCode", 90L));
+    }
+
+    @Test
+    void previewPayment_TransactionIsNull() {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.empty());
 
-        TransactionNotFoundOrExpiredException exceptionResult = assertThrows(TransactionNotFoundOrExpiredException.class, () -> barCodeAuthPaymentService.previewPayment("trxCode"));
+        TransactionNotFoundOrExpiredException exceptionResult =
+                assertThrows(TransactionNotFoundOrExpiredException.class, () ->
+                        barCodeAuthPaymentService.previewPayment("trxCode", 95000L));
 
         assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
     }

@@ -4,10 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 
@@ -16,14 +13,19 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@With
 public class PreviewPaymentRequestDTO {
 
-  @NotBlank(message = "product must not be blank")
-  @JsonProperty("product")
-  private String product;
+  @NotBlank(message = "productName must not be blank")
+  @JsonProperty("productName")
+  private String productName;
 
-  @NotNull(message = "amount must not be blank")
-  @JsonProperty("amount")
-  private BigDecimal amount;
+  @NotBlank(message = "productGtin must not be blank")
+  @JsonProperty("productGtin")
+  private String productGtin;
+
+  @NotNull(message = "amountCents must not be blank")
+  @JsonProperty("amountCents")
+  private BigDecimal amountCents;
 
 }

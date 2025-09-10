@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -187,12 +188,29 @@ class BarCodePaymentControllerTest {
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
         PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
 
-        when(barCodePaymentService.previewPayment(any())).thenReturn(previewPaymentDTO);
+        when(barCodePaymentService.previewPayment(any(), any())).thenReturn(previewPaymentDTO);
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/preview/{trxCode}","trxCode")
+                        put("/idpay/payment/bar-code/{trxCode}/preview","trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
                 .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        assertNotNull(result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void previewPayment_negativeAmount() throws Exception {
+        PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
+        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
+        previewPaymentRequestDTO.setAmountCents(BigDecimal.valueOf(-100L));
+
+        when(barCodePaymentService.previewPayment(any(), any())).thenReturn(previewPaymentDTO);
+        MvcResult result = mockMvc.perform(
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
+                .andExpect(status().is5xxServerError())
                 .andReturn();
 
         assertNotNull(result.getResponse().getContentAsString());

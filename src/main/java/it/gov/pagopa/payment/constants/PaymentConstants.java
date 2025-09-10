@@ -45,6 +45,7 @@ public class PaymentConstants {
     public static final String PAYMENT_INVALID_REQUEST = "PAYMENT_INVALID_REQUEST";
     public static final String PAYMENT_CANNOT_GUARANTEE_REWARD = "PAYMENT_CANNOT_GUARANTEE_REWARD";
     public static final String PAYMENT_TRANSACTION_VERSION_PENDING = "PAYMENT_TRANSACTION_VERSION_PENDING";
+    public static final String REWARD_NOT_VALID = "REWARD_NOT_VALID";
 
     private ExceptionCode() {}
   }
