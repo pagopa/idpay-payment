@@ -1,12 +1,14 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
@@ -53,9 +55,15 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
         final String sanitizedTrxCode = sanitizeString(trxCode);
         final String sanitizedProductName = sanitizeString(previewPaymentRequestDTO.getProductName());
         final String sanitizedProductGtin = sanitizeString(previewPaymentRequestDTO.getProductGtin());
+        final long amountCents = previewPaymentRequestDTO.getAmountCents().longValue();
+        if (amountCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative amountCents: {}", amountCents);
+            throw new TransactionInvalidException(PaymentConstants.ExceptionCode.REWARD_NOT_VALID,
+                    "Cannot preview transaction with negative amountCents [%s]".formatted(amountCents));
+        }
 
         final PreviewPaymentDTO previewPaymentDTO = barCodePaymentService
-                .previewPayment(sanitizedTrxCode, previewPaymentRequestDTO.getAmountCents().longValue());
+                .previewPayment(sanitizedTrxCode, amountCents);
 
         return previewPaymentDTO.withProductName(sanitizedProductName)
                 .withProductGtin(sanitizedProductGtin);

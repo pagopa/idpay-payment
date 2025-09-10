@@ -61,16 +61,13 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
         }
 
-        Long residualAmountCents = amountCents - preview.getRewardCents();
-        if (amountCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative amountCents: {}", amountCents);
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID,
-                    "Cannot preview transaction with negative amountCents [%s]".formatted(amountCents));
-        }
+        final long residualAmountCents = amountCents - preview.getRewardCents();
+
         if (residualAmountCents < 0L) {
             log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, preview.getRewardCents());
-            residualAmountCents = 0L; // Or optionally: throw new TransactionInvalidException(...)
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
         }
+
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
