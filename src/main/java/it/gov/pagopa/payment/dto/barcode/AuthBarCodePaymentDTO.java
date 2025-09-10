@@ -16,7 +16,6 @@ public class AuthBarCodePaymentDTO {
 
     @NotNull
     private Long amountCents;
-    @NotBlank
     private String idTrxAcquirer;
 
     private Map<String, String> additionalProperties;
