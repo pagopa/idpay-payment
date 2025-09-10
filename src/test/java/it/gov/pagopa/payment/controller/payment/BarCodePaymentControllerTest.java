@@ -189,7 +189,7 @@ class BarCodePaymentControllerTest {
 
         when(barCodePaymentService.previewPayment(any(), any())).thenReturn(previewPaymentDTO);
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/preview/{trxCode}","trxCode")
+                        put("/idpay/payment/bar-code/{trxCode}/preview","trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
                 .andExpect(status().is2xxSuccessful())

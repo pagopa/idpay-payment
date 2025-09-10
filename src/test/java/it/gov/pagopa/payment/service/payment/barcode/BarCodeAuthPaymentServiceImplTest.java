@@ -169,7 +169,7 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         when(commonAuthServiceMock.previewPayment(any(),any())).thenReturn(authPaymentDTO);
 
-        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", 900L));
+        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", 90000L));
     }
 
     @Test
@@ -178,7 +178,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         TransactionNotFoundOrExpiredException exceptionResult =
                 assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                        barCodeAuthPaymentService.previewPayment("trxCode", 950L));
+                        barCodeAuthPaymentService.previewPayment("trxCode", 95000L));
 
         assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
     }
