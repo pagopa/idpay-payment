@@ -22,5 +22,6 @@ public class PreviewPaymentDTO {
     private Long residualAmountCents;
     private String userId;
     private String productName;
+    private String productGtin;
 
 }
