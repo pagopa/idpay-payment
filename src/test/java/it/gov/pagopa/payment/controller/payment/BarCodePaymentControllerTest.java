@@ -145,7 +145,7 @@ class BarCodePaymentControllerTest {
 
     @Test
     void authorizeTransaction_testMandatoryFields() throws Exception {
-        List<String> expectedInvalidFields = List.of("amountCents", "idTrxAcquirer");
+        List<String> expectedInvalidFields = List.of("amountCents");
 
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/trxCode/authorize")
