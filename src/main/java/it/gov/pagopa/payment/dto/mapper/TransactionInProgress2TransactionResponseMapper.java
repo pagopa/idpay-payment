@@ -54,6 +54,7 @@ public class TransactionInProgress2TransactionResponseMapper
             .trxExpirationSeconds(CommonUtilities.minutesToSeconds(commonAuthorizationExpirationMinutes))
             .qrcodePngUrl(generateTrxCodeImgUrl(transactionInProgress.getTrxCode()))
             .qrcodeTxtUrl(generateTrxCodeTxtUrl(transactionInProgress.getTrxCode()))
+            .additionalProperties(transactionInProgress.getAdditionalProperties())
             .build();
   }
 

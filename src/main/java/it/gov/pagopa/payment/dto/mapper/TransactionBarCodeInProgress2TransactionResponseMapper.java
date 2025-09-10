@@ -32,6 +32,7 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .trxExpirationSeconds(CommonUtilities.minutesToSeconds(authorizationExpirationMinutes))
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
+
             .build();
   }
 }

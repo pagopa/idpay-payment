@@ -67,7 +67,7 @@ class PointOfSaleTransactionControllerTest {
                 .thenReturn(pointOfSaleTransactionDTO);
 
         MvcResult result = mockMvc.perform(
-                get("/idpay/merchant/portal/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
                         INITIATIVE_ID, POINT_OF_SALE_ID)
                         .header("x-merchant-id", MERCHANT_ID)
                         .param("fiscalCode", FISCAL_CODE)

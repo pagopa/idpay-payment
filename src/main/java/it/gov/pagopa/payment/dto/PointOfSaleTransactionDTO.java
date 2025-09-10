@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.constraints.NotNull;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -37,4 +38,5 @@ public class PointOfSaleTransactionDTO {
     private String channel;
     private String qrcodePngUrl;
     private String qrcodeTxtUrl;
+    private Map<String, String> additionalProperties;
 }

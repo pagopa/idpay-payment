@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,7 +31,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             value = "BAR_CODE_CREATE_TRANSACTION",
             payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
     public TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String userId) {
-        log.info("[BAR_CODE_CREATE_TRANSACTION] The user {} is creating a transaction", userId);
+        log.info("[BAR_CODE_CREATE_TRANSACTION] The user {} is creating a transaction", Utilities.sanitizeString(userId));
         return barCodePaymentService.createTransaction(trxBarCodeCreationRequest, userId);
     }
 
@@ -39,7 +40,8 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             value = "BAR_CODE_AUTHORIZE_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
     public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId) {
-        log.info("[BAR_CODE_AUTHORIZE_TRANSACTION] The merchant {} is authorizing the transaction having trxCode {}", merchantId, trxCode);
+        log.info("[BAR_CODE_AUTHORIZE_TRANSACTION] The merchant {} is authorizing the transaction having trxCode {}",
+            Utilities.sanitizeString(merchantId), Utilities.sanitizeString(trxCode));
         return barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerId);
     }
 

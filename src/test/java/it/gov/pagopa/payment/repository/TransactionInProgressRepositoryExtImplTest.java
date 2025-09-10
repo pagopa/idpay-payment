@@ -233,6 +233,12 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionInProgress);
 
+        try {
+            Thread.sleep(500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1", EXPIRATION_MINUTES);
         Assertions.assertNull(resultSecondSave);
@@ -262,7 +268,13 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
         transactionInProgressRepository.save(transactionInProgress);
 
-        TransactionInProgress resultSecondSave =
+      try {
+        Thread.sleep(500L);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+
+      TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(transactionInProgress.getId(), EXPIRATION_MINUTES_IDPAY_CODE);
         Assertions.assertNull(resultSecondSave);
     }
@@ -502,6 +514,12 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionExpired);
 
+        try {
+            Thread.sleep(500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNotNull(expiredTrxResult);
         assertElaborationsDateTime(now, expiredTrxResult);
@@ -545,6 +563,12 @@ class TransactionInProgressRepositoryExtImplTest {
                 TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
         transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionExpired);
+
+        try {
+            Thread.sleep(500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNotNull(expiredTrxResult);
