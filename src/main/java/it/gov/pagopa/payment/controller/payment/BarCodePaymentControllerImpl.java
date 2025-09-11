@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +51,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @Override
     @PerformanceLog(
             value = "BAR_CODE_PREVIEW_PAYMENT",
-            payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
+            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
     public PreviewPaymentDTO previewPayment(String trxCode, PreviewPaymentRequestDTO previewPaymentRequestDTO) {
         final String sanitizedTrxCode = sanitizeString(trxCode);
         final String sanitizedProductName = sanitizeString(previewPaymentRequestDTO.getProductName());
