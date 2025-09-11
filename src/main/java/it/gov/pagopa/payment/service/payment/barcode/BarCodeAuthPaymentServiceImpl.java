@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -30,17 +31,20 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private final MerchantConnector merchantConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonAuthServiceImpl commonAuthService;
+    private final DecryptRestConnector decryptRestConnector;
     protected final AuditUtilities auditUtilities;
 
     public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
                                          TransactionInProgressRepository transactionInProgressRepository,
                                          CommonAuthServiceImpl commonAuthService,
+                                         DecryptRestConnector decryptRestConnector,
                                          AuditUtilities auditUtilities) {
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonAuthService = commonAuthService;
+        this.decryptRestConnector = decryptRestConnector;
         this.auditUtilities = auditUtilities;
     }
 
@@ -68,6 +72,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
         }
 
+        final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
@@ -75,7 +81,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .originalAmountCents(amountCents)
                 .rewardCents(preview.getRewardCents())
                 .residualAmountCents(residualAmountCents)
-                .userId(transactionInProgress.getUserId())
+                .userId(userCf)
                 .build();
     }
 

@@ -1,10 +1,12 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.DecryptCfDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -47,6 +49,8 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock
     private CommonAuthServiceImpl commonAuthServiceMock;
     @Mock
+    private DecryptRestConnector decryptRestConnector;
+    @Mock
     private TransactionInProgressRepository transaction;
     private static final String USER_ID = "USERID1";
     private static final String MERCHANT_ID = "MERCHANT_ID";
@@ -69,6 +73,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 merchantConnector,
                 transaction,
                 commonAuthServiceMock,
+                decryptRestConnector,
                 auditUtilitiesMock);
     }
 
@@ -173,6 +178,9 @@ class BarCodeAuthPaymentServiceImplTest {
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
+        when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 
         assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", 90000L));
     }
