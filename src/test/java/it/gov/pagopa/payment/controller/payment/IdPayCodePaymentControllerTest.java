@@ -6,17 +6,19 @@ import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
+import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
+import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -29,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class IdPayCodePaymentControllerTest {
 
-  @MockitoBean
+  @MockBean
   private IdpayCodePaymentService idpayCodePaymentServiceMock;
 
   @Autowired
@@ -39,6 +41,8 @@ class IdPayCodePaymentControllerTest {
   private ObjectMapper objectMapper;
   @Test
   void relateUser_testMandatoryHeaders() throws Exception {
+
+    TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/payment/idpay-code/{transactionId}/relate-user",

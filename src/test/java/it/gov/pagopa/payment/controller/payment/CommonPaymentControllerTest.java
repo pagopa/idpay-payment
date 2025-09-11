@@ -24,7 +24,7 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -42,21 +42,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CommonPaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class CommonPaymentControllerTest {
-    @MockitoBean
+    @MockBean
     @Qualifier("commonCreate")
     private CommonCreationServiceImpl commonCreationServiceMock;
-    @MockitoBean
+    @MockBean
     @Qualifier("commonConfirm")
     private CommonConfirmServiceImpl commonConfirmServiceMock;
 
-    @MockitoBean
+    @MockBean
     @Qualifier("commonCancel")
     private CommonCancelServiceImpl commonCancelServiceMock;
 
-    @MockitoBean
+    @MockBean
     private QRCodeExpirationService qrCodeExpirationServiceMock;
 
-    @MockitoBean
+    @MockBean
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
 
     @Autowired
