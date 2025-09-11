@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.cloud.openfeign.FeignAutoConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -57,7 +57,7 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
     @Autowired
     private RewardCalculatorConnector rewardCalculatorConnector;
 
-    @MockitoBean
+    @MockBean
     ObjectMapper objectMapper;
 
     @Test

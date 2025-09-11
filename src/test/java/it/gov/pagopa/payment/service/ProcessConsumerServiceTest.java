@@ -33,7 +33,7 @@ class ProcessConsumerServiceTest {
     private static final int PAGE_SIZE = 100;
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         processConsumerService = new ProcessConsumerServiceImpl(transactionInProgressRepository,auditUtilities,PAGE_SIZE, 1000);
     }
 

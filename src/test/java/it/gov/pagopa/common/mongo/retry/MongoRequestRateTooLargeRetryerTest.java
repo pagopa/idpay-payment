@@ -17,14 +17,13 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.util.Collections;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -38,7 +37,7 @@ public class MongoRequestRateTooLargeRetryerTest {
 
   public static final int REQUEST_RATE_TOO_LARGE_MAX_RETRY = 1;
   public static final int REQUEST_RATE_TOO_LARGE_MAX_MILLIS_ELAPSED = 200;
-  @MockitoBean
+  @MockBean
   private Supplier<String> dummyServiceMock;
 
   @Autowired
@@ -47,7 +46,7 @@ public class MongoRequestRateTooLargeRetryerTest {
   private MemoryAppender memoryAppender;
 
   @BeforeEach
-  void setup() {
+  public void setup() {
     ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(
         MongoRequestRateTooLargeRetryer.class.getName());
     memoryAppender = new MemoryAppender();
@@ -89,7 +88,7 @@ public class MongoRequestRateTooLargeRetryerTest {
             );
             """;
     final MongoWriteException mongoWriteException = new MongoWriteException(
-            new WriteError(16500, writeErrorMessage, BsonDocument.parse("{}")), new ServerAddress(), Collections.emptyList());
+            new WriteError(16500, writeErrorMessage, BsonDocument.parse("{}")), new ServerAddress());
     return new DataIntegrityViolationException(mongoWriteException.getMessage(), mongoWriteException);
   }
 
@@ -99,7 +98,7 @@ public class MongoRequestRateTooLargeRetryerTest {
             Error=16500, RetryAfterMs=34, Details='Batch write error.'
             """;
     final MongoWriteException mongoWriteException = new MongoWriteException(
-            new WriteError(16500, writeErrorMessage, BsonDocument.parse("{}")), new ServerAddress(), Collections.emptyList());
+            new WriteError(16500, writeErrorMessage, BsonDocument.parse("{}")), new ServerAddress());
     return new DataIntegrityViolationException(mongoWriteException.getMessage(), mongoWriteException);
   }
 
@@ -260,6 +259,7 @@ public class MongoRequestRateTooLargeRetryerTest {
   }
 
   private void assertLogMessage(String expectedMessage, long maxRetryOrMaxMillisElapsed) {
+//    assertEquals(counter, memoryAppender.getLoggedEvents().size());
     for (int i = 0; i < memoryAppender.getLoggedEvents().size(); i++) {
 
       String logMessage = memoryAppender.getLoggedEvents().get(i).getFormattedMessage();

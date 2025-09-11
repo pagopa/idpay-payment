@@ -13,9 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -37,7 +37,7 @@ class ValidationExceptionHandlerTest {
     @Autowired
     ObjectMapper objectMapper;
 
-    @MockitoSpyBean
+    @SpyBean
     private TestController testControllerSpy;
 
     @RestController
@@ -58,7 +58,7 @@ class ValidationExceptionHandlerTest {
         private String data;
     }
 
-    private static final ValidationDTO VALIDATION_DTO = new ValidationDTO("data");
+    private final ValidationDTO VALIDATION_DTO = new ValidationDTO("data");
 
     @Test
     void handleMethodArgumentNotValidException() throws Exception {
