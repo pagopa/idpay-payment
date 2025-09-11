@@ -14,8 +14,9 @@ public class PreviewPaymentRequestDTOFaker {
 
   public static PreviewPaymentRequestDTO.PreviewPaymentRequestDTOBuilder mockInstanceBuilder() {
     return PreviewPaymentRequestDTO.builder()
-            .amount(BigDecimal.valueOf(100))
-            .product("product");
+            .productGtin("123456abc")
+            .amountCents(BigDecimal.valueOf(100))
+            .productName("product");
   }
 
 }

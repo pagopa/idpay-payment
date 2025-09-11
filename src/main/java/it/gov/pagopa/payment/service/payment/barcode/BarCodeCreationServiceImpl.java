@@ -16,6 +16,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -69,7 +70,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
             TransactionInProgress trx =
                     transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null);
+                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>());
             transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
 
             logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);

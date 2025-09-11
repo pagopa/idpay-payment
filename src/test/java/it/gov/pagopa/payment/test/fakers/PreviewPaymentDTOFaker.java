@@ -16,8 +16,9 @@ public class PreviewPaymentDTOFaker {
     return PreviewPaymentDTO.builder()
             .userId("userId")
             .trxCode("trxCode")
-            .amountCents(100L)
-            .trxDate(OffsetDateTime.now())
-            .rewardCents(100L);
+            .originalAmountCents(700L)
+            .rewardCents(100L)
+            .residualAmountCents(600L)
+            .trxDate(OffsetDateTime.now());
   }
 }

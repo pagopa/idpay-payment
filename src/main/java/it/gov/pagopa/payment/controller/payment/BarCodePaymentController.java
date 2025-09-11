@@ -29,7 +29,7 @@ public interface BarCodePaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId
     );
 
-    @PutMapping("/preview/{trxCode}")
+    @PutMapping("/{trxCode}/preview")
     @ResponseStatus(code = HttpStatus.OK)
     PreviewPaymentDTO previewPayment(
             @PathVariable("trxCode") String trxCode,

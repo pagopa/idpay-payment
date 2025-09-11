@@ -21,7 +21,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -32,11 +31,12 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonAuthServiceImpl commonAuthService;
     protected final AuditUtilities auditUtilities;
+
     public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
                                          TransactionInProgressRepository transactionInProgressRepository,
                                          CommonAuthServiceImpl commonAuthService,
-                                         AuditUtilities auditUtilities){
+                                         AuditUtilities auditUtilities) {
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
@@ -45,29 +45,42 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String trxCode){
-        Optional<TransactionInProgress> transactionInProgress = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase());
-        if(transactionInProgress.isEmpty()){
-            throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
-        }
-        AuthPaymentDTO preview = commonAuthService.previewPayment(transactionInProgress.get(),transactionInProgress.get().getUserId());
+    public PreviewPaymentDTO previewPayment(String trxCode, Long amountCents) {
 
-        return buildPreviewPaymentDTO(preview, transactionInProgress.get().getUserId());
-    }
-    
-    private PreviewPaymentDTO buildPreviewPaymentDTO(AuthPaymentDTO preview, String userId){
+        final TransactionInProgress transactionInProgress =
+                transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
+                        .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                                "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+        transactionInProgress.setAmountCents(amountCents);
+
+        final AuthPaymentDTO preview = commonAuthService
+                .previewPayment(transactionInProgress, transactionInProgress.getUserId());
+
+        if (preview.getRewardCents() < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
+        }
+
+        final long residualAmountCents = amountCents - preview.getRewardCents();
+
+        if (residualAmountCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, preview.getRewardCents());
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
+        }
+
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
                 .status(preview.getStatus())
+                .originalAmountCents(amountCents)
                 .rewardCents(preview.getRewardCents())
-                .amountCents(preview.getAmountCents())
-                .userId(userId)
+                .residualAmountCents(residualAmountCents)
+                .userId(transactionInProgress.getUserId())
                 .build();
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId){
+    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId) {
         try {
             if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
@@ -87,7 +100,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
             AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(trx);
 
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId,authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
+            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
             authPaymentDTO.setRejectionReasons(Collections.emptyList());
             Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
@@ -100,11 +113,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
     }
 
-    private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId,Long rewardCents, List<String> rejectionReasons){
+    private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {
         auditUtilities.logBarCodeAuthorizedPayment(initiativeId, id, trxCode, merchantId, rewardCents, rejectionReasons);
     }
 
-    private void logErrorAuthorizedPayment(String trxCode, String merchantId){
+    private void logErrorAuthorizedPayment(String trxCode, String merchantId) {
         auditUtilities.logBarCodeErrorAuthorizedPayment(trxCode, merchantId);
     }
 
@@ -119,5 +132,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         trx.setVat(merchantDetail.getVatNumber());
         trx.setAcquirerId(acquirerId);
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
+        trx.setAdditionalProperties(authBarCodePaymentDTO.getAdditionalProperties());
     }
 }
