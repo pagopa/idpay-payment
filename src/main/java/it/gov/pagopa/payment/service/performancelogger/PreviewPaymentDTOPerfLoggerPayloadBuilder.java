@@ -8,6 +8,6 @@ import org.springframework.stereotype.Service;
 public class PreviewPaymentDTOPerfLoggerPayloadBuilder implements PerformanceLoggerPayloadBuilder<PreviewPaymentDTO> {
     @Override
     public String apply(PreviewPaymentDTO previewPaymentDTO) {
-        return "TrxId %s status %s".formatted(previewPaymentDTO.getTrxCode(), previewPaymentDTO.getStatus());
+        return "TrxCode %s status %s".formatted(previewPaymentDTO.getTrxCode(), previewPaymentDTO.getStatus());
     }
 }
