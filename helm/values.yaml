@@ -71,6 +71,7 @@ microservice-chart:
       IDPAY_MERCHANT: idpay_merchant_host
       IDPAY_WALLET: idpay_wallet_host
       IDPAY_PAYMENT_INSTRUMENT: idpay_payment_instrument_host
+      IDPAY_REGISTER: idpay_register
       PDV_ENCRYPT_BASE_URL: pdv_decrypt_base_url
       PDV_DECRYPT_BASE_URL: pdv_decrypt_base_url
 

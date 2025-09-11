@@ -12,6 +12,8 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Slf4j
 @Service
 public class BarCodePaymentServiceImpl implements BarCodePaymentService {
@@ -38,8 +40,8 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String trxCode, Long amountCents) {
-        return barCodeAuthPaymentService.previewPayment(trxCode, amountCents);
+    public PreviewPaymentDTO previewPayment(Map<String, String> additionalProperties, String trxCode, Long amountCents) {
+        return barCodeAuthPaymentService.previewPayment(additionalProperties, trxCode, amountCents);
     }
 
 }

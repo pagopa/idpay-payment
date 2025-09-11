@@ -3,6 +3,8 @@ package it.gov.pagopa.payment.service.payment.barcode;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductStatus;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -12,6 +14,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -22,11 +25,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
+    private final PaymentCheckService paymentCheckService;
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
@@ -34,12 +39,14 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private final DecryptRestConnector decryptRestConnector;
     protected final AuditUtilities auditUtilities;
 
-    public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
+    public BarCodeAuthPaymentServiceImpl(PaymentCheckService paymentCheckService,
+                                         BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
                                          TransactionInProgressRepository transactionInProgressRepository,
                                          CommonAuthServiceImpl commonAuthService,
                                          DecryptRestConnector decryptRestConnector,
                                          AuditUtilities auditUtilities) {
+        this.paymentCheckService = paymentCheckService;
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
@@ -49,7 +56,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String trxCode, Long amountCents) {
+    public PreviewPaymentDTO previewPayment(Map<String, String> additionalProperties, String trxCode, Long amountCents) {
+
+        ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, additionalProperties.get("gtin"), ProductStatus.valueOf(additionalProperties.get("status")), null, null);
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -93,6 +102,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
             }
 
+            ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, authBarCodePaymentDTO.getAdditionalProperties().get("gtin"), ProductStatus.valueOf(authBarCodePaymentDTO.getAdditionalProperties().get("status")), null, null);
+            
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
             commonAuthService.checkAuth(trxCode, trx);
 

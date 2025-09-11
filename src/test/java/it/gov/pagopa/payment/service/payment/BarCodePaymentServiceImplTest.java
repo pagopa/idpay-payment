@@ -19,6 +19,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
@@ -86,11 +89,12 @@ class BarCodePaymentServiceImplTest {
     void previewPayment_ok(){
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
 
-        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any()))
+        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
                 .thenReturn(previewPaymentDTO);
 
+        Map<String, String> additionalProperties = new HashMap<>();
         // When
-        PreviewPaymentDTO result = barCodePaymentService.previewPayment("trxCode", 500L);
+        PreviewPaymentDTO result = barCodePaymentService.previewPayment(additionalProperties, "trxCode", 500L);
 
         // Then
         Assertions.assertNotNull(result);

@@ -2,12 +2,12 @@ package it.gov.pagopa.payment.configuration;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.exception.custom.*;
-
-import java.util.HashMap;
-import java.util.Map;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class ServiceExceptionConfig {
@@ -19,6 +19,7 @@ public class ServiceExceptionConfig {
     // BadRequest
     exceptionMap.put(OperationNotAllowedException.class, HttpStatus.BAD_REQUEST);
     exceptionMap.put(TransactionInvalidException.class, HttpStatus.BAD_REQUEST);
+    exceptionMap.put(ProductNotValidException.class, HttpStatus.BAD_REQUEST);
 
     // Forbidden
     exceptionMap.put(BudgetExhaustedException.class, HttpStatus.FORBIDDEN);
@@ -36,6 +37,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(IdpaycodeNotFoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(InitiativeNotfoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(TransactionNotFoundOrExpiredException.class, HttpStatus.NOT_FOUND);
+    exceptionMap.put(ProductNotFoundException.class, HttpStatus.NOT_FOUND);
 
     // InternalServerError
     exceptionMap.put(InternalServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -44,6 +46,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(PDVInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
     exceptionMap.put(RewardCalculatorInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
     exceptionMap.put(WalletInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
+    exceptionMap.put(ProductInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
 
     // TooManyRequests
     exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);
