@@ -113,6 +113,7 @@ public class CommonAuthServiceImpl {
             trx.setInitiativeRejectionReasons(initiativeRejectionReasons);
             trx.setRewards(authPaymentDTO.getRewards());
             trx.setStatus(authPaymentDTO.getStatus());
+            trx.setAdditionalProperties(authPaymentDTO.getAdditionalProperties());
 
         } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
             throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
