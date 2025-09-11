@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.Map;
 
 @Data
 @Builder
@@ -28,7 +27,5 @@ public class PreviewPaymentRequestDTO {
   @NotNull(message = "amountCents must not be blank")
   @JsonProperty("amountCents")
   private BigDecimal amountCents;
-
-  private Map<String, String> additionalProperties;
 
 }

@@ -94,7 +94,7 @@ class BarCodePaymentServiceImplTest {
 
         Map<String, String> additionalProperties = new HashMap<>();
         // When
-        PreviewPaymentDTO result = barCodePaymentService.previewPayment(additionalProperties, "trxCode", 500L);
+        PreviewPaymentDTO result = barCodePaymentService.previewPayment("gtin", "trxCode", 500L);
 
         // Then
         Assertions.assertNotNull(result);

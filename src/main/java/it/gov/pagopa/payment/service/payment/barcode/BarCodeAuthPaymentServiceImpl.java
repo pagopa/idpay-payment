@@ -24,8 +24,11 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
 @Slf4j
 @Service
@@ -56,9 +59,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(Map<String, String> additionalProperties, String trxCode, Long amountCents) {
-
-        ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, additionalProperties.get("gtin"), ProductStatus.valueOf(additionalProperties.get("status")), null, null);
+    public PreviewPaymentDTO previewPayment(String sanitizedProductGtin, String trxCode, Long amountCents) {
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -83,6 +84,14 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
 
+        ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, sanitizedProductGtin, ProductStatus.APPROVED, null, null);
+
+        Map<String, String> additionalProperties = new HashMap<>();
+        additionalProperties.put("productName", productListDTO.getContent().getFirst().getProductName());
+        additionalProperties.put("productGtin", sanitizedProductGtin);
+        additionalProperties.put("productCategory", productListDTO.getContent().getFirst().getCategory());
+        transactionInProgress.setAdditionalProperties(additionalProperties);
+
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
@@ -102,10 +111,17 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
             }
 
-            ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, authBarCodePaymentDTO.getAdditionalProperties().get("gtin"), ProductStatus.valueOf(authBarCodePaymentDTO.getAdditionalProperties().get("status")), null, null);
-            
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
             commonAuthService.checkAuth(trxCode, trx);
+
+            String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get("gtin"));
+            ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, sanitizedProductGtin, ProductStatus.APPROVED, null, null);
+
+            Map<String, String> additionalProperties = new HashMap<>();
+            additionalProperties.put("productName", productListDTO.getContent().getFirst().getProductName());
+            additionalProperties.put("productGtin", sanitizedProductGtin);
+            additionalProperties.put("productCategory", productListDTO.getContent().getFirst().getCategory());
+            trx.setAdditionalProperties(additionalProperties);
 
             MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
 

@@ -4,6 +4,7 @@ import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
@@ -20,6 +21,7 @@ import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
+import it.gov.pagopa.payment.test.fakers.ProductListDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -65,7 +67,7 @@ class BarCodeAuthPaymentServiceImplTest {
     private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
             .amountCents(AMOUNT_CENTS)
             .idTrxAcquirer(ID_TRX_ACQUIRER)
-            .additionalProperties(Map.of("gtin","123123","status","APPROVED"))
+            .additionalProperties(Map.of("gtin","123123"))
             .build();
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
@@ -104,6 +106,10 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(MerchantDetailDTO.builder().build());
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenReturn(authPaymentDTO);
+
+        ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any(),any(),any(),any(),any(),any(),any(),any(),any())).thenReturn(productListDTO);
+
         // When
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
 
@@ -168,6 +174,9 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
 
+        ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any(),any(),any(),any(),any(),any(),any(),any(),any())).thenReturn(productListDTO);
+
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
                 () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID));
 
@@ -188,7 +197,10 @@ class BarCodeAuthPaymentServiceImplTest {
         DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 
-        assertNotNull(barCodeAuthPaymentService.previewPayment(Map.of("gtin","123123","status","APPROVED"), "trxCode", 90000L));
+        ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any(),any(),any(),any(),any(),any(),any(),any(),any())).thenReturn(productListDTO);
+
+        assertNotNull(barCodeAuthPaymentService.previewPayment("gtin", "trxCode", 90000L));
     }
 
     @Test
@@ -201,7 +213,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
         assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment(Map.of("gtin","123123","status","APPROVED"), "trxCode", 90000L));
+                barCodeAuthPaymentService.previewPayment("gtin", "trxCode", 90000L));
     }
 
     @Test
@@ -214,7 +226,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
         assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment(Map.of("gtin","123123","status","APPROVED"), "trxCode", 90L));
+                barCodeAuthPaymentService.previewPayment("gtin", "trxCode", 90L));
     }
 
     @Test
@@ -223,7 +235,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         TransactionNotFoundOrExpiredException exceptionResult =
                 assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                        barCodeAuthPaymentService.previewPayment(Map.of("gtin","123123","status","APPROVED"), "trxCode", 95000L));
+                        barCodeAuthPaymentService.previewPayment("gtin", "trxCode", 95000L));
 
         assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
     }

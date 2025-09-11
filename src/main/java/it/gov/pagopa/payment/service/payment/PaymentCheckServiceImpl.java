@@ -26,12 +26,8 @@ public class PaymentCheckServiceImpl implements PaymentCheckService {
     public ProductListDTO validateProduct(String role, String organizationId, String productName, String productFileId, String eprelCode, String gtinCode, ProductStatus status, ProductCategories category, Pageable pageable) {
         ProductListDTO productListDTO = registerConnector.getProductList(role, organizationId, productName, productFileId, eprelCode, gtinCode, status, category, pageable);
         if(productListDTO == null || productListDTO.getContent().isEmpty()){
-            throw new ProductNotFoundException(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND,
-                    String.format("The product with gtin [%s] is not found", gtinCode));
-        }
-        if(!productListDTO.getContent().getFirst().getStatus().equals(status.name())){
-            throw new ProductNotValidException(PaymentConstants.ExceptionCode.PRODUCT_NOT_VALID,
-                    String.format("The product with gtin [%s] must be APPROVED", gtinCode));
+            throw new ProductNotValidException(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND,
+                    String.format("The product with gtin [%s] is not found or not approved", gtinCode));
         }
         return productListDTO;
     }
