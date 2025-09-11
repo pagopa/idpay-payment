@@ -6,10 +6,11 @@ import feign.RequestTemplate;
 import it.gov.pagopa.payment.connector.rest.register.RegisterConnectorImpl;
 import it.gov.pagopa.payment.connector.rest.register.RegisterRestClient;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductStatus;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductRequestDTO;
 import it.gov.pagopa.payment.exception.custom.ProductInvocationException;
 import it.gov.pagopa.payment.exception.custom.ProductNotFoundException;
 import it.gov.pagopa.payment.test.fakers.ProductListDTOFaker;
+import it.gov.pagopa.payment.test.fakers.ProductRequestDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,11 +37,12 @@ class RegisterConnectorImplTest {
 
     @Test
     void getProductList(){
+        ProductRequestDTO productRequestDTOFaker = ProductRequestDTOFaker.mockInstance();
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
 
         when(restClient.getProductList(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(productListDTO);
 
-        assertNotNull(connectorImpl.getProductList("role", "organizationId", "productName", "productField", "eprelCode", "gtinCode", ProductStatus.APPROVED, null, null));
+        assertNotNull(connectorImpl.getProductList(productRequestDTOFaker));
     }
 
     @Test
@@ -51,8 +53,10 @@ class RegisterConnectorImplTest {
 
         when(restClient.getProductList(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(feignExceptionMock);
 
+        ProductRequestDTO productRequestDTOFaker = ProductRequestDTOFaker.mockInstance();
+
         ProductNotFoundException exception = assertThrows(ProductNotFoundException.class,
-                () -> connectorImpl.getProductList("role", "organizationId", "productName", "productField", "eprelCode", "gtinCode", ProductStatus.APPROVED, null, null));
+                () -> connectorImpl.getProductList(productRequestDTOFaker));
 
         Assertions.assertNotNull(exception);
     }
@@ -64,9 +68,10 @@ class RegisterConnectorImplTest {
         FeignException feignExceptionMock = new FeignException.BadRequest("", request, null, null);
 
         when(restClient.getProductList(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenThrow(feignExceptionMock);
+        ProductRequestDTO productRequestDTOFaker = ProductRequestDTOFaker.mockInstance();
 
         ProductInvocationException exception = assertThrows(ProductInvocationException.class,
-                () -> connectorImpl.getProductList("role", "organizationId", "productName", "productField", "eprelCode", "gtinCode", ProductStatus.APPROVED, null, null));
+                () -> connectorImpl.getProductList(productRequestDTOFaker));
 
         Assertions.assertNotNull(exception);
     }

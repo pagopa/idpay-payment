@@ -108,7 +108,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(authPaymentDTO);
 
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct(any(),any(),any(),any(),any(),any(),any(),any(),any())).thenReturn(productListDTO);
+        when(paymentCheckService.validateProduct(any())).thenReturn(productListDTO);
 
         // When
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
@@ -175,7 +175,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
 
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct(any(),any(),any(),any(),any(),any(),any(),any(),any())).thenReturn(productListDTO);
+        when(paymentCheckService.validateProduct(any())).thenReturn(productListDTO);
 
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
                 () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID));
@@ -198,7 +198,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct(any(),any(),any(),any(),any(),any(),any(),any(),any())).thenReturn(productListDTO);
+        when(paymentCheckService.validateProduct(any())).thenReturn(productListDTO);
         DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 

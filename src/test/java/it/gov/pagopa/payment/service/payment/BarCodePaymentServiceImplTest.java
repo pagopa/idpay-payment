@@ -92,7 +92,6 @@ class BarCodePaymentServiceImplTest {
         Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
                 .thenReturn(previewPaymentDTO);
 
-        Map<String, String> additionalProperties = new HashMap<>();
         // When
         PreviewPaymentDTO result = barCodePaymentService.previewPayment("gtin", "trxCode", 500L);
 

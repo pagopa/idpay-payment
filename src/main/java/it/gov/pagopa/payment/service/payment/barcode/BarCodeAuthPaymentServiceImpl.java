@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductRequestDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductStatus;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
@@ -84,7 +85,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
 
-        ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, sanitizedProductGtin, ProductStatus.APPROVED, null, null);
+        ProductRequestDTO productRequestDTO = ProductRequestDTO.builder().gtinCode(sanitizedProductGtin).status(ProductStatus.APPROVED).build();
+        ProductListDTO productListDTO = paymentCheckService.validateProduct(productRequestDTO);
 
         Map<String, String> additionalProperties = new HashMap<>();
         additionalProperties.put("productName", productListDTO.getContent().getFirst().getProductName());
@@ -115,7 +117,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             commonAuthService.checkAuth(trxCode, trx);
 
             String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get("gtin"));
-            ProductListDTO productListDTO = paymentCheckService.validateProduct(null, null, null, null, null, sanitizedProductGtin, ProductStatus.APPROVED, null, null);
+            ProductRequestDTO productRequestDTO = ProductRequestDTO.builder().gtinCode(sanitizedProductGtin).status(ProductStatus.APPROVED).build();
+            ProductListDTO productListDTO = paymentCheckService.validateProduct(productRequestDTO);
 
             Map<String, String> additionalProperties = new HashMap<>();
             additionalProperties.put("productName", productListDTO.getContent().getFirst().getProductName());
