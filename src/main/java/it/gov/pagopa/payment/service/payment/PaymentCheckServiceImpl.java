@@ -6,7 +6,6 @@ import it.gov.pagopa.payment.connector.rest.register.dto.ProductCategories;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductStatus;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.exception.custom.ProductNotFoundException;
 import it.gov.pagopa.payment.exception.custom.ProductNotValidException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
