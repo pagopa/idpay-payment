@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.utils;
 
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -31,8 +32,11 @@ public class AuditLogger {
     }
 
     private static Object sanitizeObject(Object obj) {
-        return obj == null ? obj : obj instanceof String str ?
-                str.replaceAll("[\\r\\n]", "")
-                        .replaceAll("[^\\w\\s-\\[\\]]", "") : obj;
+        if (obj == null) {
+            return null;
+        }
+        return obj instanceof String str ?
+                Utilities.sanitizeString(str)
+                : obj;
     }
 }
