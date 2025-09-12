@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 public class ProductNotValidException extends ServiceException {
 
   public ProductNotValidException(String message) {
-    this(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, message);
+    this(ExceptionCode.PRODUCT_NOT_VALID, message);
   }
 
   public ProductNotValidException(String code, String message) {

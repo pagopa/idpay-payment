@@ -58,7 +58,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String sanitizedProductGtin, String trxCode, Long amountCents) {
+    public PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents) {
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -83,7 +83,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
 
-        ProductDTO productDTO = paymentCheckService.validateProduct(sanitizedProductGtin);
+        ProductDTO productDTO = paymentCheckService.validateProduct(productGtin);
 
         transactionInProgress.setAdditionalProperties(buildAdditionalProperties(productDTO));
 

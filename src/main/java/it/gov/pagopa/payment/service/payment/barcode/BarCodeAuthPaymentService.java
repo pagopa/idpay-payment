@@ -8,6 +8,6 @@ public interface BarCodeAuthPaymentService {
 
     AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId);
 
-    PreviewPaymentDTO previewPayment(String sanitizedProductGtin, String trxCode, Long amountCents);
+    PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents);
 
 }
