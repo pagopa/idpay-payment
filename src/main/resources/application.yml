@@ -158,6 +158,8 @@ rest-client:
     baseUrl: ${IDPAY_WALLET:http://idpay-wallet}
   payment-instrument:
     baseUrl: ${IDPAY_PAYMENT_INSTRUMENT:http://idpay-payment-instrument}
+  register:
+    baseUrl: ${IDPAY_REGISTER:http://idpay-register}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
