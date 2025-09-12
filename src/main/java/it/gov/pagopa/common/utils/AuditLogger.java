@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.utils;
 
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -35,9 +36,7 @@ public class AuditLogger {
             return null;
         }
         return obj instanceof String str ?
-                str.replaceAll("[\\r\\n]", " ") // Remove CR, LF
-                        .replaceAll("[|{}]", "*") // Remove |, {, }
-                        .replaceAll("[^\\w\\s\\d\\-\\[\\]]", "") // Only allow word, numbers, whitespace, -, [, ]
+                Utilities.sanitizeString(str)
                 : obj;
     }
 }
