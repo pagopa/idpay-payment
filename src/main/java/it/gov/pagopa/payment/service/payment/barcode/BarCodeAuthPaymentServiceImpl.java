@@ -109,7 +109,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
             commonAuthService.checkAuth(trxCode, trx);
 
-            String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get("gtin"));
+            String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get("productGtin"));
             ProductDTO productDTO = paymentCheckService.validateProduct(sanitizedProductGtin);
 
             trx.setAdditionalProperties(buildAdditionalProperties(productDTO));
