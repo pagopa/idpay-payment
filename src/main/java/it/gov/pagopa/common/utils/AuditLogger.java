@@ -32,7 +32,8 @@ public class AuditLogger {
 
     private static Object sanitizeObject(Object obj) {
         return obj == null ? obj : obj instanceof String str ?
-                str.replaceAll("[\\r\\n]", "")
-                        .replaceAll("[^\\w\\s-\\[\\]]", "") : obj;
+                str.replaceAll("[\\r\\n|{}]", " ") // Remove CR, LF, |, {, }
+                        .replaceAll("[^\\w\\s-\\[\\]]", "") // Only allow word, whitespace, -, [, ]
+                : obj;
     }
 }
