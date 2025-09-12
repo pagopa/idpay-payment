@@ -26,11 +26,13 @@ public class AuditLogger {
     }
 
     public static void logAuditString(String pattern, String... parameters) {
-        Object[] params = Arrays.stream(parameters).map(AuditLogger::sanitizeObject).toArray();
-        log.info(pattern,params);
+        Object[] sanitizedParams = Arrays.stream(parameters).map(AuditLogger::sanitizeObject).toArray();
+        log.info(pattern, sanitizedParams);
     }
 
-    private static Object sanitizeObject(Object obj){
-        return obj == null ? obj : obj instanceof String str ? str.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-\\[\\]]", "") : obj;
+    private static Object sanitizeObject(Object obj) {
+        return obj == null ? obj : obj instanceof String str ?
+                str.replaceAll("[\\r\\n]", "")
+                        .replaceAll("[^\\w\\s-\\[\\]]", "") : obj;
     }
 }
