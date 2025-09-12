@@ -27,7 +27,9 @@ public class AuditLogger {
     }
 
     public static void logAuditString(String pattern, String... parameters) {
-        Object[] sanitizedParams = Arrays.stream(parameters).map(AuditLogger::removeLogInjectionChars).toArray();
+        Object[] sanitizedParams = Arrays.stream(parameters)
+                .map(AuditLogger::removeLogInjectionChars)
+                .toArray();
         log.info(pattern, sanitizedParams);
     }
 
