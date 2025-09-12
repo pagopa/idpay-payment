@@ -51,6 +51,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
             .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
             .updateDate(now.toLocalDateTime())
             .counterVersion(0L)
+            .additionalProperties(transactionCreationRequest.getAdditionalProperties())
             .build();
   }
 }

@@ -26,6 +26,7 @@ public class AuthPaymentMapper {
             .counters(Optional.ofNullable(transaction.getRewards()).flatMap(r -> r.values().stream().map(Reward::getCounters).filter(Objects::nonNull).findFirst()).orElse(null))
             .rewards(transaction.getRewards())
             .counterVersion(transaction.getCounterVersion())
+            .additionalProperties(transaction.getAdditionalProperties())
             .build();
   }
 }

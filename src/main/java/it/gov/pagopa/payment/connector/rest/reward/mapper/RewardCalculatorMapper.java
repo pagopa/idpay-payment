@@ -68,6 +68,7 @@ public class RewardCalculatorMapper {
                 .businessName(transactionInProgress.getBusinessName())
                 .trxDate(transactionInProgress.getTrxDate())
                 .counterVersion(responseDTO.getCounterVersion())
+                .additionalProperties(transactionInProgress.getAdditionalProperties())
                 .build();
 
         if (responseDTO.getReward() != null) {

@@ -244,6 +244,47 @@ class CommonAuthServiceImplTest {
     }
 
     @Test
+    void previewPayment_ok(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "wallet-status");
+        when(walletConnectorMock.getWallet(any(),any())).thenReturn(walletDTO);
+        when(rewardCalculatorConnectorMock.previewTransaction(any())).thenReturn(authPaymentDTO);
+        assertNotNull(commonAuthService.previewPayment(transaction, USERID));
+    }
+
+    @Test
+    void previewPayment_ko_walletSuspended(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "SUSPENDED");
+
+        when(walletConnectorMock.getWallet(any(),any())).thenReturn(walletDTO);
+
+        UserSuspendedException result =
+                assertThrows(UserSuspendedException.class, () -> commonAuthService.previewPayment(transaction, USERID));
+
+        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
+
+        Assertions.assertEquals("PAYMENT_USER_SUSPENDED", result.getCode());
+    }
+
+
+    @Test
+    void previewPayment_ko_walletUnsubscribed(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "UNSUBSCRIBED");
+
+        when(walletConnectorMock.getWallet(any(),any())).thenReturn(walletDTO);
+
+        UserNotOnboardedException result =
+                assertThrows(UserNotOnboardedException.class, () -> commonAuthService.previewPayment(transaction, USERID));
+
+        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
+
+        Assertions.assertEquals("PAYMENT_USER_UNSUBSCRIBED", result.getCode());
+    }
+
+    @Test
     void authPaymentStatusKo() {
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);

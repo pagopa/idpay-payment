@@ -18,6 +18,8 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,11 +63,15 @@ class IdpayCodePreviewServiceImplTest {
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
         trx.setMerchantId(MERCHANTID);
         trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        Map<String, String> additionalProperties = new HashMap<>();
+        additionalProperties.put("description", "abc 1234");
+        trx.setAdditionalProperties(additionalProperties);
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
+        System.out.println(authPaymentDTO.getAdditionalProperties());
         when(paymentInstrumentConnectorMock.getSecondFactor(trx.getUserId()))
                 .thenReturn(new SecondFactorDTO(SECOND_FACTOR));
 
@@ -109,7 +115,7 @@ class IdpayCodePreviewServiceImplTest {
 
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
-        //When
+         //When
         AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then

@@ -6,6 +6,8 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MerchantTransactionDTOFaker {
 
@@ -23,6 +25,9 @@ public class MerchantTransactionDTOFaker {
             rewardCents=100L;
         }
 
+        Map<String, String> additionalProperties = new HashMap<>();
+        additionalProperties.put("description", "test 1234");
+
         return MerchantTransactionDTO.builder()
                 .trxId(id)
                 .fiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
@@ -33,6 +38,7 @@ public class MerchantTransactionDTOFaker {
                 .trxExpirationSeconds(CommonUtilities.minutesToSeconds(4320))
                 .status(status)
                 .channel("CHANNEL%d".formatted(bias))
+                .additionalProperties(additionalProperties)
                 .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
     }
 }

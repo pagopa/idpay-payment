@@ -23,6 +23,7 @@ public class AuthPaymentIdpayCodeMapper {
                 .residualBudgetCents(authPaymentDTO.getResidualBudgetCents())
                 .secondFactor(secondFactor)
                 .counterVersion(authPaymentDTO.getCounterVersion())
+                .additionalProperties(authPaymentDTO.getAdditionalProperties())
                 .build();
     }
 }

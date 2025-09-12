@@ -40,4 +40,5 @@ public class AuthPaymentDTO {
   @JsonIgnore
   private Map<String, Reward> rewards;
 
+  private Map<String, String> additionalProperties;
 }

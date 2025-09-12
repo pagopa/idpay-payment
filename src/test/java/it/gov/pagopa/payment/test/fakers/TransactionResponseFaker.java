@@ -4,6 +4,8 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TransactionResponseFaker {
 
@@ -12,6 +14,11 @@ public class TransactionResponseFaker {
     }
 
     public static TransactionResponse.TransactionResponseBuilder mockInstanceBuilder(Integer bias) {
+
+        Map<String, String> additionalProperties = new HashMap<>();
+
+        additionalProperties.put("description", "Additional description");
+
         return TransactionResponse.builder()
                 .initiativeId("INITIATIVEID%d".formatted(bias))
                 .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
@@ -22,7 +29,8 @@ public class TransactionResponseFaker {
                 .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
                 .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
                 .trxCode("trxcode%d".formatted(bias))
-                .status(SyncTrxStatus.CREATED);
+                .status(SyncTrxStatus.CREATED)
+                .additionalProperties(additionalProperties);
     }
 
 }

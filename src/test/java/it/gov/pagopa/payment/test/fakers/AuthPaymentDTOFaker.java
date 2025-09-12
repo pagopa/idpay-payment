@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,10 @@ public class AuthPaymentDTOFaker {
     reward.setCounters(RewardCounters.builder().exhaustedBudget(false).initiativeBudgetCents(100000L).totalRewardCents(5000L).build());
     Long residualBudget = reward.getCounters().getInitiativeBudgetCents() - reward.getCounters().getTotalRewardCents();
 
+    Map<String, String> additionalProperties = new HashMap<>();
+
+    additionalProperties.put("description", "Additional description");
+
     return AuthPaymentDTO.builder()
         .id(transaction.getId())
         .initiativeId(transaction.getInitiativeId())
@@ -38,6 +43,7 @@ public class AuthPaymentDTOFaker {
         .rewards(Map.of(transaction.getInitiativeId(), reward))
         .counters(reward.getCounters())
         .residualBudgetCents(residualBudget)
+        .additionalProperties(additionalProperties)
         .counterVersion(0L);
   }
 }
