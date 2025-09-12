@@ -36,8 +36,8 @@ public class AuditLogger {
         }
         return obj instanceof String str ?
                 str.replaceAll("[\\r\\n]", " ") // Remove CR, LF
-                        .replaceAll("[|{}]", "*") // |, {, }
-                        .replaceAll("[^\\w\\s-\\[\\]]", "") // Only allow word, whitespace, -, [, ]
+                        .replaceAll("[|{}]", "*") // Remove |, {, }
+                        .replaceAll("[^\\w\\s\\d\\-\\[\\]]", "") // Only allow word, numbers, whitespace, -, [, ]
                 : obj;
     }
 }
