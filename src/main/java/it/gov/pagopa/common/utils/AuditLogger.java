@@ -27,16 +27,17 @@ public class AuditLogger {
     }
 
     public static void logAuditString(String pattern, String... parameters) {
-        Object[] sanitizedParams = Arrays.stream(parameters).map(AuditLogger::sanitizeObject).toArray();
+        Object[] sanitizedParams = Arrays.stream(parameters).map(AuditLogger::removeLogInjectionChars).toArray();
         log.info(pattern, sanitizedParams);
     }
 
-    private static Object sanitizeObject(Object obj) {
-        if (obj == null) {
+    /**
+     * Removes newline and carriage return characters to prevent log injection.
+     */
+    private static String removeLogInjectionChars(String input) {
+        if (input == null) {
             return null;
         }
-        return obj instanceof String str ?
-                Utilities.sanitizeString(str)
-                : obj;
+        return input.replaceAll("[\\r\\n]", "");
     }
 }
