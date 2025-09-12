@@ -189,7 +189,7 @@ class BarCodePaymentControllerTest {
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
         PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
 
-        when(barCodePaymentService.previewPayment(any(), any())).thenReturn(previewPaymentDTO);
+        when(barCodePaymentService.previewPayment(any(), any(), any())).thenReturn(previewPaymentDTO);
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/{trxCode}/preview","trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -206,7 +206,7 @@ class BarCodePaymentControllerTest {
         PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
         previewPaymentRequestDTO.setAmountCents(BigDecimal.valueOf(-100L));
 
-        when(barCodePaymentService.previewPayment(any(), any())).thenReturn(previewPaymentDTO);
+        when(barCodePaymentService.previewPayment(any(), any(), any())).thenReturn(previewPaymentDTO);
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)

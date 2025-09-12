@@ -64,7 +64,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
         }
 
         final PreviewPaymentDTO previewPaymentDTO = barCodePaymentService
-                .previewPayment(sanitizedTrxCode, amountCents);
+                .previewPayment(sanitizedProductGtin, sanitizedTrxCode, amountCents);
 
         return previewPaymentDTO.withProductName(sanitizedProductName)
                 .withProductGtin(sanitizedProductGtin);
