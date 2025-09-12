@@ -123,11 +123,12 @@ class BarCodePaymentControllerTest {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         authPaymentDTO.setRewards(null);
 
-        when(barCodePaymentService.authPayment(trx.getTrxCode(),authBarCodePaymentDTO,"MERCHANTID1","ACQUIRERID1")).thenReturn(authPaymentDTO);
+        when(barCodePaymentService.authPayment(trx.getTrxCode(),authBarCodePaymentDTO,"MERCHANTID1", "POINTOFSALEID1", "ACQUIRERID1")).thenReturn(authPaymentDTO);
 
         MvcResult result = mockMvc.perform(
                         put("/idpay/payment/bar-code/{trxCode}/authorize",trx.getTrxCode())
                                 .header("x-merchant-id", "MERCHANTID1")
+                                .header("x-point-of-sale-id", "POINTOFSALEID1")
                                 .header("x-acquirer-id", "ACQUIRERID1")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(authBarCodePaymentDTO)))
