@@ -1,10 +1,9 @@
 package it.gov.pagopa.payment.service.payment;
 
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductRequestDTO;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 
 public interface PaymentCheckService {
 
-    ProductListDTO validateProduct(ProductRequestDTO productRequestDTO);
+    ProductDTO validateProduct(String productGtin);
 
 }

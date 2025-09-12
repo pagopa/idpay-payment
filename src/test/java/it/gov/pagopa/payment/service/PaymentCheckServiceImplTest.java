@@ -2,13 +2,11 @@ package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.connector.rest.register.RegisterConnector;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductRequestDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.exception.custom.ProductNotValidException;
 import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.PaymentCheckServiceImpl;
 import it.gov.pagopa.payment.test.fakers.ProductListDTOFaker;
-import it.gov.pagopa.payment.test.fakers.ProductRequestDTOFaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,22 +34,19 @@ class PaymentCheckServiceImplTest {
 
     @Test
     void validateProduct_ok(){
-        ProductRequestDTO productRequestDTOFaker = ProductRequestDTOFaker.mockInstance();
-
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(registerConnector.getProductList(any())).thenReturn(productListDTO);
-        assertNotNull(paymentCheckService.validateProduct(productRequestDTOFaker));
+        when(registerConnector.getProductList(any(), any())).thenReturn(productListDTO);
+        assertNotNull(paymentCheckService.validateProduct("gtin"));
     }
 
     @Test
     void validateProduct_ko(){
         ProductListDTO productListDTO = null;
-        ProductRequestDTO productRequestDTOFaker = ProductRequestDTOFaker.mockInstance();
 
-        when(registerConnector.getProductList(any())).thenReturn(productListDTO);
+        when(registerConnector.getProductList(any(), any())).thenReturn(productListDTO);
 
         ProductNotValidException exception = assertThrows(ProductNotValidException.class,
-                () -> paymentCheckService.validateProduct(productRequestDTOFaker));
+                () -> paymentCheckService.validateProduct("gtin"));
 
         assertEquals(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND, exception.getCode());
     }
@@ -60,12 +55,11 @@ class PaymentCheckServiceImplTest {
     void validateProduct_ko2(){
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
         productListDTO.setContent(new ArrayList<>());
-        ProductRequestDTO productRequestDTOFaker = ProductRequestDTOFaker.mockInstance();
 
-        when(registerConnector.getProductList(any())).thenReturn(productListDTO);
+        when(registerConnector.getProductList(any(), any())).thenReturn(productListDTO);
 
         ProductNotValidException exception = assertThrows(ProductNotValidException.class,
-                () -> paymentCheckService.validateProduct(productRequestDTOFaker));
+                () -> paymentCheckService.validateProduct("gtin"));
 
         assertEquals(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND, exception.getCode());
     }

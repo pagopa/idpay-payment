@@ -4,7 +4,7 @@ import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
@@ -21,7 +21,7 @@ import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.ProductListDTOFaker;
+import it.gov.pagopa.payment.test.fakers.ProductDTOFaker;
 import it.gov.pagopa.payment.test.fakers.RewardFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -107,8 +107,9 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenReturn(authPaymentDTO);
 
-        ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct(any())).thenReturn(productListDTO);
+        ProductDTO productDTO = ProductDTOFaker.mockInstance();
+
+        when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
 
         // When
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID);
@@ -174,8 +175,8 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
 
-        ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct(any())).thenReturn(productListDTO);
+        ProductDTO productDTO = ProductDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
 
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
                 () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, ACQUIRER_ID));
@@ -197,8 +198,8 @@ class BarCodeAuthPaymentServiceImplTest {
         DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 
-        ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct(any())).thenReturn(productListDTO);
+        ProductDTO productDTO = ProductDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
         DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 

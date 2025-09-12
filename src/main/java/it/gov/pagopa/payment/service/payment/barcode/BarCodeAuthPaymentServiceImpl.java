@@ -3,9 +3,7 @@ package it.gov.pagopa.payment.service.payment.barcode;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductRequestDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductStatus;
+import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -85,14 +83,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
 
-        ProductRequestDTO productRequestDTO = ProductRequestDTO.builder().gtinCode(sanitizedProductGtin).status(ProductStatus.APPROVED).build();
-        ProductListDTO productListDTO = paymentCheckService.validateProduct(productRequestDTO);
+        ProductDTO productDTO = paymentCheckService.validateProduct(sanitizedProductGtin);
 
-        Map<String, String> additionalProperties = new HashMap<>();
-        additionalProperties.put("productName", productListDTO.getContent().getFirst().getProductName());
-        additionalProperties.put("productGtin", sanitizedProductGtin);
-        additionalProperties.put("productCategory", productListDTO.getContent().getFirst().getCategory());
-        transactionInProgress.setAdditionalProperties(additionalProperties);
+        transactionInProgress.setAdditionalProperties(buildAdditionalProperties(productDTO));
 
         return PreviewPaymentDTO.builder()
                 .trxCode(preview.getTrxCode())
@@ -117,14 +110,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             commonAuthService.checkAuth(trxCode, trx);
 
             String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get("gtin"));
-            ProductRequestDTO productRequestDTO = ProductRequestDTO.builder().gtinCode(sanitizedProductGtin).status(ProductStatus.APPROVED).build();
-            ProductListDTO productListDTO = paymentCheckService.validateProduct(productRequestDTO);
+            ProductDTO productDTO = paymentCheckService.validateProduct(sanitizedProductGtin);
 
-            Map<String, String> additionalProperties = new HashMap<>();
-            additionalProperties.put("productName", productListDTO.getContent().getFirst().getProductName());
-            additionalProperties.put("productGtin", sanitizedProductGtin);
-            additionalProperties.put("productCategory", productListDTO.getContent().getFirst().getCategory());
-            trx.setAdditionalProperties(additionalProperties);
+            trx.setAdditionalProperties(buildAdditionalProperties(productDTO));
 
             MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
 
@@ -147,6 +135,14 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             logErrorAuthorizedPayment(trxCode, merchantId);
             throw e;
         }
+    }
+
+    private Map<String, String> buildAdditionalProperties(ProductDTO productDTO){
+        Map<String, String> additionalProperties = new HashMap<>();
+        additionalProperties.put("productName", productDTO.getProductName());
+        additionalProperties.put("productGtin", productDTO.getGtinCode());
+        additionalProperties.put("productCategory", productDTO.getCategory());
+        return additionalProperties;
     }
 
     private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {
