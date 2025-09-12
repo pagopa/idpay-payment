@@ -64,20 +64,21 @@ class BarCodePaymentServiceImplTest {
                 .build();
         String trxCode = "TRX_CODE";
         String merchantId = "MERCHANT_ID";
+        String pointOfSaleId = "POS_ID";
         String acquirerID = "ACQUIRER_ID";
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-        Mockito.when(barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerID))
+        Mockito.when(barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
                 .thenReturn(authPaymentDTO);
 
         // When
-        AuthPaymentDTO result = barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerID);
+        AuthPaymentDTO result = barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
 
         // Then
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
-        Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, acquirerID);
+        Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
         Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
 
@@ -86,11 +87,11 @@ class BarCodePaymentServiceImplTest {
     void previewPayment_ok(){
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
 
-        Mockito.when(barCodeAuthPaymentService.previewPayment(any()))
+        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
                 .thenReturn(previewPaymentDTO);
 
         // When
-        PreviewPaymentDTO result = barCodePaymentService.previewPayment("trxCode");
+        PreviewPaymentDTO result = barCodePaymentService.previewPayment("gtin", "trxCode", 500L);
 
         // Then
         Assertions.assertNotNull(result);

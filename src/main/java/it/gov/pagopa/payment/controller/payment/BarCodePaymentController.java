@@ -26,10 +26,11 @@ public interface BarCodePaymentController {
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
             @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
             @RequestHeader("x-acquirer-id") String acquirerId
     );
 
-    @PutMapping("/preview/{trxCode}")
+    @PutMapping("/{trxCode}/preview")
     @ResponseStatus(code = HttpStatus.OK)
     PreviewPaymentDTO previewPayment(
             @PathVariable("trxCode") String trxCode,

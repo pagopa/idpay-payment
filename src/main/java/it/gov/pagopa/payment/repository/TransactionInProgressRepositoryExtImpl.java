@@ -181,6 +181,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
                         .set(Fields.amountCents, trx.getAmountCents())
                         .set(Fields.merchantId, trx.getMerchantId())
+                        .set(Fields.additionalProperties, trx.getAdditionalProperties())
+                        .set(Fields.pointOfSaleId, trx.getPointOfSaleId())
                         .currentDate(Fields.updateDate),
                 TransactionInProgress.class);
     }

@@ -19,6 +19,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ public class CommonAuthServiceImpl {
 
     public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId) {
         checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
+        trx.setTrxChargeDate(OffsetDateTime.now());
 
         return rewardCalculatorConnector.previewTransaction(trx);
     }
@@ -111,6 +113,7 @@ public class CommonAuthServiceImpl {
             trx.setInitiativeRejectionReasons(initiativeRejectionReasons);
             trx.setRewards(authPaymentDTO.getRewards());
             trx.setStatus(authPaymentDTO.getStatus());
+            trx.setAdditionalProperties(authPaymentDTO.getAdditionalProperties());
 
         } else if (trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)) {
             throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
