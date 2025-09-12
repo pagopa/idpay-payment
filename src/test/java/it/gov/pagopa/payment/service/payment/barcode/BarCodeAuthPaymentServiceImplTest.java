@@ -200,8 +200,6 @@ class BarCodeAuthPaymentServiceImplTest {
 
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
         when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
-        DecryptCfDTO decryptCfDTO = new DecryptCfDTO("Pii");
-        when(decryptRestConnector.getPiiByToken(any())).thenReturn(decryptCfDTO);
 
         assertNotNull(barCodeAuthPaymentService.previewPayment("gtin","trxCode", 90000L));
     }
