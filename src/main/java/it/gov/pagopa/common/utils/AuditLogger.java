@@ -26,8 +26,11 @@ public class AuditLogger {
     }
 
     public static void logAuditString(String pattern, String... parameters) {
-        Object[] params = Arrays.asList(parameters).toArray();
+        Object[] params = Arrays.stream(parameters).map(AuditLogger::sanitizeString).toArray();
         log.info(pattern,params);
     }
 
+    private static String sanitizeString(String str){
+        return str.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", "");
+    }
 }
