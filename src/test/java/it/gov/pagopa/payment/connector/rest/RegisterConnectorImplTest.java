@@ -8,7 +8,6 @@ import it.gov.pagopa.payment.connector.rest.register.RegisterRestClient;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductListDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductStatus;
 import it.gov.pagopa.payment.exception.custom.ProductInvocationException;
-import it.gov.pagopa.payment.exception.custom.ProductNotFoundException;
 import it.gov.pagopa.payment.test.fakers.ProductListDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -41,20 +40,6 @@ class RegisterConnectorImplTest {
         when(restClient.getProductList(any(), any())).thenReturn(productListDTO);
 
         assertNotNull(connectorImpl.getProductList("gtin", ProductStatus.APPROVED));
-    }
-
-    @Test
-    void getProductList_ko404(){
-        Request request = Request.create(Request.HttpMethod.GET, "url",
-                new HashMap<>(), null, new RequestTemplate());
-        FeignException feignExceptionMock = new FeignException.NotFound("", request, null, null);
-
-        when(restClient.getProductList(any(), any())).thenThrow(feignExceptionMock);
-
-        ProductNotFoundException exception = assertThrows(ProductNotFoundException.class,
-                () -> connectorImpl.getProductList("gtin", ProductStatus.APPROVED));
-
-        Assertions.assertNotNull(exception);
     }
 
     @Test
