@@ -23,10 +23,11 @@ public class CommonPaymentUtilities {
         }
         return residualBudget;
     }
+
     public static Pair<Boolean, Long> getSplitPaymentAndResidualAmountCents(Long amountCents, Long rewardCents) {
         if (rewardCents != null) {
-            long residualAmountCents = amountCents - rewardCents;
-            if (residualAmountCents >= 0L) {
+            if (amountCents >= rewardCents) {
+                long residualAmountCents = amountCents - rewardCents;
                 return Pair.of(residualAmountCents > 0L, residualAmountCents);
             }
         }
