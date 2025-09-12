@@ -99,7 +99,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String acquirerId) {
+    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         try {
             if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
@@ -118,7 +118,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
             commonAuthService.checkWalletStatus(trx.getInitiativeId(), trx.getUserId());
 
-            setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId);
+            setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId, pointOfSaleId);
 
             commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
@@ -154,7 +154,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     private static void setTrxFields(String merchantId, AuthBarCodePaymentDTO authBarCodePaymentDTO,
-                                     TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId) {
+                                     TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId, String pointOfSaleId) {
         trx.setAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setEffectiveAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setIdTrxAcquirer(authBarCodePaymentDTO.getIdTrxAcquirer());
@@ -165,5 +165,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         trx.setAcquirerId(acquirerId);
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
         trx.setAdditionalProperties(authBarCodePaymentDTO.getAdditionalProperties());
+        trx.setPointOfSaleId(pointOfSaleId);
     }
 }
