@@ -25,11 +25,9 @@ public class CommonPaymentUtilities {
     }
 
     public static Pair<Boolean, Long> getSplitPaymentAndResidualAmountCents(Long amountCents, Long rewardCents) {
-        if (rewardCents != null) {
-            if (amountCents >= rewardCents) {
-                long residualAmountCents = amountCents - rewardCents;
-                return Pair.of(residualAmountCents > 0L, residualAmountCents);
-            }
+        if (rewardCents != null && amountCents >= rewardCents) {
+            long residualAmountCents = amountCents - rewardCents;
+            return Pair.of(residualAmountCents > 0L, residualAmountCents);
         }
         return PAIR_NULL;
     }
