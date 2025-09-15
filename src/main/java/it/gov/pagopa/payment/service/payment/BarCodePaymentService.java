@@ -12,5 +12,5 @@ public interface BarCodePaymentService {
 
     AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePayment, String merchantId, String acquirerId);
 
-    PreviewPaymentDTO previewPayment(String trxCode, Long amountCents);
+    PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents);
 }
