@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.utils;
 
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.InetAddress;
@@ -26,8 +27,19 @@ public class AuditLogger {
     }
 
     public static void logAuditString(String pattern, String... parameters) {
-        Object[] params = Arrays.asList(parameters).toArray();
-        log.info(pattern,params);
+        Object[] sanitizedParams = Arrays.stream(parameters)
+                .map(AuditLogger::removeLogInjectionChars)
+                .toArray();
+        log.info(pattern, sanitizedParams);
     }
 
+    /**
+     * Removes newline and carriage return characters to prevent log injection.
+     */
+    private static String removeLogInjectionChars(String input) {
+        if (input == null) {
+            return null;
+        }
+        return input.replaceAll("[\\r\\n]", "");
+    }
 }
