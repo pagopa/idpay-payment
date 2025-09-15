@@ -72,10 +72,10 @@ class ErrorManagerTest {
   @Test
   void handleExceptionClientExceptionNoBody() throws Exception {
     Mockito.doThrow(new ClientExceptionNoBody(HttpStatus.BAD_REQUEST, "NOTFOUND ClientExceptionNoBody"))
-        .when(testControllerSpy).testEndpoint();
+            .when(testControllerSpy).testEndpoint();
 
-     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
+    mockMvc.perform(MockMvcRequestBuilders.get("/test")
+                    .contentType(MediaType.APPLICATION_JSON))
             .andExpect(MockMvcResultMatchers.status().isBadRequest());
 
     checkStackTraceSuppressedLog(memoryAppender,
@@ -86,24 +86,23 @@ class ErrorManagerTest {
   @Test
   void handleExceptionClientExceptionWithBody() throws Exception {
     Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody"))
-        .when(testControllerSpy).testEndpoint();
-
-    String errorClientExceptionWithBody= "{\"code\":\"Error\",\"message\":\"Error ClientExceptionWithBody\"}";
+            .when(testControllerSpy).testEndpoint();
 
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isBadRequest())
-        .andExpect(MockMvcResultMatchers.content().json(errorClientExceptionWithBody));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("Error"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Error ClientExceptionWithBody"));
+
 
     Mockito.doThrow(new ClientExceptionWithBody(HttpStatus.BAD_REQUEST, "Error","Error ClientExceptionWithBody", new Throwable()))
-        .when(testControllerSpy).testEndpoint();
-
-    String errorClientExceptionWithBodyWithStatusAndTitleAndMessageAndThrowable= "{\"code\":\"Error\",\"message\":\"Error ClientExceptionWithBody\"}";
+            .when(testControllerSpy).testEndpoint();
 
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isBadRequest())
-        .andExpect(MockMvcResultMatchers.content().json(errorClientExceptionWithBodyWithStatusAndTitleAndMessageAndThrowable));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isBadRequest())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("Error"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Error ClientExceptionWithBody"));
 
   }
 
@@ -111,35 +110,38 @@ class ErrorManagerTest {
   void handleExceptionClientExceptionTest() throws Exception {
 
     Mockito.doThrow(ClientException.class)
-        .when(testControllerSpy).testEndpoint();
+            .when(testControllerSpy).testEndpoint();
 
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("Error"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Something gone wrong"));
 
     checkStackTraceSuppressedLog(memoryAppender, "A ClientException occurred handling request GET /test: HttpStatus null - null at UNKNOWN");
     memoryAppender.reset();
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST, "ClientException with httpStatus and message"))
-        .when(testControllerSpy).testEndpoint();
+            .when(testControllerSpy).testEndpoint();
 
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("Error"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Something gone wrong"));
 
     checkStackTraceSuppressedLog(memoryAppender, "A ClientException occurred handling request GET /test: HttpStatus 400 BAD_REQUEST - ClientException with httpStatus and message at it.gov.pagopa.common.web.exception.ErrorManagerTest\\$TestController.testEndpoint\\(ErrorManagerTest.java:[0-9]+\\)");
     memoryAppender.reset();
 
 
     Mockito.doThrow(new ClientException(HttpStatus.BAD_REQUEST, "ClientException with httpStatus, message and throwable", new Throwable()))
-        .when(testControllerSpy).testEndpoint();
+            .when(testControllerSpy).testEndpoint();
 
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("Error"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Something gone wrong"));
 
     checkLog(memoryAppender,
             "Something went wrong handling request GET /test: HttpStatus 400 BAD_REQUEST - ClientException with httpStatus, message and throwable",
@@ -151,23 +153,25 @@ class ErrorManagerTest {
   @Test
   void handleExceptionRuntimeException() throws Exception {
     Mockito.doThrow(RuntimeException.class)
-        .when(testControllerSpy).testEndpoint();
+            .when(testControllerSpy).testEndpoint();
 
     mockMvc.perform(MockMvcRequestBuilders.get("/test")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(MockMvcResultMatchers.status().isInternalServerError())
-        .andExpect(MockMvcResultMatchers.content().json(EXPECTED_DEFAULT_ERROR));
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("Error"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Something gone wrong"));
+
   }
 
   public static void checkStackTraceSuppressedLog(MemoryAppender memoryAppender, String expectedLoggedMessage) {
-    String loggedMessage = memoryAppender.getLoggedEvents().get(0).getFormattedMessage();
+    String loggedMessage = memoryAppender.getLoggedEvents().getFirst().getFormattedMessage();
     Assertions.assertTrue(Pattern.matches(expectedLoggedMessage, loggedMessage),
             "Unexpected logged message: " + loggedMessage);
   }
 
 
   public static void checkLog(MemoryAppender memoryAppender, String expectedLoggedMessageRegexp, String expectedLoggedExceptionMessage, String expectedLoggedExceptionOccurrencePosition) {
-    ILoggingEvent loggedEvent = memoryAppender.getLoggedEvents().get(0);
+    ILoggingEvent loggedEvent = memoryAppender.getLoggedEvents().getFirst();
     IThrowableProxy loggedException = loggedEvent.getThrowableProxy();
     StackTraceElementProxy loggedExceptionOccurrenceStackTrace = loggedException.getStackTraceElementProxyArray()[0];
 
