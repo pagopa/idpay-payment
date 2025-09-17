@@ -19,6 +19,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -41,23 +42,23 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 @MongoTest
 @Slf4j
 class TransactionInProgressRepositoryExtImplTest {
 
     private static final String INITIATIVE_ID = "INITIATIVEID1";
     private static final String MERCHANT_ID = "MERCHANTID1";
+    private static final String POINT_OF_SALE_ID = "POINTOFSALEID1";
     private static final String USER_ID = "USERID1";
     public static final int EXPIRATION_MINUTES = 4350;
-    public static final int EXPIRATION_MINUTES_IDPAY_CODE= 5;
+    public static final int EXPIRATION_MINUTES_IDPAY_CODE = 5;
     private static final String TRX_ID = "TRX_ID";
 
     @Autowired
     protected TransactionInProgressRepository transactionInProgressRepository;
     @Autowired
     protected MongoTemplate mongoTemplate;
-
-
 
 
     @AfterEach
@@ -69,7 +70,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 TransactionInProgress.class);
     }
 
-   @Test
+    @Test
     void createIfExists() {
 
         TransactionInProgress transactionInProgress =
@@ -121,13 +122,13 @@ class TransactionInProgressRepositoryExtImplTest {
         TestUtils.checkNotNullFields(
                 result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate", "initiativeRejectionReasons");
 
-      TooManyRequestsException exception =
+        TooManyRequestsException exception =
                 assertThrows(
-                      TooManyRequestsException.class,
+                        TooManyRequestsException.class,
                         () -> transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled("trxcode1", EXPIRATION_MINUTES));
 
-      assertEquals(ExceptionCode.TOO_MANY_REQUESTS, exception.getCode());
-      assertEquals("Too many requests on trx having trCode: trxcode1", exception.getMessage());
+        assertEquals(ExceptionCode.TOO_MANY_REQUESTS, exception.getCode());
+        assertEquals("Too many requests on trx having trCode: trxcode1", exception.getMessage());
     }
 
 
@@ -150,7 +151,7 @@ class TransactionInProgressRepositoryExtImplTest {
                     }
                 }
         );
-        Assertions.assertEquals(N-1, mongoCommandsByType.get("aggregate").get(0).getValue());
+        Assertions.assertEquals(N - 1, mongoCommandsByType.get("aggregate").get(0).getValue());
     }
 
     @Test
@@ -160,7 +161,7 @@ class TransactionInProgressRepositoryExtImplTest {
         transaction.setUserId("USERID%d".formatted(1));
         transactionInProgressRepository.save(transaction);
 
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
 
         transactionInProgressRepository.updateTrxAuthorized(transaction, authPaymentDTO, CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
         TransactionInProgress result =
@@ -188,9 +189,9 @@ class TransactionInProgressRepositoryExtImplTest {
         transaction.setChannel(RewardConstants.TRX_CHANNEL_BARCODE);
         transactionInProgressRepository.save(transaction);
 
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
 
-        transactionInProgressRepository.updateTrxAuthorized(transaction,authPaymentDTO, CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
+        transactionInProgressRepository.updateTrxAuthorized(transaction, authPaymentDTO, CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of()));
         TransactionInProgress result =
                 transactionInProgressRepository.findById(transaction.getId()).orElse(null);
 
@@ -232,6 +233,12 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionInProgress);
 
+        try {
+            Thread.sleep(500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1", EXPIRATION_MINUTES);
         Assertions.assertNull(resultSecondSave);
@@ -245,7 +252,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
         transactionInProgressRepository.save(transactionInProgress);
 
-        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(transactionInProgress.getId(),EXPIRATION_MINUTES_IDPAY_CODE);
+        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(transactionInProgress.getId(), EXPIRATION_MINUTES_IDPAY_CODE);
         Assertions.assertNotNull(resultFirstSave);
         TestUtils.checkNotNullFields(
                 resultFirstSave,
@@ -261,7 +268,13 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
         transactionInProgressRepository.save(transactionInProgress);
 
-        TransactionInProgress resultSecondSave =
+      try {
+        Thread.sleep(500L);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+
+      TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(transactionInProgress.getId(), EXPIRATION_MINUTES_IDPAY_CODE);
         Assertions.assertNull(resultSecondSave);
     }
@@ -415,7 +428,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transactionInProgress.setUserId(USER_ID);
         transactionInProgressRepository.save(transactionInProgress);
-        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString());
+        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString());
         Pageable paging = PageRequest.of(0, 10);
         List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, paging);
         assertEquals(transactionInProgress, transactionInProgressList.get(0));
@@ -430,23 +443,58 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgress2.setInitiativeId(INITIATIVE_ID);
         transactionInProgress2.setInitiatives(List.of(INITIATIVE_ID));
         transactionInProgress2.setMerchantId(MERCHANT_ID);
+        transactionInProgress2.setPointOfSaleId(POINT_OF_SALE_ID);
         TransactionInProgress transactionInProgress3 =
                 TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
         transactionInProgress3.setInitiativeId(INITIATIVE_ID);
         transactionInProgress3.setInitiatives(List.of(INITIATIVE_ID));
         transactionInProgress3.setMerchantId(MERCHANT_ID);
+        transactionInProgress3.setPointOfSaleId(POINT_OF_SALE_ID);
         transactionInProgressRepository.save(transactionInProgress1);
         transactionInProgressRepository.save(transactionInProgress2);
         transactionInProgressRepository.save(transactionInProgress3);
-        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, null, null);
+        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID, null, null);
         long count = transactionInProgressRepository.getCount(criteria);
         assertEquals(3, count);
     }
 
     @Test
+    void findPageByFilter() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        trx.setMerchantId(MERCHANT_ID);
+        trx.setPointOfSaleId(POINT_OF_SALE_ID);
+        trx.setInitiativeId(INITIATIVE_ID);
+        trx.setUserId(USER_ID);
+        trx.setStatus(SyncTrxStatus.CREATED);
+
+        transactionInProgressRepository.save(trx);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
+                MERCHANT_ID,
+                POINT_OF_SALE_ID,
+                INITIATIVE_ID,
+                USER_ID,
+                SyncTrxStatus.CREATED.toString(),
+                pageable
+        );
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(trx.getId(), result.getContent().get(0).getId());
+    }
+
+    @Test
     void getCriteria() {
-        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
+        Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, null, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
         assertEquals(4, criteria.getCriteriaObject().size());
+    }
+
+    @Test
+    void getCriteria1() {
+        Criteria criteria1 = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString());
+        assertEquals(5, criteria1.getCriteriaObject().size());
     }
 
     @Test
@@ -465,6 +513,12 @@ class TransactionInProgressRepositoryExtImplTest {
                 TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
         transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionExpired);
+
+        try {
+            Thread.sleep(500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
         TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNotNull(expiredTrxResult);
@@ -510,6 +564,12 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionExpired.setTrxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionExpired);
 
+        try {
+            Thread.sleep(500L);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
         TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction(null, EXPIRATION_MINUTES);
         Assertions.assertNotNull(expiredTrxResult);
         assertElaborationsDateTime(now, expiredTrxResult);
@@ -534,7 +594,7 @@ class TransactionInProgressRepositoryExtImplTest {
     }
 
     @Test
-    void deletePaged (){
+    void deletePaged() {
         // Given
         int pageSize = 100;
         TransactionInProgress transactionInProgress = TransactionInProgress.builder()
@@ -555,7 +615,7 @@ class TransactionInProgressRepositoryExtImplTest {
     }
 
     @Test
-    void updateTrxPostTimeout_OK (){
+    void updateTrxPostTimeout_OK() {
 
         TransactionInProgress transactionInProgress = TransactionInProgress.builder()
                 .id(TRX_ID)
@@ -577,7 +637,7 @@ class TransactionInProgressRepositoryExtImplTest {
     }
 
     @Test
-    void updateTrxPostTimeout_KO (){
+    void updateTrxPostTimeout_KO() {
 
         TransactionInProgress transactionInProgress = TransactionInProgress.builder()
                 .id(TRX_ID)
@@ -647,7 +707,7 @@ class TransactionInProgressRepositoryExtImplTest {
         trx.setElaborationDateTime(null);
     }
 
-    private Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> executeConcurrentLocks(int attempts, Supplier<Boolean> lockAcquirer){
+    private Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> executeConcurrentLocks(int attempts, Supplier<Boolean> lockAcquirer) {
         AtomicInteger dropped = new AtomicInteger(0);
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         try {

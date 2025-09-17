@@ -52,6 +52,7 @@ public class TransactionInProgress {
   private String mcc;
   private String acquirerId;
   private String merchantId;
+  private String pointOfSaleId;
   private String merchantFiscalCode;
   private String vat;
   private String initiativeId;
@@ -72,4 +73,5 @@ public class TransactionInProgress {
   private List<String> initiatives;
   @Builder.Default
   private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
+  private Map<String, String> additionalProperties = new HashMap<>();
 }
