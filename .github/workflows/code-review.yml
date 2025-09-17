@@ -20,7 +20,7 @@ permissions:
 jobs:
   sonarcloud:
     name: SonarCloud Analysis
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
