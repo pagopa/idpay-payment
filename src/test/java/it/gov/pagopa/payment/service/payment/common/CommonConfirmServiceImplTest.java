@@ -1,18 +1,18 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import static org.mockito.Mockito.when;
-
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.dto.ConfirmRequestDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.test.fakers.ConfirmRequestDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -23,6 +23,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommonConfirmServiceImplTest {
@@ -46,6 +49,50 @@ class CommonConfirmServiceImplTest {
                         notifierServiceMock,
                         paymentErrorNotifierServiceMock,
                         auditUtilitiesMock);
+    }
+
+    @Test
+    void testConfirmPaymentTrxNotFound() {
+        try {
+            ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
+            service.confirmPayment(confirmRequestDTO);
+            Assertions.fail("Expected exception");
+        } catch (TransactionNotFoundOrExpiredException e) {
+            Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
+            Assertions.assertEquals("Cannot find transaction with transactionCode [trxCode]", e.getMessage());
+        }
+    }
+
+    @Test
+    void testConfirmPaymentStatusNotValid() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+        trx.setMerchantId("MERCHID");
+        trx.setAcquirerId("ACQID");
+        trx.setStatus(SyncTrxStatus.CREATED);
+        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
+
+        try {
+            ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
+            service.confirmPayment(confirmRequestDTO);
+            Assertions.fail("Expected exception");
+        } catch (OperationNotAllowedException e) {
+            Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, e.getCode());
+            Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", e.getMessage());
+        }
+    }
+
+    @Test
+    void testConfirmPayment() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+        trx.setMerchantId("MERCHID");
+        trx.setAcquirerId("ACQID");
+        trx.setStatus(SyncTrxStatus.AUTHORIZED);
+        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
+        ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
+
+        TransactionResponse result = service.confirmPayment(confirmRequestDTO);
+
+        Assertions.assertEquals(result, mapper.apply(trx));
     }
 
     @Test
