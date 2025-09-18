@@ -50,7 +50,7 @@ public class CommonConfirmServiceImpl {
             }
 
             if(confirmRequestDTO.isConfirmed()){
-                trx.setStatus(SyncTrxStatus.REWARDED);
+                trx.setStatus(SyncTrxStatus.CAPTURED);
                 trx.setElaborationDateTime(LocalDateTime.now());
                 repository.save(trx);
             }
