@@ -53,8 +53,8 @@ class CommonConfirmServiceImplTest {
 
     @Test
     void testConfirmPaymentTrxNotFound() {
+        ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
         try {
-            ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
             service.confirmPayment(confirmRequestDTO);
             Assertions.fail("Expected exception");
         } catch (TransactionNotFoundOrExpiredException e) {
@@ -70,9 +70,8 @@ class CommonConfirmServiceImplTest {
         trx.setAcquirerId("ACQID");
         trx.setStatus(SyncTrxStatus.CREATED);
         when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
-
+        ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
         try {
-            ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
             service.confirmPayment(confirmRequestDTO);
             Assertions.fail("Expected exception");
         } catch (OperationNotAllowedException e) {
