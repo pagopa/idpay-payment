@@ -10,17 +10,17 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@RequestMapping("/idpay/payment/bar-code")
+@RequestMapping("/idpay/payment")
 public interface BarCodePaymentController {
 
-    @PostMapping
+    @PostMapping("/bar-code")
     @ResponseStatus(code = HttpStatus.CREATED)
     TransactionBarCodeResponse createTransaction(
             @RequestBody @Valid TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
             @RequestHeader("x-user-id") String userId
     );
 
-    @PutMapping("/{trxCode}/authorize")
+    @PutMapping("/bar-code/{trxCode}/authorize")
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(
             @PathVariable("trxCode") String trxCode,
@@ -30,11 +30,18 @@ public interface BarCodePaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId
     );
 
-    @PutMapping("/{trxCode}/preview")
+    @PutMapping("/bar-code/{trxCode}/preview")
     @ResponseStatus(code = HttpStatus.OK)
     PreviewPaymentDTO previewPayment(
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid PreviewPaymentRequestDTO previewPaymentRequestDTO
+    );
+
+    @GetMapping("/{initiativeId}/bar-code")
+    @ResponseStatus(code = HttpStatus.OK)
+    TransactionBarCodeResponse retrievePayment(
+            @PathVariable("initiativeId") String initiativeId,
+            @RequestHeader("x-user-id") String userId
     );
 
 }

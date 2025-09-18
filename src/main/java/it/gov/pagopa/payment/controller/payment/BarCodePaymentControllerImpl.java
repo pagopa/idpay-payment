@@ -70,4 +70,9 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
                 .withProductGtin(sanitizedProductGtin);
     }
 
+    @Override
+    public TransactionBarCodeResponse retrievePayment(String initiativeId, String userId) {
+        return barCodePaymentService.findOldestOrAuthorized(userId, initiativeId);
+    }
+
 }
