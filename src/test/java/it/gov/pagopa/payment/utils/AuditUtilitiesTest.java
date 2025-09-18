@@ -179,6 +179,19 @@ class AuditUtilitiesTest {
     }
 
     @Test
+    void logErrorConfirmedPaymentTrxCode() {
+        auditUtilities.logErrorConfirmedPayment(TRX_CODE);
+
+
+        assertEquals(
+                CEF + " msg=Merchant confirmed the transaction - KO"
+                        + " cs1Label=trxCode cs1=%s"
+                        .formatted(TRX_CODE),
+                memoryAppender.getLoggedEvents().getFirst().getFormattedMessage()
+        );
+    }
+
+    @Test
     void logConfirmedPayment() {
         auditUtilities.logConfirmedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, Collections.emptyList(), MERCHANT_ID);
 
