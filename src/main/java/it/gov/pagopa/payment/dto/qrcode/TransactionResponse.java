@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,4 +33,5 @@ public class TransactionResponse {
   private Boolean splitPayment;
   private Long residualAmountCents;
   private Long trxExpirationSeconds;
+  private Map<String, String> additionalProperties;
 }
