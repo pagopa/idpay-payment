@@ -6,7 +6,6 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.ConfirmRequestDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -16,7 +15,6 @@ import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
 import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
-import it.gov.pagopa.payment.test.fakers.ConfirmRequestDTOFaker;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
@@ -139,14 +137,12 @@ class CommonPaymentControllerTest {
 
     @Test
     void confirmCommonTransactionByTrxCode() throws Exception {
-        ConfirmRequestDTO confirmRequestDTO = ConfirmRequestDTOFaker.mockInstance();
         TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
-        Mockito.when(commonConfirmServiceMock.confirmPayment(any())).thenReturn(response);
+        Mockito.when(commonConfirmServiceMock.confirmPayment(any(),any())).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                .put("/idpay/payment/confirm")
-                .content(objectMapper.writeValueAsString(confirmRequestDTO))
+                .put("/idpay/payment/{trxCode}/capture/{confirmation}","trxCode","true")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().is2xxSuccessful()).andReturn();

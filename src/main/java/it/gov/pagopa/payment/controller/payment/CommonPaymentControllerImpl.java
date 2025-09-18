@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeApiRetryable;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
-import it.gov.pagopa.payment.dto.ConfirmRequestDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -64,10 +63,10 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(
-            value = "CONFIRM_PAYMENT",
+            value = "CAPTURE_PAYMENT",
             payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-    public TransactionResponse confirmPayment(ConfirmRequestDTO confirmRequestDTO) {
-        return commonConfirmService.confirmPayment(confirmRequestDTO);
+    public TransactionResponse capturePayment(String trxCode, String confirmation) {
+        return commonConfirmService.confirmPayment(trxCode, confirmation);
     }
 
     @Override

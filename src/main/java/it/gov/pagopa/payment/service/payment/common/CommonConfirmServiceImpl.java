@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.dto.ConfirmRequestDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -38,9 +37,8 @@ public class CommonConfirmServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public TransactionResponse confirmPayment(ConfirmRequestDTO confirmRequestDTO) {
+    public TransactionResponse confirmPayment(String trxCode, String confirmation) {
         try {
-            String trxCode = confirmRequestDTO.getTrxCode();
             TransactionInProgress trx = repository.findByTrxCode(trxCode)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
@@ -49,7 +47,7 @@ public class CommonConfirmServiceImpl {
                         "Cannot operate on transaction with transactionCode [%s] in status %s".formatted(trxCode,trx.getStatus()));
             }
 
-            if(confirmRequestDTO.isConfirmed()){
+            if(Boolean.parseBoolean(confirmation)){
                 trx.setStatus(SyncTrxStatus.CAPTURED);
                 trx.setElaborationDateTime(LocalDateTime.now());
                 repository.save(trx);
@@ -59,7 +57,7 @@ public class CommonConfirmServiceImpl {
 
             return mapper.apply(trx);
         } catch (RuntimeException e) {
-            auditUtilities.logErrorConfirmedPayment(confirmRequestDTO.getTrxCode());
+            auditUtilities.logErrorConfirmedPayment(trxCode);
             throw e;
         }
     }

@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import it.gov.pagopa.payment.dto.ConfirmRequestDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -24,9 +23,10 @@ public interface CommonPaymentController {
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId);
 
-    @PutMapping("/confirm")
-    TransactionResponse confirmPayment(
-            @RequestBody @Valid ConfirmRequestDTO trxCreationRequest);
+    @PutMapping("{trxCode}/capture/{confirmation}")
+    TransactionResponse capturePayment(
+            @PathVariable("trxCode") String trxCode,
+            @PathVariable("confirmation") String confirmation);
 
     @DeleteMapping("/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
