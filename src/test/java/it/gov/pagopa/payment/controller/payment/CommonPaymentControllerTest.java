@@ -136,13 +136,13 @@ class CommonPaymentControllerTest {
     }
 
     @Test
-    void confirmCommonTransactionByTrxCode() throws Exception {
+    void captureCommonTransactionByTrxCode() throws Exception {
         TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
-        Mockito.when(commonConfirmServiceMock.confirmPayment(any(),any())).thenReturn(response);
+        Mockito.when(commonConfirmServiceMock.capturePayment(any())).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                .put("/idpay/payment/{trxCode}/capture/{confirmation}","trxCode","true")
+                .put("/idpay/payment/{trxCode}/capture","trxCode")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().is2xxSuccessful()).andReturn();

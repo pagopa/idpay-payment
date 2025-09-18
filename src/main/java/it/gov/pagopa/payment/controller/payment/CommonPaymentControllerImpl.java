@@ -65,8 +65,8 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @PerformanceLog(
             value = "CAPTURE_PAYMENT",
             payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-    public TransactionResponse capturePayment(String trxCode, String confirmation) {
-        return commonConfirmService.confirmPayment(trxCode, confirmation);
+    public TransactionResponse capturePayment(String trxCode) {
+        return commonConfirmService.capturePayment(trxCode);
     }
 
     @Override
