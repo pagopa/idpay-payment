@@ -160,7 +160,6 @@ public class CommonAuthServiceImpl {
         if(trx.getStatus().equals(SyncTrxStatus.CAPTURED)){
             throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
                     "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(),trx.getStatus()));
-
         }
     }
 
