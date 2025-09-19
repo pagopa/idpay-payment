@@ -30,10 +30,6 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
             return null;
         }
 
-        if (transactions.size() == 1) {
-            return transactionBarCodeInProgress2TransactionResponseMapper.apply(transactions.getFirst());
-        }
-
         TransactionInProgress latest = null;
 
         for (TransactionInProgress trx : transactions) {

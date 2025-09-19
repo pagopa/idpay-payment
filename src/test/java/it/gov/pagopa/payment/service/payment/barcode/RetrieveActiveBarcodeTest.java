@@ -49,23 +49,6 @@ class RetrieveActiveBarcodeTest {
     }
 
     @Test
-    void findOldestOrAuthorized_FindOnlyOneTrx() {
-        // Given
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
-                .thenReturn(List.of(trx));
-
-        TransactionBarCodeResponse trxExpected = transactionBarCodeInProgress2TransactionResponseMapperMock.apply(trx);
-
-        //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestOrAuthorized(USER_ID, INITIATIVE_ID);
-
-        //Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(trxExpected, result);
-    }
-
-    @Test
     void findOldestOrAuthorized_FindWithAuthorizationTransaction(){
         // Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
