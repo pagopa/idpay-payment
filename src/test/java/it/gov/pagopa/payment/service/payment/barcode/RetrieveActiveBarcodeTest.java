@@ -36,13 +36,13 @@ class RetrieveActiveBarcodeTest {
     }
 
     @Test
-    void findOldestNoAuthorized_NotFoundInDB() {
+    void findOldestNotAuthorized_NotFoundInDB() {
         // Given
         Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(Collections.emptyList());
 
         //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNoAuthorized(USER_ID, INITIATIVE_ID);
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
         Assertions.assertNull(result);
@@ -57,7 +57,7 @@ class RetrieveActiveBarcodeTest {
                 .thenReturn(List.of(trx, trxAuth));
 
         //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNoAuthorized(USER_ID, INITIATIVE_ID);
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
         Assertions.assertNull(result);
@@ -80,7 +80,7 @@ class RetrieveActiveBarcodeTest {
         TransactionBarCodeResponse trxExpected = transactionBarCodeInProgress2TransactionResponseMapperMock.apply(trx2);
 
         //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNoAuthorized(USER_ID, INITIATIVE_ID);
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
         Assertions.assertNotNull(result);

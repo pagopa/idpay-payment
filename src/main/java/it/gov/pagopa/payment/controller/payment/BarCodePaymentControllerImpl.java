@@ -75,7 +75,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             value = "BAR_CODE_RETRIEVE_PAYMENT",
             payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
     public TransactionBarCodeResponse retrievePayment(String initiativeId, String userId) {
-        return barCodePaymentService.findOldestNoAuthorized(userId, initiativeId);
+        return barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
     }
 
 }

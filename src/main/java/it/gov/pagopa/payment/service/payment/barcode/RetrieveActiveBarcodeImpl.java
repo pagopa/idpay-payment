@@ -24,7 +24,7 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
     }
 
     @Override
-    public TransactionBarCodeResponse findOldestNoAuthorized(String userId, String initiativeId) {
+    public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
         List<TransactionInProgress> transactions = transactionInProgressRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
         if (transactions.isEmpty()) {
             return null;
