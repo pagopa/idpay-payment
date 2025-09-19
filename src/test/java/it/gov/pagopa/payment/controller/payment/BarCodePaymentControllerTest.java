@@ -226,7 +226,7 @@ class BarCodePaymentControllerTest {
         when(barCodePaymentService.findOldestOrAuthorized(userId, initiativeId)).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(
-                get("/idpay/payment/{initiativeId}/bar-code", initiativeId)
+                get("/idpay/payment/initiatives/{initiativeId}/bar-code", initiativeId)
                         .header("x-user-id", userId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
