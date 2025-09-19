@@ -130,7 +130,14 @@ public class AuditUtilities {
         );
     }
 
-    public void logErrorConfirmedPayment(String trxCode) {
+    public void logCapturePayment(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons, String merchantId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
+                "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons), merchantId
+        );
+    }
+
+    public void logErrorCapturePayment(String trxCode) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXCODE,
                 "Merchant confirmed the transaction - KO", trxCode

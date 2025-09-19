@@ -51,11 +51,11 @@ public class CommonConfirmServiceImpl {
             trx.setElaborationDateTime(LocalDateTime.now());
             repository.save(trx);
 
-            auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());
+            auditUtilities.logCapturePayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());
 
             return mapper.apply(trx);
         } catch (RuntimeException e) {
-            auditUtilities.logErrorConfirmedPayment(trxCode);
+            auditUtilities.logErrorCapturePayment(trxCode);
             throw e;
         }
     }
