@@ -179,8 +179,8 @@ class AuditUtilitiesTest {
     }
 
     @Test
-    void logErrorConfirmedPaymentTrxCode() {
-        auditUtilities.logErrorConfirmedPayment(TRX_CODE);
+    void logErrorCapturePaymentTrxCode() {
+        auditUtilities.logErrorCapturePayment(TRX_CODE);
 
 
         assertEquals(
@@ -188,6 +188,19 @@ class AuditUtilitiesTest {
                         + " cs1Label=trxCode cs1=%s"
                         .formatted(TRX_CODE),
                 memoryAppender.getLoggedEvents().getFirst().getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logCapturePayment() {
+        auditUtilities.logCapturePayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, Collections.emptyList(), MERCHANT_ID);
+
+
+        assertEquals(
+                CEF + " msg=Merchant confirmed the transaction"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s cs6Label=merchantId cs6=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, "[]", MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
 
