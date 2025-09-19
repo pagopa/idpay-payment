@@ -70,4 +70,12 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
                 .withProductGtin(sanitizedProductGtin);
     }
 
+    @Override
+    @PerformanceLog(
+            value = "BAR_CODE_RETRIEVE_PAYMENT",
+            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
+    public TransactionBarCodeResponse retrievePayment(String initiativeId, String userId) {
+        return barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
+    }
+
 }
