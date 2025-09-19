@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
+import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,13 @@ import org.springframework.stereotype.Service;
 public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     private final BarCodeCreationService barCodeCreationService;
     private final BarCodeAuthPaymentService barCodeAuthPaymentService;
+    private final RetrieveActiveBarcode retrieveActiveBarcode;
 
     public BarCodePaymentServiceImpl(BarCodeCreationService barCodeCreationService,
-                                     BarCodeAuthPaymentService barCodeAuthPaymentService) {
+                                     BarCodeAuthPaymentService barCodeAuthPaymentService, RetrieveActiveBarcode retrieveActiveBarcode) {
         this.barCodeCreationService = barCodeCreationService;
         this.barCodeAuthPaymentService = barCodeAuthPaymentService;
+        this.retrieveActiveBarcode = retrieveActiveBarcode;
     }
 
     @Override
@@ -40,6 +43,11 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     @Override
     public PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents) {
         return barCodeAuthPaymentService.previewPayment(productGtin, trxCode, amountCents);
+    }
+
+    @Override
+    public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
+        return retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId);
     }
 
 }
