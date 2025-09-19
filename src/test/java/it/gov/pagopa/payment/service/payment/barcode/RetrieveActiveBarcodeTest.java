@@ -73,14 +73,11 @@ class RetrieveActiveBarcodeTest {
         Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(List.of(trx, trxAuth));
 
-        TransactionBarCodeResponse trxExpected = transactionBarCodeInProgress2TransactionResponseMapperMock.apply(trxAuth);
-
         //When
         TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestOrAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(trxExpected, result);
+        Assertions.assertNull(result);
     }
 
     @Test

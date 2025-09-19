@@ -38,7 +38,7 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
 
         for (TransactionInProgress trx : transactions) {
             if (trx.getStatus() == SyncTrxStatus.AUTHORIZED) {
-                return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
+                return null;
             }
 
             if (latest == null || trx.getTrxDate().isBefore(latest.getTrxDate())) {

@@ -37,7 +37,7 @@ public interface BarCodePaymentController {
             @RequestBody @Valid PreviewPaymentRequestDTO previewPaymentRequestDTO
     );
 
-    @GetMapping("initiatives/{initiativeId}/bar-code")
+    @GetMapping("/initiatives/{initiativeId}/bar-code")
     @ResponseStatus(code = HttpStatus.OK)
     TransactionBarCodeResponse retrievePayment(
             @PathVariable("initiativeId") String initiativeId,
