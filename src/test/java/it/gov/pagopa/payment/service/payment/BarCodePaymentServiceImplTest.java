@@ -101,16 +101,16 @@ class BarCodePaymentServiceImplTest {
     }
 
     @Test
-    void findOldestOrAuthorized_ok(){
+    void findOldestNoAuthorized_ok(){
         // Given
         String userId = "USER_ID";
         String initiativeId = "INITIATIVE_ID";
 
         TransactionBarCodeResponse trx = TransactionBarCodeResponseFaker.mockInstance(1);
-        Mockito.when(retrieveActiveBarcode.findOldestOrAuthorized(userId, initiativeId)).thenReturn(trx);
+        Mockito.when(retrieveActiveBarcode.findOldestNoAuthorized(userId, initiativeId)).thenReturn(trx);
 
         // When
-        TransactionBarCodeResponse result = barCodePaymentService.findOldestOrAuthorized(userId, initiativeId);
+        TransactionBarCodeResponse result = barCodePaymentService.findOldestNoAuthorized(userId, initiativeId);
 
         // Then
         Assertions.assertNotNull(result);

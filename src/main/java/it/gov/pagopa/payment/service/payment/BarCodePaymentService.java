@@ -14,5 +14,5 @@ public interface BarCodePaymentService {
 
     PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents);
 
-    TransactionBarCodeResponse findOldestOrAuthorized(String userId, String initiativeId);
+    TransactionBarCodeResponse findOldestNoAuthorized(String userId, String initiativeId);
 }

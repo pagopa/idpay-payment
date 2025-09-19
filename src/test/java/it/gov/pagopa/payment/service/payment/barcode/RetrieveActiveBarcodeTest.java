@@ -36,20 +36,20 @@ class RetrieveActiveBarcodeTest {
     }
 
     @Test
-    void findOldestOrAuthorized_NotFoundInDB() {
+    void findOldestNoAuthorized_NotFoundInDB() {
         // Given
         Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(Collections.emptyList());
 
         //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestOrAuthorized(USER_ID, INITIATIVE_ID);
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNoAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
         Assertions.assertNull(result);
     }
 
     @Test
-    void findOldestOrAuthorized_FindWithAuthorizationTransaction(){
+    void findOldestNoAuthorized_FindWithAuthorizationTransaction(){
         // Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         TransactionInProgress trxAuth = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
@@ -57,14 +57,14 @@ class RetrieveActiveBarcodeTest {
                 .thenReturn(List.of(trx, trxAuth));
 
         //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestOrAuthorized(USER_ID, INITIATIVE_ID);
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNoAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
         Assertions.assertNull(result);
     }
 
     @Test
-    void findOldestOrAuthorized_FindWithFewTransaction(){
+    void findOldestNoAuthorized_FindWithFewTransaction(){
         // Given
         OffsetDateTime now = OffsetDateTime.now();
         TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -80,7 +80,7 @@ class RetrieveActiveBarcodeTest {
         TransactionBarCodeResponse trxExpected = transactionBarCodeInProgress2TransactionResponseMapperMock.apply(trx2);
 
         //When
-        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestOrAuthorized(USER_ID, INITIATIVE_ID);
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNoAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
         Assertions.assertNotNull(result);

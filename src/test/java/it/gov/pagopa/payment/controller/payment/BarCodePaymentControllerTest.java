@@ -223,7 +223,7 @@ class BarCodePaymentControllerTest {
         String userId = "USER_ID";
         String initiativeId = "INITIATIVE_ID";
         TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
-        when(barCodePaymentService.findOldestOrAuthorized(userId, initiativeId)).thenReturn(txrResponse);
+        when(barCodePaymentService.findOldestNoAuthorized(userId, initiativeId)).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code", initiativeId)
