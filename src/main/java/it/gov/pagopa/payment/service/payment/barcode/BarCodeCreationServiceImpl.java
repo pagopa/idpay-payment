@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionEnrichedResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
 import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
@@ -18,6 +19,7 @@ import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -36,12 +38,15 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     private final WalletConnector walletConnector;
     private final AuditUtilities auditUtilities;
     private final TransactionInProgressService transactionInProgressService;
+    private final TransactionBarCodeInProgress2TransactionEnrichedResponseMapper transactionBarCodeInProgress2TransactionEnrichedResponseMapper;
+
     protected BarCodeCreationServiceImpl(RewardRuleRepository rewardRuleRepository,
                                          AuditUtilities auditUtilities,
                                          TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
                                          TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper,
                                          WalletConnector walletConnector,
-                                         TransactionInProgressService transactionInProgressService) {
+                                         TransactionInProgressService transactionInProgressService,
+                                         TransactionBarCodeInProgress2TransactionEnrichedResponseMapper transactionBarCodeInProgress2TransactionEnrichedResponseMapper) {
 
         this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
@@ -49,6 +54,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         this.rewardRuleRepository = rewardRuleRepository;
         this.auditUtilities = auditUtilities;
         this.transactionInProgressService = transactionInProgressService;
+        this.transactionBarCodeInProgress2TransactionEnrichedResponseMapper = transactionBarCodeInProgress2TransactionEnrichedResponseMapper;
     }
 
     public TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
@@ -58,30 +64,53 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         LocalDate today = LocalDate.now();
 
         try {
-            InitiativeConfig initiative = rewardRuleRepository.findById(trxBarCodeCreationRequest.getInitiativeId())
-                    .map(RewardRule::getInitiativeConfig)
-                    .orElse(null);
-
-            checkInitiativeType(trxBarCodeCreationRequest.getInitiativeId(), initiative, getFlow());
-
-            checkInitiativeValidPeriod(today, initiative, getFlow());
-
-            Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
-
-            TransactionInProgress trx =
-                    transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>());
-            transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
-
-            logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
-
-            trx.setAmountCents(residualBudgetCents);
+            TransactionInProgress trx = generateTransaction(trxBarCodeCreationRequest, channel, userId, today, false);
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
         } catch (RuntimeException e) {
             logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
             throw e;
         }
+    }
+
+    @Override
+    public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
+                                                        String channel,
+                                                        String userId) {
+
+        LocalDate today = LocalDate.now();
+
+        try {
+            TransactionInProgress trx = generateTransaction(trxBarCodeCreationRequest, channel, userId, today, true);
+            return transactionBarCodeInProgress2TransactionEnrichedResponseMapper.apply(trx);
+
+        } catch (RuntimeException e) {
+            logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
+            throw e;
+        }
+    }
+
+    @NotNull
+    private TransactionInProgress generateTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, LocalDate today, boolean extendedAuthorization) {
+        InitiativeConfig initiative = rewardRuleRepository.findById(trxBarCodeCreationRequest.getInitiativeId())
+                .map(RewardRule::getInitiativeConfig)
+                .orElse(null);
+
+        checkInitiativeType(trxBarCodeCreationRequest.getInitiativeId(), initiative, getFlow());
+
+        checkInitiativeValidPeriod(today, initiative, getFlow());
+
+        Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
+
+        TransactionInProgress trx =
+                transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+                        trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization);
+        transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
+
+        logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
+
+        trx.setAmountCents(residualBudgetCents);
+        return trx;
     }
 
     private void logCreatedTransaction(String initiativeId, String id, String trxCode, String userId) {

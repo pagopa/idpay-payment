@@ -5,4 +5,5 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 
 public interface BarCodeCreationService {
     TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String channel, String userId);
+    TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId);
 }
