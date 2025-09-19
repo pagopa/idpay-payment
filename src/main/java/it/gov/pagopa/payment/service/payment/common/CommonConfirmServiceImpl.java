@@ -37,30 +37,6 @@ public class CommonConfirmServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public TransactionResponse capturePayment(String trxCode) {
-        try {
-            TransactionInProgress trx = repository.findByTrxCode(trxCode)
-                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
-
-            if(!trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)){
-                throw new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                        "Cannot operate on transaction with transactionCode [%s] in status %s".formatted(trxCode,trx.getStatus()));
-            }
-
-            trx.setStatus(SyncTrxStatus.CAPTURED);
-            trx.setElaborationDateTime(LocalDateTime.now());
-            repository.save(trx);
-
-            auditUtilities.logCapturePayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());
-
-            return mapper.apply(trx);
-        } catch (RuntimeException e) {
-            auditUtilities.logErrorCapturePayment(trxCode);
-            throw e;
-        }
-    }
-
-
     public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
         try {
             TransactionInProgress trx = repository.findById(trxId)

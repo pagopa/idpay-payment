@@ -10,10 +10,7 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
@@ -49,6 +46,9 @@ class CommonPaymentControllerTest {
     @MockitoBean
     @Qualifier("commonConfirm")
     private CommonConfirmServiceImpl commonConfirmServiceMock;
+    @MockitoBean
+    @Qualifier("commonCapture")
+    private CommonCaptureServiceImpl commonCaptureServiceMock;
 
     @MockitoBean
     @Qualifier("commonCancel")
@@ -139,7 +139,7 @@ class CommonPaymentControllerTest {
     void captureCommonTransactionByTrxCode() throws Exception {
         TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
-        Mockito.when(commonConfirmServiceMock.capturePayment(any())).thenReturn(response);
+        Mockito.when(commonCaptureServiceMock.capturePayment(any())).thenReturn(response);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                 .put("/idpay/payment/{trxCode}/capture","trxCode")

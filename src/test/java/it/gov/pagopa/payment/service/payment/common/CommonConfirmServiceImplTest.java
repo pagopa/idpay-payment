@@ -22,7 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,46 +46,6 @@ class CommonConfirmServiceImplTest {
                         notifierServiceMock,
                         paymentErrorNotifierServiceMock,
                         auditUtilitiesMock);
-    }
-
-    @Test
-    void testCapturePaymentTrxNotFound() {
-        try {
-            service.capturePayment("trxCode");
-            Assertions.fail("Expected exception");
-        } catch (TransactionNotFoundOrExpiredException e) {
-            Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
-            Assertions.assertEquals("Cannot find transaction with transactionCode [trxCode]", e.getMessage());
-        }
-    }
-
-    @Test
-    void testCapturePaymentStatusNotValid() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
-        trx.setMerchantId("MERCHID");
-        trx.setAcquirerId("ACQID");
-        trx.setStatus(SyncTrxStatus.CREATED);
-        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
-        try {
-            service.capturePayment("trxCode");
-            Assertions.fail("Expected exception");
-        } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", e.getMessage());
-        }
-    }
-
-    @Test
-    void testCapturePayment() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
-        trx.setMerchantId("MERCHID");
-        trx.setAcquirerId("ACQID");
-        trx.setStatus(SyncTrxStatus.AUTHORIZED);
-        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
-
-        TransactionResponse result = service.capturePayment("trxCode");
-
-        Assertions.assertEquals(result, mapper.apply(trx));
     }
 
     @Test
