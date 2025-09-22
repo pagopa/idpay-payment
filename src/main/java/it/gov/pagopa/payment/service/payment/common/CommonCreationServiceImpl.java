@@ -18,6 +18,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -94,7 +95,7 @@ public class CommonCreationServiceImpl {
       log.info(
               "[{}] Cannot find initiative with ID: [{}]",
               flowName,
-              initiativeId);
+              Utilities.sanitizeString(initiativeId));
       throw new InitiativeNotfoundException("Cannot find initiative with id [%s]".formatted(initiativeId));
     }
 
@@ -102,7 +103,7 @@ public class CommonCreationServiceImpl {
       log.info(
               "[{}] Initiative with ID: [{}] is not DISCOUNT type",
               flowName,
-              initiativeId);
+              Utilities.sanitizeString(initiativeId));
       throw new InitiativeNotfoundException(
               PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT,
               "The initiative with id [%s] is not discount".formatted(initiativeId));
