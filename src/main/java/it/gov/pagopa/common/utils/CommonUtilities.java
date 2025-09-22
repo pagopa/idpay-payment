@@ -6,6 +6,8 @@ import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 
 public class CommonUtilities {
   private CommonUtilities() {}
@@ -30,5 +32,12 @@ public class CommonUtilities {
 
   public static Long minutesToSeconds(Integer minutes){
     return minutes == null ? null : (long)minutes*60;
+  }
+
+  public static Long secondsBetween(OffsetDateTime initialDate, OffsetDateTime endedDate) {
+    if (initialDate == null || endedDate == null || endedDate.isBefore(initialDate)) {
+      return null;
+    }
+    return Duration.between(initialDate, endedDate).getSeconds();
   }
 }

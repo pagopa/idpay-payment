@@ -60,4 +60,11 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
         return barCodeCaptureService.capturePayment(trxCode);
     }
 
+    @Override
+    public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId) {
+        return barCodeCreationService.createExtendedTransaction(
+                trxBRCodeCreationRequest,
+                RewardConstants.TRX_CHANNEL_BARCODE,
+                userId);
+    }
 }

@@ -26,7 +26,7 @@ class RetrieveActiveBarcodeTest {
     private static final String INITIATIVE_ID = "INITIATIVEID";
     @Mock
     private TransactionInProgressRepository transactionInProgressRepositoryMock;
-    private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapperMock = new TransactionBarCodeInProgress2TransactionResponseMapper(5);
+    private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapperMock = new TransactionBarCodeInProgress2TransactionResponseMapper(5, 10);
 
     private RetrieveActiveBarcode retrieveActiveBarcode;
 

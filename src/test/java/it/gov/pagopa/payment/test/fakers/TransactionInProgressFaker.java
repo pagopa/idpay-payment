@@ -71,6 +71,7 @@ public class TransactionInProgressFaker {
         .counterVersion(0L)
         .rewards(rewards)
         .additionalProperties(additionalProperties)
+        .extendedAuthorization(false)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

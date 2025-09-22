@@ -261,4 +261,28 @@ class BarCodePaymentControllerTest {
 
     }
 
+    @Test
+    void createExtendedransaction() throws Exception {
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequestFaker.mockInstance(1);
+
+
+        TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
+        when(barCodePaymentService.createExtendedTransaction(trxCreationReq,"USER_ID")).thenReturn(txrResponse);
+
+        MvcResult result = mockMvc.perform(
+                post("/idpay/payment/bar-code/extended")
+                        .header("x-user-id", "USER_ID")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxCreationReq))
+        ).andExpect(status().isCreated()).andReturn();
+
+        TransactionBarCodeResponse resultResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TransactionBarCodeResponse.class);
+
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(txrResponse,resultResponse);
+
+    }
 }

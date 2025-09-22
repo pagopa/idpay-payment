@@ -133,4 +133,23 @@ class BarCodePaymentServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trx, result);
     }
+
+    @Test
+    void createTransaction_ok(){
+        // Given
+        TransactionBarCodeCreationRequest trxBRCodeCreationRequest = TransactionBarCodeCreationRequestFaker.mockInstance(1);
+        String userId = "USERID";
+        TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
+
+        Mockito.when(barCodeCreationService.createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
+                .thenReturn(response);
+
+        TransactionBarCodeResponse result = barCodePaymentService.createExtendedTransaction(trxBRCodeCreationRequest, userId);
+
+        // Then
+        Assertions.assertEquals(response.getId(), result.getId());
+        Assertions.assertEquals(response, result);
+        Mockito.verify(barCodeCreationService, Mockito.times(1)).createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId);
+        Mockito.verifyNoMoreInteractions(barCodeCreationService);
+    }
 }

@@ -48,4 +48,11 @@ public interface BarCodePaymentController {
     TransactionBarCodeResponse capturePayment(
             @PathVariable("trxCode") String trxCode);
 
+    @PostMapping("/bar-code/extended")
+    @ResponseStatus(code = HttpStatus.CREATED)
+    TransactionBarCodeResponse createExtendedTransaction(
+            @RequestBody @Valid TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
+            @RequestHeader("x-user-id") String userId
+    );
+
 }
