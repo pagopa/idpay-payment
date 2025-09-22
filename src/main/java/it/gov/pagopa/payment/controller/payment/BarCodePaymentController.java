@@ -6,7 +6,6 @@ import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -46,7 +45,7 @@ public interface BarCodePaymentController {
     );
 
     @PutMapping("/bar-code/{trxCode}/capture")
-    TransactionResponse capturePayment(
+    TransactionBarCodeResponse capturePayment(
             @PathVariable("trxCode") String trxCode);
 
 }

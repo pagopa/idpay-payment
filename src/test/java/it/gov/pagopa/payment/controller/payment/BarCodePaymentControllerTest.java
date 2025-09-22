@@ -12,17 +12,14 @@ import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
-import it.gov.pagopa.payment.service.payment.common.CommonCaptureServiceImpl;
 import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -53,16 +50,11 @@ class BarCodePaymentControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
-    @Qualifier("commonCapture")
-    private CommonCaptureServiceImpl commonCaptureServiceMock;
-
-
     @Test
     void captureCommonTransactionByTrxCode() throws Exception {
-        TransactionResponse response = TransactionResponseFaker.mockInstance(1);
+        TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(commonCaptureServiceMock.capturePayment(any())).thenReturn(response);
+        Mockito.when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                 .put("/idpay/payment/bar-code/{trxCode}/capture","trxCode")
@@ -70,12 +62,12 @@ class BarCodePaymentControllerTest {
                 .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().is2xxSuccessful()).andReturn();
 
-        TransactionResponse resultResponse = objectMapper.readValue(
+        TransactionBarCodeResponse resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TransactionResponse.class);
+                TransactionBarCodeResponse.class);
 
         Assertions.assertNotNull(resultResponse);
-        Assertions.assertEquals(response,resultResponse);
+        Assertions.assertEquals(txrResponse,resultResponse);
     }
 
 
