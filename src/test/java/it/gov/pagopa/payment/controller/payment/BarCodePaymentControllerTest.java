@@ -12,19 +12,24 @@ import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
+import it.gov.pagopa.payment.service.payment.common.CommonCaptureServiceImpl;
 import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,9 +37,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BarCodePaymentControllerImpl.class)
@@ -49,6 +52,31 @@ class BarCodePaymentControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockitoBean
+    @Qualifier("commonCapture")
+    private CommonCaptureServiceImpl commonCaptureServiceMock;
+
+
+    @Test
+    void captureCommonTransactionByTrxCode() throws Exception {
+        TransactionResponse response = TransactionResponseFaker.mockInstance(1);
+
+        Mockito.when(commonCaptureServiceMock.capturePayment(any())).thenReturn(response);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/idpay/payment/bar-code/{trxCode}/capture","trxCode")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is2xxSuccessful()).andReturn();
+
+        TransactionResponse resultResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TransactionResponse.class);
+
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(response,resultResponse);
+    }
 
 
     @Test

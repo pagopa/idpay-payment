@@ -8,13 +8,17 @@ import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
+import it.gov.pagopa.payment.service.payment.common.CommonCaptureServiceImpl;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
@@ -24,9 +28,13 @@ import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 public class BarCodePaymentControllerImpl implements BarCodePaymentController {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final CommonCaptureServiceImpl commonCaptureService;
 
-    public BarCodePaymentControllerImpl(BarCodePaymentService barCodePaymentService) {
+
+    public BarCodePaymentControllerImpl(BarCodePaymentService barCodePaymentService,
+                                        @Qualifier("commonCapture") CommonCaptureServiceImpl commonCaptureService) {
         this.barCodePaymentService = barCodePaymentService;
+        this.commonCaptureService = commonCaptureService;
     }
 
     @Override
@@ -44,7 +52,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
     public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         log.info("[BAR_CODE_AUTHORIZE_TRANSACTION] The merchant {} is authorizing the transaction having trxCode {}",
-            Utilities.sanitizeString(merchantId), Utilities.sanitizeString(trxCode));
+                Utilities.sanitizeString(merchantId), Utilities.sanitizeString(trxCode));
         return barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
     }
 
@@ -76,6 +84,14 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
     public TransactionBarCodeResponse retrievePayment(String initiativeId, String userId) {
         return barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
+    }
+
+    @Override
+    @PerformanceLog(
+            value = "CAPTURE_PAYMENT",
+            payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
+    public TransactionResponse capturePayment(String trxCode) {
+        return commonCaptureService.capturePayment(trxCode);
     }
 
 }
