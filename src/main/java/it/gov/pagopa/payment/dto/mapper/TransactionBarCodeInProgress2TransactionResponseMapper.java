@@ -25,14 +25,18 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
   @Override
   public TransactionBarCodeResponse apply(TransactionInProgress transactionInProgress) {
 
-    int authorizationExpiration = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ? extendedAuthorizationExpirationMinutes : authorizationExpirationMinutes;
+    Long authorizationExpiration = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ?
+            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(),
+                    TransactionBarCodeInProgress2TransactionEnrichedResponseMapper.calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes))
+            : CommonUtilities.minutesToSeconds(authorizationExpirationMinutes);
+
     return TransactionBarCodeResponse.builder()
             .id(transactionInProgress.getId())
             .trxCode(transactionInProgress.getTrxCode())
             .initiativeId(transactionInProgress.getInitiativeId())
             .initiativeName(transactionInProgress.getInitiativeName())
             .trxDate(transactionInProgress.getTrxDate())
-            .trxExpirationSeconds(CommonUtilities.minutesToSeconds(authorizationExpiration))
+            .trxExpirationSeconds(authorizationExpiration)
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
 

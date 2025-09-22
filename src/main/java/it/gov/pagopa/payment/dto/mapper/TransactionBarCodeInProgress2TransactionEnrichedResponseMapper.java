@@ -27,8 +27,10 @@ public class TransactionBarCodeInProgress2TransactionEnrichedResponseMapper
   @Override
   public TransactionBarCodeEnrichedResponse apply(TransactionInProgress transactionInProgress) {
 
-    int authorizationExpiration = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ? extendedAuthorizationExpirationMinutes : authorizationExpirationMinutes;
     OffsetDateTime endDate = calculateTrxEndDate(transactionInProgress);
+    Long expirationSeconds = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ?
+            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(), endDate)
+            : CommonUtilities.minutesToSeconds(authorizationExpirationMinutes);
 
     return TransactionBarCodeEnrichedResponse.builder()
             .id(transactionInProgress.getId())
@@ -36,7 +38,7 @@ public class TransactionBarCodeInProgress2TransactionEnrichedResponseMapper
             .initiativeId(transactionInProgress.getInitiativeId())
             .initiativeName(transactionInProgress.getInitiativeName())
             .trxDate(transactionInProgress.getTrxDate())
-            .trxExpirationSeconds(CommonUtilities.minutesToSeconds(authorizationExpiration))
+            .trxExpirationSeconds(expirationSeconds)
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
             .trxEndDate(endDate)
@@ -45,10 +47,15 @@ public class TransactionBarCodeInProgress2TransactionEnrichedResponseMapper
 
   private OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress) {
     if (Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization())){
-      OffsetDateTime endDate = transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
-      return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+      return calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes);
     }
 
     return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
   }
+
+  public static OffsetDateTime calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
+    OffsetDateTime endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
+    return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+  }
+
 }
