@@ -28,7 +28,9 @@ public interface CommonPaymentController {
     void cancelTransaction(
             @PathVariable("transactionId") String transactionId,
             @RequestHeader("x-merchant-id") String merchantId,
-            @RequestHeader("x-acquirer-id") String acquirerId);
+            @RequestHeader("x-acquirer-id") String acquirerId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId);
+
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
