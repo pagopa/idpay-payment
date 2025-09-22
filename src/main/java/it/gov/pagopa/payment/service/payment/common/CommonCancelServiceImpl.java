@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -48,7 +49,7 @@ public class CommonCancelServiceImpl {
         this.cancelExpiration = Duration.ofMinutes(cancelExpirationMinutes);
     }
 
-    public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
+    public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         try {
             TransactionInProgress trx = repository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
@@ -81,7 +82,19 @@ public class CommonCancelServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
             }
             log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
-            auditUtilities.logCancelTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getRewardCents(), 0L), trx.getRejectionReasons(), merchantId);
+
+            CancelTransactionAuditDTO dto = new CancelTransactionAuditDTO(
+                trx.getInitiativeId(),
+                trx.getId(),
+                trx.getTrxCode(),
+                trx.getUserId(),
+                ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
+                trx.getRejectionReasons(),
+                merchantId,
+                pointOfSaleId
+            );
+            auditUtilities.logCancelTransaction(dto);
+
         } catch (RuntimeException e) {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);
             throw e;

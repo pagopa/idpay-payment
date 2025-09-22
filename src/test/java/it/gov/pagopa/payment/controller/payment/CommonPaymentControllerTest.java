@@ -69,6 +69,7 @@ class CommonPaymentControllerTest {
     private static final String ACQUIRER_ID = "ACQUIRERID1";
     private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
     private static final String MERCHANT_ID = "MERCHANTID1";
+    private static final String POINT_OF_SALE_ID = "POINT_OF_SALE_ID1";
     private static final String TRANSACTION_ID = "TRANSACTIONID1";
     private static final String INITIATIVE_ID = "INITIATIVEID1";
 
@@ -184,12 +185,13 @@ class CommonPaymentControllerTest {
                         .delete("/idpay/payment/{transactionId}",
                                 TRANSACTION_ID)
                                 .header("x-merchant-id",MERCHANT_ID)
-                                .header("x-acquirer-id" ,ACQUIRER_ID))
+                                .header("x-acquirer-id" ,ACQUIRER_ID)
+                                .header("x-point-of-sale-id", POINT_OF_SALE_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
         assertEquals("", result.getResponse().getContentAsString());
-        Mockito.verify(commonCancelServiceMock).cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(commonCancelServiceMock).cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),  Mockito.anyString());
 
     }
     @Test

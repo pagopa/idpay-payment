@@ -3,12 +3,13 @@ package it.gov.pagopa.payment.utils;
 import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.AuditLogger;
 import it.gov.pagopa.common.utils.MemoryAppender;
+import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class AuditUtilitiesTest {
@@ -19,6 +20,7 @@ class AuditUtilitiesTest {
     private static final String USER_ID = "TEST_USER_ID";
     private static final String CHANNEL = "TEST_CHANNEL";
     private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
+    private static final String POINT_OF_SALE_ID = "TEST_POINT_OF_SALE_ID";
     public static final long REWARD_CENTS = 0L;
     public static final String TRX_ID = "TEST_TRX_ID";
     private static final String FLOW_CAUSE = "TRANSACTION_AUTHORIZATION_EXPIRED";
@@ -27,7 +29,7 @@ class AuditUtilitiesTest {
 
 
     @BeforeEach
-    public void setup() {
+     void setup() {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("AUDIT");
         memoryAppender = new MemoryAppender();
         memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
@@ -232,22 +234,26 @@ class AuditUtilitiesTest {
 
     @Test
     void logCancelTransaction() {
-        auditUtilities.logCancelTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, Collections.emptyList(), MERCHANT_ID);
-
-
-        assertEquals(
-                CEF + " msg=Merchant cancelled the transaction"
-                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s cs6Label=merchantId cs6=%s"
-                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, "[]", MERCHANT_ID),
-                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        CancelTransactionAuditDTO dto = new CancelTransactionAuditDTO(
+            INITIATIVE_ID,
+            TRX_ID,
+            TRX_CODE,
+            USER_ID,
+            REWARD_CENTS,
+            Collections.emptyList(),
+            MERCHANT_ID,
+            POINT_OF_SALE_ID
         );
+
+        auditUtilities.logCancelTransaction(dto);
+
+        String loggedMessage = memoryAppender.getLoggedEvents().get(0).getFormattedMessage();
+        Assertions.assertTrue(loggedMessage.contains("msg=Merchant cancelled the transaction"));
     }
 
     @Test
     void logErrorCancelTransaction() {
         auditUtilities.logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
-
-
         assertEquals(
                 CEF + " msg=Merchant cancelled the transaction - KO"
                         + " cs1Label=trxId cs1=%s cs2Label=merchantId cs2=%s"

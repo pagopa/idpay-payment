@@ -73,13 +73,14 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @PerformanceLog(
             value = "CANCEL_TRANSACTION",
             payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-    public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
+    public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         log.info(
-                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {}",
+                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {} at POS {}",
                 merchantId,
                 acquirerId,
-                trxId);
-        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId);
+                trxId,
+                pointOfSaleId);
+        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
     }
 
     @Override
