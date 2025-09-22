@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
