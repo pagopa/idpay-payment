@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
+import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
@@ -28,13 +29,15 @@ class BarCodePaymentServiceImplTest {
     private BarCodeCreationService barCodeCreationService;
     @Mock
     private BarCodeAuthPaymentService barCodeAuthPaymentService;
+    @Mock
+    private RetrieveActiveBarcode retrieveActiveBarcode;
 
     private BarCodePaymentService barCodePaymentService;
 
 
     @BeforeEach
     void setup(){
-        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeAuthPaymentService);
+        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeAuthPaymentService, retrieveActiveBarcode);
     }
 
     @Test
@@ -95,5 +98,22 @@ class BarCodePaymentServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
+    }
+
+    @Test
+    void findOldestNotAuthorized_ok(){
+        // Given
+        String userId = "USER_ID";
+        String initiativeId = "INITIATIVE_ID";
+
+        TransactionBarCodeResponse trx = TransactionBarCodeResponseFaker.mockInstance(1);
+        Mockito.when(retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId)).thenReturn(trx);
+
+        // When
+        TransactionBarCodeResponse result = barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(trx, result);
     }
 }

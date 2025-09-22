@@ -23,6 +23,7 @@ public class AuditUtilities {
     private static final String CEF_PATTERN_INITIATIVE_MERCHANTID = CEF_PATTERN_INITIATIVE + " cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_INITIATIVE_USERID = CEF_PATTERN_INITIATIVE + " suser={}";
     private static final String CEF_PATTERN_TRXCODE_USERID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} suser={}";
+    private static final String CEF_PATTERN_TRXCODE = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={}";
     private static final String CEF_PATTERN_TRXCODE_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxCode cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_MERCHANTID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=merchantId cs2={}";
     private static final String CEF_PATTERN_TRXID_USERID = CEF_BASE_PATTERN + " cs1Label=trxId cs1={} cs2Label=userId cs2={}";
@@ -126,6 +127,20 @@ public class AuditUtilities {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
                 "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons), merchantId
+        );
+    }
+
+    public void logCapturePayment(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons, String merchantId) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
+                "Merchant confirmed the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons), merchantId
+        );
+    }
+
+    public void logErrorCapturePayment(String trxCode) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXCODE,
+                "Merchant confirmed the transaction - KO", trxCode
         );
     }
 
