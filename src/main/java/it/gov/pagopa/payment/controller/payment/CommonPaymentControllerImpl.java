@@ -5,10 +5,7 @@ import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -18,17 +15,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
+    private final CommonCaptureServiceImpl commonCaptureService;
     private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
     private final QRCodeExpirationService qrCodeExpirationService; // used just to force the expiration: this behavior is the same for all channels
 
     public CommonPaymentControllerImpl(@Qualifier("commonCreate") CommonCreationServiceImpl commonCreationService,
+                                       @Qualifier("commonCapture") CommonCaptureServiceImpl commonCaptureService,
                                        @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
-    this.commonCreationService = commonCreationService;
+        this.commonCreationService = commonCreationService;
+        this.commonCaptureService= commonCaptureService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
         this.commonStatusTransactionService = commonStatusTransactionService;
@@ -59,6 +59,14 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 acquirerId,
                 trxId);
         return commonConfirmService.confirmPayment(trxId, merchantId, acquirerId);
+    }
+
+    @Override
+    @PerformanceLog(
+            value = "CAPTURE_PAYMENT",
+            payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
+    public TransactionResponse capturePayment(String trxCode) {
+        return commonCaptureService.capturePayment(trxCode);
     }
 
     @Override
