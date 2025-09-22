@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -17,12 +18,16 @@ import org.springframework.stereotype.Service;
 @Service
 public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     private final BarCodeCreationService barCodeCreationService;
+    private final BarCodeCaptureService barCodeCaptureService;
     private final BarCodeAuthPaymentService barCodeAuthPaymentService;
     private final RetrieveActiveBarcode retrieveActiveBarcode;
 
     public BarCodePaymentServiceImpl(BarCodeCreationService barCodeCreationService,
-                                     BarCodeAuthPaymentService barCodeAuthPaymentService, RetrieveActiveBarcode retrieveActiveBarcode) {
+                                     BarCodeCaptureService barCodeCaptureService,
+                                     BarCodeAuthPaymentService barCodeAuthPaymentService,
+                                     RetrieveActiveBarcode retrieveActiveBarcode) {
         this.barCodeCreationService = barCodeCreationService;
+        this.barCodeCaptureService = barCodeCaptureService;
         this.barCodeAuthPaymentService = barCodeAuthPaymentService;
         this.retrieveActiveBarcode = retrieveActiveBarcode;
     }
@@ -48,6 +53,11 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     @Override
     public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
         return retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId);
+    }
+
+    @Override
+    public TransactionBarCodeResponse capturePayment(String trxCode){
+        return barCodeCaptureService.capturePayment(trxCode);
     }
 
     @Override

@@ -1,8 +1,8 @@
-package it.gov.pagopa.payment.service.payment.common;
+package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -15,21 +15,22 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Slf4j
-@Service("commonCapture")
-public class CommonCaptureServiceImpl {
+@Service
+public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
+
     private final TransactionInProgressRepository repository;
-    private final TransactionInProgress2TransactionResponseMapper mapper;
+    private final TransactionBarCodeInProgress2TransactionResponseMapper mapper;
     private final AuditUtilities auditUtilities;
 
-    public CommonCaptureServiceImpl(TransactionInProgressRepository repository,
-                                    TransactionInProgress2TransactionResponseMapper mapper,
+    public BarCodeCaptureServiceImpl(TransactionInProgressRepository repository,
+                                     TransactionBarCodeInProgress2TransactionResponseMapper mapper,
                                     AuditUtilities auditUtilities) {
         this.repository = repository;
         this.mapper = mapper;
         this.auditUtilities = auditUtilities;
     }
 
-    public TransactionResponse capturePayment(String trxCode) {
+    public TransactionBarCodeResponse capturePayment(String trxCode) {
         try {
             TransactionInProgress trx = repository.findByTrxCode(trxCode)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
@@ -51,5 +52,4 @@ public class CommonCaptureServiceImpl {
             throw e;
         }
     }
-
 }

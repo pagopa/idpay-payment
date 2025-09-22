@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.test.fakers.*;
@@ -28,6 +29,8 @@ class BarCodePaymentServiceImplTest {
     @Mock
     private BarCodeCreationService barCodeCreationService;
     @Mock
+    private BarCodeCaptureService barCodeCaptureService;
+    @Mock
     private BarCodeAuthPaymentService barCodeAuthPaymentService;
     @Mock
     private RetrieveActiveBarcode retrieveActiveBarcode;
@@ -37,7 +40,7 @@ class BarCodePaymentServiceImplTest {
 
     @BeforeEach
     void setup(){
-        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeAuthPaymentService, retrieveActiveBarcode);
+        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeCaptureService, barCodeAuthPaymentService, retrieveActiveBarcode);
     }
 
     @Test
@@ -83,6 +86,20 @@ class BarCodePaymentServiceImplTest {
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
         Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
         Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
+    }
+
+    @Test
+    void capturePayment_ok(){
+        TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
+
+        Mockito.when(barCodeCaptureService.capturePayment(any()))
+                .thenReturn(response);
+
+        // When
+        TransactionBarCodeResponse result = barCodePaymentService.capturePayment("trxCode");
+
+        // Then
+        Assertions.assertNotNull(result);
     }
 
 

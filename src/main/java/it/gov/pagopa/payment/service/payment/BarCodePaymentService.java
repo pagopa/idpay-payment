@@ -16,5 +16,8 @@ public interface BarCodePaymentService {
 
     TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId);
 
+    TransactionBarCodeResponse capturePayment(String trxCode);
+
+
     TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
 }
