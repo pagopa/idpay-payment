@@ -50,4 +50,11 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
         return retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId);
     }
 
+    @Override
+    public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId) {
+        return barCodeCreationService.createExtendedTransaction(
+                trxBRCodeCreationRequest,
+                RewardConstants.TRX_CHANNEL_BARCODE,
+                userId);
+    }
 }
