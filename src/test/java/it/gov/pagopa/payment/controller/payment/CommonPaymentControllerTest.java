@@ -10,10 +10,7 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
@@ -24,9 +21,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -36,27 +33,31 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CommonPaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class CommonPaymentControllerTest {
-    @MockBean
+    @MockitoBean
     @Qualifier("commonCreate")
     private CommonCreationServiceImpl commonCreationServiceMock;
-    @MockBean
+    @MockitoBean
     @Qualifier("commonConfirm")
     private CommonConfirmServiceImpl commonConfirmServiceMock;
+    @MockitoBean
+    @Qualifier("commonCapture")
+    private CommonCaptureServiceImpl commonCaptureServiceMock;
 
-    @MockBean
+    @MockitoBean
     @Qualifier("commonCancel")
     private CommonCancelServiceImpl commonCancelServiceMock;
 
-    @MockBean
+    @MockitoBean
     private QRCodeExpirationService qrCodeExpirationServiceMock;
 
-    @MockBean
+    @MockitoBean
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
 
     @Autowired
@@ -132,6 +133,26 @@ class CommonPaymentControllerTest {
         assertEquals("Required request header "
                         + "'x-merchant-id' for method parameter type String is not present",
                 actual.getMessage());
+    }
+
+    @Test
+    void captureCommonTransactionByTrxCode() throws Exception {
+        TransactionResponse response = TransactionResponseFaker.mockInstance(1);
+
+        Mockito.when(commonCaptureServiceMock.capturePayment(any())).thenReturn(response);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/idpay/payment/{trxCode}/capture","trxCode")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is2xxSuccessful()).andReturn();
+
+        TransactionResponse resultResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TransactionResponse.class);
+
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(response,resultResponse);
     }
 
     @Test
