@@ -25,11 +25,11 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, Pageable pageable) {
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
         log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", ""));
 
         Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
-                merchantId, initiativeId, pointOfSaleId, fiscalCode, status, pageable);
+                merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, pageable);
 
         List<PointOfSaleTransactionDTO> dtos = page.getContent().stream()
                 .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, fiscalCode))
