@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service.payment;
+package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -8,7 +8,6 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -28,8 +27,7 @@ class BarCodeCaptureServiceImplTest {
 
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private AuditUtilities auditUtilitiesMock;
-
-    private final TransactionBarCodeInProgress2TransactionResponseMapper mapper = new TransactionBarCodeInProgress2TransactionResponseMapper(5);
+    @Mock private TransactionBarCodeInProgress2TransactionResponseMapper mapper;
 
     BarCodeCaptureServiceImpl service;
 
