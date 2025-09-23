@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -135,11 +136,11 @@ class BarCodePaymentServiceImplTest {
     }
 
     @Test
-    void createTransaction_ok(){
+    void createExtendedTransaction_ok(){
         // Given
         TransactionBarCodeCreationRequest trxBRCodeCreationRequest = TransactionBarCodeCreationRequestFaker.mockInstance(1);
         String userId = "USERID";
-        TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
+        TransactionBarCodeEnrichedResponse response = TransactionBarCodeEnrichedResponseFaker.mockInstance(1);
 
         Mockito.when(barCodeCreationService.createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
                 .thenReturn(response);

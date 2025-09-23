@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -266,7 +267,7 @@ class BarCodePaymentControllerTest {
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequestFaker.mockInstance(1);
 
 
-        TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
+        TransactionBarCodeEnrichedResponse txrResponse = TransactionBarCodeEnrichedResponseFaker.mockInstance(1);
         when(barCodePaymentService.createExtendedTransaction(trxCreationReq,"USER_ID")).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(
@@ -277,9 +278,9 @@ class BarCodePaymentControllerTest {
                         .content(objectMapper.writeValueAsString(trxCreationReq))
         ).andExpect(status().isCreated()).andReturn();
 
-        TransactionBarCodeResponse resultResponse = objectMapper.readValue(
+        TransactionBarCodeEnrichedResponse resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                TransactionBarCodeResponse.class);
+                TransactionBarCodeEnrichedResponse.class);
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(txrResponse,resultResponse);
