@@ -23,10 +23,6 @@ public interface CommonPaymentController {
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId);
 
-    @PutMapping("{trxCode}/capture")
-    TransactionResponse capturePayment(
-            @PathVariable("trxCode") String trxCode);
-
     @DeleteMapping("/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
     void cancelTransaction(

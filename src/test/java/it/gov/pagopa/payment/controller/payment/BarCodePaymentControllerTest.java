@@ -18,6 +18,7 @@ import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -25,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,9 +34,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BarCodePaymentControllerImpl.class)
@@ -49,6 +49,26 @@ class BarCodePaymentControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Test
+    void captureCommonTransactionByTrxCode() throws Exception {
+        TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
+
+        Mockito.when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/idpay/payment/bar-code/{trxCode}/capture","trxCode")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().is2xxSuccessful()).andReturn();
+
+        TransactionBarCodeResponse resultResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TransactionBarCodeResponse.class);
+
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(txrResponse,resultResponse);
+    }
 
 
     @Test
@@ -241,4 +261,28 @@ class BarCodePaymentControllerTest {
 
     }
 
+    @Test
+    void createExtendedransaction() throws Exception {
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequestFaker.mockInstance(1);
+
+
+        TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
+        when(barCodePaymentService.createExtendedTransaction(trxCreationReq,"USER_ID")).thenReturn(txrResponse);
+
+        MvcResult result = mockMvc.perform(
+                post("/idpay/payment/bar-code/extended")
+                        .header("x-user-id", "USER_ID")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxCreationReq))
+        ).andExpect(status().isCreated()).andReturn();
+
+        TransactionBarCodeResponse resultResponse = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                TransactionBarCodeResponse.class);
+
+        Assertions.assertNotNull(resultResponse);
+        Assertions.assertEquals(txrResponse,resultResponse);
+
+    }
 }

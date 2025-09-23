@@ -1,5 +1,11 @@
 package it.gov.pagopa.payment.repository;
 
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_CATEGORY;
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_CATEGORY_IT;
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_GTIN;
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS;
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS_IT;
+
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
@@ -10,16 +16,20 @@ import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
 import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -76,7 +86,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.updateDate, trx.getUpdateDate())
                         .setOnInsert(Fields.userId, trx.getUserId())
                         .setOnInsert(Fields.additionalProperties, trx.getAdditionalProperties())
-                        .setOnInsert(Fields.counterVersion, trx.getCounterVersion()),
+                        .setOnInsert(Fields.counterVersion, trx.getCounterVersion())
+                        .setOnInsert(Fields.extendedAuthorization, trx.getExtendedAuthorization()),
                 TransactionInProgress.class);
     }
 
@@ -268,7 +279,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public Criteria getCriteria(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status) {
+    public Criteria getCriteria(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, String productGtin) {
         Criteria criteria = Criteria.where(Fields.merchantId).is(merchantId).and(Fields.initiativeId).is(initiativeId);
         if (userId != null) {
             criteria.and(Fields.userId).is(userId);
@@ -276,14 +287,13 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         if (pointOfSaleId != null) {
             criteria.and(Fields.pointOfSaleId).is(pointOfSaleId);
         }
+        if (StringUtils.isNotBlank(productGtin)) {
+            criteria.and(FIELD_PRODUCT_GTIN).is(productGtin);
+        }
         if (StringUtils.isNotBlank(status)) {
-            if (List.of(SyncTrxStatus.CREATED.toString(), SyncTrxStatus.IDENTIFIED.toString())
-                    .contains(status)) {
-                criteria.orOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
-                        Criteria.where(Fields.status).is(SyncTrxStatus.IDENTIFIED));
-            } else {
-                criteria.and(TransactionInProgress.Fields.status).is(status);
-            }
+            criteria.and(Fields.status).is(status);
+        } else {
+            criteria.and(Fields.status).in("AUTHORIZED", "CAPTURED");
         }
         return criteria;
     }
@@ -299,14 +309,103 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     @Override
-    public Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, Pageable pageable) {
-        Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status);
-        Query query = Query.query(criteria).with(CommonUtilities.getPageable(pageable));
+    public Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, String productGtin, Pageable pageable) {
+        Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status, productGtin);
+        Aggregation aggregation = buildAggregation(criteria, pageable);
 
-        List<TransactionInProgress> transactions = mongoTemplate.find(query, TransactionInProgress.class);
+        List<TransactionInProgress> transactions;
+
+        if (aggregation != null ) {
+            transactions = mongoTemplate.aggregate(aggregation, TransactionInProgress.class, TransactionInProgress.class)
+                .getMappedResults();
+        } else {
+            Query query = Query.query(criteria).with(CommonUtilities.getPageable(pageable));
+            transactions = mongoTemplate.find(query, TransactionInProgress.class);
+        }
+
         long count = mongoTemplate.count(Query.query(criteria), TransactionInProgress.class);
 
         return PageableExecutionUtils.getPage(transactions, pageable, () -> count);
+    }
+
+    private Aggregation buildAggregation(Criteria criteria, Pageable pageable) {
+        Sort mappedSort = Sort.by(
+            pageable.getSort().stream()
+                .map(order -> {
+                    if ("productCategory".equalsIgnoreCase(order.getProperty())) {
+                        return order.withProperty(FIELD_PRODUCT_CATEGORY);
+                    }
+                    return order;
+                })
+                .toList()
+        );
+
+        if (isSortedBy(mappedSort, FIELD_STATUS)) {
+            return buildStatusAggregation(criteria, pageable);
+        }
+        if (isSortedBy(mappedSort, FIELD_PRODUCT_CATEGORY)) {
+            return buildCategoryAggregation(criteria, mappedSort, pageable);
+        }
+        return null;
+    }
+
+    private boolean isSortedBy(Sort sort, String property) {
+        return sort.stream().anyMatch(order -> order.getProperty().equalsIgnoreCase(property));
+    }
+
+    private Aggregation buildStatusAggregation(Criteria criteria, Pageable pageable) {
+        Sort.Direction direction = getSortDirection(pageable, FIELD_STATUS);
+
+        return Aggregation.newAggregation(
+            Aggregation.addFields()
+                .addField(FIELD_STATUS_IT)
+                .withValue(
+                    ConditionalOperators.switchCases(
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_STATUS).equalToValue("AUTHORIZED")).then("Da autorizzare"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_STATUS).equalToValue("CAPTURED")).then("Da rimborsare")
+                    ).defaultTo("Altro")
+                ).build(),
+            Aggregation.match(criteria),
+            Aggregation.sort(Sort.by(direction, FIELD_STATUS_IT)),
+            Aggregation.skip(pageable.getOffset()),
+            Aggregation.limit(pageable.getPageSize())
+        );
+    }
+
+    private Aggregation buildCategoryAggregation(Criteria criteria, Sort sort, Pageable pageable) {
+        Sort.Direction direction = sort.stream()
+            .filter(order -> order.getProperty().equals(FIELD_PRODUCT_CATEGORY))
+            .map(Sort.Order::getDirection)
+            .findFirst()
+            .orElse(Sort.Direction.ASC);
+
+        return Aggregation.newAggregation(
+            Aggregation.addFields()
+                .addField(FIELD_PRODUCT_CATEGORY_IT)
+                .withValue(
+                    ConditionalOperators.switchCases(
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("WASHINGMACHINES")).then("Lavatrice"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("WASHERDRIERS")).then("Lavasciuga"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("OVENS")).then("Forno"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("RANGEHOODS")).then("Cappa"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("DISHWASHERS")).then("Lavastoviglie"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("TUMBLEDRYERS")).then("Asciugatrice"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("REFRIGERATINGAPPL")).then("Frigorifero"),
+                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("COOKINGHOBS")).then("Piano cottura")
+                    ).defaultTo("Altro")
+                ).build(),
+            Aggregation.match(criteria),
+            Aggregation.sort(Sort.by(direction, FIELD_PRODUCT_CATEGORY_IT)),
+            Aggregation.skip(pageable.getOffset()),
+            Aggregation.limit(pageable.getPageSize())
+        );
+    }
+
+
+    private Sort.Direction getSortDirection(Pageable pageable, String property) {
+        return Optional.ofNullable(pageable.getSort().getOrderFor(property))
+            .map(Sort.Order::getDirection)
+            .orElse(Sort.Direction.ASC);
     }
 
     @Override

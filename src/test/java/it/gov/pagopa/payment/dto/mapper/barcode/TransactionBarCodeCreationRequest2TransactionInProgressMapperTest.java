@@ -32,7 +32,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
         OffsetDateTime now = OffsetDateTime.now();
         TransactionInProgress result =
                 mapper.apply(
-                        trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>());
+                        trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false);
 
         TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
                 "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmountCents", "amountCurrency",

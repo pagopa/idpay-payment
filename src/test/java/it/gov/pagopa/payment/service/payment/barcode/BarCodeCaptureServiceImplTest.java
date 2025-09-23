@@ -1,8 +1,8 @@
-package it.gov.pagopa.payment.service.payment.common;
+package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -23,19 +23,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CommonCaptureServiceImplTest {
+class BarCodeCaptureServiceImplTest {
 
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private AuditUtilities auditUtilitiesMock;
+    @Mock private TransactionBarCodeInProgress2TransactionResponseMapper mapper;
 
-    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
-
-    CommonCaptureServiceImpl service;
+    BarCodeCaptureServiceImpl service;
 
     @BeforeEach
     void init() {
         service =
-                new CommonCaptureServiceImpl(
+                new BarCodeCaptureServiceImpl(
                         repositoryMock,
                         mapper,
                         auditUtilitiesMock);
@@ -76,7 +75,7 @@ class CommonCaptureServiceImplTest {
         trx.setStatus(SyncTrxStatus.AUTHORIZED);
         when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
 
-        TransactionResponse result = service.capturePayment("trxCode");
+        TransactionBarCodeResponse result = service.capturePayment("trxCode");
 
         Assertions.assertEquals(result, mapper.apply(trx));
     }
