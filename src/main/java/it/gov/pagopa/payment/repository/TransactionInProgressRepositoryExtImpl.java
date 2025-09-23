@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.repository;
 
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_CATEGORY;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_CATEGORY_IT;
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_GTIN;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS_IT;
 
@@ -287,7 +288,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             criteria.and(Fields.pointOfSaleId).is(pointOfSaleId);
         }
         if (StringUtils.isNotBlank(productGtin)) {
-            criteria.and("additionalProperties.productGtin").is(productGtin);
+            criteria.and(FIELD_PRODUCT_GTIN).is(productGtin);
         }
         if (StringUtils.isNotBlank(status)) {
             criteria.and(Fields.status).is(status);
