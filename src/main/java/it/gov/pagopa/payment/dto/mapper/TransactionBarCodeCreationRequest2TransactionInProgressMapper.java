@@ -20,7 +20,8 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
             String channel,
             String userId,
             String initiativeName,
-            Map<String, String> additionalProperties
+            Map<String, String> additionalProperties,
+            boolean extendedAuthorization
     ) {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
@@ -41,6 +42,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
                 .userId(userId)
                 .updateDate(now.toLocalDateTime())
                 .additionalProperties(additionalProperties)
+                .extendedAuthorization(extendedAuthorization)
                 .build();
     }
 }

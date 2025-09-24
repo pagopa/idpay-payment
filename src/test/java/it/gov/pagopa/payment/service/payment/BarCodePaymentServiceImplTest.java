@@ -4,11 +4,14 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
+import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.Assertions;
@@ -27,14 +30,18 @@ class BarCodePaymentServiceImplTest {
     @Mock
     private BarCodeCreationService barCodeCreationService;
     @Mock
+    private BarCodeCaptureService barCodeCaptureService;
+    @Mock
     private BarCodeAuthPaymentService barCodeAuthPaymentService;
+    @Mock
+    private RetrieveActiveBarcode retrieveActiveBarcode;
 
     private BarCodePaymentService barCodePaymentService;
 
 
     @BeforeEach
     void setup(){
-        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeAuthPaymentService);
+        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeCaptureService, barCodeAuthPaymentService, retrieveActiveBarcode);
     }
 
     @Test
@@ -82,6 +89,20 @@ class BarCodePaymentServiceImplTest {
         Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
 
+    @Test
+    void capturePayment_ok(){
+        TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
+
+        Mockito.when(barCodeCaptureService.capturePayment(any()))
+                .thenReturn(response);
+
+        // When
+        TransactionBarCodeResponse result = barCodePaymentService.capturePayment("trxCode");
+
+        // Then
+        Assertions.assertNotNull(result);
+    }
+
 
     @Test
     void previewPayment_ok(){
@@ -95,5 +116,41 @@ class BarCodePaymentServiceImplTest {
 
         // Then
         Assertions.assertNotNull(result);
+    }
+
+    @Test
+    void findOldestNotAuthorized_ok(){
+        // Given
+        String userId = "USER_ID";
+        String initiativeId = "INITIATIVE_ID";
+
+        TransactionBarCodeResponse trx = TransactionBarCodeResponseFaker.mockInstance(1);
+        Mockito.when(retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId)).thenReturn(trx);
+
+        // When
+        TransactionBarCodeResponse result = barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(trx, result);
+    }
+
+    @Test
+    void createExtendedTransaction_ok(){
+        // Given
+        TransactionBarCodeCreationRequest trxBRCodeCreationRequest = TransactionBarCodeCreationRequestFaker.mockInstance(1);
+        String userId = "USERID";
+        TransactionBarCodeEnrichedResponse response = TransactionBarCodeEnrichedResponseFaker.mockInstance(1);
+
+        Mockito.when(barCodeCreationService.createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
+                .thenReturn(response);
+
+        TransactionBarCodeResponse result = barCodePaymentService.createExtendedTransaction(trxBRCodeCreationRequest, userId);
+
+        // Then
+        Assertions.assertEquals(response.getId(), result.getId());
+        Assertions.assertEquals(response, result);
+        Mockito.verify(barCodeCreationService, Mockito.times(1)).createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId);
+        Mockito.verifyNoMoreInteractions(barCodeCreationService);
     }
 }

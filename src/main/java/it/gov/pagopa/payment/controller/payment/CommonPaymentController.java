@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -23,12 +23,14 @@ public interface CommonPaymentController {
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId);
 
-    @DeleteMapping("/{transactionId}")
+    @DeleteMapping("/transactions/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
     void cancelTransaction(
             @PathVariable("transactionId") String transactionId,
             @RequestHeader("x-merchant-id") String merchantId,
-            @RequestHeader("x-acquirer-id") String acquirerId);
+            @RequestHeader("x-acquirer-id") String acquirerId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId);
+
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
