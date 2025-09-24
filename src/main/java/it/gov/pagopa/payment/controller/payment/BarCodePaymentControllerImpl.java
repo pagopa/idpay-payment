@@ -7,7 +7,6 @@ import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
@@ -92,7 +91,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             value = "BAR_CODE_CREATE_EXTENDED_TRANSACTION",
             payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
     @Override
-    public TransactionBarCodeEnrichedResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String userId) {
+    public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String userId) {
         log.info("[BAR_CODE_CREATE_EXTENDED_TRANSACTION] The user {} is creating a transaction", Utilities.sanitizeString(userId));
         return barCodePaymentService.createExtendedTransaction(trxBarCodeCreationRequest, userId);
     }

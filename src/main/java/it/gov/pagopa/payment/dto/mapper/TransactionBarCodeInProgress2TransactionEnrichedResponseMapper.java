@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +14,7 @@ import java.util.function.Function;
 @Service
 @Slf4j
 public class TransactionBarCodeInProgress2TransactionEnrichedResponseMapper
-    implements Function<TransactionInProgress, TransactionBarCodeEnrichedResponse> {
+    implements Function<TransactionInProgress, TransactionBarCodeResponse> {
 
   private final int authorizationExpirationMinutes;
   private final int extendedAuthorizationExpirationMinutes;
@@ -25,14 +25,14 @@ public class TransactionBarCodeInProgress2TransactionEnrichedResponseMapper
     this.extendedAuthorizationExpirationMinutes = extendedAuthorizationExpirationMinutes;
   }
   @Override
-  public TransactionBarCodeEnrichedResponse apply(TransactionInProgress transactionInProgress) {
+  public TransactionBarCodeResponse apply(TransactionInProgress transactionInProgress) {
 
     OffsetDateTime endDate = calculateTrxEndDate(transactionInProgress);
     Long expirationSeconds = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ?
             CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(), endDate)
             : CommonUtilities.minutesToSeconds(authorizationExpirationMinutes);
 
-    return TransactionBarCodeEnrichedResponse.builder()
+    return TransactionBarCodeResponse.builder()
             .id(transactionInProgress.getId())
             .trxCode(transactionInProgress.getTrxCode())
             .initiativeId(transactionInProgress.getInitiativeId())

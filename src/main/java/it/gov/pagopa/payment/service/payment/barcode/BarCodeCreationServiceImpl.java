@@ -5,10 +5,8 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionEnrichedResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
 import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
@@ -18,6 +16,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -40,15 +39,14 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     private final WalletConnector walletConnector;
     private final AuditUtilities auditUtilities;
     private final TransactionInProgressService transactionInProgressService;
-    private final TransactionBarCodeInProgress2TransactionEnrichedResponseMapper transactionBarCodeInProgress2TransactionEnrichedResponseMapper;
 
     protected BarCodeCreationServiceImpl(RewardRuleRepository rewardRuleRepository,
                                          AuditUtilities auditUtilities,
                                          TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
                                          TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper,
                                          WalletConnector walletConnector,
-                                         TransactionInProgressService transactionInProgressService,
-                                         TransactionBarCodeInProgress2TransactionEnrichedResponseMapper transactionBarCodeInProgress2TransactionEnrichedResponseMapper) {
+                                         TransactionInProgressService transactionInProgressService
+                                         ) {
 
         this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
@@ -56,7 +54,6 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         this.rewardRuleRepository = rewardRuleRepository;
         this.auditUtilities = auditUtilities;
         this.transactionInProgressService = transactionInProgressService;
-        this.transactionBarCodeInProgress2TransactionEnrichedResponseMapper = transactionBarCodeInProgress2TransactionEnrichedResponseMapper;
     }
 
     public TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
@@ -82,7 +79,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     }
 
     @Override
-    public TransactionBarCodeEnrichedResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
+    public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
                                                                         String channel,
                                                                         String userId) {
 
@@ -91,7 +88,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
             TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
-            return transactionBarCodeInProgress2TransactionEnrichedResponseMapper.apply(trx);
+            return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
         } catch (RuntimeException e) {
             logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
@@ -104,6 +101,8 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         TransactionInProgress trx =
                 transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                         trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization);
+        OffsetDateTime trxEndDate = transactionBarCodeInProgress2TransactionResponseMapper.calculateTrxEndDate(trx);
+        trx.setTrxEndDate(trxEndDate);
         transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
 
         logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);

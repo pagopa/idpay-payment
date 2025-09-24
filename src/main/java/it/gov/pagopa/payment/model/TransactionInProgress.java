@@ -76,4 +76,6 @@ public class TransactionInProgress {
   private Map<String, String> additionalProperties = new HashMap<>();
 
   private Boolean extendedAuthorization;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private OffsetDateTime trxEndDate;
 }
