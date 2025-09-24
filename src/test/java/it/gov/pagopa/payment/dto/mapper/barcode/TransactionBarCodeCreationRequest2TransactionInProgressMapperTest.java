@@ -30,14 +30,15 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 .initiativeId("INITIATIVEID")
                 .build();
         OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime trxEndDate = now.plusDays(10);
         TransactionInProgress result =
                 mapper.apply(
-                        trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false);
+                        trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false, trxEndDate);
 
         TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
                 "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmountCents", "amountCurrency",
                 "mcc", "acquirerId", "merchantId", "pointOfSaleId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
-                "rewardCents", "rejectionReasons", "rewards", "initiativeRejectionReasons");
+                "rewardCents", "rejectionReasons", "rewards", "initiativeRejectionReasons" );
         assertResponse(trxCreationReq, now, result);
     }
     void assertResponse(TransactionBarCodeCreationRequest trxCreationReq, OffsetDateTime now, TransactionInProgress result){

@@ -98,10 +98,11 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
     @NotNull
     private TransactionInProgress generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
+        OffsetDateTime trxEndDate = null;
         TransactionInProgress trx =
                 transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                        trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization);
-        OffsetDateTime trxEndDate = transactionBarCodeInProgress2TransactionResponseMapper.calculateTrxEndDate(trx);
+                        trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
+        trxEndDate = transactionBarCodeInProgress2TransactionResponseMapper.calculateTrxEndDate(trx);
         trx.setTrxEndDate(trxEndDate);
         transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
 

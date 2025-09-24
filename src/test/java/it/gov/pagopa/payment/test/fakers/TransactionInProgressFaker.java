@@ -41,6 +41,8 @@ public class TransactionInProgressFaker {
 
     Map<String, String> additionalProperties = new HashMap<>();
     additionalProperties.put("description", "test 1234");
+    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime trxEndDate = now.plusDays(10);
 
     return TransactionInProgress.builder()
         .id(id)
@@ -72,6 +74,7 @@ public class TransactionInProgressFaker {
         .rewards(rewards)
         .additionalProperties(additionalProperties)
         .extendedAuthorization(false)
+        .trxEndDate(trxEndDate)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

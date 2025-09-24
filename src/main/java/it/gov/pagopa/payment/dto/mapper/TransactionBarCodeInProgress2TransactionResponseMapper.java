@@ -41,7 +41,7 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .trxExpirationSeconds(authorizationExpiration)
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
-
+            .trxEndDate(endDate)
             .build();
   }
 
