@@ -42,7 +42,7 @@ public class TransactionInProgressFaker {
     Map<String, String> additionalProperties = new HashMap<>();
     additionalProperties.put("description", "test 1234");
     OffsetDateTime now = OffsetDateTime.now();
-    OffsetDateTime trxEndDate = now.plusDays(10);
+    OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
     return TransactionInProgress.builder()
         .id(id)

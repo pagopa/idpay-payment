@@ -7,6 +7,8 @@ import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2Transa
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +32,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 .initiativeId("INITIATIVEID")
                 .build();
         OffsetDateTime now = OffsetDateTime.now();
-        OffsetDateTime trxEndDate = now.plusDays(10);
+        OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
         TransactionInProgress result =
                 mapper.apply(
                         trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false, trxEndDate);
