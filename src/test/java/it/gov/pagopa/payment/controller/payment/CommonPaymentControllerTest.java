@@ -161,7 +161,7 @@ class CommonPaymentControllerTest {
     void cancelTransaction() throws Exception {
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/idpay/payment/{transactionId}",
+                        .delete("/idpay/payment/transactions/{transactionId}",
                                 TRANSACTION_ID)
                                 .header("x-merchant-id",MERCHANT_ID)
                                 .header("x-acquirer-id" ,ACQUIRER_ID)
@@ -177,7 +177,7 @@ class CommonPaymentControllerTest {
     void cancelTransaction_testMandatoryHeaders() throws Exception {
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/idpay/payment/{transactionId}",
+                        .delete("/idpay/payment/transactions/{transactionId}",
                                 TRANSACTION_ID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
