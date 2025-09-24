@@ -21,6 +21,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -65,7 +66,13 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         LocalDate today = LocalDate.now();
 
         try {
-            TransactionInProgress trx = generateTransaction(trxBarCodeCreationRequest, channel, userId, today, false);
+            InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
+
+            Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
+
+            TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, false, initiative);
+
+            trx.setAmountCents(residualBudgetCents);
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
         } catch (RuntimeException e) {
@@ -82,7 +89,8 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         LocalDate today = LocalDate.now();
 
         try {
-            TransactionInProgress trx = generateTransaction(trxBarCodeCreationRequest, channel, userId, today, true);
+            InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
+            TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
             return transactionBarCodeInProgress2TransactionEnrichedResponseMapper.apply(trx);
 
         } catch (RuntimeException e) {
@@ -92,7 +100,18 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     }
 
     @NotNull
-    private TransactionInProgress generateTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, LocalDate today, boolean extendedAuthorization) {
+    private TransactionInProgress generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
+        TransactionInProgress trx =
+                transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+                        trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization);
+        transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
+
+        logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
+        return trx;
+    }
+
+    @Nullable
+    private InitiativeConfig checkInitiative(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, LocalDate today) {
         InitiativeConfig initiative = rewardRuleRepository.findById(trxBarCodeCreationRequest.getInitiativeId())
                 .map(RewardRule::getInitiativeConfig)
                 .orElse(null);
@@ -100,18 +119,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         checkInitiativeType(trxBarCodeCreationRequest.getInitiativeId(), initiative, getFlow());
 
         checkInitiativeValidPeriod(today, initiative, getFlow());
-
-        Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
-
-        TransactionInProgress trx =
-                transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                        trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization);
-        transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
-
-        logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
-
-        trx.setAmountCents(residualBudgetCents);
-        return trx;
+        return initiative;
     }
 
     private void logCreatedTransaction(String initiativeId, String id, String trxCode, String userId) {
