@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.utils;
 
 import it.gov.pagopa.common.utils.AuditLogger;
+import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -153,10 +154,18 @@ public class AuditUtilities {
     // endregion
 
     // region confirmPayment
-    public void logCancelTransaction(String initiativeId, String trxId, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons, String merchantId) {
+    public void logCancelTransaction(CancelTransactionAuditDTO dto) {
         AuditLogger.logAuditString(
-                CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
-                "Merchant cancelled the transaction", initiativeId, trxId, trxCode, userId, String.valueOf(rewardCents), String.valueOf(rejectionReasons), merchantId
+            CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
+            "Merchant cancelled the transaction",
+            dto.getInitiativeId(),
+            dto.getTrxId(),
+            dto.getTrxCode(),
+            dto.getUserId(),
+            String.valueOf(dto.getRewardCents()),
+            String.valueOf(dto.getRejectionReasons()),
+            dto.getMerchantId(),
+            dto.getPointOfSaleId()
         );
     }
 
