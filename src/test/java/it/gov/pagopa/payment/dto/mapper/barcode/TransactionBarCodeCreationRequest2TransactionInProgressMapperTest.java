@@ -32,7 +32,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 .initiativeId("INITIATIVEID")
                 .build();
         OffsetDateTime now = OffsetDateTime.now();
-        OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+        OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1).truncatedTo(ChronoUnit.MILLIS);
         TransactionInProgress result =
                 mapper.apply(
                         trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false, trxEndDate);
