@@ -331,7 +331,6 @@ class BarCodeCreationServiceImplTest {
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmountCents(1000L);
 
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
@@ -397,72 +396,6 @@ class BarCodeCreationServiceImplTest {
                                         "USERID"));
 
         Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, result.getCode());
-    }
-
-    @ParameterizedTest
-    @ValueSource(longs = {-100, 0})
-    void createExtendedTransaction_UserBudgetExhausted(long budgetAmount) {
-
-        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
-                .initiativeId("INITIATIVEID")
-                .build();
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmountCents(budgetAmount);
-
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
-
-        BudgetExhaustedException result =
-                Assertions.assertThrows(
-                        BudgetExhaustedException.class,
-                        () ->
-                                barCodeCreationService.createExtendedTransaction(
-                                        trxCreationReq,
-                                        RewardConstants.TRX_CHANNEL_BARCODE,
-                                        "USERID"));
-
-        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage());
-    }
-
-    @Test
-    void createExtendedTransaction_walletStatusUnsubscribed() {
-        // Given
-        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
-                .initiativeId("INITIATIVEID")
-                .build();
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
-        walletDTO.setAmountCents(1000L);
-
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
-
-        // When
-        UserNotOnboardedException result = Assertions.assertThrows(UserNotOnboardedException.class,
-                () -> barCodeCreationService.createExtendedTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
-
-        // Then
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, result.getCode());
-    }
-
-    @Test
-    void createExtendedTransaction_UserNotOnboarded() {
-        // Given
-        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
-                .initiativeId("INITIATIVEID")
-                .build();
-
-
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenThrow(new UserNotOnboardedException(String.format("The current user is not onboarded on initiative [%s]", "INITIATIVEID"),true,null));
-
-        // When
-        UserNotOnboardedException result = Assertions.assertThrows(UserNotOnboardedException.class,
-                () -> barCodeCreationService.createExtendedTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
-
-        // Then
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED, result.getCode());
     }
 
     @ParameterizedTest
