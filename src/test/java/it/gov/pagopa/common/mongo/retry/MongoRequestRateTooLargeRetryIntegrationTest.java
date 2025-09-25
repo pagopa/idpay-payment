@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @TestPropertySource(
         properties = {
-                "de.flapdoodle.mongodb.embedded.version=4.2.24",
+                "de.flapdoodle.mongodb.embedded.version=5.0.5",
 
                 "spring.data.mongodb.database=idpay",
                 "spring.data.mongodb.config.connectionPool.maxSize: 100",
