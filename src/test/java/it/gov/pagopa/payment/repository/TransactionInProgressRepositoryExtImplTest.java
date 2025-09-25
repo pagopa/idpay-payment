@@ -106,7 +106,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
     }
 
     @Test
@@ -179,7 +180,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
     }
@@ -207,7 +209,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
     }
@@ -231,7 +234,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
 
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES));
         transactionInProgressRepository.save(transactionInProgress);
@@ -266,7 +270,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
 
         transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
         transactionInProgressRepository.save(transactionInProgress);
@@ -305,7 +310,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
         Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
     }
@@ -328,7 +334,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
 
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         preview.setRewardCents(500L);
@@ -370,7 +377,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
 
         transactionInProgress.setStatus(SyncTrxStatus.IDENTIFIED);
         transactionInProgress.setUserId("USERID1");
@@ -413,7 +421,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rejectionReasons",
                 "rewards",
                 "trxChargeDate",
-                "initiativeRejectionReasons");
+                "initiativeRejectionReasons",
+                "initiativeEndDate");
 
         transactionInProgressRepository.updateTrxRejected(
                 "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"), Map.of(transactionInProgress.getInitiativeId(), List.of("REJECTIONREASON1")), "CHANNEL");
@@ -749,7 +758,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 resultFirstSave,
                 "authDate", "elaborationDateTime", "rewardCents", "rejectionReasons", "rewards", "trxChargeDate",
                 "acquirerId", "amountCents", "effectiveAmountCents", "amountCurrency", "merchantFiscalCode", "merchantId",
-                "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName", "initiativeRejectionReasons");
+                "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName", "initiativeRejectionReasons", "initiativeEndDate");
 
         transactionInProgressRepository.updateTrxRejected(transactionInProgress2, List.of("REJECTIONREASON1"), Map.of(transactionInProgress.getInitiativeId(), List.of("REJECTIONREASON1")));
 
