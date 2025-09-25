@@ -56,4 +56,11 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
+    @GetMapping("/initiatives/{initiativeId}/bar-code/{trxCode}/pdf")
+    @ResponseStatus(code = HttpStatus.OK)
+    byte[] downloadBarcode(
+            @PathVariable("initiativeId") String initiativeId,
+            @PathVariable("initiativeId") String trxId,
+            @RequestHeader("x-user-id") String userId
+    );
 }

@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
@@ -26,9 +27,11 @@ import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 public class BarCodePaymentControllerImpl implements BarCodePaymentController {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final PdfService pdfService;
 
-    public BarCodePaymentControllerImpl(BarCodePaymentService barCodePaymentService) {
+    public BarCodePaymentControllerImpl(BarCodePaymentService barCodePaymentService, PdfService pdfService) {
         this.barCodePaymentService = barCodePaymentService;
+        this.pdfService = pdfService;
     }
 
     @Override
@@ -95,6 +98,13 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     public TransactionBarCodeEnrichedResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String userId) {
         log.info("[BAR_CODE_CREATE_EXTENDED_TRANSACTION] The user {} is creating a transaction", Utilities.sanitizeString(userId));
         return barCodePaymentService.createExtendedTransaction(trxBarCodeCreationRequest, userId);
+    }
+
+    @PerformanceLog(
+            value = "BAR_CODE_PDF")
+    @Override
+    public byte[] downloadBarcode(String initiativeId, String trxId, String userId) {
+        return pdfService.create(initiativeId, trxId, userId);
     }
 
 }
