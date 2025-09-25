@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
@@ -62,14 +63,17 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @PerformanceLog(
             value = "CANCEL_TRANSACTION",
             payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-    public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
+    public void cancelTransaction(String trxId, String merchantId, String acquirerId,  String pointOfSaleId) {
         log.info(
-                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {}",
-                merchantId,
-                acquirerId,
-                trxId);
-        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId);
+            "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {} at POS {}",
+            Utilities.sanitizeString(merchantId),
+            Utilities.sanitizeString(acquirerId),
+            Utilities.sanitizeString(trxId),
+            Utilities.sanitizeString(pointOfSaleId)
+        );
+        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
     }
+
 
     @Override
     @PerformanceLog("GET_STATUS_TRANSACTION")
