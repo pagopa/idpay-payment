@@ -58,8 +58,11 @@ class BarCodeCreationServiceImplTest {
 
     BarCodeCreationServiceImpl barCodeCreationService;
 
+
     @BeforeEach
     void setUp() {
+        int authorizationExpirationMinutes = 5;
+        int extendedAuthorizationExpirationMinutes = 14400;
         barCodeCreationService =
                 new BarCodeCreationServiceImpl(
                         rewardRuleRepository,
@@ -67,7 +70,9 @@ class BarCodeCreationServiceImplTest {
                         transactionBarCodeCreationRequest2TransactionInProgressMapper,
                         transactionBarCodeInProgress2TransactionResponseMapper,
                         walletConnector,
-                        transactionInProgressServiceMock);
+                        transactionInProgressServiceMock,
+                        authorizationExpirationMinutes,
+                        extendedAuthorizationExpirationMinutes);
     }
 
     //region Create Transaction
