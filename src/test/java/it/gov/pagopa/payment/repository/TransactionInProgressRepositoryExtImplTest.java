@@ -124,7 +124,7 @@ class TransactionInProgressRepositoryExtImplTest {
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         assertTrue(result.getTrxChargeDate().isAfter(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES)));
         TestUtils.checkNotNullFields(
-                result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate", "initiativeRejectionReasons");
+                result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards", "authDate", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate");
 
         TooManyRequestsException exception =
                 assertThrows(
@@ -353,7 +353,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(
-                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate");
+                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate", "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -397,7 +397,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(
-                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate");
+                resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate", "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -429,7 +429,7 @@ class TransactionInProgressRepositoryExtImplTest {
         TransactionInProgress resultSecondSave =
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
-        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate");
+        TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
@@ -766,7 +766,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(resultSecondSave,
-                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc");
+                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc", "initiativeEndDate");
         Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }
