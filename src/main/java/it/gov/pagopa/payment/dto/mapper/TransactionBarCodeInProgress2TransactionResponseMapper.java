@@ -54,7 +54,12 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
   }
 
   public static OffsetDateTime calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
-    OffsetDateTime endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
+    OffsetDateTime endDate;
+    if(transactionInProgress.getInitiativeEndDate().minusMinutes(authExpirationMinutes).isBefore(transactionInProgress.getTrxDate())){
+      endDate = transactionInProgress.getInitiativeEndDate();
+    } else {
+      endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
+    }
     return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
   }
 }

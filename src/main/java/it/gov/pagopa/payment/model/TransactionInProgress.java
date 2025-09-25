@@ -78,4 +78,5 @@ public class TransactionInProgress {
   private Boolean extendedAuthorization;
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private OffsetDateTime trxEndDate;
+  private OffsetDateTime initiativeEndDate;
 }

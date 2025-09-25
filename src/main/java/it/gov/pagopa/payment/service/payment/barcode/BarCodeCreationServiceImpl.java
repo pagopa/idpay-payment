@@ -17,6 +17,7 @@ import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -102,6 +103,12 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         TransactionInProgress trx =
                 transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                         trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
+        LocalDate  localEndDate = LocalDate.MAX;
+        if (initiative != null){
+            localEndDate = initiative.getEndDate() != null ? initiative.getEndDate() : LocalDate.MAX;
+        }
+        OffsetDateTime  offsetEndDate = localEndDate.atStartOfDay().atOffset(ZoneOffset.of("+02:00"));
+        trx.setInitiativeEndDate(offsetEndDate);
         trxEndDate = transactionBarCodeInProgress2TransactionResponseMapper.calculateTrxEndDate(trx);
         trx.setTrxEndDate(trxEndDate);
         transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
