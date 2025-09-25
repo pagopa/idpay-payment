@@ -4,7 +4,6 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 
 public interface BarCodePaymentService {
@@ -20,5 +19,5 @@ public interface BarCodePaymentService {
     TransactionBarCodeResponse capturePayment(String trxCode);
 
 
-    TransactionBarCodeEnrichedResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
+    TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
 }
