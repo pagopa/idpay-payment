@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 
 @Service
@@ -25,9 +27,9 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
   @Override
   public TransactionBarCodeResponse apply(TransactionInProgress transactionInProgress) {
 
+    OffsetDateTime endDate = calculateTrxEndDate(transactionInProgress);
     Long authorizationExpiration = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ?
-            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(),
-                    TransactionBarCodeInProgress2TransactionEnrichedResponseMapper.calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes))
+            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(), endDate)
             : CommonUtilities.minutesToSeconds(authorizationExpirationMinutes);
 
     return TransactionBarCodeResponse.builder()
@@ -39,7 +41,25 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .trxExpirationSeconds(authorizationExpiration)
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
-
+            .trxEndDate(endDate)
             .build();
+  }
+
+  public OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress) {
+    if (Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization())){
+      return calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes);
+    }
+
+    return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+  }
+
+  public static OffsetDateTime calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
+    OffsetDateTime endDate = transactionInProgress.getInitiativeEndDate() != null ? transactionInProgress.getInitiativeEndDate() : OffsetDateTime.MAX;
+    if(endDate.minusMinutes(authExpirationMinutes).isBefore(transactionInProgress.getTrxDate())){
+      endDate = transactionInProgress.getInitiativeEndDate();
+    } else {
+      endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
+    }
+    return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
   }
 }

@@ -87,7 +87,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .setOnInsert(Fields.userId, trx.getUserId())
                         .setOnInsert(Fields.additionalProperties, trx.getAdditionalProperties())
                         .setOnInsert(Fields.counterVersion, trx.getCounterVersion())
-                        .setOnInsert(Fields.extendedAuthorization, trx.getExtendedAuthorization()),
+                        .setOnInsert(Fields.extendedAuthorization, trx.getExtendedAuthorization())
+                        .setOnInsert(Fields.trxEndDate, trx.getTrxEndDate()),
                 TransactionInProgress.class);
     }
 

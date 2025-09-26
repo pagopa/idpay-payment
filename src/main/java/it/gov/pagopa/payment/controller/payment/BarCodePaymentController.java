@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -51,7 +50,7 @@ public interface BarCodePaymentController {
 
     @PostMapping("/bar-code/extended")
     @ResponseStatus(code = HttpStatus.CREATED)
-    TransactionBarCodeEnrichedResponse createExtendedTransaction(
+    TransactionBarCodeResponse createExtendedTransaction(
             @RequestBody @Valid TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
             @RequestHeader("x-user-id") String userId
     );

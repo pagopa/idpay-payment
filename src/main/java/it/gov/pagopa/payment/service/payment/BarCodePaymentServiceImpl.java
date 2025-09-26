@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
@@ -62,7 +61,7 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public TransactionBarCodeEnrichedResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId) {
+    public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId) {
         return barCodeCreationService.createExtendedTransaction(
                 trxBRCodeCreationRequest,
                 RewardConstants.TRX_CHANNEL_BARCODE,

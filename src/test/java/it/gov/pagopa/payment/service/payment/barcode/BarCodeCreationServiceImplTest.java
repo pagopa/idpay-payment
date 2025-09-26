@@ -4,10 +4,8 @@ import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeEnrichedResponse;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionEnrichedResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -20,7 +18,6 @@ import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeEnrichedResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
@@ -56,7 +53,6 @@ class BarCodeCreationServiceImplTest {
     private TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
     @Mock private WalletConnector walletConnector;
     @Mock private TransactionInProgressService transactionInProgressServiceMock;
-    @Mock private TransactionBarCodeInProgress2TransactionEnrichedResponseMapper transactionBarCodeInProgress2TransactionEnrichedResponseMapperMock;
 
     private static final String INITIATIVE_NAME = "INITIATIVE_NAME";
 
@@ -71,8 +67,7 @@ class BarCodeCreationServiceImplTest {
                         transactionBarCodeCreationRequest2TransactionInProgressMapper,
                         transactionBarCodeInProgress2TransactionResponseMapper,
                         walletConnector,
-                        transactionInProgressServiceMock,
-                        transactionBarCodeInProgress2TransactionEnrichedResponseMapperMock);
+                        transactionInProgressServiceMock);
     }
 
     //region Create Transaction
@@ -96,7 +91,8 @@ class BarCodeCreationServiceImplTest {
                 anyString(),
                 anyString(),
                 any(),
-                eq(false)))
+                eq(false),
+                any()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
@@ -143,7 +139,8 @@ class BarCodeCreationServiceImplTest {
                 anyString(),
                 anyString(),
                 any(),
-                eq(false)))
+                eq(false),
+                any()))
                 .thenReturn(trx);
         when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
@@ -325,7 +322,7 @@ class BarCodeCreationServiceImplTest {
                 .build();
 
 
-        TransactionBarCodeEnrichedResponse trxCreated = TransactionBarCodeEnrichedResponseFaker.mockInstance(1);
+        TransactionBarCodeResponse trxCreated = TransactionBarCodeResponseFaker.mockInstance(1);
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
@@ -338,9 +335,10 @@ class BarCodeCreationServiceImplTest {
                 anyString(),
                 anyString(),
                 any(),
-                eq(true)))
+                eq(true),
+                any()))
                 .thenReturn(trx);
-        when(transactionBarCodeInProgress2TransactionEnrichedResponseMapperMock.apply(any(TransactionInProgress.class)))
+        when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
                 .thenReturn(trxCreated);
 
         TransactionBarCodeResponse result =
