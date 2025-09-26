@@ -15,6 +15,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
+import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,9 @@ class BarCodePaymentControllerTest {
 
     @MockitoBean
     private BarCodePaymentService barCodePaymentService;
+
+    @MockitoBean
+    private PdfService pdfService;
 
     @Autowired
     private MockMvc mockMvc;

@@ -18,6 +18,7 @@ public interface BarCodePaymentService {
 
     TransactionBarCodeResponse capturePayment(String trxCode);
 
+    TransactionBarCodeResponse retriveVoucher(String intiativeId, String trxCode, String userId);
 
     TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
 }
