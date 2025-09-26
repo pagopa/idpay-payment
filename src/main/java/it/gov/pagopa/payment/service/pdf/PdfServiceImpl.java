@@ -9,6 +9,7 @@ import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -17,6 +18,7 @@ import com.itextpdf.layout.properties.*;
 import com.itextpdf.barcodes.Barcode128;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
@@ -34,15 +36,28 @@ public class PdfServiceImpl implements PdfService {
     private static final String OUTPUT = "bonus-elettrodomestici.pdf";
 
     // TODO: da inserire le immagini qui tramite @Value o tramite reference interne
-    private final String FONT_TTF = "DejaVuSans.ttf";
-    private final String LOGO_SX = null;
-    private final String LOGO_DX = null;
-    private final String ICON_WASHER = null;
-    private final String ICON_HEALTHCARD = null;
-    private final String ICON_BARCODE = null;
+
+    @Value("${pdf.devPortalLink}")
+    private final String devPortalLink;
+    @Value("${pdf.font}")
+    private final String font = "DejaVuSans.ttf";
+    @Value("${pdf.logoMimit}")
+    private final String logoMimit = null;
+    @Value("${pdf.logoPari}")
+    private final String logoPari = null;
+    @Value("${pdf.iconWasher}")
+    private final String iconWasher = null;
+    @Value("${pdf.iconHealthcard}")
+    private final String iconHealthcard = null;
+    @Value("${pdf.iconBarcode}")
+    private final String iconBarcode = null;
+
+    public PdfServiceImpl(String devPortalLink) {
+        this.devPortalLink = devPortalLink;
+    }
 
     public static void main(String[] args) throws Exception {
-        byte[] bytes = new PdfServiceImpl().create(null, null, null);
+        byte[] bytes = new PdfServiceImpl("https://developer.pagopa.it/pari/overview").create(null, null, null);
 
         // sanity check
         if (bytes.length == 0) throw new IllegalStateException("PDF vuoto");
@@ -78,13 +93,13 @@ public class PdfServiceImpl implements PdfService {
      * sezioni e barcode) e chiude le risorse prima di serializzare i byte.
      *
      * @param initiativeId identificativo iniziativa (opzionale, per logging/telemetria)
-     * @param trxId        identificativo transazione (opzionale, per logging/telemetria)
+     * @param trxCode        identificativo transazione (opzionale, per logging/telemetria)
      * @param userId       identificativo utente (opzionale, per logging/telemetria)
      * @return bytes del PDF generato; mai null
      * @throws RuntimeException se la generazione fallisce per IO/layout
      */
     @Override
-    public byte[] create(String initiativeId, String trxId, String userId) {
+    public byte[] create(String initiativeId, String trxCode, String userId) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
@@ -92,11 +107,11 @@ public class PdfServiceImpl implements PdfService {
 
             doc.setMargins(36, 36, 48, 36);
 
-            PdfFont regular = (new File(FONT_TTF).exists())
-                    ? PdfFontFactory.createFont(FONT_TTF, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED)
+            PdfFont regular = (new File(font).exists())
+                    ? PdfFontFactory.createFont(font, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED)
                     : PdfFontFactory.createFont(StandardFonts.HELVETICA);
-            PdfFont bold = (new File(FONT_TTF).exists())
-                    ? PdfFontFactory.createFont(FONT_TTF, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED)
+            PdfFont bold = (new File(font).exists())
+                    ? PdfFontFactory.createFont(font, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED)
                     : PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
 
             Color textPrimary = new DeviceRgb(33, 37, 41);
@@ -109,6 +124,7 @@ public class PdfServiceImpl implements PdfService {
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                     .setMarginTop(6).setMarginBottom(18));
 
+            // TODO: chiamare BE per prendere i valori
             // Dati di esempio (in prod: arrivano da DTO)
             String intestatario   = "Giovanna Beltramin";
             String cf            = "BLTGVN78A52C409X";
@@ -127,14 +143,20 @@ public class PdfServiceImpl implements PdfService {
             doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary, lightGrayBg));
 
             doc.add(new Paragraph("Pari è un progetto dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. "
-                    + "Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes. Link al dev portal")
-                    .setFont(regular).setFontSize(9).setFontColor(textSecondary)
+                    + "Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes. ")
+                    .add(new Link("Link al dev portal", PdfAction.createURI(devPortalLink))
+                            .setFontColor(brandBlue)
+                            .setUnderline()
+                    )
+                    .setFont(regular)
+                    .setFontSize(9)
+                    .setFontColor(textSecondary)
                     .setTextAlignment(TextAlignment.CENTER)
                     .setMarginTop(24));
 
         } catch (Exception e) {
             throw new RuntimeException("Errore durante la generazione del PDF "
-                    + "(initiativeId=" + initiativeId + ", trxId=" + trxId + ", userId=" + userId + ")", e);
+                    + "(initiativeId=" + initiativeId + ", trxCode=" + trxCode + ", userId=" + userId + ")", e);
         }
         return baos.toByteArray();
     }
@@ -152,7 +174,7 @@ public class PdfServiceImpl implements PdfService {
         Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
 
         Div left = new Div();
-        Image logoSx = PdfUtils.loadImageOrNull(LOGO_SX, 80);
+        Image logoSx = PdfUtils.loadImageOrNull(this.logoMimit, 80);
         if (logoSx != null) left.add(logoSx.setMarginBottom(8));
         left.add(new Paragraph("BONUS ELETTRODOMESTICI").setFont(bold).setFontSize(12).setFontColor(textPrimary).setMarginBottom(2));
         left.add(new Paragraph("Ministero delle Imprese del Made in Italy").setFont(regular).setFontSize(10).setFontColor(textPrimary));
@@ -160,7 +182,7 @@ public class PdfServiceImpl implements PdfService {
         Div right = new Div().setTextAlignment(TextAlignment.RIGHT);
         right.add(new Paragraph("Iniziativa fornita da").setFont(regular).setFontSize(10).setFontColor(textPrimary).setMarginBottom(2));
         right.add(new Paragraph("PARI").setFont(bold).setFontSize(20).setFontColor(brandBlue));
-        Image logoDx = PdfUtils.loadImageOrNull(LOGO_DX, 0);
+        Image logoDx = PdfUtils.loadImageOrNull(logoPari, 0);
         if (logoDx != null) right.add(logoDx.setAutoScale(true));
 
         t.addCell(PdfUtils.noBorderCell(left));
@@ -262,13 +284,13 @@ public class PdfServiceImpl implements PdfService {
         Table grid = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1})).useAllAvailableWidth();
         grid.setBorder(Border.NO_BORDER);
 
-        grid.addCell(stepCell(ICON_WASHER, "Scegli l’elettrodomestico da sostituire",
+        grid.addCell(stepCell(iconWasher, "Scegli l’elettrodomestico da sostituire",
                 "Scegli quale elettrodomestico vuoi smaltire perché ormai vecchio o consuma troppa energia.",
                 regular, bold, textPrimary, textSecondary));
-        grid.addCell(stepCell(ICON_HEALTHCARD, "Porta con te la Tessera Sanitaria",
+        grid.addCell(stepCell(iconHealthcard, "Porta con te la Tessera Sanitaria",
                 "Mostrala, se richiesta, per eventuali controlli presso il punto vendita.",
                 regular, bold, textPrimary, textSecondary));
-        grid.addCell(stepCell(ICON_BARCODE, "Mostra il codice a barre",
+        grid.addCell(stepCell(iconBarcode, "Mostra il codice a barre",
                 "Stampa questo buono o mostralo direttamente dal tuo dispositivo.",
                 regular, bold, textPrimary, textSecondary));
 

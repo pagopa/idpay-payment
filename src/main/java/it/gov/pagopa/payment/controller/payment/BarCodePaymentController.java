@@ -60,7 +60,7 @@ public interface BarCodePaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     byte[] downloadBarcode(
             @PathVariable("initiativeId") String initiativeId,
-            @PathVariable("initiativeId") String trxId,
+            @PathVariable("trxCode") String trxCode,
             @RequestHeader("x-user-id") String userId
     );
 }

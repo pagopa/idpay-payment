@@ -103,8 +103,8 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_PDF")
     @Override
-    public byte[] downloadBarcode(String initiativeId, String trxId, String userId) {
-        return pdfService.create(initiativeId, trxId, userId);
+    public byte[] downloadBarcode(String initiativeId, String trxCode, String userId) {
+        return pdfService.create(initiativeId, trxCode, userId);
     }
 
 }
