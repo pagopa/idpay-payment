@@ -23,4 +23,5 @@ public class TransactionBarCodeResponse {
     private Long trxExpirationSeconds;
     private Long residualBudgetCents;
     private OffsetDateTime trxEndDate;
+    private Long voucherAmountCents;
 }

@@ -79,4 +79,5 @@ public class TransactionInProgress {
   @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
   private OffsetDateTime trxEndDate;
   private OffsetDateTime initiativeEndDate;
+  private Long voucherAmountCents;
 }
