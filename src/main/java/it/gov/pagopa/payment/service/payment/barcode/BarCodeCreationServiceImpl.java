@@ -98,6 +98,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
+            checkVoucherAmountCents(trxBarCodeCreationRequest.getInitiativeId(), trxBarCodeCreationRequest.getVoucherAmountCents());
             TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
 
@@ -177,5 +178,11 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         }
 
         return wallet.getAmountCents();
+    }
+
+    private void checkVoucherAmountCents(String initiativeId, Long voucherAmountCents){
+        if (voucherAmountCents < 0L) {
+            throw new BudgetExhaustedException(String.format("Budget exhausted for the current user and initiative [%s]", initiativeId));
+        }
     }
 }
