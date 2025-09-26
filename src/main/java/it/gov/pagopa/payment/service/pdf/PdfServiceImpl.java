@@ -16,7 +16,10 @@ import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
 import com.itextpdf.barcodes.Barcode128;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,66 +27,40 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
-import java.nio.file.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Service
 public class PdfServiceImpl implements PdfService {
 
-    private static final String OUTPUT = "bonus-elettrodomestici.pdf";
+    private final BarCodePaymentService barCodePaymentService;
 
-    // TODO: da inserire le immagini qui tramite @Value o tramite reference interne
-
-    @Value("${pdf.devPortalLink}")
     private final String devPortalLink;
-    @Value("${pdf.font}")
-    private final String font = "DejaVuSans.ttf";
-    @Value("${pdf.logoMimit}")
-    private final String logoMimit = null;
-    @Value("${pdf.logoPari}")
-    private final String logoPari = null;
-    @Value("${pdf.iconWasher}")
-    private final String iconWasher = null;
-    @Value("${pdf.iconHealthcard}")
-    private final String iconHealthcard = null;
-    @Value("${pdf.iconBarcode}")
-    private final String iconBarcode = null;
+    private final String font;
+    private final String logoMimit;
+    private final String logoPari;
+    private final String iconWasher;
+    private final String iconHealthcard;
+    private final String iconBarcode;
 
-    public PdfServiceImpl(String devPortalLink) {
+    public PdfServiceImpl(
+            BarCodePaymentService barCodePaymentService,
+            @Value("${pdf.devPortalLink:https://developer.pagopa.it/pari/overview}") String devPortalLink,
+            @Value("${pdf.font:DejaVuSans.ttf}") String font,
+            @Value("${pdf.logoMimit:}") String logoMimit,
+            @Value("${pdf.logoPari:}") String logoPari,
+            @Value("${pdf.iconWasher:}") String iconWasher,
+            @Value("${pdf.iconHealthcard:}") String iconHealthcard,
+            @Value("${pdf.iconBarcode:}") String iconBarcode
+    ) {
+        this.barCodePaymentService = barCodePaymentService;
         this.devPortalLink = devPortalLink;
-    }
-
-    public static void main(String[] args) throws Exception {
-        byte[] bytes = new PdfServiceImpl("https://developer.pagopa.it/pari/overview").create(null, null, null);
-
-        // sanity check
-        if (bytes.length == 0) throw new IllegalStateException("PDF vuoto");
-        if (!(new String(bytes, 0, 5, java.nio.charset.StandardCharsets.ISO_8859_1).startsWith("%PDF-"))) {
-            throw new IllegalStateException("Header PDF mancante");
-        }
-
-        // 1) Cartella di destinazione
-        Path dir = Paths.get("generatedPdf");
-        Files.createDirectories(dir); // idempotente
-
-        // 2) Nome file univoco (timestamp fino ai millisecondi)
-        String ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss_SSS"));
-        String fileName = "bonus-elettrodomestici_" + ts + ".pdf";
-        Path out = dir.resolve(fileName);
-
-        // 3) Scrittura (opzione: temp + move per extra robustezza su Windows)
-        Path tmp = Files.createTempFile("bonus-elettrodomestici-", ".pdf");
-        Files.write(tmp, bytes, StandardOpenOption.TRUNCATE_EXISTING);
-        try {
-            Files.move(tmp, out, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException e) {
-            Files.move(tmp, out, StandardCopyOption.REPLACE_EXISTING);
-        }
-
-        System.out.println("Creato: " + out.toAbsolutePath());
+        this.font = font;
+        this.logoMimit = logoMimit;
+        this.logoPari = logoPari;
+        this.iconWasher = iconWasher;
+        this.iconHealthcard = iconHealthcard;
+        this.iconBarcode = iconBarcode;
     }
 
     /**
@@ -124,21 +101,21 @@ public class PdfServiceImpl implements PdfService {
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                     .setMarginTop(6).setMarginBottom(18));
 
-            // TODO: chiamare BE per prendere i valori
-            // Dati di esempio (in prod: arrivano da DTO)
-            String intestatario   = "Giovanna Beltramin";
-            String cf            = "BLTGVN78A52C409X";
-            LocalDate emessoIl   = LocalDate.of(2025, 11, 23);
-            LocalDate validoFino = LocalDate.of(2025, 12, 3);
-            BigDecimal importo   = new BigDecimal("100.00");
-            String codice        = "12345678";
+
+            TransactionBarCodeResponse trxBarcode = barCodePaymentService.retriveVoucher(initiativeId,trxCode,userId);
+            String intestatario  = "Giovanna Beltramin";// TODO: cablato in attesa di capire da dove recuperarli
+            String cf            = "BLTGVN78A52C409X";// TODO: cablato in attesa di capire da dove recuperarlo
+            LocalDate emessoIl   = Utilities.getLocalDate(trxBarcode.getTrxDate());
+            LocalDate validoFino = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
+            BigDecimal importo   = new BigDecimal("100.00"); // TODO: effetuare merge da develop dopo aggiunta voucherAmount e fare diviso cento
+            String codice        = trxBarcode.getTrxCode();
 
             doc.add(buildOwnerRow(intestatario, cf, regular, bold, textPrimary, textSecondary));
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                     .setMarginTop(12).setMarginBottom(18));
 
             doc.add(buildDetailsAndAmount(emessoIl, validoFino, importo, regular, bold, textPrimary, textSecondary));
-            doc.add(buildBarcodeBlock(pdf, codice, regular, bold, textPrimary, textSecondary));
+            doc.add(buildBarcodeBlock(pdf, codice, regular, textSecondary));
             doc.add(new Paragraph().setHeight(18));
             doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary, lightGrayBg));
 
@@ -243,7 +220,7 @@ public class PdfServiceImpl implements PdfService {
     /**
      * Costruisce il blocco con barcode Code128 e numero visibile.
      */
-    private BlockElement<?> buildBarcodeBlock(PdfDocument pdf, String code, PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
+    private BlockElement<?> buildBarcodeBlock(PdfDocument pdf, String code, PdfFont regular, Color textSecondary) {
         Div wrap = new Div().setTextAlignment(TextAlignment.CENTER);
 
         wrap.add(new Paragraph("CODICE A BARRE")
@@ -318,7 +295,6 @@ public class PdfServiceImpl implements PdfService {
                     .setHorizontalAlignment(HorizontalAlignment.CENTER);
             d.add(icon);
         } else {
-            // placeholder tondo, centrato
             Div ph = new Div()
                     .setWidth(36).setHeight(36)
                     .setBackgroundColor(new DeviceGray(0.9f))

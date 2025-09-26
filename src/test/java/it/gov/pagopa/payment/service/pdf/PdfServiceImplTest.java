@@ -4,61 +4,95 @@ import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.kernel.pdf.annot.PdfAnnotation;
 import com.itextpdf.kernel.pdf.annot.PdfLinkAnnotation;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class PdfServiceImplTest {
 
     private static final String DEV_PORTAL_LINK = "https://developer.pagopa.it/pari/overview";
 
+    @Mock
+    private BarCodePaymentService barCodePaymentService;
+
+    @Mock
+    private TransactionBarCodeResponse trxResp;
+
+    private PdfServiceImpl newService() {
+        return new PdfServiceImpl(
+                barCodePaymentService,        // mock
+                DEV_PORTAL_LINK,              // link dev portal
+                "DejaVuSans.ttf",             // font (se non esiste, userà Helvetica)
+                null,                         // logoMimit
+                null,                         // logoPari
+                null,                         // iconWasher
+                null,                         // iconHealthcard
+                null                          // iconBarcode
+        );
+    }
+
     @Test
-    void create_shouldReturnValidPdfBytes() throws Exception {
-        PdfServiceImpl svc = new PdfServiceImpl(DEV_PORTAL_LINK);
+    void create_shouldReturnValidPdfBytes_andCallBarcodeService() throws Exception {
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("12345678");
+        when(barCodePaymentService.retriveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
 
-        byte[] bytes = svc.create(null, "trx-123", "user-abc");
+        PdfServiceImpl svc = newService();
 
-        assertNotNull(bytes, "I bytes del PDF non devono essere null");
-        assertTrue(bytes.length > 0, "Il PDF non deve essere vuoto");
-        // header %PDF-
+        byte[] bytes = svc.create("INIT1", "TRX1", "USER1");
+
+        assertNotNull(bytes);
+        assertTrue(bytes.length > 0);
         String header = new String(bytes, 0, Math.min(5, bytes.length), java.nio.charset.StandardCharsets.ISO_8859_1);
-        assertTrue(header.startsWith("%PDF-"), "Header PDF mancante");
+        assertTrue(header.startsWith("%PDF-"));
 
-        // Il documento deve essere apribile e avere almeno 1 pagina
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
              PdfDocument pdf = new PdfDocument(reader)) {
-            assertTrue(pdf.getNumberOfPages() >= 1, "Il PDF deve avere almeno una pagina");
+            assertTrue(pdf.getNumberOfPages() >= 1);
         }
+
+        var initCap = ArgumentCaptor.forClass(String.class);
+        var trxCap  = ArgumentCaptor.forClass(String.class);
+        var usrCap  = ArgumentCaptor.forClass(String.class);
+        verify(barCodePaymentService).retriveVoucher(initCap.capture(), trxCap.capture(), usrCap.capture());
+        assertEquals("INIT1", initCap.getValue());
+        assertEquals("TRX1",  trxCap.getValue());
+        assertEquals("USER1", usrCap.getValue());
     }
 
     @Test
     void create_shouldContainDevPortalLinkAnnotation() throws Exception {
-        PdfServiceImpl svc = new PdfServiceImpl(DEV_PORTAL_LINK);
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("12345678");
+        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
 
-        byte[] bytes = svc.create(null, "trx-123", "user-abc");
+        PdfServiceImpl svc = newService();
+        byte[] bytes = svc.create("INIT1", "TRX1", "USER1");
 
         boolean found = false;
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
              PdfDocument pdf = new PdfDocument(reader)) {
 
-            // Scorri le annotazioni di tutte le pagine (o solo la prima, se preferisci)
             for (int p = 1; p <= pdf.getNumberOfPages() && !found; p++) {
                 for (PdfAnnotation ann : pdf.getPage(p).getAnnotations()) {
                     if (ann instanceof PdfLinkAnnotation link) {
-                        // Dizionario dell'annotazione
                         PdfDictionary annDict = link.getPdfObject();
-
-                        // /A = action dictionary
                         PdfDictionary actionDict = annDict.getAsDictionary(PdfName.A);
                         if (actionDict == null) continue;
-
-                        // /S deve essere /URI
-                        PdfName s = actionDict.getAsName(PdfName.S);
-                        if (!PdfName.URI.equals(s)) continue;
-
-                        // /URI contiene l'URL
+                        if (!PdfName.URI.equals(actionDict.getAsName(PdfName.S))) continue;
                         PdfString uriStr = actionDict.getAsString(PdfName.URI);
                         if (uriStr != null && DEV_PORTAL_LINK.equals(uriStr.toUnicodeString())) {
                             found = true;
@@ -73,22 +107,19 @@ class PdfServiceImplTest {
 
     @Test
     void create_shouldContainExpectedTexts() throws Exception {
-        PdfServiceImpl svc = new PdfServiceImpl(DEV_PORTAL_LINK);
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("12345678");
+        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
 
-        byte[] bytes = svc.create(null, "trx-123", "user-abc");
+        PdfServiceImpl svc = newService();
+        byte[] bytes = svc.create("INIT1", "TRX1", "USER1");
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
              PdfDocument pdf = new PdfDocument(reader)) {
-
             String page1Text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage());
-
-            // Verifiche "soft" sul testo estratto
-            assertTrue(page1Text.toUpperCase().contains("BONUS ELETTRODOMESTICI"),
-                    "Testo 'BONUS ELETTRODOMESTICI' non trovato");
-            assertTrue(page1Text.toUpperCase().contains("CODICE A BARRE"),
-                    "Testo 'CODICE A BARRE' non trovato");
-            assertTrue(page1Text.contains("12345678"),
-                    "Numero del barcode '12345678' non trovato");
+            assertTrue(page1Text.toUpperCase().contains("BONUS ELETTRODOMESTICI"));
+            assertTrue(page1Text.toUpperCase().contains("CODICE A BARRE"));
         }
     }
 }

@@ -17,7 +17,10 @@ import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeRespons
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.nio.charset.StandardCharsets;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
@@ -102,8 +105,18 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_PDF")
     @Override
-    public byte[] downloadBarcode(String initiativeId, String trxCode, String userId) {
-        return pdfService.create(initiativeId, trxCode, userId);
+    public ResponseEntity<byte[]> downloadBarcode(String initiativeId, String trxCode, String userId) {
+        byte[] pdf = pdfService.create(initiativeId, trxCode, userId);
+        ContentDisposition cd = ContentDisposition
+                .inline()
+                .filename("barcode_" + trxCode + ".pdf", StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
+                .contentType(MediaType.APPLICATION_PDF)
+                .cacheControl(CacheControl.noStore())
+                .contentLength(pdf.length)
+                .body(pdf);
     }
 
 }

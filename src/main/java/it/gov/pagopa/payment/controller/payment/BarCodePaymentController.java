@@ -8,6 +8,8 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RequestMapping("/idpay/payment")
@@ -55,9 +57,10 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
-    @GetMapping("/initiatives/{initiativeId}/bar-code/{trxCode}/pdf")
+    @GetMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/pdf",
+            produces = MediaType.APPLICATION_PDF_VALUE)
     @ResponseStatus(code = HttpStatus.OK)
-    byte[] downloadBarcode(
+    ResponseEntity<byte[]> downloadBarcode(
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
             @RequestHeader("x-user-id") String userId
