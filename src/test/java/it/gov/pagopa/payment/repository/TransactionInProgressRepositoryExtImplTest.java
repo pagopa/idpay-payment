@@ -316,7 +316,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rewards",
                 "trxChargeDate",
                 "initiativeRejectionReasons",
-                "initiativeEndDate");
+                "initiativeEndDate",
+                "voucherAmountCents");
         Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
         Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
     }
@@ -340,7 +341,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rewards",
                 "trxChargeDate",
                 "initiativeRejectionReasons",
-                "initiativeEndDate");
+                "initiativeEndDate",
+                "voucherAmountCents");
 
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         preview.setRewardCents(500L);
@@ -383,7 +385,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "rewards",
                 "trxChargeDate",
                 "initiativeRejectionReasons",
-                "initiativeEndDate");
+                "initiativeEndDate",
+                "voucherAmountCents");
 
         transactionInProgress.setStatus(SyncTrxStatus.IDENTIFIED);
         transactionInProgress.setUserId("USERID1");
@@ -772,7 +775,7 @@ class TransactionInProgressRepositoryExtImplTest {
                 transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
         Assertions.assertNotNull(resultSecondSave);
         TestUtils.checkNotNullFields(resultSecondSave,
-                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc", "initiativeEndDate");
+                "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer", "mcc", "initiativeEndDate","voucherAmountCents");
         Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
         Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
     }

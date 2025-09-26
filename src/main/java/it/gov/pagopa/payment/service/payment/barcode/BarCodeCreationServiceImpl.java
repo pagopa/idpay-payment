@@ -181,7 +181,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     }
 
     private void checkVoucherAmountCents(String initiativeId, Long voucherAmountCents){
-        if (voucherAmountCents < 0L) {
+        if (voucherAmountCents != null && voucherAmountCents < 0L) {
             throw new BudgetExhaustedException(String.format("Budget exhausted for the current user and initiative [%s]", initiativeId));
         }
     }
