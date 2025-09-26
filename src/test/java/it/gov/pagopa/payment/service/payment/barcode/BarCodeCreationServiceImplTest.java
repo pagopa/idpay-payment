@@ -428,6 +428,28 @@ class BarCodeCreationServiceImplTest {
 
         Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, result.getCode());
     }
+
+    @ParameterizedTest
+    @ValueSource(longs = {-100, -1})
+    void createExtendedTransaction_UserBudgetExhausted(long voucherAmountCents) {
+
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
+                .initiativeId("INITIATIVEID")
+                .voucherAmountCents(voucherAmountCents)
+                .build();
+
+        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+
+        BudgetExhaustedException result =
+                Assertions.assertThrows(
+                        BudgetExhaustedException.class,
+                        () ->
+                                barCodeCreationService.createExtendedTransaction(
+                                        trxCreationReq,
+                                        RewardConstants.TRX_CHANNEL_BARCODE,
+                                        "USERID"));
+
+        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage()); }
     @Test
     void shouldReturnTrxDatePlusAuthorizationMinutesWhenNotExtended()  {
         TransactionInProgress  trx =  new  TransactionInProgress();

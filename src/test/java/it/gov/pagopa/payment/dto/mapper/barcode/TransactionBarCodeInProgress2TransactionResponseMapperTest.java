@@ -31,7 +31,7 @@ class TransactionBarCodeInProgress2TransactionResponseMapperTest {
         assertionCommons(trx, result);
         Assertions.assertEquals(CommonUtilities.minutesToSeconds(5), result.getTrxExpirationSeconds());
 
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "voucherAmountCents");
     }
     private static void assertionCommons(TransactionInProgress trx, TransactionBarCodeResponse result) {
         Assertions.assertNotNull(result);
@@ -52,6 +52,6 @@ class TransactionBarCodeInProgress2TransactionResponseMapperTest {
         OffsetDateTime endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 14400);
         Assertions.assertEquals(CommonUtilities.secondsBetween(trx.getTrxDate(), endDate), result.getTrxExpirationSeconds());
 
-        TestUtils.checkNotNullFields(result);
+        TestUtils.checkNotNullFields(result, "voucherAmountCents");
     }
 }

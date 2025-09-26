@@ -45,6 +45,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
                 .additionalProperties(additionalProperties)
                 .extendedAuthorization(extendedAuthorization)
                 .trxEndDate(trxEndDate)
+                .voucherAmountCents(transactionBarCodeCreationRequest.getVoucherAmountCents())
                 .build();
     }
 }

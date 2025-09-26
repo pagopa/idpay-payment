@@ -41,6 +41,7 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
             .trxEndDate(transactionInProgress.getTrxEndDate())
+            .voucherAmountCents(transactionInProgress.getVoucherAmountCents())
             .build();
   }
 
