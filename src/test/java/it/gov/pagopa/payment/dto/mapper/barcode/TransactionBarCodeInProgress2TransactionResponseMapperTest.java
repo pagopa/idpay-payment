@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.dto.mapper.barcode;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionEnrichedResponseMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -50,7 +49,7 @@ class TransactionBarCodeInProgress2TransactionResponseMapperTest {
         TransactionBarCodeResponse result = mapper.apply(trx);
 
         assertionCommons(trx, result);
-        OffsetDateTime endDate = TransactionBarCodeInProgress2TransactionEnrichedResponseMapper.calculateExtendedEndDate(trx, 2880);
+        OffsetDateTime endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 14400);
         Assertions.assertEquals(CommonUtilities.secondsBetween(trx.getTrxDate(), endDate), result.getTrxExpirationSeconds());
 
         TestUtils.checkNotNullFields(result);

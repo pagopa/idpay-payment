@@ -22,4 +22,5 @@ public class TransactionBarCodeResponse {
     private SyncTrxStatus status;
     private Long trxExpirationSeconds;
     private Long residualBudgetCents;
+    private OffsetDateTime trxEndDate;
 }
