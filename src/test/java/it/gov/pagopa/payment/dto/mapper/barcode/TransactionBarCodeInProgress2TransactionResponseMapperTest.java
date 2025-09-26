@@ -49,7 +49,7 @@ class TransactionBarCodeInProgress2TransactionResponseMapperTest {
         TransactionBarCodeResponse result = mapper.apply(trx);
 
         assertionCommons(trx, result);
-        OffsetDateTime endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 2880);
+        OffsetDateTime endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 14400);
         Assertions.assertEquals(CommonUtilities.secondsBetween(trx.getTrxDate(), endDate), result.getTrxExpirationSeconds());
 
         TestUtils.checkNotNullFields(result);
