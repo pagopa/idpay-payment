@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
@@ -9,6 +10,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -30,12 +32,13 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -293,39 +296,51 @@ class BarCodePaymentControllerTest {
 
     @Test
     void downloadBarcode_ok() throws Exception {
+        // arrange
         String initiativeId = "INITIATIVE_ID";
         String trxCode = "TRX123";
         String userId = "USER_42";
 
-        byte[] bytes = new byte[]{1, 2, 3, 4, 5};
-        String pdf = Base64.getEncoder().encodeToString(bytes);
+        byte[] expectedPdfBytes = new byte[]{1, 2, 3, 4, 5};
+        String base64 = Base64.getEncoder().encodeToString(expectedPdfBytes);
+        ReportDTO report = ReportDTO.builder().data(base64).build();
 
-        when(pdfService.create(initiativeId, trxCode, userId)).thenReturn(pdf);
+        when(pdfService.create(initiativeId, trxCode, userId)).thenReturn(report);
 
+        // act
         MvcResult result = mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
                         .header("x-user-id", userId)
-                        .accept(MediaType.TEXT_PLAIN) // <-- produce/accept coerenti
         ).andExpect(status().isOk()).andReturn();
 
-        // contentType è una String (es: "text/plain;charset=UTF-8")
+        // assert: Content-Type application/json
         String contentType = result.getResponse().getContentType();
-        assertNotNull(contentType);
-        assertTrue(contentType.startsWith(MediaType.TEXT_PLAIN_VALUE));
+        assertNotNull(contentType, "Content-Type mancante");
+        assertTrue(contentType.startsWith(MediaType.APPLICATION_JSON_VALUE),
+                "Content-Type atteso application/json ma trovato: " + contentType);
 
+        // assert: Content-Disposition inline; filename="barcode_TRX123.pdf"
         String cd = result.getResponse().getHeader("Content-Disposition");
-        assertNotNull(cd);
-        assertTrue(cd.toLowerCase().contains("inline"));
-        assertTrue(cd.contains("barcode_" + trxCode + ".pdf"));
+        assertNotNull(cd, "Content-Disposition mancante");
+        String cdLower = cd.toLowerCase();
+        assertTrue(cdLower.contains("inline"), "Content-Disposition non contiene 'inline': " + cd);
+        assertTrue(cd.contains("barcode_" + trxCode + ".pdf"),
+                "Content-Disposition non contiene il filename atteso: " + cd);
 
+        // assert: Cache-Control no-store
         assertEquals("no-store", result.getResponse().getHeader("Cache-Control"));
 
-        assertEquals(pdf, result.getResponse().getContentAsString());
-        assertEquals(
-                pdf.getBytes(java.nio.charset.StandardCharsets.UTF_8).length,
-                result.getResponse().getContentAsByteArray().length
-        );
+        // assert: body JSON con ReportDTO, campo data == base64
+        String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        JsonNode json = objectMapper.readTree(body);
+        assertTrue(json.hasNonNull("data"), "Campo 'data' assente nel body");
+        assertEquals(base64, json.get("data").asText(), "Il campo 'data' non corrisponde alla Base64 attesa");
+
+        // verify
+        verify(pdfService).create(initiativeId, trxCode, userId);
+        verifyNoMoreInteractions(pdfService);
     }
+
 
     @Test
     void downloadBarcode_errorFromService_returns5xx() throws Exception {
