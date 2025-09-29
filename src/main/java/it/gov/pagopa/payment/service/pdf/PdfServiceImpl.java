@@ -147,7 +147,7 @@ public class PdfServiceImpl implements PdfService {
 
         } catch (Exception e) {
             log.error("Errore durante la generazione del PDF (initiativeId={}, trxCode={}, userId={})",
-                    initiativeId, trxCode, userId, e);
+                    Utilities.sanitizeString(initiativeId), Utilities.sanitizeString(trxCode), Utilities.sanitizeString(userId), e);
             throw new RuntimeException("Errore durante la generazione del PDF "
                     + "(initiativeId=" + initiativeId + ", trxCode=" + trxCode + ", userId=" + userId + ")", e);
         }
