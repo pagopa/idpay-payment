@@ -12,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Base64;
+
 @RequestMapping("/idpay/payment")
 public interface BarCodePaymentController {
 
@@ -58,9 +60,9 @@ public interface BarCodePaymentController {
     );
 
     @GetMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/pdf",
-            produces = MediaType.APPLICATION_PDF_VALUE)
+            produces = MediaType.TEXT_PLAIN_VALUE)
     @ResponseStatus(code = HttpStatus.OK)
-    ResponseEntity<byte[]> downloadBarcode(
+    ResponseEntity<String> downloadBarcode(
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
             @RequestHeader("x-user-id") String userId

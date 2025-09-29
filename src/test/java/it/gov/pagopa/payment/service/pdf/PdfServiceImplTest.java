@@ -13,7 +13,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -43,7 +45,7 @@ class PdfServiceImplTest {
     }
 
     @Test
-    void create_shouldReturnValidPdfBytes_andCallBarcodeService() throws Exception {
+    void create_shouldReturnValidPdfBase64_andCallBarcodeService() throws Exception {
         when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
         when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
@@ -51,14 +53,20 @@ class PdfServiceImplTest {
 
         PdfServiceImpl svc = newService();
 
-        byte[] bytes = svc.create("INIT1", "TRX1", "USER1");
+        // Ora create ritorna Base64
+        String base64 = svc.create("INIT1", "TRX1", "USER1");
 
-        assertNotNull(bytes);
-        assertTrue(bytes.length > 0);
-        String header = new String(bytes, 0, Math.min(5, bytes.length), java.nio.charset.StandardCharsets.ISO_8859_1);
+        assertNotNull(base64);
+        assertFalse(base64.isBlank());
+
+        // Decodifica per validare il contenuto PDF
+        byte[] pdfBytes = Base64.getDecoder().decode(base64);
+        assertTrue(pdfBytes.length > 0);
+
+        String header = new String(pdfBytes, 0, Math.min(5, pdfBytes.length), StandardCharsets.ISO_8859_1);
         assertTrue(header.startsWith("%PDF-"));
 
-        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
+        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
              PdfDocument pdf = new PdfDocument(reader)) {
             assertTrue(pdf.getNumberOfPages() >= 1);
         }
@@ -80,7 +88,9 @@ class PdfServiceImplTest {
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
 
         PdfServiceImpl svc = newService();
-        byte[] bytes = svc.create("INIT1", "TRX1", "USER1");
+
+        String base64 = svc.create("INIT1", "TRX1", "USER1");
+        byte[] bytes = Base64.getDecoder().decode(base64);
 
         boolean found = false;
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
@@ -113,7 +123,9 @@ class PdfServiceImplTest {
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
 
         PdfServiceImpl svc = newService();
-        byte[] bytes = svc.create("INIT1", "TRX1", "USER1");
+
+        String base64 = svc.create("INIT1", "TRX1", "USER1");
+        byte[] bytes = Base64.getDecoder().decode(base64);
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
              PdfDocument pdf = new PdfDocument(reader)) {
