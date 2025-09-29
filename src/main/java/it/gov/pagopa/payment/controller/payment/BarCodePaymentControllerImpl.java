@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -106,18 +107,17 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_PDF")
     @Override
-    public ResponseEntity<String> downloadBarcode(String initiativeId, String trxCode, String userId) {
-        String pdf = pdfService.create(initiativeId, trxCode, userId);
+    public ResponseEntity<ReportDTO> downloadBarcode(String initiativeId, String trxCode, String userId) {
+        ReportDTO reportDTO = pdfService.create(initiativeId, trxCode, userId);
         ContentDisposition cd = ContentDisposition
                 .inline()
                 .filename("barcode_" + trxCode + ".pdf", StandardCharsets.UTF_8)
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
-                .contentType(MediaType.TEXT_PLAIN)
+                .contentType(MediaType.APPLICATION_JSON)
                 .cacheControl(CacheControl.noStore())
-                .contentLength(pdf.length())
-                .body(pdf);
+                .body(reportDTO);
     }
 
 }

@@ -16,6 +16,7 @@ import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
 import com.itextpdf.barcodes.Barcode128;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Base64;
 
@@ -65,19 +67,28 @@ public class PdfServiceImpl implements PdfService {
     }
 
     /**
-     * Genera il PDF del bonus e lo restituisce come array di byte.
+     * Genera il PDF del voucher bonus e lo restituisce codificato in Base64.
      * <p>
-     * Crea un PdfWriter su un ByteArrayOutputStream, compone il layout con iText (A4, margini, header,
-     * sezioni e barcode) e chiude le risorse prima di serializzare i byte.
+     * Il metodo compone un documento PDF in formato A4 utilizzando la libreria iText.
+     * Durante la generazione:
+     * <ul>
+     *   <li>Crea un {@link PdfWriter} su un {@link ByteArrayOutputStream} per raccogliere i byte.</li>
+     *   <li>Configura margini, font (personalizzato se presente, altrimenti Helvetica/Helvetica-Bold) e colori di brand.</li>
+     *   <li>Aggiunge intestazione, dati del beneficiario, dettagli del voucher, barcode della transazione e
+     *       una sezione informativa con link al portale sviluppatori.</li>
+     * </ul>
+     * <p>
+     * Al termine, il PDF viene chiuso e il suo contenuto codificato in Base64 viene inserito in un {@link ReportDTO}.
      *
-     * @param initiativeId identificativo iniziativa (opzionale, per logging/telemetria)
-     * @param trxCode        identificativo transazione (opzionale, per logging/telemetria)
-     * @param userId       identificativo utente (opzionale, per logging/telemetria)
-     * @return bytes del PDF generato; mai null
-     * @throws RuntimeException se la generazione fallisce per IO/layout
+     * @param initiativeId identificativo dell’iniziativa (opzionale, usato per logging/telemetria)
+     * @param trxCode      codice della transazione (opzionale, usato per logging/telemetria)
+     * @param userId       identificativo utente (opzionale, usato per logging/telemetria)
+     * @return un {@link ReportDTO} contenente nella proprietà {@code data} la rappresentazione Base64 dei byte del PDF;
+     *         mai {@code null}
+     * @throws RuntimeException se la generazione del PDF fallisce per problemi di I/O o di layout
      */
     @Override
-    public String create(String initiativeId, String trxCode, String userId) {
+    public ReportDTO create(String initiativeId, String trxCode, String userId) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
@@ -108,7 +119,9 @@ public class PdfServiceImpl implements PdfService {
             String cf            = "BLTGVN78A52C409X";// TODO: cablato in attesa di capire da dove recuperarlo
             LocalDate emessoIl   = Utilities.getLocalDate(trxBarcode.getTrxDate());
             LocalDate validoFino = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
-            BigDecimal importo   = new BigDecimal("100.00"); // TODO: effetuare merge da develop dopo aggiunta voucherAmount e fare diviso cento
+            BigDecimal importo   = BigDecimal
+                    .valueOf(trxBarcode.getVoucherAmountCents())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             String codice        = trxBarcode.getTrxCode();
 
             doc.add(buildOwnerRow(intestatario, cf, regular, bold, textPrimary, textSecondary));
@@ -133,10 +146,15 @@ public class PdfServiceImpl implements PdfService {
                     .setMarginTop(24));
 
         } catch (Exception e) {
+            log.error("Errore durante la generazione del PDF (initiativeId={}, trxCode={}, userId={})",
+                    initiativeId, trxCode, userId, e);
             throw new RuntimeException("Errore durante la generazione del PDF "
                     + "(initiativeId=" + initiativeId + ", trxCode=" + trxCode + ", userId=" + userId + ")", e);
         }
-        return Base64.getEncoder().encodeToString(baos.toByteArray());
+        return ReportDTO
+                .builder()
+                .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
+                .build();
     }
 
     /**
@@ -204,7 +222,7 @@ public class PdfServiceImpl implements PdfService {
 
         Div right = new Div();
         right.add(PdfUtils.smallLabel("Importo massimo disponibile", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo.divide(BigDecimal.valueOf(100)))).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
         right.add(new Paragraph("Puoi usare il bonus per ottenere uno sconto ")
                 .add(new Text("fino al 30%").setFont(bold))
                 .add(" sul prezzo d’acquisto di ")
