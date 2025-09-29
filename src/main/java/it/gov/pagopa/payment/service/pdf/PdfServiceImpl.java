@@ -16,6 +16,7 @@ import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
 import com.itextpdf.barcodes.Barcode128;
+import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
@@ -28,7 +29,6 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Base64;
 
@@ -119,9 +119,8 @@ public class PdfServiceImpl implements PdfService {
             String cf            = "BLTGVN78A52C409X";// TODO: cablato in attesa di capire da dove recuperarlo
             LocalDate emessoIl   = Utilities.getLocalDate(trxBarcode.getTrxDate());
             LocalDate validoFino = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
-            BigDecimal importo   = BigDecimal
-                    .valueOf(trxBarcode.getVoucherAmountCents())
-                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal importo   = getAmount(trxBarcode.getVoucherAmountCents());
+            
             String codice        = trxBarcode.getTrxCode();
 
             doc.add(buildOwnerRow(intestatario, cf, regular, bold, textPrimary, textSecondary));
@@ -222,7 +221,7 @@ public class PdfServiceImpl implements PdfService {
 
         Div right = new Div();
         right.add(PdfUtils.smallLabel("Importo massimo disponibile", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo.divide(BigDecimal.valueOf(100)))).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
         right.add(new Paragraph("Puoi usare il bonus per ottenere uno sconto ")
                 .add(new Text("fino al 30%").setFont(bold))
                 .add(" sul prezzo d’acquisto di ")
@@ -334,5 +333,12 @@ public class PdfServiceImpl implements PdfService {
 
         c.add(d);
         return c;
+    }
+
+    private static BigDecimal getAmount(Long voucherAmount) {
+        if(voucherAmount != null){
+            return CommonUtilities.centsToEuro(voucherAmount);
+        }
+        return new BigDecimal(0);
     }
 }
