@@ -202,11 +202,11 @@ app:
 pdf:
   devPortalLink: ${DEV_PORTAL_LINK:https://developer.pagopa.it/pari/overview}
   font: ${FONT:DejaVuSans.ttf}
-  logoMimit: ${LOGO_MIMIT}
-  logoPari: ${LOGO_PARI}
-  iconWasher: ${ICON_WASHER}
-  iconHealthcard: ${ICON_HEALTCARD}
-  iconBarcode: ${ICON_BARCODE}
+  logoMimit: ${LOGO_MIMIT:}
+  logoPari: ${LOGO_PARI:}
+  iconWasher: ${ICON_WASHER:}
+  iconHealthcard: ${ICON_HEALTCARD:}
+  iconBarcode: ${ICON_BARCODE:}
 
 
 management:
