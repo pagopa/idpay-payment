@@ -289,4 +289,60 @@ class BarCodePaymentControllerTest {
         Assertions.assertEquals(txrResponse,resultResponse);
 
     }
+
+    @Test
+    void downloadBarcode_ok() throws Exception {
+
+        String initiativeId = "INITIATIVE_ID";
+        String trxCode = "TRX123";
+        String userId = "USER_42";
+        byte[] pdf = new byte[]{1, 2, 3, 4, 5};
+
+        when(pdfService.create(initiativeId, trxCode, userId)).thenReturn(pdf);
+
+        MvcResult result = mockMvc.perform(
+                get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
+                        .header("x-user-id", userId)
+                        .accept(MediaType.APPLICATION_PDF)
+        ).andExpect(status().isOk()).andReturn();
+
+        assertEquals(MediaType.APPLICATION_PDF_VALUE, result.getResponse().getContentType());
+
+        String cd = result.getResponse().getHeader("Content-Disposition");
+        assertNotNull(cd);
+        assertTrue(cd.toLowerCase().contains("inline"));
+        assertTrue(cd.contains("barcode_" + trxCode + ".pdf"));
+
+        assertEquals("no-store", result.getResponse().getHeader("Cache-Control"));
+
+        assertArrayEquals(pdf, result.getResponse().getContentAsByteArray());
+        assertEquals(pdf.length, result.getResponse().getContentAsByteArray().length);
+    }
+
+    @Test
+    void downloadBarcode_errorFromService_returns5xx() throws Exception {
+        String initiativeId = "INITIATIVE_ID";
+        String trxCode = "TRX123";
+        String userId = "USER_42";
+
+        when(pdfService.create(initiativeId, trxCode, userId))
+                .thenThrow(new IllegalStateException("pdf generation failed"));
+
+        mockMvc.perform(
+                get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
+                        .header("x-user-id", userId)
+                        .accept(MediaType.APPLICATION_PDF)
+        ).andExpect(status().is5xxServerError());
+    }
+
+    @Test
+    void downloadBarcode_missingUserIdHeader_returns400() throws Exception {
+        String initiativeId = "INITIATIVE_ID";
+        String trxCode = "TRX123";
+
+        mockMvc.perform(
+                get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
+                        .accept(MediaType.APPLICATION_PDF)
+        ).andExpect(status().isBadRequest());
+    }
 }

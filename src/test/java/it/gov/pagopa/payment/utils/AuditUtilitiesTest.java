@@ -329,4 +329,28 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logRetriveVoucher() {
+        auditUtilities.logRetriveVoucher(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, Collections.emptyList());
+
+        assertEquals(
+                CEF + " msg=User downloaded the voucher"
+                        + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s"
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, "[]"),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
+
+    @Test
+    void logErrorRetriveVoucher() {
+        auditUtilities.logErrorRetriveVoucher(INITIATIVE_ID, TRX_CODE, USER_ID);
+
+        assertEquals(
+                CEF + " msg=User downloaded the voucher - KO"
+                        + "cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=userId cs3=%s"
+                        .formatted(INITIATIVE_ID, TRX_CODE, USER_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
+    }
 }
