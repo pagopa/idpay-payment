@@ -28,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Base64;
 
 @Slf4j
 @Service
@@ -76,7 +77,7 @@ public class PdfServiceImpl implements PdfService {
      * @throws RuntimeException se la generazione fallisce per IO/layout
      */
     @Override
-    public byte[] create(String initiativeId, String trxCode, String userId) {
+    public String create(String initiativeId, String trxCode, String userId) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
@@ -135,7 +136,7 @@ public class PdfServiceImpl implements PdfService {
             throw new RuntimeException("Errore durante la generazione del PDF "
                     + "(initiativeId=" + initiativeId + ", trxCode=" + trxCode + ", userId=" + userId + ")", e);
         }
-        return baos.toByteArray();
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 
     /**

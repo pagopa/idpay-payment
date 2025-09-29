@@ -21,6 +21,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
@@ -105,17 +106,17 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_PDF")
     @Override
-    public ResponseEntity<byte[]> downloadBarcode(String initiativeId, String trxCode, String userId) {
-        byte[] pdf = pdfService.create(initiativeId, trxCode, userId);
+    public ResponseEntity<String> downloadBarcode(String initiativeId, String trxCode, String userId) {
+        String pdf = pdfService.create(initiativeId, trxCode, userId);
         ContentDisposition cd = ContentDisposition
                 .inline()
                 .filename("barcode_" + trxCode + ".pdf", StandardCharsets.UTF_8)
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
-                .contentType(MediaType.APPLICATION_PDF)
+                .contentType(MediaType.TEXT_PLAIN)
                 .cacheControl(CacheControl.noStore())
-                .contentLength(pdf.length)
+                .contentLength(pdf.length())
                 .body(pdf);
     }
 

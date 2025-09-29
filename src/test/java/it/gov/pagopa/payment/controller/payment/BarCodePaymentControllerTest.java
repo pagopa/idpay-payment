@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.math.BigDecimal;
+import java.util.Base64;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -292,21 +293,25 @@ class BarCodePaymentControllerTest {
 
     @Test
     void downloadBarcode_ok() throws Exception {
-
         String initiativeId = "INITIATIVE_ID";
         String trxCode = "TRX123";
         String userId = "USER_42";
-        byte[] pdf = new byte[]{1, 2, 3, 4, 5};
+
+        byte[] bytes = new byte[]{1, 2, 3, 4, 5};
+        String pdf = Base64.getEncoder().encodeToString(bytes);
 
         when(pdfService.create(initiativeId, trxCode, userId)).thenReturn(pdf);
 
         MvcResult result = mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
                         .header("x-user-id", userId)
-                        .accept(MediaType.APPLICATION_PDF)
+                        .accept(MediaType.TEXT_PLAIN) // <-- produce/accept coerenti
         ).andExpect(status().isOk()).andReturn();
 
-        assertEquals(MediaType.APPLICATION_PDF_VALUE, result.getResponse().getContentType());
+        // contentType è una String (es: "text/plain;charset=UTF-8")
+        String contentType = result.getResponse().getContentType();
+        assertNotNull(contentType);
+        assertTrue(contentType.startsWith(MediaType.TEXT_PLAIN_VALUE));
 
         String cd = result.getResponse().getHeader("Content-Disposition");
         assertNotNull(cd);
@@ -315,8 +320,11 @@ class BarCodePaymentControllerTest {
 
         assertEquals("no-store", result.getResponse().getHeader("Cache-Control"));
 
-        assertArrayEquals(pdf, result.getResponse().getContentAsByteArray());
-        assertEquals(pdf.length, result.getResponse().getContentAsByteArray().length);
+        assertEquals(pdf, result.getResponse().getContentAsString());
+        assertEquals(
+                pdf.getBytes(java.nio.charset.StandardCharsets.UTF_8).length,
+                result.getResponse().getContentAsByteArray().length
+        );
     }
 
     @Test
@@ -331,7 +339,7 @@ class BarCodePaymentControllerTest {
         mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
                         .header("x-user-id", userId)
-                        .accept(MediaType.APPLICATION_PDF)
+                        .accept(MediaType.TEXT_PLAIN) // <-- NON application/pdf
         ).andExpect(status().is5xxServerError());
     }
 
@@ -342,7 +350,7 @@ class BarCodePaymentControllerTest {
 
         mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
-                        .accept(MediaType.APPLICATION_PDF)
+                        .accept(MediaType.TEXT_PLAIN) // <-- NON application/pdf
         ).andExpect(status().isBadRequest());
     }
 }
