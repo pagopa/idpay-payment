@@ -22,7 +22,6 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
@@ -82,7 +81,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @Override
     @PerformanceLog(
             value = "BAR_CODE_RETRIEVE_PAYMENT",
-            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
+            payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
     public TransactionBarCodeResponse retrievePayment(String initiativeId, String userId) {
         return barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
     }
