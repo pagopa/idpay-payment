@@ -27,9 +27,8 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
   @Override
   public TransactionBarCodeResponse apply(TransactionInProgress transactionInProgress) {
 
-    OffsetDateTime endDate = calculateTrxEndDate(transactionInProgress);
     Long authorizationExpiration = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ?
-            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(), endDate)
+            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(), transactionInProgress.getTrxEndDate())
             : CommonUtilities.minutesToSeconds(authorizationExpirationMinutes);
 
     return TransactionBarCodeResponse.builder()
@@ -41,7 +40,8 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .trxExpirationSeconds(authorizationExpiration)
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
-            .trxEndDate(endDate)
+            .trxEndDate(transactionInProgress.getTrxEndDate())
+            .voucherAmountCents(transactionInProgress.getVoucherAmountCents())
             .build();
   }
 

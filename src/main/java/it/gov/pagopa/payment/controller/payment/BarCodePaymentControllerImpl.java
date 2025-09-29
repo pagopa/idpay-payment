@@ -5,10 +5,12 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
@@ -16,7 +18,10 @@ import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeRespons
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.nio.charset.StandardCharsets;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
@@ -25,9 +30,11 @@ import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 public class BarCodePaymentControllerImpl implements BarCodePaymentController {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final PdfService pdfService;
 
-    public BarCodePaymentControllerImpl(BarCodePaymentService barCodePaymentService) {
+    public BarCodePaymentControllerImpl(BarCodePaymentService barCodePaymentService, PdfService pdfService) {
         this.barCodePaymentService = barCodePaymentService;
+        this.pdfService = pdfService;
     }
 
     @Override
@@ -74,7 +81,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @Override
     @PerformanceLog(
             value = "BAR_CODE_RETRIEVE_PAYMENT",
-            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
+            payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
     public TransactionBarCodeResponse retrievePayment(String initiativeId, String userId) {
         return barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
     }
@@ -94,6 +101,22 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String userId) {
         log.info("[BAR_CODE_CREATE_EXTENDED_TRANSACTION] The user {} is creating a transaction", Utilities.sanitizeString(userId));
         return barCodePaymentService.createExtendedTransaction(trxBarCodeCreationRequest, userId);
+    }
+
+    @PerformanceLog(
+            value = "BAR_CODE_PDF")
+    @Override
+    public ResponseEntity<ReportDTO> downloadBarcode(String initiativeId, String trxCode, String userId) {
+        ReportDTO reportDTO = pdfService.create(initiativeId, trxCode, userId);
+        ContentDisposition cd = ContentDisposition
+                .inline()
+                .filename("barcode_" + trxCode + ".pdf", StandardCharsets.UTF_8)
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .cacheControl(CacheControl.noStore())
+                .body(reportDTO);
     }
 
 }
