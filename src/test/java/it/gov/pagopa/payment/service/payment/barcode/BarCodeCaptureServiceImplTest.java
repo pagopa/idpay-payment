@@ -14,13 +14,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodeCaptureServiceImplTest {
@@ -80,4 +82,100 @@ class BarCodeCaptureServiceImplTest {
         Assertions.assertEquals(result, mapper.apply(trx));
     }
 
+    @Test
+    void retriveVoucher_ok() {
+        String initiativeId = "INIT1";
+        String trxCode = "TRX123";
+        String userId = "USR1";
+
+        TransactionInProgress trx = new TransactionInProgress();
+        trx.setId("id-1");
+        trx.setInitiativeId(initiativeId);
+        trx.setTrxCode(trxCode);
+        trx.setUserId(userId);
+        trx.setRewardCents(100L);
+
+        TransactionBarCodeResponse expected = new TransactionBarCodeResponse();
+
+        when(repositoryMock.findByInitiativeIdAndTrxCodeAndUserId(initiativeId, trxCode, userId))
+                .thenReturn(Optional.of(trx));
+        when(mapper.apply(trx)).thenReturn(expected);
+
+        TransactionBarCodeResponse result = service.retriveVoucher(initiativeId, trxCode, userId);
+
+        assertSame(expected, result);
+
+        verify(repositoryMock).findByInitiativeIdAndTrxCodeAndUserId(initiativeId, trxCode, userId);
+        verify(mapper).apply(trx);
+        verify(auditUtilitiesMock).logRetriveVoucher(
+                trx.getInitiativeId(),
+                trx.getId(),
+                trx.getTrxCode(),
+                trx.getUserId(),
+                trx.getRewardCents(),
+                trx.getRejectionReasons()
+        );
+        verify(auditUtilitiesMock, never()).logErrorRetriveVoucher(any(), any(), any());
+        verifyNoMoreInteractions(auditUtilitiesMock);
+    }
+
+    @Test
+    void retriveVoucher_notFound_logsAndThrows() {
+        String initiativeId = "INIT1";
+        String trxCode = "TRX404";
+        String userId = "USR1";
+
+        when(repositoryMock.findByInitiativeIdAndTrxCodeAndUserId(initiativeId, trxCode, userId))
+                .thenReturn(Optional.empty());
+
+        TransactionNotFoundOrExpiredException ex = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> service.retriveVoucher(initiativeId, trxCode, userId)
+        );
+        assertTrue(ex.getMessage().contains(trxCode));
+
+        verify(repositoryMock).findByInitiativeIdAndTrxCodeAndUserId(initiativeId, trxCode, userId);
+        verify(auditUtilitiesMock).logErrorRetriveVoucher(initiativeId, trxCode, userId);
+        verify(auditUtilitiesMock, never()).logRetriveVoucher(any(), any(), any(), any(), any(), any());
+        verifyNoMoreInteractions(auditUtilitiesMock);
+        verifyNoInteractions(mapper);
+    }
+
+    @Test
+    void retriveVoucher_mapperThrows_logsSuccessThenError_andRethrows() {
+        String initiativeId = "INIT1";
+        String trxCode = "TRX123";
+        String userId = "USR1";
+
+        TransactionInProgress trx = new TransactionInProgress();
+        trx.setId("ID-1");
+        trx.setInitiativeId(initiativeId);
+        trx.setTrxCode(trxCode);
+        trx.setUserId(userId);
+        trx.setRewardCents(100L);
+
+        when(repositoryMock.findByInitiativeIdAndTrxCodeAndUserId(initiativeId, trxCode, userId))
+                .thenReturn(Optional.of(trx));
+        when(mapper.apply(trx)).thenThrow(new IllegalStateException("boom"));
+
+        IllegalStateException ex = assertThrows(
+                IllegalStateException.class,
+                () -> service.retriveVoucher(initiativeId, trxCode, userId)
+        );
+        assertEquals("boom", ex.getMessage());
+
+        verify(repositoryMock).findByInitiativeIdAndTrxCodeAndUserId(initiativeId, trxCode, userId);
+        verify(mapper).apply(trx);
+
+        InOrder inOrder = inOrder(auditUtilitiesMock);
+        inOrder.verify(auditUtilitiesMock).logRetriveVoucher(
+                eq(trx.getInitiativeId()),
+                eq(trx.getId()),
+                eq(trx.getTrxCode()),
+                eq(trx.getUserId()),
+                eq(trx.getRewardCents()),
+                (java.util.List<String>) nullable(java.util.List.class)
+        );
+        inOrder.verify(auditUtilitiesMock).logErrorRetriveVoucher(initiativeId, trxCode, userId);
+    }
 }

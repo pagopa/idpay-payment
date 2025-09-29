@@ -4,4 +4,6 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 
 public interface BarCodeCaptureService {
     TransactionBarCodeResponse capturePayment(String trxCode);
+
+    TransactionBarCodeResponse retriveVoucher(String intiativeId, String trxCode, String userId);
 }
