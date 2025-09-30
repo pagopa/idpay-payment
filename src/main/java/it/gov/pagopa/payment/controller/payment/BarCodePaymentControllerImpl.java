@@ -89,7 +89,7 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @Override
     @PerformanceLog(
             value = "BAR_CODE_CAPTURE_PAYMENT",
-            payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
+            payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
     public TransactionBarCodeResponse capturePayment(String trxCode) {
         return barCodePaymentService.capturePayment(trxCode);
     }
