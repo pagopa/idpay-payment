@@ -3,15 +3,14 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 
 @RequestMapping("/idpay/payment")
 public interface BarCodePaymentController {
@@ -58,10 +57,9 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
-    @GetMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/pdf",
-            produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/pdf")
     @ResponseStatus(code = HttpStatus.OK)
-    ResponseEntity<String> downloadBarcode(
+    ResponseEntity<ReportDTO> downloadBarcode(
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
             @RequestHeader("x-user-id") String userId
