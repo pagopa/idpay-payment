@@ -142,6 +142,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         additionalProperties.put("productName", productDTO.getProductName());
         additionalProperties.put("productGtin", productDTO.getGtinCode());
         additionalProperties.put("productCategory", productDTO.getCategory());
+        additionalProperties.put("productBrand", productDTO.getBrand());
         return additionalProperties;
     }
 
