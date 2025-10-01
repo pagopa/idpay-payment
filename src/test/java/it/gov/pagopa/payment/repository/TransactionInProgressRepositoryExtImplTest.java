@@ -538,7 +538,7 @@ class TransactionInProgressRepositoryExtImplTest {
     }
 
     @Test
-    void findPageByFilterSortedByProductCategory() {
+    void findPageByFilterSortedByProductName() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         trx.setMerchantId(MERCHANT_ID);
         trx.setPointOfSaleId(POINT_OF_SALE_ID);
@@ -548,7 +548,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
         transactionInProgressRepository.save(trx);
 
-        Pageable pageable = PageRequest.of(0, 10, Sort.by("productCategory"));
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("productName"));
 
         Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
             MERCHANT_ID,
