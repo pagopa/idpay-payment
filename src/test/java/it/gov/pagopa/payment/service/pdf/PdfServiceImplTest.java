@@ -4,6 +4,7 @@ import com.itextpdf.kernel.pdf.*;
 import com.itextpdf.kernel.pdf.annot.PdfAnnotation;
 import com.itextpdf.kernel.pdf.annot.PdfLinkAnnotation;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import org.junit.jupiter.api.Test;
@@ -53,14 +54,11 @@ class PdfServiceImplTest {
 
         PdfServiceImpl svc = newService();
 
-        // Ora create ritorna Base64
-        String base64 = svc.create("INIT1", "TRX1", "USER1");
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1");
 
-        assertNotNull(base64);
-        assertFalse(base64.isBlank());
+        assertNotNull(report);
 
-        // Decodifica per validare il contenuto PDF
-        byte[] pdfBytes = Base64.getDecoder().decode(base64);
+        byte[] pdfBytes = Base64.getDecoder().decode(report.getData());
         assertTrue(pdfBytes.length > 0);
 
         String header = new String(pdfBytes, 0, Math.min(5, pdfBytes.length), StandardCharsets.ISO_8859_1);
@@ -89,8 +87,8 @@ class PdfServiceImplTest {
 
         PdfServiceImpl svc = newService();
 
-        String base64 = svc.create("INIT1", "TRX1", "USER1");
-        byte[] bytes = Base64.getDecoder().decode(base64);
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1");
+        byte[] bytes = Base64.getDecoder().decode(report.getData());
 
         boolean found = false;
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
@@ -124,8 +122,8 @@ class PdfServiceImplTest {
 
         PdfServiceImpl svc = newService();
 
-        String base64 = svc.create("INIT1", "TRX1", "USER1");
-        byte[] bytes = Base64.getDecoder().decode(base64);
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1");
+        byte[] bytes = Base64.getDecoder().decode(report.getData());
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
              PdfDocument pdf = new PdfDocument(reader)) {

@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.service.pdf;
 
 
+import it.gov.pagopa.payment.dto.ReportDTO;
+
 public interface PdfService {
-    String create(String initiativeId, String trxCode, String userId);
+    ReportDTO create(String initiativeId, String trxCode, String userId);
 }
