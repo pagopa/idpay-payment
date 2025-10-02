@@ -96,7 +96,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes) {
         return mongoTemplate.findOne(
                 Query.query(
-                        criteriaByTrxCodeAndDateGreaterThan(trxCode, OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes))),
+                    Criteria.where(Fields.trxCode).is(trxCode)
+                        .and("trxEndDate").gte(OffsetDateTime.now())
+                ),
                 TransactionInProgress.class);
     }
 
