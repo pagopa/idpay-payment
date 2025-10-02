@@ -38,7 +38,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, authorizationExpirationMinutes);
+        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode);
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {

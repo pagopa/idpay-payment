@@ -46,11 +46,11 @@ class QRCodeAuthorizationExpiredServiceImplTest {
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
 
-        when(transactionInProgressRepositoryMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES))
+        when(transactionInProgressRepositoryMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
                 .thenReturn(transaction);
         qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
-        Mockito.verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES);
+        Mockito.verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
     }
 

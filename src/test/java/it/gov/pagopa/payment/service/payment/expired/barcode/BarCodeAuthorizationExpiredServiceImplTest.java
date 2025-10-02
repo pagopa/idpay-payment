@@ -40,11 +40,11 @@ class BarCodeAuthorizationExpiredServiceImplTest {
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transaction.setUserId("USERID1");
 
-        when(transactionInProgressRepositoryMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES))
+        when(transactionInProgressRepositoryMock.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode()))
                 .thenReturn(transaction);
         barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
-        Mockito.verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES);
+        Mockito.verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
     }
 
