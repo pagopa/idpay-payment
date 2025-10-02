@@ -23,5 +23,5 @@ public class PreviewPaymentDTO {
     private String userId;
     private String productName;
     private String productGtin;
-
+    private boolean extendedAuthorization;
 }

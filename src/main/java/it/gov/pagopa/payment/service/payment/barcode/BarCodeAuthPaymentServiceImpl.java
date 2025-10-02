@@ -95,6 +95,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .rewardCents(preview.getRewardCents())
                 .residualAmountCents(residualAmountCents)
                 .userId(userCf)
+                .extendedAuthorization(transactionInProgress.getExtendedAuthorization())
                 .build();
     }
 
