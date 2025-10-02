@@ -522,19 +522,6 @@ class TransactionInProgressRepositoryExtImplTest {
 
         transactionInProgressRepository.save(trx);
 
-        TransactionInProgress trxCategory = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
-        trxCategory.setMerchantId(MERCHANT_ID);
-        trxCategory.setPointOfSaleId(POINT_OF_SALE_ID);
-        trxCategory.setInitiativeId(INITIATIVE_ID);
-        trxCategory.setUserId(USER_ID);
-        trx.setStatus(SyncTrxStatus.AUTHORIZED);
-
-        Map<String, String> additionalProperties = new HashMap<>();
-        additionalProperties.put("productCategory", "WASHINGMACHINES");
-
-        trxCategory.setAdditionalProperties(additionalProperties);
-        transactionInProgressRepository.save(trxCategory);
-
         Pageable pageableStatus = PageRequest.of(0, 10, Sort.by("status"));
         Page<TransactionInProgress> resultStatus = transactionInProgressRepository.findPageByFilter(
             MERCHANT_ID,
@@ -548,21 +535,62 @@ class TransactionInProgressRepositoryExtImplTest {
         assertNotNull(resultStatus);
         assertEquals(1, resultStatus.getTotalElements());
         assertEquals(trx.getId(), resultStatus.getContent().get(0).getId());
+    }
 
-        Pageable pageableCategory = PageRequest.of(0, 10, Sort.by("productCategory"));
-        Page<TransactionInProgress> resultCategory = transactionInProgressRepository.findPageByFilter(
+    @Test
+    void findPageByFilterSortedByProductName() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        trx.setMerchantId(MERCHANT_ID);
+        trx.setPointOfSaleId(POINT_OF_SALE_ID);
+        trx.setInitiativeId(INITIATIVE_ID);
+        trx.setUserId(USER_ID);
+        trx.setStatus(SyncTrxStatus.AUTHORIZED);
+
+        transactionInProgressRepository.save(trx);
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("productName"));
+
+        Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
             MERCHANT_ID,
             POINT_OF_SALE_ID,
             INITIATIVE_ID,
             USER_ID,
             SyncTrxStatus.AUTHORIZED.toString(),
             null,
-            pageableCategory
+            pageable
         );
-        assertNotNull(resultCategory);
-        assertEquals(1, resultCategory.getTotalElements());
-        assertEquals(trx.getId(), resultCategory.getContent().get(0).getId());
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals(trx.getId(), result.getContent().get(0).getId());
     }
+
+    @Test
+    void findPageByFilterSortedByOtherField() {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+        trx.setMerchantId(MERCHANT_ID);
+        trx.setPointOfSaleId(POINT_OF_SALE_ID);
+        trx.setInitiativeId(INITIATIVE_ID);
+        trx.setUserId(USER_ID);
+        trx.setStatus(SyncTrxStatus.AUTHORIZED);
+        transactionInProgressRepository.save(trx);
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("trxDate"));
+
+        Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
+            MERCHANT_ID,
+            POINT_OF_SALE_ID,
+            INITIATIVE_ID,
+            USER_ID,
+            SyncTrxStatus.AUTHORIZED.toString(),
+            null,
+            pageable
+        );
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+    }
+
 
     @Test
     void getCriteria() {

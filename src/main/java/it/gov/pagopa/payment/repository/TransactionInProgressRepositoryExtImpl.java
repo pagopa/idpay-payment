@@ -1,8 +1,7 @@
 package it.gov.pagopa.payment.repository;
 
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_CATEGORY;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_CATEGORY_IT;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_GTIN;
+import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_NAME;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS_IT;
 
@@ -321,7 +320,9 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             transactions = mongoTemplate.aggregate(aggregation, TransactionInProgress.class, TransactionInProgress.class)
                 .getMappedResults();
         } else {
-            Query query = Query.query(criteria).with(CommonUtilities.getPageable(pageable));
+            Sort mappedSort = mapSort(CommonUtilities.getPageable(pageable));
+            Query query = Query.query(criteria).
+                with(PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), mappedSort));
             transactions = mongoTemplate.find(query, TransactionInProgress.class);
         }
 
@@ -330,23 +331,24 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         return PageableExecutionUtils.getPage(transactions, pageable, () -> count);
     }
 
-    private Aggregation buildAggregation(Criteria criteria, Pageable pageable) {
-        Sort mappedSort = Sort.by(
+    private Sort mapSort(Pageable pageable) {
+        return Sort.by(
             pageable.getSort().stream()
                 .map(order -> {
-                    if ("productCategory".equalsIgnoreCase(order.getProperty())) {
-                        return order.withProperty(FIELD_PRODUCT_CATEGORY);
+                    if ("productName".equalsIgnoreCase(order.getProperty())) {
+                        return order.withProperty(FIELD_PRODUCT_NAME);
                     }
                     return order;
                 })
                 .toList()
         );
+    }
 
-        if (isSortedBy(mappedSort, FIELD_STATUS)) {
+    private Aggregation buildAggregation(Criteria criteria, Pageable pageable) {
+        Sort sort = pageable.getSort();
+
+        if (isSortedBy(sort, FIELD_STATUS)) {
             return buildStatusAggregation(criteria, pageable);
-        }
-        if (isSortedBy(mappedSort, FIELD_PRODUCT_CATEGORY)) {
-            return buildCategoryAggregation(criteria, mappedSort, pageable);
         }
         return null;
     }
@@ -373,36 +375,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             Aggregation.limit(pageable.getPageSize())
         );
     }
-
-    private Aggregation buildCategoryAggregation(Criteria criteria, Sort sort, Pageable pageable) {
-        Sort.Direction direction = sort.stream()
-            .filter(order -> order.getProperty().equals(FIELD_PRODUCT_CATEGORY))
-            .map(Sort.Order::getDirection)
-            .findFirst()
-            .orElse(Sort.Direction.ASC);
-
-        return Aggregation.newAggregation(
-            Aggregation.addFields()
-                .addField(FIELD_PRODUCT_CATEGORY_IT)
-                .withValue(
-                    ConditionalOperators.switchCases(
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("WASHINGMACHINES")).then("Lavatrice"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("WASHERDRIERS")).then("Lavasciuga"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("OVENS")).then("Forno"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("RANGEHOODS")).then("Cappa da cucina"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("DISHWASHERS")).then("Lavastoviglie"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("TUMBLEDRYERS")).then("Asciugatrice"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("REFRIGERATINGAPPL")).then("Apparecchio di refrigerazione"),
-                        ConditionalOperators.Switch.CaseOperator.when(ComparisonOperators.valueOf(FIELD_PRODUCT_CATEGORY).equalToValue("COOKINGHOBS")).then("Piano cottura")
-                    ).defaultTo("Altro")
-                ).build(),
-            Aggregation.match(criteria),
-            Aggregation.sort(Sort.by(direction, FIELD_PRODUCT_CATEGORY_IT)),
-            Aggregation.skip(pageable.getOffset()),
-            Aggregation.limit(pageable.getPageSize())
-        );
-    }
-
 
     private Sort.Direction getSortDirection(Pageable pageable, String property) {
         return Optional.ofNullable(pageable.getSort().getOrderFor(property))
