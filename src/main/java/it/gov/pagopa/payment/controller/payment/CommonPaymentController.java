@@ -31,6 +31,9 @@ public interface CommonPaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId,
             @RequestHeader("x-point-of-sale-id") String pointOfSaleId);
 
+    @DeleteMapping("/pendingTransactions")
+    @ResponseStatus(code = HttpStatus.OK)
+    void cancelPendingTransactions();
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
