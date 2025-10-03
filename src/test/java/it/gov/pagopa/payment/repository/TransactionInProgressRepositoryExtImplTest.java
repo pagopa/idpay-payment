@@ -226,7 +226,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
         transactionInProgressRepository.save(transactionInProgress);
 
-        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1", EXPIRATION_MINUTES);
+        TransactionInProgress resultFirstSave = transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1");
         Assertions.assertNotNull(resultFirstSave);
         TestUtils.checkNotNullFields(
                 resultFirstSave,
@@ -241,7 +241,8 @@ class TransactionInProgressRepositoryExtImplTest {
                 "initiativeEndDate",
                 "voucherAmountCents");
 
-        transactionInProgress.setTrxDate(OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES));
+        transactionInProgress.setTrxDate(OffsetDateTime.now().minusDays(30));
+        transactionInProgress.setTrxEndDate(OffsetDateTime.now().minusDays(11));
         transactionInProgressRepository.save(transactionInProgress);
 
         try {
@@ -251,7 +252,7 @@ class TransactionInProgressRepositoryExtImplTest {
         }
 
         TransactionInProgress resultSecondSave =
-                transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1", EXPIRATION_MINUTES);
+                transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1");
         Assertions.assertNull(resultSecondSave);
     }
 
