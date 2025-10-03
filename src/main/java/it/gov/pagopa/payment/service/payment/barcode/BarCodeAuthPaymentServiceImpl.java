@@ -142,7 +142,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         Map<String, String> additionalProperties = new HashMap<>();
         additionalProperties.put("productName", productDTO.getProductName());
         additionalProperties.put("productGtin", productDTO.getGtinCode());
-        additionalProperties.put("productCategory", productDTO.getCategory());
         return additionalProperties;
     }
 
