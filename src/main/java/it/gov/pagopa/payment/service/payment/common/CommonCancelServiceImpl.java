@@ -17,6 +17,8 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -117,5 +119,20 @@ public class CommonCancelServiceImpl {
                 log.error("[CANCEL_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getUserId(), trx.getAcquirerId(), e);
             }
         }
+    }
+
+    public void rejectTransactions() {
+        List<TransactionInProgress> transactions;
+        int pageSize = 2;
+        do {
+            transactions = repository.findCreatedOrIdentifiedTransactions(pageSize);
+            log.info("[CANCEL_CREATED_TRANSACTIONS] Transactions to cancel: {} / {}", transactions.size(), pageSize);
+            transactions.forEach(transaction ->
+                    this.cancelTransaction(
+                            transaction.getId(),
+                            transaction.getMerchantId(),
+                            transaction.getAcquirerId(),
+                            transaction.getPointOfSaleId()));
+        } while (!transactions.isEmpty());
     }
 }

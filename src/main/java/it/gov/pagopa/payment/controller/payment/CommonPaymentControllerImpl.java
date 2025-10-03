@@ -72,6 +72,12 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
     }
 
+    @Override
+    @PerformanceLog(value = "CANCEL_CREATED_TRANSACTIONS")
+    public void cancelPendingTransactions() {
+        log.info("[CANCEL_CREATED_TRANSACTIONS] Request to reject all transactions in CREATED or IDENTIFIED status");
+        commonCancelService.rejectTransactions();
+    }
 
     @Override
     @PerformanceLog("GET_STATUS_TRANSACTION")

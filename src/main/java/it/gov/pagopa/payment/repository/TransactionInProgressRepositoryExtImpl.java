@@ -433,4 +433,18 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
     }
+
+    public List<TransactionInProgress> findCreatedOrIdentifiedTransactions(int pageSize) {
+        Criteria criteria = Criteria.where(TransactionInProgress.Fields.status)
+                .in(SyncTrxStatus.CREATED, SyncTrxStatus.IDENTIFIED);
+        Pageable pageable = PageRequest.of(0, pageSize);
+        Query query = Query.query(criteria).with(pageable);
+        query.fields()
+                .include(TransactionInProgress.Fields.id)
+                .include(TransactionInProgress.Fields.trxCode)
+                .include(TransactionInProgress.Fields.merchantId)
+                .include(TransactionInProgress.Fields.acquirerId)
+                .include(TransactionInProgress.Fields.pointOfSaleId);
+        return mongoTemplate.find(query, TransactionInProgress.class);
+    }
 }
