@@ -17,6 +17,9 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,14 +55,14 @@ public class CommonCancelServiceImpl {
     public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         try {
             TransactionInProgress trx = repository.findById(trxId)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
             if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
                 throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
 
             if(SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-              log.info("[TRX_STATUS][CREATED] Transaction {} already in CREATED/IDENTIFIED, no action taken", trx.getId());
+                log.info("[TRX_STATUS][CREATED] Transaction {} already in CREATED/IDENTIFIED, no action taken", trx.getId());
             }
             else if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
 
@@ -74,8 +77,7 @@ public class CommonCancelServiceImpl {
                     trx.setElaborationDateTime(LocalDateTime.now());
                     sendTransactionResetNotification(trx);
                 }
-                    trx.setStatus(SyncTrxStatus.CREATED);
-                    repository.save(trx);
+                revertTrxToCreatedStatus(trx);
             }
             else{
                 throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
@@ -83,14 +85,14 @@ public class CommonCancelServiceImpl {
             log.info("[TRX_STATUS][RESET] The transaction with trxId {} trxCode {} has been reset to CREATED", trx.getId(), trx.getTrxCode());
 
             CancelTransactionAuditDTO dto = new CancelTransactionAuditDTO(
-                trx.getInitiativeId(),
-                trx.getId(),
-                trx.getTrxCode(),
-                trx.getUserId(),
-                ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
-                trx.getRejectionReasons(),
-                merchantId,
-                pointOfSaleId
+                    trx.getInitiativeId(),
+                    trx.getId(),
+                    trx.getTrxCode(),
+                    trx.getUserId(),
+                    ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
+                    trx.getRejectionReasons(),
+                    merchantId,
+                    pointOfSaleId
             );
             auditUtilities.logCancelTransaction(dto);
 
@@ -98,6 +100,29 @@ public class CommonCancelServiceImpl {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);
             throw e;
         }
+    }
+
+    private void revertTrxToCreatedStatus(TransactionInProgress trx) {
+        trx.setStatus(SyncTrxStatus.CREATED);
+        trx.setAcquirerId(null);
+        trx.setAmountCents(null);
+        trx.setEffectiveAmountCents(null);
+        trx.setAmountCurrency(null);
+        trx.setMerchantFiscalCode(null);
+        trx.setMerchantId(null);
+        trx.setPointOfSaleId(null);
+        trx.setIdTrxAcquirer(null);
+        trx.setIdTrxIssuer(null);
+        trx.setVat(null);
+        trx.setTrxChargeDate(null);
+        trx.setBusinessName(null);
+        trx.setUpdateDate(LocalDateTime.now());
+        trx.setAdditionalProperties(new HashMap<>());
+        trx.setRewardCents(null);
+        trx.setRewards(null);
+        trx.setChannel(null);
+        trx.setRejectionReasons(Collections.emptyList());
+        repository.save(trx);
     }
 
     private void sendTransactionResetNotification(TransactionInProgress trx) {
