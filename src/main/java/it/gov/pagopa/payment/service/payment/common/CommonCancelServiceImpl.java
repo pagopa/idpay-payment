@@ -59,7 +59,7 @@ public class CommonCancelServiceImpl {
             }
 
             if(SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-                repository.deleteById(trxId);
+              log.info("[TRX_STATUS][CREATED] Transaction {} already in CREATED/IDENTIFIED, no action taken", trx.getId());
             }
             else if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
 
@@ -69,19 +69,18 @@ public class CommonCancelServiceImpl {
 
                 AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
                 if(refund != null) {
-                    trx.setStatus(SyncTrxStatus.CANCELLED);
                     trx.setRewardCents(refund.getRewardCents());
                     trx.setRewards(refund.getRewards());
                     trx.setElaborationDateTime(LocalDateTime.now());
-
-                    sendCancelledTransactionNotification(trx);
+                    sendTransactionResetNotification(trx);
                 }
-                repository.deleteById(trxId);
+                    trx.setStatus(SyncTrxStatus.CREATED);
+                    repository.save(trx);
             }
             else{
                 throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED, "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
             }
-            log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
+            log.info("[TRX_STATUS][RESET] The transaction with trxId {} trxCode {} has been reset to CREATED", trx.getId(), trx.getTrxCode());
 
             CancelTransactionAuditDTO dto = new CancelTransactionAuditDTO(
                 trx.getInitiativeId(),
@@ -101,11 +100,11 @@ public class CommonCancelServiceImpl {
         }
     }
 
-    private void sendCancelledTransactionNotification(TransactionInProgress trx) {
+    private void sendTransactionResetNotification(TransactionInProgress trx) {
         try {
-            log.info("[CANCEL_TRANSACTION][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
+            log.info("[CANCEL_TRANSACTION][SEND_NOTIFICATION]  Voucher trxId {} reset to CREATED for reuse - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
             if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while cancelling Authorized Payment notify");
+                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something went wrong while resetting voucher to CREATED");
             }
         } catch (Exception e) {
             if(!paymentErrorNotifierService.notifyCancelPayment(
