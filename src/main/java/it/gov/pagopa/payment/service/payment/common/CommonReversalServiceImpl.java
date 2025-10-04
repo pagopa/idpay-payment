@@ -64,7 +64,7 @@ public class CommonReversalServiceImpl {
 
             // updating the transaction
             trx.setStatus(SyncTrxStatus.REFUNDED);
-            trx.setInvoiceFile(InvoiceFile.builder().filename(path).build());
+            trx.setInvoiceFile(InvoiceFile.builder().filename(reversaInvoiceDTO.getFileName()).build());
 
             // sending the transaction reversal notification
             sendReversedTransactionNotification(trx);
