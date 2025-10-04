@@ -79,17 +79,17 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, MultipartFile file) {
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
-        final String sanitizedTrxCode = Utilities.sanitizeString(trxCode);
+        final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
         final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
 
         log.info(
-                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the trxCode {} at POS {}",
+                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} at POS {}",
                 sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
         );
-        commonReversalService.reversalTransaction(sanitizedTrxCode, sanitizedMerchantId, sanitizedPointOfSaleId, file);
+        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file);
     }
 
     @Override

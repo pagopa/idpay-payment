@@ -44,12 +44,12 @@ public class CommonReversalServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, MultipartFile file) {
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
-            TransactionInProgress trx = repository.findById(trxCode)
-                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxCode)));
+            TransactionInProgress trx = repository.findById(transactionId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
             if (!trx.getMerchantId().equals(merchantId)) {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
@@ -86,14 +86,13 @@ public class CommonReversalServiceImpl {
             auditUtilities.logReverseTransaction(auditDTO);
 
             // removing the transaction from transaction_in_progress
-            // TODO: remove comment
-            //    repository.deleteById(trxCode);
+            repository.deleteById(transactionId);
 
         } catch (RuntimeException e) {
-            auditUtilities.logErrorReversalTransaction(trxCode, merchantId);
+            auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
             throw e;
         } catch (IOException e) {
-            auditUtilities.logErrorReversalTransaction(trxCode, merchantId);
+            auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
             throw new RuntimeException(e.getMessage(), e);
         }
 
