@@ -94,6 +94,11 @@
             <groupId>com.azure.spring</groupId>
             <artifactId>spring-cloud-azure-stream-binder-servicebus</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.27.1</version>
+        </dependency>
 
         <!--3rd party library-->
         <dependency>

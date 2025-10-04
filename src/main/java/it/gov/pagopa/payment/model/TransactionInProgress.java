@@ -80,4 +80,6 @@ public class TransactionInProgress {
   private OffsetDateTime trxEndDate;
   private OffsetDateTime initiativeEndDate;
   private Long voucherAmountCents;
+
+  private InvoiceFile invoiceFile;
 }

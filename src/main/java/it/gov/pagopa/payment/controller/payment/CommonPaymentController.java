@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/idpay/payment")
 public interface CommonPaymentController {
@@ -31,6 +32,14 @@ public interface CommonPaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId,
             @RequestHeader("x-point-of-sale-id") String pointOfSaleId);
 
+    @PostMapping("/transactions/{transactionId}/reversal")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    void reversalTransaction(
+            @PathVariable("transactionId") String transactionId,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+            @RequestPart("file") MultipartFile file
+    );
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
