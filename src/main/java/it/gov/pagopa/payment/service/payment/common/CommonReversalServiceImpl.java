@@ -58,7 +58,8 @@ public class CommonReversalServiceImpl {
             }
 
             // Uploading invoice to storage
-            String path = String.format("INVOICES/merchant-%s/pos-%s/trxcode-%s/%s", merchantId, pointOfSaleId, trxCode, reversaInvoiceDTO.getFileName());
+            String path = String.format("INVOICES/merchant/%s/pos/%s/trxid/%s/%s",
+                    merchantId, pointOfSaleId, trx.getId(), reversaInvoiceDTO.getFileName());
             fileStorageClient.upload(reversaInvoiceDTO.getFile().getInputStream(), path, reversaInvoiceDTO.getType());
 
             // updating the transaction
