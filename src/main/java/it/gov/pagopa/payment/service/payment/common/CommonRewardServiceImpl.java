@@ -14,16 +14,15 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-
 @Slf4j
-@Service("commonReversal")
-public class CommonReversalServiceImpl {
+@Service("commonReward")
+public class CommonRewardServiceImpl {
 
     private final TransactionInProgressRepository repository;
     private final TransactionNotifierService notifierService;
@@ -31,7 +30,7 @@ public class CommonReversalServiceImpl {
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
 
-    public CommonReversalServiceImpl(
+    public CommonRewardServiceImpl(
             TransactionInProgressRepository repository,
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
@@ -44,10 +43,10 @@ public class CommonReversalServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
+    public void rewardTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
-            // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
+            // getting the transaction from transaction_in_progress and checking if it is valid for the reward
             TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
             if (!trx.getMerchantId().equals(merchantId)) {
@@ -57,7 +56,7 @@ public class CommonReversalServiceImpl {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]".formatted(trx.getPointOfSaleId(), pointOfSaleId));
             }
             if (!SyncTrxStatus.CAPTURED.equals(trx.getStatus())) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
+                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reward transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
 
             // Uploading invoice to storage
@@ -65,12 +64,12 @@ public class CommonReversalServiceImpl {
                     merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
-            // updating the transaction
-            trx.setStatus(SyncTrxStatus.REFUNDED);
+            // updating the transaction status to rewarded
+            trx.setStatus(SyncTrxStatus.REWARDED);
             trx.setInvoiceFile(InvoiceFile.builder().filename(file.getOriginalFilename()).build());
 
-            // sending the transaction reversal notification
-            sendReversedTransactionNotification(trx);
+            // sending the transaction reward notification
+            sendRewardTransactionNotification(trx);
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
@@ -83,36 +82,35 @@ public class CommonReversalServiceImpl {
                     merchantId,
                     pointOfSaleId
             );
-            auditUtilities.logReverseTransaction(auditDTO);
+            auditUtilities.logRewardTransaction(auditDTO);
 
             // removing the transaction from transaction_in_progress
             repository.deleteById(transactionId);
 
         } catch (RuntimeException e) {
-            auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
+            auditUtilities.logErrorRewardTransaction(transactionId, merchantId);
             throw e;
         } catch (IOException e) {
-            auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
+            auditUtilities.logErrorRewardTransaction(transactionId, merchantId);
             throw new RuntimeException(e.getMessage(), e);
         }
 
     }
 
-    private void sendReversedTransactionNotification(TransactionInProgress trx) {
+    private void sendRewardTransactionNotification(TransactionInProgress trx) {
         try {
-            log.info("[REVERSE_TRANSACTION][SEND_NOTIFICATION] Sending Reverse Authorized Payment event to Notification: trxId {} - merchantId {}", trx.getId(), trx.getMerchantId());
+            log.info("[REWARD_TRANSACTION][SEND_NOTIFICATION] Sending Reward Authorized Payment event to Notification: trxId {} - merchantId {}", trx.getId(), trx.getMerchantId());
             if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while reversing Authorized Payment notify");
+                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while rewarding Authorized Payment notify");
             }
         } catch (Exception e) {
-            // TODO
-            if (!paymentErrorNotifierService.notifyCancelPayment(
+            if (!paymentErrorNotifierService.notifyRewardPayment(
                     notifierService.buildMessage(trx, trx.getUserId()),
-                    "[REVERSE_TRANSACTION] An error occurred while publishing the reversal authorized result: trxId %s - merchantId %s".formatted(trx.getId(), trx.getMerchantId()),
+                    "[REWARD_TRANSACTION] An error occurred while publishing the reward authorized result: trxId %s - merchantId %s".formatted(trx.getId(), trx.getMerchantId()),
                     true,
                     e)
             ) {
-                log.error("[REVERSE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {}", trx.getId(), trx.getUserId(), e);
+                log.error("[REWARD_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {}", trx.getId(), trx.getUserId(), e);
             }
         }
     }

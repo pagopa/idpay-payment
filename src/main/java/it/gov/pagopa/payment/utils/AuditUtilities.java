@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.utils;
 
 import it.gov.pagopa.common.utils.AuditLogger;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
-import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
+import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -186,7 +186,7 @@ public class AuditUtilities {
         );
     }
 
-    public void logReverseTransaction(RevertTransactionAuditDTO dto) {
+    public void logReverseTransaction(TransactionAuditDTO dto) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
                 "Merchant reversed the transaction",
@@ -201,6 +201,14 @@ public class AuditUtilities {
         );
     }
 
+    public void logRewardTransaction(TransactionAuditDTO dto) {
+        AuditLogger.logAuditString(
+            CEF_PATTERN_TRXID_TRXCODE_MERCHANTID,
+            "Merchant rewarded the transaction",
+            dto.getInitiativeId(), dto.getTrxId(), dto.getTrxCode(), dto.getMerchantId()
+        );
+    }
+
     public void logErrorCancelTransaction(String trxId, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_MERCHANTID,
@@ -212,6 +220,13 @@ public class AuditUtilities {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_MERCHANTID,
                 "Merchant reversed the transaction - KO", trxId, merchantId
+        );
+    }
+
+    public void logErrorRewardTransaction(String trxId, String merchantId) {
+        AuditLogger.logAuditString(
+            CEF_PATTERN_TRXID_MERCHANTID,
+            "Merchant reversed the transaction - KO", trxId, merchantId
         );
     }
 

@@ -41,6 +41,15 @@ public interface CommonPaymentController {
             @RequestPart("file") MultipartFile file
     );
 
+    @PostMapping("/transactions/{transactionId}/reward")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    void rewardTransaction(
+        @PathVariable("transactionId") String transactionId,
+        @RequestHeader("x-merchant-id") String merchantId,
+        @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+        @RequestPart("file") MultipartFile file
+    );
+
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
     SyncTrxStatusDTO getStatusTransaction(@PathVariable("transactionId") String transactionId,

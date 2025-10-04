@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class RevertTransactionAuditDTO {
+public class TransactionAuditDTO {
   private String initiativeId;
   private String trxId;
   private String trxCode;
