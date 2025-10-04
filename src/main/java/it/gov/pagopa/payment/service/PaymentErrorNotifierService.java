@@ -9,5 +9,6 @@ public interface PaymentErrorNotifierService {
     boolean notifyCancelPayment(Message<?> message, String description, boolean retryable, Throwable exception);
     boolean notifyRewardPayment(Message<?> message, String description, boolean retryable, Throwable exception);
     boolean notifyReversalPayment(Message<?> message, String description, boolean retryable, Throwable exception);
+    boolean notifyRewardPayment(Message<?> message, String description, boolean retryable, Throwable exception);
     boolean notify(KafkaConfiguration.BaseKafkaInfoDTO kafkaInfoDTO, Message<?> message, String description, boolean retryable, boolean resendApplication, Throwable exception);
 }
