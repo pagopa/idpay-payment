@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeApiRetryable;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.dto.ReversaInvoiceDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -11,24 +12,28 @@ import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLo
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
 @Slf4j
 @RestController
 public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
     private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
+    private final CommonReversalServiceImpl commonReversalService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
     private final QRCodeExpirationService qrCodeExpirationService; // used just to force the expiration: this behavior is the same for all channels
 
     public CommonPaymentControllerImpl(@Qualifier("commonCreate") CommonCreationServiceImpl commonCreationService,
                                        @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
+                                       @Qualifier("commonCancel") CommonReversalServiceImpl commonReversalService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
         this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
+        this.commonReversalService = commonReversalService;
         this.commonStatusTransactionService = commonStatusTransactionService;
         this.qrCodeExpirationService = qrCodeExpirationService;
     }
@@ -72,6 +77,17 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
     }
 
+    @Override
+    @PerformanceLog(value = "REVERSAL_TRANSACTION")
+    public void reversalTransaction(String trxId, String merchantId, String pointOfSaleId, ReversaInvoiceDTO reversaInvoiceDTO) {
+        log.info(
+                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the trxId {} at POS {}",
+                Utilities.sanitizeString(merchantId),
+                Utilities.sanitizeString(trxId),
+                Utilities.sanitizeString(pointOfSaleId)
+        );
+        commonReversalService.reversalTransaction(trxId, merchantId, pointOfSaleId, reversaInvoiceDTO);
+    }
 
     @Override
     @PerformanceLog("GET_STATUS_TRANSACTION")

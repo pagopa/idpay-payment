@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import it.gov.pagopa.payment.dto.ReversaInvoiceDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -31,6 +32,14 @@ public interface CommonPaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId,
             @RequestHeader("x-point-of-sale-id") String pointOfSaleId);
 
+    @PostMapping("/transactions/{transactionId}/reversal")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+     void reversalTransaction(
+            @PathVariable("transactionId") String transactionId,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+            @ModelAttribute ReversaInvoiceDTO reversaInvoiceDTO
+    ) ;
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
