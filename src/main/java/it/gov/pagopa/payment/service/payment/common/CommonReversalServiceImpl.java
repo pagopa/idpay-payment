@@ -3,10 +3,12 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.ReversaInvoiceDTO;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.InvoiceFile;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -15,11 +17,12 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 
 @Slf4j
-@Service("commonCancel")
+@Service("commonReversal")
 public class CommonReversalServiceImpl {
 
     private final TransactionInProgressRepository repository;
@@ -41,7 +44,7 @@ public class CommonReversalServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, ReversaInvoiceDTO reversaInvoiceDTO) {
+    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
@@ -58,13 +61,13 @@ public class CommonReversalServiceImpl {
             }
 
             // Uploading invoice to storage
-            String path = String.format("INVOICES/merchant/%s/pos/%s/trxid/%s/%s",
-                    merchantId, pointOfSaleId, trx.getId(), reversaInvoiceDTO.getFileName());
-            fileStorageClient.upload(reversaInvoiceDTO.getFile().getInputStream(), path, reversaInvoiceDTO.getType());
+            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+                    merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
+            fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
             // updating the transaction
             trx.setStatus(SyncTrxStatus.REFUNDED);
-            trx.setInvoiceFile(InvoiceFile.builder().filename(reversaInvoiceDTO.getFileName()).build());
+            trx.setInvoiceFile(InvoiceFile.builder().filename(file.getOriginalFilename()).build());
 
             // sending the transaction reversal notification
             sendReversedTransactionNotification(trx);
@@ -83,7 +86,8 @@ public class CommonReversalServiceImpl {
             auditUtilities.logReverseTransaction(auditDTO);
 
             // removing the transaction from transaction_in_progress
-            repository.deleteById(trxCode);
+            // TODO: remove comment
+            //    repository.deleteById(trxCode);
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorReversalTransaction(trxCode, merchantId);
@@ -102,6 +106,7 @@ public class CommonReversalServiceImpl {
                 throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while reversing Authorized Payment notify");
             }
         } catch (Exception e) {
+            // TODO
             if (!paymentErrorNotifierService.notifyCancelPayment(
                     notifierService.buildMessage(trx, trx.getUserId()),
                     "[REVERSE_TRANSACTION] An error occurred while publishing the reversal authorized result: trxId %s - merchantId %s".formatted(trx.getId(), trx.getMerchantId()),

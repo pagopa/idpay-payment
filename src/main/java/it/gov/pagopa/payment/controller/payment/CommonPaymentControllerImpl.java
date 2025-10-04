@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeApiRetryable;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
-import it.gov.pagopa.payment.dto.ReversaInvoiceDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -13,6 +12,7 @@ import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -27,7 +27,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     public CommonPaymentControllerImpl(@Qualifier("commonCreate") CommonCreationServiceImpl commonCreationService,
                                        @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
-                                       @Qualifier("commonCancel") CommonReversalServiceImpl commonReversalService,
+                                       @Qualifier("commonReversal") CommonReversalServiceImpl commonReversalService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
         this.commonCreationService = commonCreationService;
@@ -79,7 +79,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, ReversaInvoiceDTO reversaInvoiceDTO) {
+    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(trxCode);
@@ -89,7 +89,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the trxCode {} at POS {}",
                 sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
         );
-        commonReversalService.reversalTransaction(sanitizedTrxCode, sanitizedMerchantId, sanitizedPointOfSaleId, reversaInvoiceDTO);
+        commonReversalService.reversalTransaction(sanitizedTrxCode, sanitizedMerchantId, sanitizedPointOfSaleId, file);
     }
 
     @Override

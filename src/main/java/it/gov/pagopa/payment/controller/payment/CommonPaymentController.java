@@ -1,12 +1,12 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import it.gov.pagopa.payment.dto.ReversaInvoiceDTO;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/idpay/payment")
 public interface CommonPaymentController {
@@ -34,12 +34,12 @@ public interface CommonPaymentController {
 
     @PostMapping("/transactions/{transactionId}/reversal")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-     void reversalTransaction(
+    void reversalTransaction(
             @PathVariable("transactionId") String transactionId,
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
-            @ModelAttribute ReversaInvoiceDTO reversaInvoiceDTO
-    ) ;
+            @RequestPart("file") MultipartFile file
+    );
 
     @GetMapping("/{transactionId}/status")
     @ResponseStatus(code = HttpStatus.OK)
