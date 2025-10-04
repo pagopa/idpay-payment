@@ -79,14 +79,17 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String trxId, String merchantId, String pointOfSaleId, ReversaInvoiceDTO reversaInvoiceDTO) {
+    public void reversalTransaction(String trxCode, String merchantId, String pointOfSaleId, ReversaInvoiceDTO reversaInvoiceDTO) {
+
+        final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
+        final String sanitizedTrxCode = Utilities.sanitizeString(trxCode);
+        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
+
         log.info(
-                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the trxId {} at POS {}",
-                Utilities.sanitizeString(merchantId),
-                Utilities.sanitizeString(trxId),
-                Utilities.sanitizeString(pointOfSaleId)
+                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the trxCode {} at POS {}",
+                sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
         );
-        commonReversalService.reversalTransaction(trxId, merchantId, pointOfSaleId, reversaInvoiceDTO);
+        commonReversalService.reversalTransaction(sanitizedTrxCode, sanitizedMerchantId, sanitizedPointOfSaleId, reversaInvoiceDTO);
     }
 
     @Override
