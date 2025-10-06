@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.utils;
 
 import it.gov.pagopa.common.utils.AuditLogger;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
+import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -88,6 +89,7 @@ public class AuditUtilities {
                 "User request preview the transaction", initiativeId, trxId, trxCode, userId, channel
         );
     }
+
     public void logErrorPreviewTransaction(String initiativeId, String trxId, String trxCode, String userId, String channel) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_TRXCODE_CHANNEL_USER,
@@ -151,7 +153,7 @@ public class AuditUtilities {
     public void logErrorRetriveVoucher(String initiativeId, String trxCode, String userId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_INITIATIVEID_TRXID_USERID,
-                "User downloaded the voucher - KO",initiativeId, trxCode, userId
+                "User downloaded the voucher - KO", initiativeId, trxCode, userId
         );
     }
 
@@ -173,20 +175,20 @@ public class AuditUtilities {
     // region confirmPayment
     public void logCancelTransaction(CancelTransactionAuditDTO dto) {
         AuditLogger.logAuditString(
-            CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
-            "Merchant cancelled the transaction",
-            dto.getInitiativeId(),
-            dto.getTrxId(),
-            dto.getTrxCode(),
-            dto.getUserId(),
-            String.valueOf(dto.getRewardCents()),
-            String.valueOf(dto.getRejectionReasons()),
-            dto.getMerchantId(),
-            dto.getPointOfSaleId()
+                CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
+                "Merchant cancelled the transaction",
+                dto.getInitiativeId(),
+                dto.getTrxId(),
+                dto.getTrxCode(),
+                dto.getUserId(),
+                String.valueOf(dto.getRewardCents()),
+                String.valueOf(dto.getRejectionReasons()),
+                dto.getMerchantId(),
+                dto.getPointOfSaleId()
         );
     }
 
-    public void logReverseTransaction(TransactionAuditDTO dto) {
+    public void logReverseTransaction(RevertTransactionAuditDTO dto) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_REWARD_REJECTIONS_MERCHANTID,
                 "Merchant reversed the transaction",
@@ -203,9 +205,9 @@ public class AuditUtilities {
 
     public void logRewardTransaction(TransactionAuditDTO dto) {
         AuditLogger.logAuditString(
-            CEF_PATTERN_TRXID_TRXCODE_MERCHANTID,
-            "Merchant rewarded the transaction",
-            dto.getInitiativeId(), dto.getTrxId(), dto.getTrxCode(), dto.getMerchantId()
+                CEF_PATTERN_TRXID_TRXCODE_MERCHANTID,
+                "Merchant rewarded the transaction",
+                dto.getInitiativeId(), dto.getTrxId(), dto.getTrxCode(), dto.getMerchantId()
         );
     }
 
@@ -225,8 +227,8 @@ public class AuditUtilities {
 
     public void logErrorRewardTransaction(String trxId, String merchantId) {
         AuditLogger.logAuditString(
-            CEF_PATTERN_TRXID_MERCHANTID,
-            "Merchant reversed the transaction - KO", trxId, merchantId
+                CEF_PATTERN_TRXID_MERCHANTID,
+                "Merchant reversed the transaction - KO", trxId, merchantId
         );
     }
 
