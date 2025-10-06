@@ -22,7 +22,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 
 class CommonReversalServiceImplTest {
@@ -69,7 +70,7 @@ class CommonReversalServiceImplTest {
     }
 
     @Test
-    void reversalTransaction_success() throws IOException {
+    void reversalTransaction_success() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
 
@@ -127,7 +128,7 @@ class CommonReversalServiceImplTest {
     }
 
     @Test
-    void reversalTransaction_ioException_shouldLogAndThrow() throws IOException {
+    void reversalTransaction_ioException_shouldLogAndThrow() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -144,7 +145,7 @@ class CommonReversalServiceImplTest {
     }
 
     @Test
-    void reversalTransaction_shouldSetCorrectInvoicePath() throws IOException {
+    void reversalTransaction_shouldSetCorrectInvoicePath() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
         service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
