@@ -105,8 +105,7 @@ public class CommonReversalServiceImpl {
                 throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while reversing Authorized Payment notify");
             }
         } catch (Exception e) {
-            // TODO
-            if (!paymentErrorNotifierService.notifyCancelPayment(
+            if (!paymentErrorNotifierService.notifyReversalPayment(
                     notifierService.buildMessage(trx, trx.getUserId()),
                     "[REVERSE_TRANSACTION] An error occurred while publishing the reversal authorized result: trxId %s - merchantId %s".formatted(trx.getId(), trx.getMerchantId()),
                     true,
