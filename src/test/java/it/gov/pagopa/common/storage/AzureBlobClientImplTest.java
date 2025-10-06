@@ -112,7 +112,6 @@ class AzureBlobClientImplTest {
 
     @Test
     void download_withString_shouldCallDownloadStream() {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         Mockito.doAnswer(invocation -> {
             ByteArrayOutputStream os = invocation.getArgument(0);
             os.write("test".getBytes());
