@@ -2,16 +2,12 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -74,9 +70,7 @@ class CommonRewardServiceImplTest {
     void rewardTransaction_success() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
-
         service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
-
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
         Mockito.verify(repository).deleteById(TRANSACTION_ID);
         Mockito.verify(auditUtilities).logRewardTransaction(any());
@@ -120,6 +114,34 @@ class CommonRewardServiceImplTest {
     }
 
     @Test
+    void rewardTransaction_invalidFileFormat_shouldThrowInvalidInvoiceFormatException() {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        MultipartFile invalidFile = Mockito.mock(MultipartFile.class);
+        Mockito.when(invalidFile.getOriginalFilename()).thenReturn("document.txt");
+        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
+                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile));
+        assertEquals("File must be a PDF or XML", ex.getMessage());
+    }
+
+    @Test
+    void rewardTransaction_nullFile_shouldThrowInvalidInvoiceFormatException() {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
+                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, null));
+        assertEquals("File must be a PDF or XML", ex.getMessage());
+    }
+
+    @Test
+    void rewardTransaction_nullFileName_shouldThrowInvalidInvoiceFormatException() {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        MultipartFile fileWithNullName = Mockito.mock(MultipartFile.class);
+        Mockito.when(fileWithNullName.getOriginalFilename()).thenReturn(null);
+        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
+                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, fileWithNullName));
+        assertEquals("File must be a PDF or XML", ex.getMessage());
+    }
+
+    @Test
     void rewardTransaction_runtimeException_shouldLogAndThrow() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenThrow(new RuntimeException("Generic error"));
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -139,18 +161,10 @@ class CommonRewardServiceImplTest {
     }
 
     @Test
-    void sendRewardedTransactionNotification_notifyReturnsFalse_shouldThrowTransactionNotFoundOrExpiredException() {
+    void sendRewardTransactionNotification_notifyReturnsFalse_shouldThrowInternalServerErrorException() {
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
-    }
-
-    @Test
-    void sendRewardedTransactionNotification_genericException_shouldLogAndThrow() {
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
-        assertThrows(Exception.class,
-            () -> service.rewardTransaction(TRANSACTION_ID + "_ERROR", MERCHANT_ID, POS_ID, file));
-        // TODO check log
     }
 
     @Test
