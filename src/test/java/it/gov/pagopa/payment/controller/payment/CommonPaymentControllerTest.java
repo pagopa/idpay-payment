@@ -49,6 +49,9 @@ class CommonPaymentControllerTest {
     @MockitoBean
     @Qualifier("commonReversal")
     private CommonReversalServiceImpl commonReversalService;
+    @MockitoBean
+    @Qualifier("commonReward")
+    private CommonRewardServiceImpl commonRewardService;
 
     @MockitoBean
     @Qualifier("commonCancel")
@@ -206,6 +209,23 @@ class CommonPaymentControllerTest {
 
         assertEquals("", result.getResponse().getContentAsString());
         Mockito.verify(commonReversalService).reversalTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any());
+    }
+
+    @Test
+    void rewardTransaction() throws Exception {
+        MultipartFile file = Mockito.mock(MultipartFile.class);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .multipart("/idpay/payment/transactions/{transactionId}/reward", TRANSACTION_ID)
+                .file("file", file.getBytes())
+                .header("x-merchant-id", MERCHANT_ID)
+                .header("x-point-of-sale-id", POINT_OF_SALE_ID)
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+            .andExpect(status().isNoContent())
+            .andReturn();
+
+        assertEquals("", result.getResponse().getContentAsString());
+        Mockito.verify(commonRewardService).rewardTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any());
     }
 
     @Test
