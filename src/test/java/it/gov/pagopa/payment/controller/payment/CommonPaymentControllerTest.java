@@ -10,10 +10,7 @@ import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
@@ -30,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -48,6 +46,9 @@ class CommonPaymentControllerTest {
     @MockitoBean
     @Qualifier("commonConfirm")
     private CommonConfirmServiceImpl commonConfirmServiceMock;
+    @MockitoBean
+    @Qualifier("commonReversal")
+    private CommonReversalServiceImpl commonReversalService;
 
     @MockitoBean
     @Qualifier("commonCancel")
@@ -188,6 +189,23 @@ class CommonPaymentControllerTest {
         String actual = "{\"code\":\"PAYMENT_INVALID_REQUEST\",\"message\":\"Required request header "
                 + "'x-merchant-id' for method parameter type String is not present\"}";
         assertEquals(actual, result.getResponse().getContentAsString());
+    }
+
+    @Test
+    void reversalTransaction() throws Exception {
+        MultipartFile file = Mockito.mock(MultipartFile.class);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                        .multipart("/idpay/payment/transactions/{transactionId}/reversal", TRANSACTION_ID)
+                        .file("file", file.getBytes())
+                        .header("x-merchant-id", MERCHANT_ID)
+                        .header("x-point-of-sale-id", POINT_OF_SALE_ID)
+                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        assertEquals("", result.getResponse().getContentAsString());
+        Mockito.verify(commonReversalService).reversalTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any());
     }
 
     @Test
