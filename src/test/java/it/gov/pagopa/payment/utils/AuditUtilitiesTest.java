@@ -8,6 +8,8 @@ import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
@@ -32,7 +34,7 @@ class AuditUtilitiesTest {
 
 
     @BeforeEach
-     void setup() {
+    void setup() {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("AUDIT");
         memoryAppender = new MemoryAppender();
         memoryAppender.setContext((LoggerContext) LoggerFactory.getILoggerFactory());
@@ -48,7 +50,7 @@ class AuditUtilitiesTest {
         assertEquals(
                 CEF + " msg=Transaction created"
                         + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s cs4Label=merchantId cs4=%s"
-                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID),
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -96,7 +98,7 @@ class AuditUtilitiesTest {
         assertEquals(
                 CEF + " msg=User related to transaction"
                         + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s cs4Label=channel cs4=%s suser=%s"
-                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL),
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -124,6 +126,7 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
     @Test
     void logErrorPreviewTransaction() {
         auditUtilities.logErrorPreviewTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL);
@@ -135,6 +138,7 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
     @Test
     void logAuthorizedPayment() {
         auditUtilities.logAuthorizedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, Collections.emptyList());
@@ -142,7 +146,7 @@ class AuditUtilitiesTest {
         assertEquals(
                 CEF + " msg=User authorized the transaction"
                         + " cs1Label=initiativeId cs1=%s cs2Label=trxId cs2=%s cs3Label=trxCode cs3=%s suser=%s cs4Label=reward cs4=%s cs5Label=rejectionReasons cs5=%s"
-                                .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, "[]"),
+                        .formatted(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, REWARD_CENTS, "[]"),
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
@@ -238,14 +242,14 @@ class AuditUtilitiesTest {
     @Test
     void logCancelTransaction() {
         CancelTransactionAuditDTO dto = new CancelTransactionAuditDTO(
-            INITIATIVE_ID,
-            TRX_ID,
-            TRX_CODE,
-            USER_ID,
-            REWARD_CENTS,
-            Collections.emptyList(),
-            MERCHANT_ID,
-            POINT_OF_SALE_ID
+                INITIATIVE_ID,
+                TRX_ID,
+                TRX_CODE,
+                USER_ID,
+                REWARD_CENTS,
+                Collections.emptyList(),
+                MERCHANT_ID,
+                POINT_OF_SALE_ID
         );
 
         auditUtilities.logCancelTransaction(dto);
@@ -275,7 +279,6 @@ class AuditUtilitiesTest {
     @Test
     void logErrorCancelTransaction() {
         auditUtilities.logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
-
 
         assertEquals(
                 CEF + " msg=Merchant cancelled the transaction - KO"
@@ -373,4 +376,18 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logErrorReversalTransaction_shouldCallAuditLoggerWithCorrectParams() {
+        try (MockedStatic<AuditLogger> auditLoggerMock = Mockito.mockStatic(AuditLogger.class)) {
+            auditUtilities.logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+            auditLoggerMock.verify(() -> AuditLogger.logAuditString(
+                    Mockito.anyString(),
+                    Mockito.eq("Merchant reversed the transaction - KO"),
+                    Mockito.eq(TRX_ID),
+                    Mockito.eq(MERCHANT_ID)
+            ));
+        }
+    }
+
 }

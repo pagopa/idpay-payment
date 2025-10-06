@@ -17,7 +17,7 @@ class EncryptRestConnectorTest {
 
     @Test
     void testUpsertToken() {
-        EncryptRestConnectorImpl encryptRestConnectorImpl = new EncryptRestConnectorImpl("apikey",encryptRest);
+        EncryptRestConnectorImpl encryptRestConnectorImpl = new EncryptRestConnectorImpl("apikey", encryptRest);
         EncryptedCfDTO encryptedCfDTO = new EncryptedCfDTO("ABC123");
         when(encryptRest.upsertToken(any(), any())).thenReturn(encryptedCfDTO);
         assertSame(encryptedCfDTO, encryptRestConnectorImpl.upsertToken(new CFDTO("Pii")));

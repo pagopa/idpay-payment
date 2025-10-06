@@ -37,6 +37,11 @@ public class PaymentErrorNotifierServiceImpl implements PaymentErrorNotifierServ
     }
 
     @Override
+    public boolean notifyRewardPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
+        return notify(kafkaConfiguration.getStream().getBindings().get(BINDING_NAME_TRANSACTION_OUTCOME), message, description, retryable, false, exception);
+    }
+
+    @Override
     public boolean notifyReversalPayment(Message<?> message, String description, boolean retryable, Throwable exception) {
         return notify(kafkaConfiguration.getStream().getBindings().get(BINDING_NAME_TRANSACTION_OUTCOME), message, description, retryable, false, exception);
     }
