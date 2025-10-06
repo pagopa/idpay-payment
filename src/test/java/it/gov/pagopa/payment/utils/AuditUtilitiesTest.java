@@ -4,7 +4,7 @@ import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.AuditLogger;
 import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
-import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
+import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -255,7 +255,7 @@ class AuditUtilitiesTest {
 
     @Test
     void logReverseTransaction() {
-        RevertTransactionAuditDTO dto = new RevertTransactionAuditDTO(
+        TransactionAuditDTO dto = new TransactionAuditDTO(
                 INITIATIVE_ID,
                 TRX_ID,
                 TRX_CODE,
