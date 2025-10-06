@@ -60,7 +60,7 @@ public class CommonRewardServiceImpl {
             }
 
             // Uploading invoice to storage
-            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice-reward/%s",
                     merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 

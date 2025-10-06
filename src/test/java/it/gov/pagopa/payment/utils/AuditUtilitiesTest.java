@@ -378,16 +378,12 @@ class AuditUtilitiesTest {
     }
 
     @Test
-    void logErrorReversalTransaction_shouldCallAuditLoggerWithCorrectParams() {
-        try (MockedStatic<AuditLogger> auditLoggerMock = Mockito.mockStatic(AuditLogger.class)) {
-            auditUtilities.logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
-            auditLoggerMock.verify(() -> AuditLogger.logAuditString(
-                    Mockito.anyString(),
-                    Mockito.eq("Merchant reversed the transaction - KO"),
-                    Mockito.eq(TRX_ID),
-                    Mockito.eq(MERCHANT_ID)
-            ));
-        }
+    void logErrorReversalTransaction() {
+        auditUtilities.logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+        assertEquals(
+                CEF + " msg=Merchant reversed the transaction - KO cs1Label=trxId cs1=%s cs2Label=merchantId cs2=%s"
+                        .formatted(TRX_ID, MERCHANT_ID),
+                memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
+        );
     }
-
 }

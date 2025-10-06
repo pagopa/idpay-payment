@@ -172,7 +172,7 @@ class CommonRewardServiceImplTest {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
         service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice-reward/%s",
                 MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
         Mockito.verify(fileStorageClient).upload(any(), eq(expectedPath), anyString());
     }
