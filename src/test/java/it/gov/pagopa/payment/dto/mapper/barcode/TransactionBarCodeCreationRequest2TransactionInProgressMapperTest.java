@@ -37,7 +37,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 mapper.apply(
                         trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false, trxEndDate);
 
-        TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate",
+        TestUtils.checkNotNullFields(result, "trxCode", "idTrxAcquirer", "trxChargeDate", "invoiceFile",
                 "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmountCents", "amountCurrency",
                 "mcc", "acquirerId", "merchantId", "pointOfSaleId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
                 "rewardCents", "rejectionReasons", "rewards", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents" );
