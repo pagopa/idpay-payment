@@ -1,15 +1,14 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.InvoiceFile;
+import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -47,6 +46,7 @@ public class CommonReversalServiceImpl {
     public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
+
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
@@ -58,6 +58,11 @@ public class CommonReversalServiceImpl {
             }
             if (!SyncTrxStatus.CAPTURED.equals(trx.getStatus())) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
+            }
+            if (file == null || file.getOriginalFilename() == null ||
+                (!file.getOriginalFilename().toLowerCase().endsWith(".pdf") &&
+                        !file.getOriginalFilename().toLowerCase().endsWith(".xml"))) {
+                throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
             }
 
             // Uploading invoice to storage

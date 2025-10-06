@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -152,6 +153,16 @@ class CommonReversalServiceImplTest {
         String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
                 MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
         Mockito.verify(fileStorageClient).upload(any(), eq(expectedPath), anyString());
+    }
+
+    @Test
+    void reversalTransaction_invalidFileFormat_shouldThrowInvalidInvoiceFormatException() {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        MultipartFile invalidFile = Mockito.mock(MultipartFile.class);
+        Mockito.when(invalidFile.getOriginalFilename()).thenReturn("document.txt");
+        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile));
+        assertEquals("File must be a PDF or XML", ex.getMessage());
     }
 
 }
