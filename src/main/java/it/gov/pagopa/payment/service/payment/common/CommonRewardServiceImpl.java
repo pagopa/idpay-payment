@@ -5,10 +5,7 @@ import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.InvoiceFile;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -46,6 +43,12 @@ public class CommonRewardServiceImpl {
     public void rewardTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
+            if (file == null || file.getOriginalFilename() == null ||
+                    (!file.getOriginalFilename().toLowerCase().endsWith(".pdf") &&
+                            !file.getOriginalFilename().toLowerCase().endsWith(".xml"))) {
+                throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
+            }
+
             // getting the transaction from transaction_in_progress and checking if it is valid for the reward
             TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));

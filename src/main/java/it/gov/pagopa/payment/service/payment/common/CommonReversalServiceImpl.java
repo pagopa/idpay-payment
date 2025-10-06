@@ -44,6 +44,11 @@ public class CommonReversalServiceImpl {
     public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
+            if (file == null || file.getOriginalFilename() == null ||
+                    (!file.getOriginalFilename().toLowerCase().endsWith(".pdf") &&
+                            !file.getOriginalFilename().toLowerCase().endsWith(".xml"))) {
+                throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
+            }
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             TransactionInProgress trx = repository.findById(transactionId)
@@ -56,11 +61,6 @@ public class CommonReversalServiceImpl {
             }
             if (!SyncTrxStatus.CAPTURED.equals(trx.getStatus())) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
-            }
-            if (file == null || file.getOriginalFilename() == null ||
-                (!file.getOriginalFilename().toLowerCase().endsWith(".pdf") &&
-                        !file.getOriginalFilename().toLowerCase().endsWith(".xml"))) {
-                throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
             }
 
             // Uploading invoice to storage
