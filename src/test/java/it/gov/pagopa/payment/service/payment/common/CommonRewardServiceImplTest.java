@@ -80,7 +80,7 @@ class CommonRewardServiceImplTest {
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
         Mockito.verify(repository).deleteById(TRANSACTION_ID);
         Mockito.verify(auditUtilities).logRewardTransaction(any());
-        assertEquals(SyncTrxStatus.REFUNDED, trx.getStatus());
+        assertEquals(SyncTrxStatus.REWARDED, trx.getStatus());
         assertEquals(FILENAME, trx.getInvoiceFile().getFilename());
     }
 
@@ -143,6 +143,14 @@ class CommonRewardServiceImplTest {
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+    }
+
+    @Test
+    void sendRewardedTransactionNotification_genericException_shouldLogAndThrow() {
+        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
+        assertThrows(Exception.class,
+            () -> service.rewardTransaction(TRANSACTION_ID + "_ERROR", MERCHANT_ID, POS_ID, file));
+        // TODO check log
     }
 
     @Test
