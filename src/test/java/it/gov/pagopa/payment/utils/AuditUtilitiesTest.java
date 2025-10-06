@@ -8,6 +8,8 @@ import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
@@ -278,7 +280,6 @@ class AuditUtilitiesTest {
     void logErrorCancelTransaction() {
         auditUtilities.logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
 
-
         assertEquals(
                 CEF + " msg=Merchant cancelled the transaction - KO"
                         + " cs1Label=trxId cs1=%s cs2Label=merchantId cs2=%s"
@@ -375,4 +376,18 @@ class AuditUtilitiesTest {
                 memoryAppender.getLoggedEvents().get(0).getFormattedMessage()
         );
     }
+
+    @Test
+    void logErrorReversalTransaction_shouldCallAuditLoggerWithCorrectParams() {
+        try (MockedStatic<AuditLogger> auditLoggerMock = Mockito.mockStatic(AuditLogger.class)) {
+            auditUtilities.logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+            auditLoggerMock.verify(() -> AuditLogger.logAuditString(
+                    Mockito.anyString(),
+                    Mockito.eq("Merchant reversed the transaction - KO"),
+                    Mockito.eq(TRX_ID),
+                    Mockito.eq(MERCHANT_ID)
+            ));
+        }
+    }
+
 }
