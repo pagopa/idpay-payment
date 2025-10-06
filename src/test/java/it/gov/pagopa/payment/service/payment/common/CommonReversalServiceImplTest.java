@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -116,6 +115,42 @@ class CommonReversalServiceImplTest {
         assertThrows(OperationNotAllowedException.class,
                 () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void reversalTransaction_runtimeException_shouldLogAndThrow() {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenThrow(new RuntimeException("Generic error"));
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+        assertEquals("Generic error", ex.getMessage());
+        Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void reversalTransaction_ioException_shouldLogAndThrow() throws IOException {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        Mockito.doThrow(new IOException("IO error")).when(fileStorageClient).upload(any(), anyString(), anyString());
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+        assertEquals("IO error", ex.getCause().getMessage());
+        Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void sendReversedTransactionNotification_notifyReturnsFalse_shouldThrowTransactionNotFoundOrExpiredException() {
+        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
+        assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+    }
+
+    @Test
+    void reversalTransaction_shouldSetCorrectInvoicePath() throws IOException {
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
+        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+                MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
+        Mockito.verify(fileStorageClient).upload(any(), eq(expectedPath), anyString());
     }
 
 }
