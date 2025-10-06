@@ -7,6 +7,7 @@ import com.azure.storage.blob.models.*;
 import com.azure.storage.blob.options.BlobDownloadToFileOptions;
 import com.azure.storage.blob.options.BlobParallelUploadOptions;
 import com.azure.storage.blob.options.BlobUploadFromFileOptions;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -42,7 +43,7 @@ public class AzureBlobClientImpl implements AzureBlobClient {
 
     @Override
     public Response<BlockBlobItem> upload(InputStream inputStream, String destination, String contentType) {
-        log.info("Uploading (contentType={}) into azure blob at destination {}", contentType, destination);
+        log.info("Uploading (contentType={}) into azure blob at destination {}", Utilities.sanitizeString(contentType), Utilities.sanitizeString(destination));
 
         return blobContainerClient.getBlobClient(destination)
                 .uploadWithResponse(new BlobParallelUploadOptions(inputStream), null, null);
