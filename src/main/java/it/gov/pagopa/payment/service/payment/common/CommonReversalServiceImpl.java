@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
@@ -44,11 +45,7 @@ public class CommonReversalServiceImpl {
     public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         try {
-            if (file == null || file.getOriginalFilename() == null ||
-                    (!file.getOriginalFilename().toLowerCase().endsWith(".pdf") &&
-                            !file.getOriginalFilename().toLowerCase().endsWith(".xml"))) {
-                throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
-            }
+            Utilities.checkFileExtensionOrThrow(file);
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             TransactionInProgress trx = repository.findById(transactionId)
