@@ -4,6 +4,7 @@ import ch.qos.logback.classic.LoggerContext;
 import it.gov.pagopa.common.utils.AuditLogger;
 import it.gov.pagopa.common.utils.MemoryAppender;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
+import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ class AuditUtilitiesTest {
     private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
     private static final String POINT_OF_SALE_ID = "TEST_POINT_OF_SALE_ID";
     public static final long REWARD_CENTS = 0L;
+    public static final String INVOICE_FILE_NAME = "TEST_INVOICE_FILE_NAME";
     public static final String TRX_ID = "TEST_TRX_ID";
     private static final String FLOW_CAUSE = "TRANSACTION_AUTHORIZATION_EXPIRED";
     private final AuditUtilities auditUtilities = new AuditUtilities();
@@ -249,6 +251,24 @@ class AuditUtilitiesTest {
         auditUtilities.logCancelTransaction(dto);
         String loggedMessage = memoryAppender.getLoggedEvents().get(0).getFormattedMessage();
         Assertions.assertTrue(loggedMessage.contains("msg=Merchant cancelled the transaction"));
+    }
+
+    @Test
+    void logReverseTransaction() {
+        RevertTransactionAuditDTO dto = new RevertTransactionAuditDTO(
+                INITIATIVE_ID,
+                TRX_ID,
+                TRX_CODE,
+                USER_ID,
+                REWARD_CENTS,
+                INVOICE_FILE_NAME,
+                MERCHANT_ID,
+                POINT_OF_SALE_ID
+        );
+
+        auditUtilities.logReverseTransaction(dto);
+        String loggedMessage = memoryAppender.getLoggedEvents().get(0).getFormattedMessage();
+        Assertions.assertTrue(loggedMessage.contains("msg=Merchant reversed the transaction"));
     }
 
 
