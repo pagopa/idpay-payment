@@ -129,7 +129,7 @@ class CommonReversalServiceImplTest {
     @Test
     void reversalTransaction_ioException_shouldLogAndThrow() throws IOException {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        Mockito.doThrow(new IOException("IO error")).when(fileStorageClient).upload(any(), anyString(), anyString());
+        Mockito.doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
         RuntimeException ex = assertThrows(RuntimeException.class,
                 () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
         assertEquals("IO error", ex.getCause().getMessage());
