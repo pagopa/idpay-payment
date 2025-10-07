@@ -13,7 +13,7 @@ import java.util.Map;
 
 public interface TransactionInProgressRepositoryExt {
   UpdateResult createIfExists(TransactionInProgress trx, String trxCode);
-  TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode, long authorizationExpirationMinutes);
+  TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode);
   TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId, long authorizationExpirationMinutes);
   TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode, long authorizationExpirationMinutes);
   void updateTrxRejected(String id, String userId, List<String> rejectionReasons, Map<String, List<String>> initiativeRejectionReason, String channel);

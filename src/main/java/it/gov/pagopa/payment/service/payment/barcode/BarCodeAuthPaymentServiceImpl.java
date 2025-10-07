@@ -95,6 +95,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .rewardCents(preview.getRewardCents())
                 .residualAmountCents(residualAmountCents)
                 .userId(userCf)
+                .extendedAuthorization(transactionInProgress.getExtendedAuthorization())
                 .build();
     }
 
@@ -141,8 +142,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         Map<String, String> additionalProperties = new HashMap<>();
         additionalProperties.put("productName", productDTO.getProductName());
         additionalProperties.put("productGtin", productDTO.getGtinCode());
-        additionalProperties.put("productCategory", productDTO.getCategory());
-        additionalProperties.put("productBrand", productDTO.getBrand());
         return additionalProperties;
     }
 

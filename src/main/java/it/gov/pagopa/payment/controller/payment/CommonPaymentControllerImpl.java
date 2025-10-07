@@ -12,23 +12,31 @@ import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
 @Slf4j
 @RestController
 public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
     private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
+    private final CommonReversalServiceImpl commonReversalService;
+    private final CommonRewardServiceImpl commonRewardService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
     private final QRCodeExpirationService qrCodeExpirationService; // used just to force the expiration: this behavior is the same for all channels
 
     public CommonPaymentControllerImpl(@Qualifier("commonCreate") CommonCreationServiceImpl commonCreationService,
                                        @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
+                                       @Qualifier("commonReversal") CommonReversalServiceImpl commonReversalService,
+                                       @Qualifier("commonReward") CommonRewardServiceImpl commonRewardService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
         this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
+        this.commonReversalService = commonReversalService;
+        this.commonRewardService = commonRewardService;
         this.commonStatusTransactionService = commonStatusTransactionService;
         this.qrCodeExpirationService = qrCodeExpirationService;
     }
@@ -70,6 +78,36 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 Utilities.sanitizeString(pointOfSaleId)
         );
         commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
+    }
+
+    @Override
+    @PerformanceLog(value = "REVERSAL_TRANSACTION")
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
+
+        final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
+        final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
+        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
+
+        log.info(
+                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} at POS {}",
+                sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
+        );
+        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file);
+    }
+
+    @Override
+    @PerformanceLog(value = "REWARD_TRANSACTION")
+    public void rewardTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
+
+        final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
+        final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
+        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
+
+        log.info(
+            "[REWARD_TRANSACTION] The merchant {} is requesting a reward for the transactionId {} at POS {}",
+            sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
+        );
+        commonRewardService.rewardTransaction(transactionId, merchantId, pointOfSaleId, file);
     }
 
     @Override
