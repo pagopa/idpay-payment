@@ -5,12 +5,10 @@ import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.payment.service.payment.common.CommonCancelServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl;
-import it.gov.pagopa.payment.service.payment.common.CommonStatusTransactionServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,7 +26,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
-    this.commonCreationService = commonCreationService;
+        this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
         this.commonStatusTransactionService = commonStatusTransactionService;
@@ -62,17 +60,18 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     }
 
     @Override
-    @PerformanceLog(
-            value = "CANCEL_TRANSACTION",
-            payloadBuilderBeanClass = TransactionResponsePerfLoggerPayloadBuilder.class)
-    public void cancelTransaction(String trxId, String merchantId, String acquirerId) {
+    @PerformanceLog(value = "CANCEL_TRANSACTION")
+    public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         log.info(
-                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {}",
-                merchantId,
-                acquirerId,
-                trxId);
-        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId);
+                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {} at POS {}",
+                Utilities.sanitizeString(merchantId),
+                Utilities.sanitizeString(acquirerId),
+                Utilities.sanitizeString(trxId),
+                Utilities.sanitizeString(pointOfSaleId)
+        );
+        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
     }
+
 
     @Override
     @PerformanceLog("GET_STATUS_TRANSACTION")

@@ -74,4 +74,10 @@ public class TransactionInProgress {
   @Builder.Default
   private Map<String, List<String>> initiativeRejectionReasons = new HashMap<>();
   private Map<String, String> additionalProperties = new HashMap<>();
+
+  private Boolean extendedAuthorization;
+  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  private OffsetDateTime trxEndDate;
+  private OffsetDateTime initiativeEndDate;
+  private Long voucherAmountCents;
 }

@@ -24,9 +24,9 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -42,21 +42,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CommonPaymentControllerImpl.class)
 @Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class CommonPaymentControllerTest {
-    @MockBean
+    @MockitoBean
     @Qualifier("commonCreate")
     private CommonCreationServiceImpl commonCreationServiceMock;
-    @MockBean
+    @MockitoBean
     @Qualifier("commonConfirm")
     private CommonConfirmServiceImpl commonConfirmServiceMock;
 
-    @MockBean
+    @MockitoBean
     @Qualifier("commonCancel")
     private CommonCancelServiceImpl commonCancelServiceMock;
 
-    @MockBean
+    @MockitoBean
     private QRCodeExpirationService qrCodeExpirationServiceMock;
 
-    @MockBean
+    @MockitoBean
     private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
 
     @Autowired
@@ -68,6 +68,7 @@ class CommonPaymentControllerTest {
     private static final String ACQUIRER_ID = "ACQUIRERID1";
     private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
     private static final String MERCHANT_ID = "MERCHANTID1";
+    private static final String POINT_OF_SALE_ID = "POINT_OF_SALE_ID1";
     private static final String TRANSACTION_ID = "TRANSACTIONID1";
     private static final String INITIATIVE_ID = "INITIATIVEID1";
 
@@ -160,22 +161,23 @@ class CommonPaymentControllerTest {
     void cancelTransaction() throws Exception {
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/idpay/payment/{transactionId}",
+                        .delete("/idpay/payment/transactions/{transactionId}",
                                 TRANSACTION_ID)
                                 .header("x-merchant-id",MERCHANT_ID)
-                                .header("x-acquirer-id" ,ACQUIRER_ID))
+                                .header("x-acquirer-id" ,ACQUIRER_ID)
+                                .header("x-point-of-sale-id", POINT_OF_SALE_ID))
                 .andExpect(status().isOk())
                 .andReturn();
 
         assertEquals("", result.getResponse().getContentAsString());
-        Mockito.verify(commonCancelServiceMock).cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        Mockito.verify(commonCancelServiceMock).cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
 
     }
     @Test
     void cancelTransaction_testMandatoryHeaders() throws Exception {
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/idpay/payment/{transactionId}",
+                        .delete("/idpay/payment/transactions/{transactionId}",
                                 TRANSACTION_ID)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())

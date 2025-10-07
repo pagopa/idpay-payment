@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 
 @Service
@@ -15,13 +17,19 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
     implements Function<TransactionInProgress, TransactionBarCodeResponse> {
 
   private final int authorizationExpirationMinutes;
+  private final int extendedAuthorizationExpirationMinutes;
 
-  public TransactionBarCodeInProgress2TransactionResponseMapper(@Value("${app.barCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes) {
+  public TransactionBarCodeInProgress2TransactionResponseMapper(@Value("${app.barCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+                                                                @Value("${app.barCode.expirations.extendedAuthorizationMinutes}") int extendedAuthorizationExpirationMinutes) {
     this.authorizationExpirationMinutes = authorizationExpirationMinutes;
-
+    this.extendedAuthorizationExpirationMinutes = extendedAuthorizationExpirationMinutes;
   }
   @Override
   public TransactionBarCodeResponse apply(TransactionInProgress transactionInProgress) {
+
+    Long authorizationExpiration = Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization()) ?
+            CommonUtilities.secondsBetween(transactionInProgress.getTrxDate(), transactionInProgress.getTrxEndDate())
+            : CommonUtilities.minutesToSeconds(authorizationExpirationMinutes);
 
     return TransactionBarCodeResponse.builder()
             .id(transactionInProgress.getId())
@@ -29,10 +37,29 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .initiativeId(transactionInProgress.getInitiativeId())
             .initiativeName(transactionInProgress.getInitiativeName())
             .trxDate(transactionInProgress.getTrxDate())
-            .trxExpirationSeconds(CommonUtilities.minutesToSeconds(authorizationExpirationMinutes))
+            .trxExpirationSeconds(authorizationExpiration)
             .status(transactionInProgress.getStatus())
             .residualBudgetCents(transactionInProgress.getAmountCents())
-
+            .trxEndDate(transactionInProgress.getTrxEndDate())
+            .voucherAmountCents(transactionInProgress.getVoucherAmountCents())
             .build();
+  }
+
+  public OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress) {
+    if (Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization())){
+      return calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes);
+    }
+
+    return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+  }
+
+  public static OffsetDateTime calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
+    OffsetDateTime endDate = transactionInProgress.getInitiativeEndDate() != null ? transactionInProgress.getInitiativeEndDate() : OffsetDateTime.MAX;
+    if(endDate.minusMinutes(authExpirationMinutes).isBefore(transactionInProgress.getTrxDate())){
+      endDate = transactionInProgress.getInitiativeEndDate();
+    } else {
+      endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
+    }
+    return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
   }
 }

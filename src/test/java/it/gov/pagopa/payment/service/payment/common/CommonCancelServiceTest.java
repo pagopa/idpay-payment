@@ -56,7 +56,7 @@ class CommonCancelServiceTest {
     @Test
     void testTrxNotFound() {
         try {
-            service.cancelTransaction("TRXID", "MERCHID", "ACQID");
+            service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
             Assertions.fail("Expected exception");
         } catch (TransactionNotFoundOrExpiredException e) {
             Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
@@ -70,7 +70,7 @@ class CommonCancelServiceTest {
                 .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
 
         try {
-            service.cancelTransaction("TRXID", "MERCHID", "ACQID");
+            service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
             Assertions.fail("Expected exception");
         } catch (MerchantOrAcquirerNotAllowedException e) {
             Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
@@ -86,7 +86,7 @@ class CommonCancelServiceTest {
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
-            service.cancelTransaction("TRXID", "MERCHID_1", "ACQID");
+            service.cancelTransaction("TRXID", "MERCHID_1", "ACQID", "POSID");
             Assertions.fail("Expected exception");
         } catch (MerchantOrAcquirerNotAllowedException e) {
             Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
@@ -102,7 +102,7 @@ class CommonCancelServiceTest {
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
-            service.cancelTransaction("TRXID", "MERCHID", "ACQID");
+            service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
             Assertions.fail("Expected exception");
         } catch (OperationNotAllowedException e) {
             Assertions.assertEquals(ExceptionCode.TRX_DELETE_NOT_ALLOWED, e.getCode());
@@ -119,7 +119,7 @@ class CommonCancelServiceTest {
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
         try {
-            service.cancelTransaction("TRXID", "MERCHID", "ACQID");
+            service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
             Assertions.fail("Expected exception");
         } catch (OperationNotAllowedException e) {
             Assertions.assertEquals(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, e.getCode());
@@ -149,7 +149,7 @@ class CommonCancelServiceTest {
             when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(notifyOutcome);
         }
 
-        service.cancelTransaction("TRXID", "MERCHID", "ACQID");
+        service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
 
         Mockito.verify(repositoryMock).deleteById("TRXID");
         if(expectedNotify && !notifyOutcome){

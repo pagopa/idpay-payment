@@ -16,11 +16,11 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -39,15 +39,16 @@ class PointOfSaleTransactionControllerTest {
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
-    @MockBean
+    @MockitoBean
     private PointOfSaleTransactionService pointOfSaleTransactionServiceMock;
-    @MockBean
+    @MockitoBean
     private PointOfSaleTransactionMapper pointOfSaleTransactionMapper;
 
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
     private static final String FISCAL_CODE = "FISCAL_CODE";
     private static final String MERCHANT_ID = "MERCHANT_ID";
     private static final String POINT_OF_SALE_ID = "POINT_OF_SALE_ID";
+    private static final String PRODUCT_GTIN = "PRODUCT_GTIN";
 
     @Test
     void getPointOfSaleTransactionsList() throws Exception {
@@ -57,7 +58,7 @@ class PointOfSaleTransactionControllerTest {
         );
 
         Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
-                        anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+                        anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any()))
                 .thenReturn(trxPage);
 
         PointOfSaleTransactionDTO pointOfSaleTransactionDTO = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -73,7 +74,8 @@ class PointOfSaleTransactionControllerTest {
                         .param("fiscalCode", FISCAL_CODE)
                         .param("page", "1")
                         .param("size", "10")
-                        .param("status", SyncTrxStatus.CREATED.toString())
+                        .param("status", SyncTrxStatus.AUTHORIZED.toString())
+                    .param("productGtin", PRODUCT_GTIN)
         ).andExpect(status().isOk()).andReturn();
 
         PointOfSaleTransactionsListDTO actual = objectMapper.readValue(
@@ -89,7 +91,7 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(FISCAL_CODE, actual.getContent().get(0).getFiscalCode());
 
         Mockito.verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(
-                anyString(), anyString(), anyString(), anyString(), anyString(), any());
+                anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any());
         Mockito.verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
     }
 }
