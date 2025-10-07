@@ -436,7 +436,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 TransactionInProgress.class);
     }
 
-    public List<TransactionInProgress> findCreatedOrIdentifiedTransactions(int pageSize) {
+    public List<TransactionInProgress> findPendingTransactions(int pageSize) {
         Criteria criteria = Criteria.where(TransactionInProgress.Fields.status)
                 .in(SyncTrxStatus.CREATED, SyncTrxStatus.IDENTIFIED);
         Pageable pageable = PageRequest.of(0, pageSize);
