@@ -110,7 +110,6 @@ public class CommonCancelServiceImpl {
       sendCancelledTransactionNotification(trx, isReset);
 
       if (isReset) {
-        trx.setStatus(SyncTrxStatus.CREATED);
         resetTransaction(trx);
         repository.save(trx);
       }
