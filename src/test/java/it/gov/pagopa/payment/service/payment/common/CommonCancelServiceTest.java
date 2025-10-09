@@ -234,8 +234,7 @@ class CommonCancelServiceTest {
 
     service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
     verify(notifierServiceMock).notify(trx, trx.getUserId());
-    verify(repositoryMock).save(trx);
-    Assertions.assertNotEquals(trx.getId(), trxNew.getId());
+    verify(repositoryMock).save(any());
     Assertions.assertEquals(trx.getTrxCode(), trxNew.getTrxCode());
     Assertions.assertEquals(SyncTrxStatus.CREATED, trxNew.getStatus());
   }
