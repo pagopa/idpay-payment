@@ -9,6 +9,10 @@ mongo:
       max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_RETRY:5}
       max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_MILLIS_ELAPSED:0}
 
+blobStorage:
+  storageAccountName: ${BLOB_STORAGE_ACCOUNT_NAME:}
+  containerReference: ${BLOB_STORAGE_CONTAINER_REFERENCE:}
+
 spring:
   application:
     name: "@project.artifactId@"
