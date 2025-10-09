@@ -30,6 +30,7 @@ public class RewardCalculatorMapper {
                 .idTrxIssuer(transactionInProgress.getIdTrxIssuer())
                 .trxChargeDate(transactionInProgress.getTrxChargeDate())
                 .channel(transactionInProgress.getChannel())
+                .voucherAmountCents(transactionInProgress.getVoucherAmountCents())
                 .build();
     }
     public AuthPaymentRequestDTO authRequestMap(TransactionInProgress transactionInProgress) {
@@ -49,6 +50,7 @@ public class RewardCalculatorMapper {
                 .trxChargeDate(transactionInProgress.getTrxChargeDate())
                 .channel(transactionInProgress.getChannel())
                 .rewardCents(transactionInProgress.getRewardCents())
+                .voucherAmountCents(transactionInProgress.getVoucherAmountCents())
                 .build();
     }
 
