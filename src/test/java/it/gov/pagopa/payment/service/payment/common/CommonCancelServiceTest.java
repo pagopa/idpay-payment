@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
@@ -221,6 +222,7 @@ class CommonCancelServiceTest {
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
+    when(barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate())).thenReturn(trx);
 
     service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
     verify(notifierServiceMock).notify(trx, trx.getUserId());
