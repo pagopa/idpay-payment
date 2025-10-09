@@ -947,7 +947,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
     List<String> resultIds = result.stream()
         .map(TransactionInProgress::getId)
-        .collect(Collectors.toList());
+        .toList();
     assertTrue(resultIds.contains(pendingCreated.getId()));
     assertTrue(resultIds.contains(pendingIdentified.getId()));
 
