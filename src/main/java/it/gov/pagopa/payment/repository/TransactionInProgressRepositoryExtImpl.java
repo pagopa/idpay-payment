@@ -15,6 +15,8 @@ import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.RewardConstants;
+
+import java.time.LocalDateTime;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -437,8 +439,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     }
 
     public List<TransactionInProgress> findPendingTransactions(int pageSize) {
+        LocalDateTime threshold = LocalDateTime.now().minusHours(24);
         Criteria criteria = Criteria.where(TransactionInProgress.Fields.status)
-                .in(SyncTrxStatus.CREATED, SyncTrxStatus.IDENTIFIED);
+                .in(SyncTrxStatus.CREATED, SyncTrxStatus.IDENTIFIED)
+                .and(TransactionInProgress.Fields.updateDate).lt(threshold);
         Pageable pageable = PageRequest.of(0, pageSize);
         Query query = Query.query(criteria).with(pageable);
         query.fields()
