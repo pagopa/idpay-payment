@@ -22,7 +22,8 @@
           "acquirerId":  "ACQUIRERID",
           "idTrxAcquirer": "${json-unit.regex}.*IDTRXACQUIRER[0-9]+",
           "channel": "BARCODE",
-          "rewardCents": 200
+          "rewardCents": 200,
+          "voucherAmountCents": 100
         }
       }
     ]
