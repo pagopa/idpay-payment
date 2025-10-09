@@ -16,7 +16,8 @@
           "amountCurrency": "EUR",
           "acquirerId":  "ACQUIRERID",
           "idTrxAcquirer": "${json-unit.regex}IDTRXACQUIRER[0-9]+",
-          "channel": "BARCODE"
+          "channel": "BARCODE",
+          "voucherAmountCents": 100
         }
       }
     ]
