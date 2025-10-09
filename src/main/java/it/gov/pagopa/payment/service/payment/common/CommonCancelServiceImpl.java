@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
@@ -13,6 +14,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 public class CommonCancelServiceImpl {
 
     private final Duration cancelExpiration;
+    private final BarCodeCreationServiceImpl barCodeCreationService;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -39,20 +42,21 @@ public class CommonCancelServiceImpl {
 
 
   public CommonCancelServiceImpl(
-            @Value("${app.common.expirations.cancelMinutes}") long cancelExpirationMinutes,
-            TransactionInProgressRepository repository,
-            RewardCalculatorConnector rewardCalculatorConnector,
-            TransactionNotifierService notifierService,
-            PaymentErrorNotifierService paymentErrorNotifierService,
-            AuditUtilities auditUtilities) {
+          @Value("${app.common.expirations.cancelMinutes}") long cancelExpirationMinutes,
+          TransactionInProgressRepository repository,
+          RewardCalculatorConnector rewardCalculatorConnector,
+          TransactionNotifierService notifierService,
+          PaymentErrorNotifierService paymentErrorNotifierService,
+          AuditUtilities auditUtilities,
+          BarCodeCreationServiceImpl barCodeCreationService) {
         this.repository = repository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
-
         this.cancelExpiration = Duration.ofMinutes(cancelExpirationMinutes);
-    }
+        this.barCodeCreationService = barCodeCreationService;
+  }
 
   public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
     try {
@@ -110,14 +114,13 @@ public class CommonCancelServiceImpl {
       sendCancelledTransactionNotification(trx, isReset);
 
       if (isReset) {
-        resetTransaction(trx);
-        repository.save(trx);
+        TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
+        newTransaction.setTrxCode(trx.getTrxCode());
+        repository.save(newTransaction);
       }
     }
+    repository.deleteById(trx.getId());
 
-    if (!isReset) {
-      repository.deleteById(trx.getId());
-    }
   }
 
   private void logCancelTransactionAudit(TransactionInProgress trx, String merchantId, String pointOfSaleId) {
@@ -134,27 +137,6 @@ public class CommonCancelServiceImpl {
     auditUtilities.logCancelTransaction(dto);
   }
 
-
-    private void resetTransaction(TransactionInProgress trx) {
-        trx.setStatus(SyncTrxStatus.CREATED);
-        trx.setAcquirerId(null);
-        trx.setAmountCents(null);
-        trx.setEffectiveAmountCents(null);
-        trx.setAmountCurrency(null);
-        trx.setMerchantFiscalCode(null);
-        trx.setMerchantId(null);
-        trx.setPointOfSaleId(null);
-        trx.setIdTrxAcquirer(null);
-        trx.setIdTrxIssuer(null);
-        trx.setVat(null);
-        trx.setTrxChargeDate(null);
-        trx.setBusinessName(null);
-        trx.setUpdateDate(LocalDateTime.now());
-        trx.setAdditionalProperties(new HashMap<>());
-        trx.setRewardCents(null);
-        trx.setRewards(null);
-        trx.setRejectionReasons(Collections.emptyList());
-    }
 
     private void sendCancelledTransactionNotification(TransactionInProgress trx, boolean isReset) {
         try {
