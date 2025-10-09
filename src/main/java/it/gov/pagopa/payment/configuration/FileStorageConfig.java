@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.configuration;
 
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,12 +12,13 @@ public class FileStorageConfig {
 
   @Bean
   public BlobContainerClient fileStorageClientConfiguration(
-    @Value("${blobStorage.connectionString}") String connectionString,
+    @Value("${blobStorage.storageAccountName}") String storageAccountName,
     @Value("${blobStorage.containerReference}") String containerName) {
 
     return new BlobServiceClientBuilder()
-      .connectionString(connectionString)
-      .buildClient()
-      .getBlobContainerClient(containerName);
+        .credential(new DefaultAzureCredentialBuilder().build())
+        .endpoint("https://" + storageAccountName + ".blob.core.windows.net")
+        .buildClient()
+        .getBlobContainerClient(containerName);
   }
 }
