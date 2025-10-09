@@ -950,7 +950,6 @@ class TransactionInProgressRepositoryExtImplTest {
         .toList();
     assertTrue(resultIds.contains(pendingCreated.getId()));
     assertTrue(resultIds.contains(pendingIdentified.getId()));
-
     result.forEach(trx -> {
       assertNotNull(trx.getId());
       assertNotNull(trx.getTrxCode());
