@@ -116,6 +116,7 @@ public class CommonCancelServiceImpl {
       if (isReset) {
         TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
         newTransaction.setTrxCode(trx.getTrxCode());
+        newTransaction.setTrxDate(trx.getTrxDate());
         repository.save(newTransaction);
       }
     }
