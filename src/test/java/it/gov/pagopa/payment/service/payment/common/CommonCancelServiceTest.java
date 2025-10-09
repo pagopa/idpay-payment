@@ -219,15 +219,25 @@ class CommonCancelServiceTest {
     AuthPaymentDTO refund = new AuthPaymentDTO();
     refund.setRewardCents(1000L);
 
+    TransactionInProgress trxNew = TransactionInProgressFaker.mockInstance(0,
+            SyncTrxStatus.CREATED);
+    trxNew.setMerchantId("MERCHID");
+    trxNew.setAcquirerId("ACQID");
+    trxNew.setExtendedAuthorization(true);
+    trxNew.setUserId(trx.getUserId());
+    trxNew.setTrxCode(trx.getTrxCode());
+
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
-    when(barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate())).thenReturn(trx);
+    when(barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate())).thenReturn(trxNew);
 
     service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
     verify(notifierServiceMock).notify(trx, trx.getUserId());
     verify(repositoryMock).save(trx);
-    Assertions.assertEquals(SyncTrxStatus.CREATED, trx.getStatus());
+    Assertions.assertNotEquals(trx.getId(), trxNew.getId());
+    Assertions.assertEquals(trx.getTrxCode(), trxNew.getTrxCode());
+    Assertions.assertEquals(SyncTrxStatus.CREATED, trxNew.getStatus());
   }
 
   @Test
