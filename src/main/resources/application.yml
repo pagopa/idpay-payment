@@ -198,6 +198,10 @@ app:
       delayTime: ${DELETE_DELAY_TIME:1000}
   timeoutPayment:
     seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
+  extendedTransactions:
+    staleMinutesThreshold: ${STALE_MINUTES_THRESHOLD:120}
+    sendExpiredSendBatchSize: ${EXPIRY_SEND_BATCH_SIZE:1000}
+    updateBatchSize: ${EXPIRY_UPDATE_BATCH_SIZE:10000}
 
 pdf:
   devPortalLink: ${DEV_PORTAL_LINK:https://developer.pagopa.it/pari/overview}

@@ -8,6 +8,7 @@ import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS_IT;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -23,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -44,12 +46,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     private final MongoTemplate mongoTemplate;
     private final long trxThrottlingSeconds;
+    private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
+
 
     public TransactionInProgressRepositoryExtImpl(
             MongoTemplate mongoTemplate,
-            @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds) {
+            @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
+            AppConfigurationProperties.ExtendedTransactions extendedTransactions) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
+        this.extendedTransactions = extendedTransactions;
     }
 
     @Override
@@ -435,4 +441,64 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 FindAndModifyOptions.options().returnNew(true),
                 TransactionInProgress.class);
     }
+
+    @Override
+    public Long updateStatusForExpiredVoucherTransactions(String initiativeId) {
+        OffsetDateTime now = OffsetDateTime.now();
+
+        long updatedRecords = 0L;
+        Update update = new Update()
+                .set(Fields.status, SyncTrxStatus.EXPIRED)
+                .set(Fields.updateDate, now);
+
+        while (true) {
+
+            Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
+                    .andOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
+                            Criteria.where(Fields.initiativeEndDate).ne(null),
+                            Criteria.where(Fields.trxEndDate).ne(null),
+                            Criteria.where(Fields.extendedAuthorization).is(true),
+                            new Criteria().orOperator(Criteria.where(Fields.trxEndDate).lt(now),
+                                   Criteria.where(Fields.initiativeEndDate).lt(now))
+                    );
+            Query query = Query.query(criteria);
+            query.fields().include(Fields.id);
+            query.with(Pageable.ofSize(extendedTransactions.getUpdateBatchSize()));
+            query.with(Sort.by(Fields.id));
+
+            List<TransactionInProgress> expiredTransactions =
+                    mongoTemplate.find(query, TransactionInProgress.class);
+
+            if (expiredTransactions.isEmpty()) {
+                return updatedRecords;
+            }
+            updatedRecords = updatedRecords + expiredTransactions.size();
+
+            BulkOperations bulk = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
+                    TransactionInProgress.class);
+            expiredTransactions.parallelStream().forEach(expiredTransaction -> {
+                Query fq = Query.query(Criteria.where("_id").is(expiredTransaction.getId()));
+                bulk.updateOne(fq, update);
+            });
+            bulk.execute();
+
+        }
+
+    }
+
+    @Override
+    public List<TransactionInProgress> findUnprocessedExpiredVoucherTransactions(
+            String initiativeId, Integer listSize, Integer page) {
+        OffsetDateTime now = OffsetDateTime.now();
+
+        Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
+                .and(Fields.status).is(SyncTrxStatus.EXPIRED)
+                .and(Fields.updateDate).lt(now.plusMinutes(extendedTransactions.getStaleMinutesThreshold()))
+                .and(Fields.extendedAuthorization).is(true);
+        Query query = Query.query(criteria);
+        query.with(Pageable.ofSize(listSize).withPage(page));
+        query.with(Sort.by(Fields.id));
+        return mongoTemplate.find(query, TransactionInProgress.class);
+    }
+
 }
