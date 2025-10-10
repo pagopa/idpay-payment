@@ -62,6 +62,8 @@ public interface BarCodePaymentController {
     ResponseEntity<ReportDTO> downloadBarcode(
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
-            @RequestHeader("x-user-id") String userId
+            @RequestHeader("x-user-id") String userId,
+            @RequestHeader("X-Username") String username,
+            @RequestHeader("X-Fiscal-Code") String fiscalCode
     );
 }

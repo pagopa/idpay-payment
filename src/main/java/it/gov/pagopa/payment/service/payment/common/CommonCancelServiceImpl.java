@@ -21,6 +21,8 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -158,5 +160,20 @@ public class CommonCancelServiceImpl {
                         isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(), trx.getUserId(), trx.getAcquirerId(), e);
             }
         }
+    }
+
+    public void rejectPendingTransactions() {
+        List<TransactionInProgress> transactions;
+        int pageSize = 100;
+        do {
+            transactions = repository.findPendingTransactions(pageSize);
+            log.info("[CANCEL_AUTHORIZED_TRANSACTIONS] Transactions to cancel: {} / {}", transactions.size(), pageSize);
+            transactions.forEach(transaction ->
+                    this.cancelTransaction(
+                            transaction.getId(),
+                            transaction.getMerchantId(),
+                            transaction.getAcquirerId(),
+                            transaction.getPointOfSaleId()));
+        } while (!transactions.isEmpty());
     }
 }
