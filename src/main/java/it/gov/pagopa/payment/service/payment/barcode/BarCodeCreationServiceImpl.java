@@ -78,6 +78,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
             Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
 
+            trxBarCodeCreationRequest.setVoucherAmountCents(residualBudgetCents);
             TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, false, initiative);
 
             trx.setAmountCents(residualBudgetCents);
