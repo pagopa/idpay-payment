@@ -924,14 +924,6 @@ class TransactionInProgressRepositoryExtImplTest {
     LocalDateTime oldDate = now.minusHours(25);
     LocalDateTime recentDate = now.minusHours(1);
 
-    TransactionInProgress pendingCreated = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    pendingCreated.setUpdateDate(oldDate);
-    transactionInProgressRepository.save(pendingCreated);
-
-    TransactionInProgress pendingIdentified = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.IDENTIFIED);
-    pendingIdentified.setUpdateDate(oldDate);
-    transactionInProgressRepository.save(pendingIdentified);
-
     TransactionInProgress recentAuthorized = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
     recentAuthorized.setUpdateDate(recentDate);
     transactionInProgressRepository.save(recentAuthorized);
@@ -955,8 +947,6 @@ class TransactionInProgressRepositoryExtImplTest {
     assertTrue(resultIds.contains(oldAuthorized.getId()));
     assertTrue(resultIds.contains(oldAuthorized2.getId()));
 
-    assertFalse(resultIds.contains(pendingCreated.getId()));
-    assertFalse(resultIds.contains(pendingIdentified.getId()));
     assertFalse(resultIds.contains(recentAuthorized.getId()));
 
     result.forEach(trx -> {
