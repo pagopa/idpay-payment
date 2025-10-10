@@ -457,6 +457,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                                 .subtract(1000 * trxThrottlingSeconds))))
         );
 
+    criteria.and(Fields.extendedAuthorization).ne(true);
+
     if (initiativeId != null) {
       criteria.and(Fields.initiativeId).is(initiativeId);
     }
