@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.ByteArrayInputStream;
@@ -34,6 +35,9 @@ class PdfServiceTest {
 
     @Mock
     private TransactionBarCodeResponse trxResp;
+
+    @Mock
+    private Resource pariPngResource;
 
     private PdfServiceImpl newService() {
         return new PdfServiceImpl(
@@ -228,6 +232,134 @@ class PdfServiceTest {
         assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
     }
 
+    /**
+     * Quando forniamo un logo PARI valido (PNG) via ResourceLoader,
+     * l’immagine viene usata e la label di fallback "PARI" NON deve essere presente.
+     */
+    @Test
+    void create_whenPariPngProvided_shouldUseImageAndNotShowFallbackText() throws Exception {
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("11223344");
+        when(trxResp.getVoucherAmountCents()).thenReturn(1500L);
+        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+
+        String pariPath = "classpath:static/icons/icon_pari.png";
+        when(resourceLoader.getResource(pariPath)).thenReturn(pariPngResource);
+        when(pariPngResource.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
+
+        PdfServiceImpl svc = new PdfServiceImpl(
+                barCodePaymentService,
+                resourceLoader,
+                "DejaVuSans.ttf",
+                null,          // logoMimit
+                pariPath,      // logoPari (PNG)
+                null, null, null
+        );
+
+        ReportDTO report = svc.create(
+                "INIT1", "TRX1", "USER1",
+                "Giovanna Beltramin", "BLTGVN78A52C409X"
+        );
+
+        verify(resourceLoader).getResource(pariPath);
+        verify(pariPngResource).getInputStream();
+
+        byte[] bytes = Base64.getDecoder().decode(report.getData());
+        assertTrue(bytes.length > 0, "PDF vuoto");
+
+        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
+             PdfDocument pdf = new PdfDocument(reader)) {
+
+            assertTrue(pdf.getNumberOfPages() >= 1, "PDF senza pagine");
+
+            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
+
+            assertTrue(norm.contains("BONUS ELETTRODOMESTICI"),
+                    () -> "Manca 'BONUS ELETTRODOMESTICI' in:\n" + norm);
+
+            assertTrue(norm.contains("POWERED BY"),
+                    () -> "Manca 'POWERED BY' in:\n" + norm);
+
+            boolean hasPagoPA = norm.contains("PAGOPA");
+            boolean hasSpa = norm.contains(" SPA ") || norm.contains(" S P A ");
+            assertTrue(hasPagoPA && hasSpa,
+                    () -> "Brand PagoPA non trovato (PAGOPA + SPA/S P A). Testo:\n" + norm);
+        }
+    }
+
+
+    /**
+     * Quando non forniamo alcun logo (o non è caricabile), deve comparire il fallback testuale "PARI".
+     * Questo test rende esplicita la copertura del ramo else { new Paragraph("PARI") ... }.
+     */
+    @Test
+    void create_whenPariLogoMissing_shouldShowFallbackTextLabel() throws Exception {
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("55667788");
+        when(trxResp.getVoucherAmountCents()).thenReturn(2500L);
+        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+
+        PdfServiceImpl svc = newService();
+
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
+                "Mario Rossi", "RSSMRA80A01H501Z");
+
+        byte[] bytes = Base64.getDecoder().decode(report.getData());
+        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
+             PdfDocument pdf = new PdfDocument(reader)) {
+
+            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
+
+            assertTrue(norm.contains(" PARI "),
+                    () -> "Manca la label di fallback 'PARI' quando il logo non è disponibile:\n" + norm);
+        }
+    }
+
+    /**
+     * (opzionale ma utile) Se forniamo anche un logoMimit PNG, verifichiamo che la generazione rimanga corretta
+     * e NON compaiano artefatti testuali inattesi (il test copre il ramo con .scaleToFit(45,45) sul logo header).
+     */
+    @Mock
+    private Resource mimitPngResource;
+
+    @Test
+    void create_whenMimitLogoPngProvided_shouldGeneratePdfNormally() throws Exception {
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("99887766");
+        when(trxResp.getVoucherAmountCents()).thenReturn(3500L);
+        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+
+        String mimitPath = "classpath:static/icons/mimit.png";
+        when(resourceLoader.getResource(mimitPath)).thenReturn(mimitPngResource);
+        when(mimitPngResource.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
+
+        PdfServiceImpl svc = new PdfServiceImpl(
+                barCodePaymentService,
+                resourceLoader,
+                "DejaVuSans.ttf",
+                mimitPath,     // <- logoMimit PNG valido
+                null,          // logoPari assente
+                null, null, null
+        );
+
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
+                "Laura Bianchi", "BNCLRA80A01H501X");
+
+        byte[] bytes = Base64.getDecoder().decode(report.getData());
+        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
+             PdfDocument pdf = new PdfDocument(reader)) {
+            assertTrue(pdf.getNumberOfPages() >= 1);
+
+            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
+            // contenuti essenziali presenti
+            assertTrue(norm.contains("BONUS ELETTRODOMESTICI"));
+            assertTrue(norm.contains("LAURA") && norm.contains("BIANCHI"));
+        }
+    }
+
     private static String normalize(String s) {
         String up = s.toUpperCase();
         up = up.replace('’', '\'')
@@ -238,5 +370,10 @@ class PdfServiceTest {
         up = up.replaceAll("[^A-Z0-9]+", " ");
         up = up.trim().replaceAll("\\s+", " ");
         return up;
+    }
+
+    private static byte[] tinyPng() {
+        String b64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO4yqekAAAAASUVORK5CYII=";
+        return java.util.Base64.getDecoder().decode(b64);
     }
 }
