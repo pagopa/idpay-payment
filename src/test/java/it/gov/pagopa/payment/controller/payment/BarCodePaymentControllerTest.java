@@ -296,30 +296,31 @@ class BarCodePaymentControllerTest {
 
     @Test
     void downloadBarcode_ok() throws Exception {
-        // arrange
         String initiativeId = "INITIATIVE_ID";
         String trxCode = "TRX123";
         String userId = "USER_42";
+        String username = "Giovanna Beltramin";
+        String fiscalCode = "BLTGVN78A52C409X";
 
         byte[] expectedPdfBytes = new byte[]{1, 2, 3, 4, 5};
         String base64 = Base64.getEncoder().encodeToString(expectedPdfBytes);
         ReportDTO report = ReportDTO.builder().data(base64).build();
 
-        when(pdfService.create(initiativeId, trxCode, userId)).thenReturn(report);
+        when(pdfService.create(initiativeId, trxCode, userId, username, fiscalCode)).thenReturn(report);
 
-        // act
         MvcResult result = mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
                         .header("x-user-id", userId)
+                        .header("X-Username", username)
+                        .header("X-Fiscal-Code", fiscalCode)
+
         ).andExpect(status().isOk()).andReturn();
 
-        // assert: Content-Type application/json
         String contentType = result.getResponse().getContentType();
         assertNotNull(contentType, "Content-Type mancante");
         assertTrue(contentType.startsWith(MediaType.APPLICATION_JSON_VALUE),
                 "Content-Type atteso application/json ma trovato: " + contentType);
 
-        // assert: Content-Disposition inline; filename="barcode_TRX123.pdf"
         String cd = result.getResponse().getHeader("Content-Disposition");
         assertNotNull(cd, "Content-Disposition mancante");
         String cdLower = cd.toLowerCase();
@@ -327,17 +328,14 @@ class BarCodePaymentControllerTest {
         assertTrue(cd.contains("barcode_" + trxCode + ".pdf"),
                 "Content-Disposition non contiene il filename atteso: " + cd);
 
-        // assert: Cache-Control no-store
         assertEquals("no-store", result.getResponse().getHeader("Cache-Control"));
 
-        // assert: body JSON con ReportDTO, campo data == base64
         String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
         JsonNode json = objectMapper.readTree(body);
         assertTrue(json.hasNonNull("data"), "Campo 'data' assente nel body");
         assertEquals(base64, json.get("data").asText(), "Il campo 'data' non corrisponde alla Base64 attesa");
 
-        // verify
-        verify(pdfService).create(initiativeId, trxCode, userId);
+        verify(pdfService).create(initiativeId, trxCode, userId, username, fiscalCode);
         verifyNoMoreInteractions(pdfService);
     }
 
@@ -347,14 +345,18 @@ class BarCodePaymentControllerTest {
         String initiativeId = "INITIATIVE_ID";
         String trxCode = "TRX123";
         String userId = "USER_42";
+        String username = "Giovanna Beltramin";
+        String fiscalCode = "BLTGVN78A52C409X";
 
-        when(pdfService.create(initiativeId, trxCode, userId))
+        when(pdfService.create(initiativeId, trxCode, userId, username, fiscalCode))
                 .thenThrow(new IllegalStateException("pdf generation failed"));
 
         mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
                         .header("x-user-id", userId)
-                        .accept(MediaType.TEXT_PLAIN) // <-- NON application/pdf
+                        .header("X-Username", username)
+                        .header("X-Fiscal-Code", fiscalCode)
+                        .accept(MediaType.TEXT_PLAIN)
         ).andExpect(status().is5xxServerError());
     }
 
@@ -365,7 +367,7 @@ class BarCodePaymentControllerTest {
 
         mockMvc.perform(
                 get("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/pdf", initiativeId, trxCode)
-                        .accept(MediaType.TEXT_PLAIN) // <-- NON application/pdf
+                        .accept(MediaType.TEXT_PLAIN)
         ).andExpect(status().isBadRequest());
     }
 }
