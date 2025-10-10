@@ -92,7 +92,7 @@ class PdfUtilsTest {
     }
 
     @Test
-    void loadPdfFont_shouldFallbackToHelvetica_whenEmptyOrHelvetica() throws Exception {
+    void loadPdfFont_shouldFallbackToHelvetica_whenEmptyOrHelvetica() {
         ResourceLoader rl = mock(ResourceLoader.class);
 
         PdfFont f1 = PdfUtils.loadPdfFont("", false, rl);
@@ -108,7 +108,7 @@ class PdfUtilsTest {
     void loadPdfFont_shouldLoadFromClasspath_ifExists() throws Exception {
         ResourceLoader rl = mock(ResourceLoader.class);
         Resource res = mock(Resource.class);
-        when(rl.getResource(eq("classpath:/fonts/DejaVuSans.ttf"))).thenReturn(res);
+        when(rl.getResource("classpath:/fonts/DejaVuSans.ttf")).thenReturn(res);
         when(res.exists()).thenReturn(true);
         when(res.getInputStream()).thenReturn(new ByteArrayInputStream(new byte[]{0x00, 0x01}));
 
@@ -162,7 +162,7 @@ class PdfUtilsTest {
 
         ResourceLoader rl = mock(ResourceLoader.class);
         Resource res = mock(Resource.class);
-        when(rl.getResource(eq("classpath:/icons/ok.png"))).thenReturn(res);
+        when(rl.getResource("classpath:/icons/ok.png")).thenReturn(res);
         when(res.getInputStream()).thenReturn(new ByteArrayInputStream(pngBytes));
 
         PdfFont regular = com.itextpdf.kernel.font.PdfFontFactory.createFont(StandardFonts.HELVETICA);

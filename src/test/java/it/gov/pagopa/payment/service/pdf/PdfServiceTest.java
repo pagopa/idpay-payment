@@ -1,10 +1,12 @@
 package it.gov.pagopa.payment.service.pdf;
 
+import com.itextpdf.kernel.exceptions.PdfException;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -211,6 +213,19 @@ class PdfServiceTest {
 
         assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
         verify(barCodePaymentService).retriveVoucher("INIT1", "TRX1", "USER1");
+    }
+
+    @Test
+    void create_whenFontLoadingFails_shouldThrowPdfGenerationException() {
+        when(barCodePaymentService.retriveVoucher(any(), any(), any()))
+                .thenThrow(new PdfException("Test font error"));
+
+        PdfServiceImpl svc = newService();
+
+        PdfGenerationException ex = assertThrows(PdfGenerationException.class,
+                () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA77A01H501Z"));
+
+        assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
     }
 
     private static String normalize(String s) {

@@ -4,6 +4,7 @@ import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceGray;
+import com.itextpdf.kernel.exceptions.PdfException;
 import com.itextpdf.kernel.font.PdfFont;
 import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.layout.borders.Border;
@@ -12,10 +13,13 @@ import com.itextpdf.layout.properties.BorderRadius;
 import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
+import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -27,6 +31,7 @@ import java.util.Locale;
  * Utility comuni per la generazione di PDF con iText.
  * Include metodi per separatori, label, celle, formattazione, immagini e font.
  */
+@Slf4j
 public final class PdfUtils {
 
     private PdfUtils() {}
@@ -153,32 +158,59 @@ public final class PdfUtils {
      * @param bold           se true usa la variante bold (se Helvetica di fallback)
      * @param loader         ResourceLoader per il classpath
      * @return PdfFont pronto all'uso
-     * @throws Exception in caso di errori iText nella creazione del font
+     * @throws PdfException  in caso di errori iText nella creazione del font
      */
-    public static PdfFont loadPdfFont(String configuredFont, boolean bold, ResourceLoader loader) throws Exception {
+    public static PdfFont loadPdfFont(String configuredFont, boolean bold, ResourceLoader loader) {
         String f = configuredFont == null ? "" : configuredFont.trim();
 
-        if (f.isEmpty() || "Helvetica".equalsIgnoreCase(f)) {
-            return PdfFontFactory.createFont(bold ? StandardFonts.HELVETICA_BOLD : StandardFonts.HELVETICA);
-        }
+        try {
+            if (f.isEmpty() || "Helvetica".equalsIgnoreCase(f)) {
+                log.debug("[PdfUtils] Font non specificato o 'Helvetica': uso font di default ({})",
+                        bold ? "HELVETICA_BOLD" : "HELVETICA");
+                return helvetica(bold);
+            }
 
-        if (f.startsWith("classpath:")) {
-            Resource res = loader.getResource(f);
-            if (res.exists()) {
-                try (InputStream is = res.getInputStream()) {
-                    // Nessuna lettura necessaria, serve solo a validare che la risorsa sia accessibile
-                    return PdfFontFactory.createFont();
+            if (f.startsWith("classpath:")) {
+                Resource res = loader.getResource(f);
+                if (res.exists()) {
+                    try (InputStream ignored = res.getInputStream()) {
+                        log.debug("[PdfUtils] Font caricato da classpath: {}", f);
+                        return PdfFontFactory.createFont();
+                    }
+                } else {
+                    log.warn("[PdfUtils] Font non trovato nel classpath: {}. Fallback su Helvetica.", f);
+                    return helvetica(bold);
                 }
             }
-            return PdfFontFactory.createFont(bold ? StandardFonts.HELVETICA_BOLD : StandardFonts.HELVETICA);
-        }
 
-        File file = new File(f);
-        if (file.exists()) {
-            return PdfFontFactory.createFont();
-        }
+            File file = new File(f);
+            if (file.exists()) {
+                log.debug("[PdfUtils] Font caricato dal filesystem: {}", file.getAbsolutePath());
+                return PdfFontFactory.createFont();
+            }
 
-        return PdfFontFactory.createFont(bold ? StandardFonts.HELVETICA_BOLD : StandardFonts.HELVETICA);
+            log.warn("[PdfUtils] Font non trovato in alcun percorso ({}). Fallback su Helvetica.", f);
+            return helvetica(bold);
+
+        } catch (IOException | PdfException ex) {
+            log.error("[PdfUtils] Errore durante il caricamento del font '{}': {}. Fallback su Helvetica.",
+                    f, ex.getMessage(), ex);
+            return helvetica(bold);
+        } catch (Exception ex) {
+            log.error("[PdfUtils] Errore inatteso durante il caricamento del font '{}'", f, ex);
+            throw new PdfGenerationException("Errore durante il caricamento del font " + f, true, ex);
+        }
+    }
+
+    private static PdfFont helvetica(boolean bold) {
+        try {
+            return PdfFontFactory.createFont(
+                    bold ? StandardFonts.HELVETICA_BOLD : StandardFonts.HELVETICA);
+        } catch (IOException e) {
+            log.error("[PdfUtils] ERRORE CRITICO: impossibile caricare anche il font Helvetica", e);
+            throw new PdfGenerationException(
+                    "Impossibile caricare il font Helvetica", true, e);
+        }
     }
 
     /**

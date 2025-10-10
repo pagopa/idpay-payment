@@ -16,6 +16,7 @@ import com.itextpdf.layout.properties.*;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
@@ -25,6 +26,7 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -117,12 +119,12 @@ public class PdfServiceImpl implements PdfService {
             doc.add(buildPoweredByPari(regular, brandBlue));
             doc.add(buildFooter(bold, regular, textSecondary));
 
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             log.error("Errore durante la generazione del PDF (initiativeId={}, trxCode={}, userId={})",
                     Utilities.sanitizeString(initiativeId),
                     Utilities.sanitizeString(trxCode),
                     Utilities.sanitizeString(userId), e);
-            throw new RuntimeException("Errore durante la generazione del PDF", e);
+            throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
         }
 
         return ReportDTO.builder()
