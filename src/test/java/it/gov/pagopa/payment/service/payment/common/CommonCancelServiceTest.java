@@ -4,6 +4,8 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
@@ -12,6 +14,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.util.List;
@@ -54,6 +57,8 @@ class CommonCancelServiceTest {
   private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
   @Mock
   private AuditUtilities auditUtilitiesMock;
+  @Mock
+  private BarCodeCreationServiceImpl barCodeCreationService;
 
   private CommonCancelServiceImpl service;
 
@@ -66,7 +71,7 @@ class CommonCancelServiceTest {
             rewardCalculatorConnectorMock,
             notifierServiceMock,
             paymentErrorNotifierServiceMock,
-            auditUtilitiesMock);
+            auditUtilitiesMock, barCodeCreationService);
   }
 
   @Test
@@ -215,15 +220,24 @@ class CommonCancelServiceTest {
     AuthPaymentDTO refund = new AuthPaymentDTO();
     refund.setRewardCents(1000L);
 
+    TransactionInProgress trxNew = TransactionInProgressFaker.mockInstance(0,
+            SyncTrxStatus.CREATED);
+    trxNew.setMerchantId("MERCHID");
+    trxNew.setAcquirerId("ACQID");
+    trxNew.setExtendedAuthorization(true);
+    trxNew.setUserId(trx.getUserId());
+    trxNew.setTrxCode(trx.getTrxCode());
+
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
+    when(barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate())).thenReturn(trxNew);
 
     service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
     verify(notifierServiceMock).notify(trx, trx.getUserId());
-    verify(repositoryMock, never()).deleteById(any());
-    verify(repositoryMock).save(trx);
-    Assertions.assertEquals(SyncTrxStatus.CREATED, trx.getStatus());
+    verify(repositoryMock).save(any());
+    Assertions.assertEquals(trx.getTrxCode(), trxNew.getTrxCode());
+    Assertions.assertEquals(SyncTrxStatus.CREATED, trxNew.getStatus());
   }
 
   @Test

@@ -74,7 +74,7 @@ public class TransactionInProgressFaker {
         .rewards(rewards)
         .additionalProperties(additionalProperties)
         .extendedAuthorization(false)
-        .trxEndDate(trxEndDate)
+        .trxEndDate(trxEndDate).voucherAmountCents(100L)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }
