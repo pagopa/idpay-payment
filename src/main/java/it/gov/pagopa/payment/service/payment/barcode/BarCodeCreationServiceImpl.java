@@ -108,6 +108,24 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         }
     }
 
+    public TransactionInProgress createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
+                                                                String channel,
+                                                                String userId,
+                                                                OffsetDateTime trxEndDate) {
+
+        LocalDate today = LocalDate.now();
+
+        try {
+            InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
+            return transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), true, trxEndDate);
+
+        } catch (RuntimeException e) {
+            logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
+            throw e;
+        }
+    }
+
 
     @NotNull
     private TransactionInProgress generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {

@@ -19,7 +19,8 @@
           "idTrxIssuer":"${json-unit.regex}IDTRXISSUER[0-9]+",
           "idTrxAcquirer":"${json-unit.regex}IDTRXACQUIRER[0-9]+",
           "channel":"${json-unit.regex}(QRCODE|IDPAYCODE|CHANNEL[0-9]+)",
-          "rewardCents":"${json-unit.any-number}"
+          "rewardCents":"${json-unit.any-number}",
+          "voucherAmountCents": 100
         }
       }
     ]
