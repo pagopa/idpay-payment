@@ -932,13 +932,17 @@ class TransactionInProgressRepositoryExtImplTest {
     pendingIdentified.setUpdateDate(oldDate);
     transactionInProgressRepository.save(pendingIdentified);
 
-    TransactionInProgress recentCreated = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.CREATED);
-    recentCreated.setUpdateDate(recentDate);
-    transactionInProgressRepository.save(recentCreated);
+    TransactionInProgress recentAuthorized = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
+    recentAuthorized.setUpdateDate(recentDate);
+    transactionInProgressRepository.save(recentAuthorized);
 
     TransactionInProgress oldAuthorized = TransactionInProgressFaker.mockInstance(4, SyncTrxStatus.AUTHORIZED);
     oldAuthorized.setUpdateDate(oldDate);
     transactionInProgressRepository.save(oldAuthorized);
+
+    TransactionInProgress oldAuthorized2 = TransactionInProgressFaker.mockInstance(5, SyncTrxStatus.AUTHORIZED);
+    oldAuthorized2.setUpdateDate(oldDate);
+    transactionInProgressRepository.save(oldAuthorized2);
 
     List<TransactionInProgress> result = transactionInProgressRepository.findPendingTransactions(10);
 
@@ -948,8 +952,13 @@ class TransactionInProgressRepositoryExtImplTest {
     List<String> resultIds = result.stream()
         .map(TransactionInProgress::getId)
         .toList();
-    assertTrue(resultIds.contains(pendingCreated.getId()));
-    assertTrue(resultIds.contains(pendingIdentified.getId()));
+    assertTrue(resultIds.contains(oldAuthorized.getId()));
+    assertTrue(resultIds.contains(oldAuthorized2.getId()));
+
+    assertFalse(resultIds.contains(pendingCreated.getId()));
+    assertFalse(resultIds.contains(pendingIdentified.getId()));
+    assertFalse(resultIds.contains(recentAuthorized.getId()));
+
     result.forEach(trx -> {
       assertNotNull(trx.getId());
       assertNotNull(trx.getTrxCode());
@@ -958,3 +967,4 @@ class TransactionInProgressRepositoryExtImplTest {
     });
   }
 }
+

@@ -113,7 +113,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @Override
     @PerformanceLog(value = "CANCEL_PENDING_TRANSACTIONS")
     public void cancelPendingTransactions() {
-        log.info("[CANCEL_PENDING_TRANSACTIONS] Request to reject all transactions in CREATED or IDENTIFIED status");
+        log.info("[CANCEL_PENDING_TRANSACTIONS] Request to reject all transactions in AUTHORIZED status");
         commonCancelService.rejectPendingTransactions();
     }
 
