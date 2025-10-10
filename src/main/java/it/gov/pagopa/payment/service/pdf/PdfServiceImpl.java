@@ -116,6 +116,7 @@ public class PdfServiceImpl implements PdfService {
             doc.add(buildBarcodeBlock(pdf, barcodeTrxCode, regular, textSecondary));
             doc.add(new Paragraph().setHeight(10));
             doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary));
+            doc.add(new Paragraph().setHeight(2));
             doc.add(buildPoweredByPari(regular, brandBlue));
             doc.add(buildFooter(bold, regular, textSecondary));
 
@@ -262,7 +263,7 @@ public class PdfServiceImpl implements PdfService {
                 .setBorder(new SolidBorder(new DeviceGray(0.85f), 1f))
                 .setBorderRadius(new BorderRadius(8))
                 .setMarginTop(12)
-                .setMarginBottom(6);
+                .setMarginBottom(30);
 
         card.add(new Paragraph("COME USARE IL BONUS")
                 .setTextAlignment(TextAlignment.CENTER)
@@ -318,7 +319,7 @@ public class PdfServiceImpl implements PdfService {
         left.add(new Paragraph("Powered by").setFont(regular).setFontSize(10).setMargin(0));
 
         if (pari != null) {
-            pari.setAutoScale(false).scaleToFit(120, 50);
+            pari.setAutoScale(false).scaleToFit(80, 20);
             right.add(pari);
         } else {
             right.add(new Paragraph("PARI").setFont(regular).setFontSize(12).setFontColor(brandBlue).setMargin(0));
