@@ -221,7 +221,7 @@ class CommonCancelServiceTest {
     refund.setRewardCents(1000L);
 
     TransactionInProgress trxNew = TransactionInProgressFaker.mockInstance(0,
-            SyncTrxStatus.CREATED);
+        SyncTrxStatus.CREATED);
     trxNew.setMerchantId("MERCHID");
     trxNew.setAcquirerId("ACQID");
     trxNew.setExtendedAuthorization(true);
@@ -231,7 +231,9 @@ class CommonCancelServiceTest {
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
-    when(barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate())).thenReturn(trxNew);
+    when(barCodeCreationService.createExtendedTransactionPostDelete(
+        new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),
+        trx.getChannel(), trx.getUserId(), trx.getTrxEndDate())).thenReturn(trxNew);
 
     service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
     verify(notifierServiceMock).notify(trx, trx.getUserId());
@@ -242,12 +244,14 @@ class CommonCancelServiceTest {
 
   @Test
   void testSendCancelledTransactionNotification_NotifyReturnsFalse_ShouldThrowException() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
+        SyncTrxStatus.AUTHORIZED);
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
 
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(false);
-    when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(Mockito.mock(org.springframework.messaging.Message.class));
+    when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(
+        Mockito.mock(org.springframework.messaging.Message.class));
     when(paymentErrorNotifierServiceMock.notifyCancelPayment(
         any(), anyString(), eq(true), any(InternalServerErrorException.class)))
         .thenReturn(true);
@@ -261,13 +265,15 @@ class CommonCancelServiceTest {
 
   @Test
   void testSendCancelledTransactionNotification_NotifyThrowsException_ErrorNotifierSucceeds() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
+        SyncTrxStatus.AUTHORIZED);
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
 
     RuntimeException exception = new RuntimeException("Notification error");
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenThrow(exception);
-    when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(Mockito.mock(org.springframework.messaging.Message.class));
+    when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(
+        Mockito.mock(org.springframework.messaging.Message.class));
     when(paymentErrorNotifierServiceMock.notifyCancelPayment(
         any(), anyString(), eq(true), eq(exception)))
         .thenReturn(true);
@@ -281,13 +287,15 @@ class CommonCancelServiceTest {
 
   @Test
   void testSendCancelledTransactionNotification_NotifyThrowsException_ErrorNotifierFails() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
+        SyncTrxStatus.AUTHORIZED);
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
 
     RuntimeException exception = new RuntimeException("Notification error");
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenThrow(exception);
-    when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(Mockito.mock(org.springframework.messaging.Message.class));
+    when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(
+        Mockito.mock(org.springframework.messaging.Message.class));
     when(paymentErrorNotifierServiceMock.notifyCancelPayment(
         any(), anyString(), eq(true), eq(exception)))
         .thenReturn(false);
@@ -305,7 +313,8 @@ class CommonCancelServiceTest {
       "false"
   })
   void testSendCancelledTransactionNotification_WithBothResetValues(boolean isReset) {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
+        SyncTrxStatus.AUTHORIZED);
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
 
@@ -319,8 +328,10 @@ class CommonCancelServiceTest {
 
   @Test
   void testRejectPendingTransactions_ok() {
-    TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
-    TransactionInProgress trx2 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(0,
+        SyncTrxStatus.AUTHORIZED);
+    TransactionInProgress trx2 = TransactionInProgressFaker.mockInstance(1,
+        SyncTrxStatus.AUTHORIZED);
 
     when(repositoryMock.findPendingTransactions(100))
         .thenReturn(List.of(trx1, trx2))
@@ -338,7 +349,8 @@ class CommonCancelServiceTest {
 
     verify(repositoryMock, Mockito.times(2)).findPendingTransactions(100);
     verify(spyService, Mockito.times(2))
-        .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString());
+        .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+            Mockito.anyString());
   }
 }
 
