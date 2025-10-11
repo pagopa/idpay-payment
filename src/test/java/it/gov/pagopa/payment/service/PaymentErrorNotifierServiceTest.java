@@ -78,6 +78,26 @@ class PaymentErrorNotifierServiceTest {
     }
 
     @Test
+    void notifyReversalPayment() {
+        TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Message<TransactionInProgress> message = buildMessage(trx, trx.getUserId());
+
+        KafkaConfiguration.KafkaInfoDTO kafkaInfoDTO = mockKafkaConfig();
+
+        Mockito.when(errorNotifierServiceMock.notify(eq(kafkaInfoDTO), eq(message), any(), eq(true), eq(false), any())).thenReturn(false);
+
+        service.notifyReversalPayment(
+                message,
+                "[QR_CODE_CANCEL_PAYMENT] An error occurred while publishing the reversal authorized result",
+                true,
+                new Throwable(ERROR_MESSAGE)
+        );
+
+        verify(errorNotifierServiceMock).notify(any(), any(), any(), anyBoolean(), anyBoolean(), any());
+
+    }
+
+    @Test
     void notifyConfirmPayment(){
         TransactionInProgress trx= TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         Message<TransactionInProgress> message = buildMessage(trx, trx.getUserId());
