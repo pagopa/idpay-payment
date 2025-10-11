@@ -505,7 +505,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
             Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
                     .andOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
-                            Criteria.where(Fields.initiativeEndDate).ne(null),
                             Criteria.where(Fields.trxEndDate).ne(null),
                             Criteria.where(Fields.extendedAuthorization).is(true),
                             new Criteria().orOperator(Criteria.where(Fields.trxEndDate).lt(now),
@@ -520,6 +519,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                     mongoTemplate.find(query, TransactionInProgress.class);
 
             if (expiredTransactions.isEmpty()) {
+                log.info("[BATCH_EXPIRED_VOUCHER] Updated expired vouchers: {}", updatedRecords);
                 return updatedRecords;
             }
             updatedRecords = updatedRecords + expiredTransactions.size();
