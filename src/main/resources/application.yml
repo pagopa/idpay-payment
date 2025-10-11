@@ -202,7 +202,7 @@ app:
       delayTime: ${DELETE_DELAY_TIME:1000}
   timeoutPayment:
     seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
-  extendedTransactions:
+  extended-transactions:
     staleMinutesThreshold: ${STALE_MINUTES_THRESHOLD:120}
     sendExpiredSendBatchSize: ${EXPIRY_SEND_BATCH_SIZE:1000}
     updateBatchSize: ${EXPIRY_UPDATE_BATCH_SIZE:10000}
