@@ -11,7 +11,7 @@ public class AppConfigurationProperties {
 
     @Getter
     @Setter
-    public static class ExtendedTransactions {
+    public class ExtendedTransactions {
         int staleMinutesThreshold;
         int sendExpiredSendBatchSize;
         int updateBatchSize;

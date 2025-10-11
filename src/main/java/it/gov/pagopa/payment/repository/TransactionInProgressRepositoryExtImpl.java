@@ -48,7 +48,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
   private final MongoTemplate mongoTemplate;
   private final long trxThrottlingSeconds;
-    private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
+  private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
 
   public TransactionInProgressRepositoryExtImpl(
       MongoTemplate mongoTemplate,
