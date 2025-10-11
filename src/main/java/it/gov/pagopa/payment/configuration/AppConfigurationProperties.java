@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfigurationProperties {
 
     @Configuration
-    @ConfigurationProperties(prefix = "app.extendedTransactions")
+    @ConfigurationProperties(prefix = "app.extended-transactions")
     @Data
     public static class ExtendedTransactions {
         int staleMinutesThreshold;
