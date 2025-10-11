@@ -5,12 +5,14 @@ import ch.qos.logback.classic.Logger;
 import it.gov.pagopa.common.mongo.DummySpringRepository;
 import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
+import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,9 @@ class BaseMongoRepositoryIntegrationTest {
 
     @Autowired
     private DummySpringRepository repository;
+
+    @MockitoBean
+    AppConfigurationProperties.ExtendedTransactions extendedTransactions;
 
     private static final List<String> ID_TEST_ENTITIES = List.of("ID", "ID2");
 
