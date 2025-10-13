@@ -22,6 +22,7 @@ import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -341,7 +342,7 @@ public class PdfServiceImpl implements PdfService {
      * Recupero il cf tramite chiamata al decrypt
      */
     private String getCf(String userId, String fiscalCode) {
-        return fiscalCode == null ? decryptRestConnector.getPiiByToken(userId).getPii() : fiscalCode;
+        return StringUtils.isNotBlank(fiscalCode) ? fiscalCode : decryptRestConnector.getPiiByToken(userId).getPii();
     }
 
     /**
