@@ -148,13 +148,13 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @Test
   void findByTrxCodeThrottled_Concurrent() {
-    int N = 10;
+    int n = 10;
     TransactionInProgress stored =
         transactionInProgressRepository.save(
             TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.IDENTIFIED));
 
     Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> mongoCommandsByType = executeConcurrentLocks(
-        N,
+        n,
         () -> {
           try {
             transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(
@@ -167,7 +167,7 @@ class TransactionInProgressRepositoryExtImplTest {
           }
         }
     );
-    Assertions.assertEquals(N - 1, mongoCommandsByType.get("aggregate").get(0).getValue());
+    Assertions.assertEquals(n - 1, mongoCommandsByType.get("aggregate").get(0).getValue());
   }
 
   @Test
@@ -264,12 +264,6 @@ class TransactionInProgressRepositoryExtImplTest {
     transactionInProgress.setTrxEndDate(OffsetDateTime.now().minusDays(11));
     transactionInProgressRepository.save(transactionInProgress);
 
-    try {
-      Thread.sleep(500L);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-
     TransactionInProgress resultSecondSave =
         transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired("trxcode1");
     Assertions.assertNull(resultSecondSave);
@@ -303,12 +297,6 @@ class TransactionInProgressRepositoryExtImplTest {
     transactionInProgress.setTrxDate(
         OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
     transactionInProgressRepository.save(transactionInProgress);
-
-    try {
-      Thread.sleep(500L);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
 
     TransactionInProgress resultSecondSave =
         transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(
@@ -663,12 +651,6 @@ class TransactionInProgressRepositoryExtImplTest {
         OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
     transactionInProgressRepository.save(transactionExpired);
 
-    try {
-      Thread.sleep(500L);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
-
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNotNull(expiredTrxResult);
@@ -684,6 +666,36 @@ class TransactionInProgressRepositoryExtImplTest {
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(expiredTrxThrottledResult);
 
+  }
+
+  @Test
+  void findAuthorizationExpiredTransaction_whenExtendedAuthorizationTrue_thenNotReturnedAndStillPresentInDb() {
+    TransactionInProgress trxExpiredExtendedAuth = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    trxExpiredExtendedAuth.setExtendedAuthorization(true);
+    trxExpiredExtendedAuth.setTrxDate(OffsetDateTime.now()
+        .truncatedTo(ChronoUnit.MILLIS)
+        .minusMinutes(EXPIRATION_MINUTES));
+    transactionInProgressRepository.save(trxExpiredExtendedAuth);
+
+    TransactionInProgress trxExpired = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+    trxExpired.setExtendedAuthorization(false);
+    trxExpired.setTrxDate(OffsetDateTime.now()
+        .truncatedTo(ChronoUnit.MILLIS)
+        .minusMinutes(EXPIRATION_MINUTES));
+    transactionInProgressRepository.save(trxExpired);
+
+    TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
+
+    Assertions.assertNotNull(expiredTrxResult);
+    Assertions.assertNotEquals(Boolean.TRUE, expiredTrxResult.getExtendedAuthorization());
+
+    TransactionInProgress secondResult =
+        transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
+    Assertions.assertNull(secondResult);
+
+    TransactionInProgress trxFromDb = mongoTemplate.findById(trxExpiredExtendedAuth.getId(), TransactionInProgress.class);
+    Assertions.assertNotNull(trxFromDb);
+    assertEquals(Boolean.TRUE, trxFromDb.getExtendedAuthorization());
   }
 
   private static void alignFetchedDateTimeToLocalOffset(TransactionInProgress trx) {
@@ -721,12 +733,6 @@ class TransactionInProgressRepositoryExtImplTest {
     transactionExpired.setTrxDate(
         OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
     transactionInProgressRepository.save(transactionExpired);
-
-    try {
-      Thread.sleep(500L);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction(
         null, EXPIRATION_MINUTES);
