@@ -4,6 +4,7 @@ import com.itextpdf.kernel.exceptions.PdfException;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
+import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
@@ -31,6 +32,9 @@ class PdfServiceTest {
     private BarCodePaymentService barCodePaymentService;
 
     @Mock
+    private DecryptRestConnector decryptRestConnector;
+
+    @Mock
     private ResourceLoader resourceLoader;
 
     @Mock
@@ -42,6 +46,7 @@ class PdfServiceTest {
     private PdfServiceImpl newService() {
         return new PdfServiceImpl(
                 barCodePaymentService,        // mock
+                decryptRestConnector,         // mock
                 resourceLoader,               // mock
                 "DejaVuSans.ttf",             // se non presente, PdfUtils fa fallback a Helvetica
                 null,                         // logoMimit
@@ -55,6 +60,7 @@ class PdfServiceTest {
     private PdfServiceImpl newServiceWithFont(String fontPath) {
         return new PdfServiceImpl(
                 barCodePaymentService,
+                decryptRestConnector,
                 resourceLoader,
                 fontPath,     // simula font inesistente per testare il fallback
                 null,
@@ -250,6 +256,7 @@ class PdfServiceTest {
 
         PdfServiceImpl svc = new PdfServiceImpl(
                 barCodePaymentService,
+                decryptRestConnector,
                 resourceLoader,
                 "DejaVuSans.ttf",
                 null,          // logoMimit
@@ -338,6 +345,7 @@ class PdfServiceTest {
 
         PdfServiceImpl svc = new PdfServiceImpl(
                 barCodePaymentService,
+                decryptRestConnector,
                 resourceLoader,
                 "DejaVuSans.ttf",
                 mimitPath,     // <- logoMimit PNG valido

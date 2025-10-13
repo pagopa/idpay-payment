@@ -14,6 +14,7 @@ import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
@@ -21,6 +22,7 @@ import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ import java.util.Base64;
 public class PdfServiceImpl implements PdfService {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final DecryptRestConnector decryptRestConnector;
     private final ResourceLoader resourceLoader;
 
     private final String font;
@@ -45,8 +48,9 @@ public class PdfServiceImpl implements PdfService {
     private final String iconHealthcard;
     private final String iconBarcode;
 
+
     public PdfServiceImpl(
-            BarCodePaymentService barCodePaymentService,
+            BarCodePaymentService barCodePaymentService, DecryptRestConnector decryptRestConnector,
             ResourceLoader resourceLoader,
             @Value("${pdf.font}") String font,
             @Value("${pdf.logoMimit}") String logoMimit,
@@ -56,6 +60,7 @@ public class PdfServiceImpl implements PdfService {
             @Value("${pdf.iconBarcode}") String iconBarcode
     ) {
         this.barCodePaymentService = barCodePaymentService;
+        this.decryptRestConnector = decryptRestConnector;
         this.resourceLoader = resourceLoader;
         this.font = font;
         this.logoMimit = logoMimit;
@@ -106,9 +111,10 @@ public class PdfServiceImpl implements PdfService {
             LocalDate validUntil  = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
             BigDecimal amount     = CommonUtilities.centsToEuro(trxBarcode.getVoucherAmountCents());
             String barcodeTrxCode = trxBarcode.getTrxCode();
+            String cf = getCf(userId, fiscalCode);
 
             // Sezioni principali
-            doc.add(buildOwnerRow(username, fiscalCode, regular, bold, textPrimary, textSecondary));
+            doc.add(buildOwnerRow(username, cf, regular, bold, textPrimary, textSecondary));
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                     .setMarginTop(12).setMarginBottom(18));
 
@@ -330,6 +336,13 @@ public class PdfServiceImpl implements PdfService {
 
         box.add(inline);
         return box;
+    }
+
+    /**
+     * Recupero il cf tramite chiamata al decrypt
+     */
+    private String getCf(String userId, String fiscalCode) {
+        return StringUtils.isNotBlank(fiscalCode) ? fiscalCode : decryptRestConnector.getPiiByToken(userId).getPii();
     }
 
     /**
