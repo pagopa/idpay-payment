@@ -921,7 +921,7 @@ class TransactionInProgressRepositoryExtImplTest {
     @Test
     void findStaleExpired() {
         OffsetDateTime updateTime = OffsetDateTime.now();
-        updateTime.minusMinutes(11);
+        updateTime = updateTime.minusMinutes(120);
         TransactionInProgress transactionInProgress =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.EXPIRED);
         transactionInProgress.setInitiativeEndDate(updateTime);

@@ -543,7 +543,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
         Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
                 .and(Fields.status).is(SyncTrxStatus.EXPIRED)
-                .and(Fields.updateDate).lt(now.plusMinutes(extendedTransactions.getStaleMinutesThreshold()))
+                .and(Fields.updateDate).lt(now.minusMinutes(extendedTransactions.getStaleMinutesThreshold()))
                 .and(Fields.extendedAuthorization).is(true);
         Query query = Query.query(criteria);
         query.with(Pageable.ofSize(listSize).withPage(page));
