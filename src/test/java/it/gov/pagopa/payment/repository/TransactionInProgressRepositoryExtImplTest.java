@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,6 +29,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -44,6 +47,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @MongoTest
 @Slf4j
@@ -58,11 +62,19 @@ class TransactionInProgressRepositoryExtImplTest {
   public static final int EXPIRATION_MINUTES_IDPAY_CODE = 5;
   private static final String TRX_ID = "TRX_ID";
 
-  @Autowired
+  @MockitoBean
+    private AppConfigurationProperties.ExtendedTransactions extendedTransactions;
+    @Autowired
   protected TransactionInProgressRepository transactionInProgressRepository;
   @Autowired
   protected MongoTemplate mongoTemplate;
 
+    @BeforeEach
+    void initParams() {
+        when(extendedTransactions.getSendExpiredSendBatchSize()).thenReturn(1);
+        when(extendedTransactions.getUpdateBatchSize()).thenReturn(1);
+        when(extendedTransactions.getStaleMinutesThreshold()).thenReturn(10);
+    }
 
 
   @AfterEach
@@ -878,11 +890,73 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
 
-  private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
-    long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
-    assertTrue(minutes <= 1);
-    trx.setElaborationDateTime(null);
-  }
+  @Test
+    void updateTrxExpiredIfInitiativeEnded() {
+        OffsetDateTime initEndDate = OffsetDateTime.now();
+        initEndDate.minusDays(1);
+        OffsetDateTime trxEndDate = OffsetDateTime.now();
+        trxEndDate.plusDays(1);
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgress.setInitiativeEndDate(initEndDate);
+        transactionInProgress.setTrxEndDate(trxEndDate);
+        transactionInProgress.setInitiativeId(transactionInProgress.getId());
+        transactionInProgress.setExtendedAuthorization(true);
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultSave =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultSave);
+        Assertions.assertEquals(SyncTrxStatus.CREATED, resultSave.getStatus());
+        transactionInProgressRepository.updateStatusForExpiredVoucherTransactions(
+                transactionInProgress.getInitiativeId());
+
+        TransactionInProgress resultAfterUpdate =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultAfterUpdate);
+        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultAfterUpdate.getStatus());
+
+    }
+
+    @Test
+    void findStaleExpired() {
+        OffsetDateTime updateTime = OffsetDateTime.now();
+        updateTime = updateTime.minusMinutes(120);
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.EXPIRED);
+        transactionInProgress.setInitiativeEndDate(updateTime);
+        transactionInProgress.setTrxEndDate(updateTime);
+        transactionInProgress.setUpdateDate(updateTime.toLocalDateTime());
+        transactionInProgress.setInitiativeId(transactionInProgress.getId());
+        transactionInProgress.setExtendedAuthorization(true);
+
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultSave =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultSave);
+        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultSave.getStatus());
+        List<TransactionInProgress> transactionInProgresses =
+                transactionInProgressRepository.findUnprocessedExpiredVoucherTransactions(
+                transactionInProgress.getInitiativeId(),1,0);
+
+        TransactionInProgress resultAfterUpdate =
+                transactionInProgresses.get(0);
+        Assertions.assertNotNull(resultAfterUpdate);
+        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultAfterUpdate.getStatus());
+
+        transactionInProgresses =
+                transactionInProgressRepository.findUnprocessedExpiredVoucherTransactions(
+                        transactionInProgress.getInitiativeId(),1,2);
+        Assertions.assertTrue(transactionInProgresses.isEmpty());
+
+    }
+
+    private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
+        long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
+        assertTrue(minutes <= 1);
+        trx.setElaborationDateTime(null);
+    }
 
   private Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> executeConcurrentLocks(
       int attempts, Supplier<Boolean> lockAcquirer) {
