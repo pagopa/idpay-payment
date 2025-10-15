@@ -1,31 +1,26 @@
 package it.gov.pagopa.payment.configuration;
 
 import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.util.TestPropertyValues;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.context.TestPropertySource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest(classes = FileStorageConfig.class)
-@TestPropertySource(properties = {
-        "blobStorage.connectionString=DefaultEndpointsProtocol=https;AccountName=test;AccountKey=test;EndpointSuffix=core.windows.net",
-        "blobStorage.containerReference=test-container"
-})
-class FileStorageConfigTest {
+class FileStorageConfigUnitTest {
 
-    @Autowired
-    private ApplicationContext context;
+  @Test
+  void blobContainerClient_isBuiltFromProperties() {
+    FileStorageProperties props = new FileStorageProperties();
+    props.setStorageAccountName("testaccount");
+    props.setContainerReference("test-container");
 
-    @Test
-    void fileStorageClientConfiguration_createsBean() {
-        BlobContainerClient client = context.getBean(BlobContainerClient.class);
-        assertNotNull(client);
-        assertEquals("test-container", client.getBlobContainerName());
-    }
+    FileStorageConfig config = new FileStorageConfig(props);
+
+    BlobServiceClient serviceClient = config.blobServiceClient();
+    BlobContainerClient containerClient = config.blobContainerClient(serviceClient);
+
+    assertNotNull(containerClient);
+    assertTrue(containerClient.getBlobContainerUrl()
+        .contains("https://testaccount.blob.core.windows.net/test-container"));
+  }
 }
