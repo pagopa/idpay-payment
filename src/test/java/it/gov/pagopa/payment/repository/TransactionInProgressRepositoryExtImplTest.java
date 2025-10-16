@@ -722,10 +722,6 @@ class TransactionInProgressRepositoryExtImplTest {
     assertEquals(Boolean.TRUE, trxFromDb.getExtendedAuthorization());
   }
 
-  private static void alignFetchedDateTimeToLocalOffset(TransactionInProgress trx) {
-    trx.setTrxDate(trx.getTrxDate().withOffsetSameInstant(OffsetDateTime.now().getOffset()));
-  }
-
   @Test
   void testFindAuthorizationExpiredTransaction_concurrent() {
     TransactionInProgress transactionExpired =
@@ -961,12 +957,6 @@ class TransactionInProgressRepositoryExtImplTest {
                         transactionInProgress.getInitiativeId(),1,2);
         Assertions.assertTrue(transactionInProgresses.isEmpty());
 
-    }
-
-    private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
-        long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
-        assertTrue(minutes <= 1);
-        trx.setElaborationDateTime(null);
     }
 
   private Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> executeConcurrentLocks(
