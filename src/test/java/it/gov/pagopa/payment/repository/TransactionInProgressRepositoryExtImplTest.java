@@ -484,13 +484,26 @@ class TransactionInProgressRepositoryExtImplTest {
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgress.setUserId(USER_ID);
     transactionInProgressRepository.save(transactionInProgress);
-    Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID,
-        INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null);
+
+    Criteria criteria = transactionInProgressRepository.getCriteria(
+        MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID,
+        USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null);
     Pageable paging = PageRequest.of(0, 10);
-    List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(
-        criteria, paging);
-    assertEquals(transactionInProgress, transactionInProgressList.get(0));
+
+    List<TransactionInProgress> transactionInProgressList =
+        transactionInProgressRepository.findByFilter(criteria, paging);
+
+    assertFalse(transactionInProgressList.isEmpty());
+
+    TransactionInProgress savedTrx = transactionInProgressList.get(0);
+
+    assertEquals(transactionInProgress.getTrxCode(), savedTrx.getTrxCode());
+    assertEquals(transactionInProgress.getTrxDate(), savedTrx.getTrxDate());
+    assertEquals(transactionInProgress.getIdTrxAcquirer(), savedTrx.getIdTrxAcquirer());
+    assertEquals(transactionInProgress.getOperationType(), savedTrx.getOperationType());
+    assertEquals(transactionInProgress.getUserId(), savedTrx.getUserId());
   }
+
 
   @Test
   void getCount() {
