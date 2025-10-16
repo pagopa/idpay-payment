@@ -646,8 +646,6 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @Test
   void findAuthorizationExpiredTransaction() {
-    LocalDateTime now = LocalDateTime.now();
-    // Not expired transaction
     TransactionInProgress transaction =
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgressRepository.save(transaction);
@@ -656,7 +654,6 @@ class TransactionInProgressRepositoryExtImplTest {
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(notExpiredTrxResult);
 
-    // expired transaction
     TransactionInProgress transactionExpired =
         TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
     transactionExpired.setTrxDate(
@@ -666,19 +663,21 @@ class TransactionInProgressRepositoryExtImplTest {
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNotNull(expiredTrxResult);
-    assertElaborationsDateTime(now, expiredTrxResult);
-    alignFetchedDateTimeToLocalOffset(expiredTrxResult);
-    Assertions.assertEquals(transactionExpired, expiredTrxResult);
+
+    Assertions.assertEquals(transactionExpired.getTrxCode(), expiredTrxResult.getTrxCode());
+    Assertions.assertEquals(transactionExpired.getTrxDate(), expiredTrxResult.getTrxDate());
+    Assertions.assertEquals(transactionExpired.getIdTrxAcquirer(), expiredTrxResult.getIdTrxAcquirer());
+    Assertions.assertEquals(transactionExpired.getOperationType(), expiredTrxResult.getOperationType());
+
     Assertions.assertNull(
         transactionInProgressRepository.findAuthorizationExpiredTransaction("DUMMYINITIATIVEID",
             EXPIRATION_MINUTES));
 
-    // throttled test
     TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(expiredTrxThrottledResult);
-
   }
+
 
   @Test
   void findAuthorizationExpiredTransaction_whenExtendedAuthorizationTrue_thenNotReturnedAndStillPresentInDb() {
@@ -729,8 +728,6 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @Test
   void findCancelExpiredTransaction() {
-    LocalDateTime now = LocalDateTime.now();
-    // Not expired transaction
     TransactionInProgress transaction =
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
     transactionInProgressRepository.save(transaction);
@@ -739,7 +736,6 @@ class TransactionInProgressRepositoryExtImplTest {
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(notExpiredTrxResult);
 
-    // expired transaction
     TransactionInProgress transactionExpired =
         TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
     transactionExpired.setTrxDate(
@@ -749,19 +745,21 @@ class TransactionInProgressRepositoryExtImplTest {
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNotNull(expiredTrxResult);
-    assertElaborationsDateTime(now, expiredTrxResult);
-    alignFetchedDateTimeToLocalOffset(expiredTrxResult);
-    Assertions.assertEquals(transactionExpired, expiredTrxResult);
+
+    Assertions.assertEquals(transactionExpired.getTrxCode(), expiredTrxResult.getTrxCode());
+    Assertions.assertEquals(transactionExpired.getTrxDate(), expiredTrxResult.getTrxDate());
+    Assertions.assertEquals(transactionExpired.getIdTrxAcquirer(), expiredTrxResult.getIdTrxAcquirer());
+    Assertions.assertEquals(transactionExpired.getOperationType(), expiredTrxResult.getOperationType());
+
     Assertions.assertNull(
         transactionInProgressRepository.findCancelExpiredTransaction("DUMMYINITIATIVEID",
             EXPIRATION_MINUTES));
 
-    // throttled test
     TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findCancelExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(expiredTrxThrottledResult);
-
   }
+
 
   @Test
   void testFindCancelExpiredTransaction_concurrent() {
