@@ -4,24 +4,14 @@ import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.http.rest.Response;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.models.BlobItem;
-import com.azure.storage.blob.models.BlobProperties;
-import com.azure.storage.blob.models.BlobStorageException;
-import com.azure.storage.blob.models.BlockBlobItem;
-import com.azure.storage.blob.options.BlobDownloadToFileOptions;
-import com.azure.storage.blob.options.BlobParallelUploadOptions;
-import com.azure.storage.blob.options.BlobUploadFromFileOptions;
+import com.azure.storage.blob.models.*;
+import com.azure.storage.blob.options.*;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
-import it.gov.pagopa.payment.configuration.FileStorageConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -33,25 +23,23 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@ContextConfiguration(classes = {
-  FileStorageClient.class,
-  FileStorageConfig.class
-})
-@TestPropertySource(properties = {
-  "azure.storage.connection-string=your-connection-string",
-  "azure.storage.container-name=your-container-reference"
-})
-@SpringBootTest
 class FileStorageClientTest {
 
-  @MockitoBean
+  @Mock
   private BlobContainerClient blobContainerClient;
-
-  @Autowired
-  private FileStorageClient fileStorageClient;
 
   @Mock
   private BlobClient blobClient;
+
+  private FileStorageClient fileStorageClient;
+
+  @BeforeEach
+  void setUp() {
+    fileStorageClient = new FileStorageClient(blobContainerClient);
+  }
+
+  @Mock
+  private Response<BlockBlobItem> mockResponse;
 
   @Test
   void uploadFile_ShouldUploadSuccessfully() {
@@ -59,11 +47,9 @@ class FileStorageClientTest {
     String destination = "folder/test.txt";
     String contentType = "text/plain";
 
-    Response<BlockBlobItem> mockResponse = mock(Response.class);
-
     when(blobContainerClient.getBlobClient(destination)).thenReturn(blobClient);
     when(blobClient.uploadFromFileWithResponse(any(BlobUploadFromFileOptions.class), any(), any()))
-      .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
 
     Response<BlockBlobItem> result = fileStorageClient.uploadFile(file, destination, contentType);
 
@@ -82,7 +68,7 @@ class FileStorageClientTest {
 
     when(blobContainerClient.getBlobClient(destination)).thenReturn(blobClient);
     when(blobClient.uploadWithResponse(any(BlobParallelUploadOptions.class), any(), any()))
-      .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
 
     Response<BlockBlobItem> result = fileStorageClient.upload(inputStream, destination, contentType);
 
@@ -98,7 +84,7 @@ class FileStorageClientTest {
 
     when(blobContainerClient.getBlobClient(destination)).thenReturn(blobClient);
     when(blobClient.deleteIfExistsWithResponse(any(), any(), any(), any()))
-      .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
 
     Response<Boolean> result = fileStorageClient.deleteFile(destination);
 
@@ -132,14 +118,12 @@ class FileStorageClientTest {
     when(blobContainerClient.getBlobClient(filePath)).thenReturn(blobClient);
     doThrow(exception).when(blobClient).downloadStream(any(OutputStream.class));
 
-
     assertThatThrownBy(() -> fileStorageClient.download(filePath))
-      .isInstanceOf(BlobStorageException.class);
+        .isInstanceOf(BlobStorageException.class);
   }
 
   @Test
   void downloadToFile_ShouldDownloadSuccessfully() throws IOException {
-
     String filePath = "test.txt";
     Path destination = Files.createTempFile("test", ".txt");
 
@@ -147,12 +131,10 @@ class FileStorageClientTest {
 
     when(blobContainerClient.getBlobClient(filePath)).thenReturn(blobClient);
     when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any()))
-      .thenReturn(mockResponse);
+        .thenReturn(mockResponse);
 
     try {
-
       Response<BlobProperties> result = fileStorageClient.download(filePath, destination);
-
 
       assertThat(result).isEqualTo(mockResponse);
       verify(blobContainerClient).getBlobClient(filePath);
@@ -169,9 +151,7 @@ class FileStorageClientTest {
 
     when(blobContainerClient.listBlobsByHierarchy(path)).thenReturn(mockPagedIterable);
 
-
     PagedIterable<BlobItem> result = fileStorageClient.listFiles(path);
-
 
     assertThat(result).isEqualTo(mockPagedIterable);
     verify(blobContainerClient).listBlobsByHierarchy(path);
