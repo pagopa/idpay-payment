@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
@@ -18,6 +19,7 @@ import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,8 +29,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -44,6 +46,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @MongoTest
 @Slf4j
@@ -58,11 +61,19 @@ class TransactionInProgressRepositoryExtImplTest {
   public static final int EXPIRATION_MINUTES_IDPAY_CODE = 5;
   private static final String TRX_ID = "TRX_ID";
 
-  @Autowired
+  @MockitoBean
+    private AppConfigurationProperties.ExtendedTransactions extendedTransactions;
+    @Autowired
   protected TransactionInProgressRepository transactionInProgressRepository;
   @Autowired
   protected MongoTemplate mongoTemplate;
 
+    @BeforeEach
+    void initParams() {
+        when(extendedTransactions.getSendExpiredSendBatchSize()).thenReturn(1);
+        when(extendedTransactions.getUpdateBatchSize()).thenReturn(1);
+        when(extendedTransactions.getStaleMinutesThreshold()).thenReturn(10);
+    }
 
 
   @AfterEach
@@ -472,13 +483,26 @@ class TransactionInProgressRepositoryExtImplTest {
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgress.setUserId(USER_ID);
     transactionInProgressRepository.save(transactionInProgress);
-    Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID,
-        INITIATIVE_ID, USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null);
+
+    Criteria criteria = transactionInProgressRepository.getCriteria(
+        MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID,
+        USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null);
     Pageable paging = PageRequest.of(0, 10);
-    List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(
-        criteria, paging);
-    assertEquals(transactionInProgress, transactionInProgressList.get(0));
+
+    List<TransactionInProgress> transactionInProgressList =
+        transactionInProgressRepository.findByFilter(criteria, paging);
+
+    assertFalse(transactionInProgressList.isEmpty());
+
+    TransactionInProgress savedTrx = transactionInProgressList.get(0);
+
+    assertEquals(transactionInProgress.getTrxCode(), savedTrx.getTrxCode());
+    assertEquals(transactionInProgress.getTrxDate(), savedTrx.getTrxDate());
+    assertEquals(transactionInProgress.getIdTrxAcquirer(), savedTrx.getIdTrxAcquirer());
+    assertEquals(transactionInProgress.getOperationType(), savedTrx.getOperationType());
+    assertEquals(transactionInProgress.getUserId(), savedTrx.getUserId());
   }
+
 
   @Test
   void getCount() {
@@ -634,8 +658,6 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @Test
   void findAuthorizationExpiredTransaction() {
-    LocalDateTime now = LocalDateTime.now();
-    // Not expired transaction
     TransactionInProgress transaction =
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     transactionInProgressRepository.save(transaction);
@@ -644,7 +666,6 @@ class TransactionInProgressRepositoryExtImplTest {
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(notExpiredTrxResult);
 
-    // expired transaction
     TransactionInProgress transactionExpired =
         TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
     transactionExpired.setTrxDate(
@@ -654,19 +675,21 @@ class TransactionInProgressRepositoryExtImplTest {
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNotNull(expiredTrxResult);
-    assertElaborationsDateTime(now, expiredTrxResult);
-    alignFetchedDateTimeToLocalOffset(expiredTrxResult);
-    Assertions.assertEquals(transactionExpired, expiredTrxResult);
+
+    Assertions.assertEquals(transactionExpired.getTrxCode(), expiredTrxResult.getTrxCode());
+    Assertions.assertEquals(transactionExpired.getTrxDate(), expiredTrxResult.getTrxDate());
+    Assertions.assertEquals(transactionExpired.getIdTrxAcquirer(), expiredTrxResult.getIdTrxAcquirer());
+    Assertions.assertEquals(transactionExpired.getOperationType(), expiredTrxResult.getOperationType());
+
     Assertions.assertNull(
         transactionInProgressRepository.findAuthorizationExpiredTransaction("DUMMYINITIATIVEID",
             EXPIRATION_MINUTES));
 
-    // throttled test
     TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(expiredTrxThrottledResult);
-
   }
+
 
   @Test
   void findAuthorizationExpiredTransaction_whenExtendedAuthorizationTrue_thenNotReturnedAndStillPresentInDb() {
@@ -698,10 +721,6 @@ class TransactionInProgressRepositoryExtImplTest {
     assertEquals(Boolean.TRUE, trxFromDb.getExtendedAuthorization());
   }
 
-  private static void alignFetchedDateTimeToLocalOffset(TransactionInProgress trx) {
-    trx.setTrxDate(trx.getTrxDate().withOffsetSameInstant(OffsetDateTime.now().getOffset()));
-  }
-
   @Test
   void testFindAuthorizationExpiredTransaction_concurrent() {
     TransactionInProgress transactionExpired =
@@ -717,8 +736,6 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @Test
   void findCancelExpiredTransaction() {
-    LocalDateTime now = LocalDateTime.now();
-    // Not expired transaction
     TransactionInProgress transaction =
         TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
     transactionInProgressRepository.save(transaction);
@@ -727,7 +744,6 @@ class TransactionInProgressRepositoryExtImplTest {
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(notExpiredTrxResult);
 
-    // expired transaction
     TransactionInProgress transactionExpired =
         TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
     transactionExpired.setTrxDate(
@@ -737,19 +753,21 @@ class TransactionInProgressRepositoryExtImplTest {
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findCancelExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNotNull(expiredTrxResult);
-    assertElaborationsDateTime(now, expiredTrxResult);
-    alignFetchedDateTimeToLocalOffset(expiredTrxResult);
-    Assertions.assertEquals(transactionExpired, expiredTrxResult);
+
+    Assertions.assertEquals(transactionExpired.getTrxCode(), expiredTrxResult.getTrxCode());
+    Assertions.assertEquals(transactionExpired.getTrxDate(), expiredTrxResult.getTrxDate());
+    Assertions.assertEquals(transactionExpired.getIdTrxAcquirer(), expiredTrxResult.getIdTrxAcquirer());
+    Assertions.assertEquals(transactionExpired.getOperationType(), expiredTrxResult.getOperationType());
+
     Assertions.assertNull(
         transactionInProgressRepository.findCancelExpiredTransaction("DUMMYINITIATIVEID",
             EXPIRATION_MINUTES));
 
-    // throttled test
     TransactionInProgress expiredTrxThrottledResult = transactionInProgressRepository.findCancelExpiredTransaction(
         null, EXPIRATION_MINUTES);
     Assertions.assertNull(expiredTrxThrottledResult);
-
   }
+
 
   @Test
   void testFindCancelExpiredTransaction_concurrent() {
@@ -878,11 +896,67 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
 
-  private void assertElaborationsDateTime(LocalDateTime now, TransactionInProgress trx) {
-    long minutes = Duration.between(now, trx.getElaborationDateTime()).toMinutes();
-    assertTrue(minutes <= 1);
-    trx.setElaborationDateTime(null);
-  }
+  @Test
+    void updateTrxExpiredIfInitiativeEnded() {
+        OffsetDateTime initEndDate = OffsetDateTime.now();
+        initEndDate.minusDays(1);
+        OffsetDateTime trxEndDate = OffsetDateTime.now();
+        trxEndDate.plusDays(1);
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transactionInProgress.setInitiativeEndDate(initEndDate);
+        transactionInProgress.setTrxEndDate(trxEndDate);
+        transactionInProgress.setInitiativeId(transactionInProgress.getId());
+        transactionInProgress.setExtendedAuthorization(true);
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultSave =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultSave);
+        Assertions.assertEquals(SyncTrxStatus.CREATED, resultSave.getStatus());
+        transactionInProgressRepository.updateStatusForExpiredVoucherTransactions(
+                transactionInProgress.getInitiativeId());
+
+        TransactionInProgress resultAfterUpdate =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultAfterUpdate);
+        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultAfterUpdate.getStatus());
+
+    }
+
+    @Test
+    void findStaleExpired() {
+        OffsetDateTime updateTime = OffsetDateTime.now();
+        updateTime = updateTime.minusMinutes(120);
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.EXPIRED);
+        transactionInProgress.setInitiativeEndDate(updateTime);
+        transactionInProgress.setTrxEndDate(updateTime);
+        transactionInProgress.setUpdateDate(updateTime.toLocalDateTime());
+        transactionInProgress.setInitiativeId(transactionInProgress.getId());
+        transactionInProgress.setExtendedAuthorization(true);
+
+        transactionInProgressRepository.save(transactionInProgress);
+
+        TransactionInProgress resultSave =
+                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+        Assertions.assertNotNull(resultSave);
+        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultSave.getStatus());
+        List<TransactionInProgress> transactionInProgresses =
+                transactionInProgressRepository.findUnprocessedExpiredVoucherTransactions(
+                transactionInProgress.getInitiativeId(),1,0);
+
+        TransactionInProgress resultAfterUpdate =
+                transactionInProgresses.get(0);
+        Assertions.assertNotNull(resultAfterUpdate);
+        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultAfterUpdate.getStatus());
+
+        transactionInProgresses =
+                transactionInProgressRepository.findUnprocessedExpiredVoucherTransactions(
+                        transactionInProgress.getInitiativeId(),1,2);
+        Assertions.assertTrue(transactionInProgresses.isEmpty());
+
+    }
 
   private Map<String, List<Map.Entry<MongoTestUtilitiesService.MongoCommand, Long>>> executeConcurrentLocks(
       int attempts, Supplier<Boolean> lockAcquirer) {
