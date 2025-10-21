@@ -106,17 +106,26 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_PDF")
     @Override
-    public ResponseEntity<ReportDTO> downloadBarcode(String initiativeId, String trxCode, String userId) {
-        ReportDTO reportDTO = pdfService.create(initiativeId, trxCode, userId);
+    public ResponseEntity<ReportDTO> downloadBarcode(
+            String initiativeId,
+            String trxCode,
+            String userId,
+            String username,
+            String fiscalCode) {
+
+        ReportDTO reportDTO = pdfService.create(initiativeId, trxCode, userId, username, fiscalCode);
+
         ContentDisposition cd = ContentDisposition
                 .inline()
                 .filename("barcode_" + trxCode + ".pdf", StandardCharsets.UTF_8)
                 .build();
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
                 .contentType(MediaType.APPLICATION_JSON)
                 .cacheControl(CacheControl.noStore())
                 .body(reportDTO);
     }
+
 
 }

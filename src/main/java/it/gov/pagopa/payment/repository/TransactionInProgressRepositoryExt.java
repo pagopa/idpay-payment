@@ -30,4 +30,9 @@ public interface TransactionInProgressRepositoryExt {
   List<TransactionInProgress> deletePaged(String initiativeId, int pageSize);
   UpdateResult updateTrxPostTimeout(String trxId);
   Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, String productGtin, Pageable pageable);
+  List<TransactionInProgress> findPendingTransactions(int pageSize);
+
+  Long updateStatusForExpiredVoucherTransactions(String initiativeId);
+
+  List<TransactionInProgress> findUnprocessedExpiredVoucherTransactions(String initiativeId, Integer listSize, Integer page);
 }

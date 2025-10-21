@@ -1,33 +1,34 @@
 package it.gov.pagopa.payment.service.pdf;
 
-import com.itextpdf.io.font.constants.StandardFonts;
+import com.itextpdf.barcodes.Barcode128;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceGray;
 import com.itextpdf.kernel.colors.DeviceRgb;
 import com.itextpdf.kernel.font.PdfFont;
-import com.itextpdf.kernel.font.PdfFontFactory;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
-import com.itextpdf.kernel.pdf.action.PdfAction;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
-import com.itextpdf.barcodes.Barcode128;
 import it.gov.pagopa.common.utils.CommonUtilities;
+import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -37,8 +38,9 @@ import java.util.Base64;
 public class PdfServiceImpl implements PdfService {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final DecryptRestConnector decryptRestConnector;
+    private final ResourceLoader resourceLoader;
 
-    private final String devPortalLink;
     private final String font;
     private final String logoMimit;
     private final String logoPari;
@@ -46,18 +48,20 @@ public class PdfServiceImpl implements PdfService {
     private final String iconHealthcard;
     private final String iconBarcode;
 
+
     public PdfServiceImpl(
-            BarCodePaymentService barCodePaymentService,
-            @Value("${pdf.devPortalLink:https://developer.pagopa.it/pari/overview}") String devPortalLink,
-            @Value("${pdf.font:DejaVuSans.ttf}") String font,
-            @Value("${pdf.logoMimit:}") String logoMimit,
-            @Value("${pdf.logoPari:}") String logoPari,
-            @Value("${pdf.iconWasher:}") String iconWasher,
-            @Value("${pdf.iconHealthcard:}") String iconHealthcard,
-            @Value("${pdf.iconBarcode:}") String iconBarcode
+            BarCodePaymentService barCodePaymentService, DecryptRestConnector decryptRestConnector,
+            ResourceLoader resourceLoader,
+            @Value("${pdf.font}") String font,
+            @Value("${pdf.logoMimit}") String logoMimit,
+            @Value("${pdf.logoPari}") String logoPari,
+            @Value("${pdf.iconWasher}") String iconWasher,
+            @Value("${pdf.iconHealthcard}") String iconHealthcard,
+            @Value("${pdf.iconBarcode}") String iconBarcode
     ) {
         this.barCodePaymentService = barCodePaymentService;
-        this.devPortalLink = devPortalLink;
+        this.decryptRestConnector = decryptRestConnector;
+        this.resourceLoader = resourceLoader;
         this.font = font;
         this.logoMimit = logoMimit;
         this.logoPari = logoPari;
@@ -67,126 +71,111 @@ public class PdfServiceImpl implements PdfService {
     }
 
     /**
-     * Genera il PDF del voucher bonus e lo restituisce codificato in Base64.
-     * <p>
-     * Il metodo compone un documento PDF in formato A4 utilizzando la libreria iText.
-     * Durante la generazione:
-     * <ul>
-     *   <li>Crea un {@link PdfWriter} su un {@link ByteArrayOutputStream} per raccogliere i byte.</li>
-     *   <li>Configura margini, font (personalizzato se presente, altrimenti Helvetica/Helvetica-Bold) e colori di brand.</li>
-     *   <li>Aggiunge intestazione, dati del beneficiario, dettagli del voucher, barcode della transazione e
-     *       una sezione informativa con link al portale sviluppatori.</li>
-     * </ul>
-     * <p>
-     * Al termine, il PDF viene chiuso e il suo contenuto codificato in Base64 viene inserito in un {@link ReportDTO}.
+     * Genera il PDF del bonus elettrodomestici con intestazione, dati del beneficiario,
+     * dettagli del bonus, codice a barre e istruzioni d'uso.
      *
-     * @param initiativeId identificativo dell’iniziativa (opzionale, usato per logging/telemetria)
-     * @param trxCode      codice della transazione (opzionale, usato per logging/telemetria)
-     * @param userId       identificativo utente (opzionale, usato per logging/telemetria)
-     * @return un {@link ReportDTO} contenente nella proprietà {@code data} la rappresentazione Base64 dei byte del PDF;
-     *         mai {@code null}
-     * @throws RuntimeException se la generazione del PDF fallisce per problemi di I/O o di layout
+     * @param initiativeId id dell'iniziativa
+     * @param trxCode      codice della transazione
+     * @param userId       id utente
+     * @param username     nominativo intestatario
+     * @param fiscalCode   codice fiscale intestatario
+     * @return ReportDTO con il PDF codificato Base64
      */
     @Override
-    public ReportDTO create(String initiativeId, String trxCode, String userId) {
+    public ReportDTO create(String initiativeId, String trxCode, String userId, String username, String fiscalCode) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);
              Document doc = new Document(pdf, PageSize.A4)) {
 
+            // Margini
             doc.setMargins(36, 36, 48, 36);
 
-            PdfFont regular = (new File(font).exists())
-                    ? PdfFontFactory.createFont(font, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED)
-                    : PdfFontFactory.createFont(StandardFonts.HELVETICA);
-            PdfFont bold = (new File(font).exists())
-                    ? PdfFontFactory.createFont(font, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED)
-                    : PdfFontFactory.createFont(StandardFonts.HELVETICA_BOLD);
+            // Font (con fallback gestito in PdfUtils)
+            PdfFont regular = PdfUtils.loadPdfFont(font, false, resourceLoader);
+            PdfFont bold = PdfUtils.loadPdfFont(font, true, resourceLoader);
 
-            Color textPrimary = new DeviceRgb(33, 37, 41);
+            // Palette
+            Color textPrimary   = new DeviceRgb(33, 37, 41);
             Color textSecondary = new DeviceGray(0.35f);
-            Color brandBlue   = new DeviceRgb(0, 92, 230);
-            Color lightGrayBg = new DeviceRgb(247, 248, 250);
+            Color brandBlue     = new DeviceRgb(0, 92, 230);
 
-            // Header
-            doc.add(buildHeader(regular, bold, textPrimary, brandBlue));
+            // Header + separatore
+            doc.add(buildHeader(regular, bold, textPrimary));
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                     .setMarginTop(6).setMarginBottom(18));
 
+            // Dati transazione
+            TransactionBarCodeResponse trxBarcode = barCodePaymentService.retriveVoucher(initiativeId, trxCode, userId);
+            LocalDate createdDate = Utilities.getLocalDate(trxBarcode.getTrxDate());
+            LocalDate validUntil  = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
+            BigDecimal amount     = CommonUtilities.centsToEuro(trxBarcode.getVoucherAmountCents());
+            String barcodeTrxCode = trxBarcode.getTrxCode();
+            String cf = getCf(userId, fiscalCode);
 
-            TransactionBarCodeResponse trxBarcode = barCodePaymentService.retriveVoucher(initiativeId,trxCode,userId);
-            String intestatario  = "Giovanna Beltramin";// TODO: cablato in attesa di capire da dove recuperarli
-            String cf            = "BLTGVN78A52C409X";// TODO: cablato in attesa di capire da dove recuperarlo
-            LocalDate emessoIl   = Utilities.getLocalDate(trxBarcode.getTrxDate());
-            LocalDate validoFino = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
-            BigDecimal importo   = getAmount(trxBarcode.getVoucherAmountCents());
-            
-            String codice        = trxBarcode.getTrxCode();
-
-            doc.add(buildOwnerRow(intestatario, cf, regular, bold, textPrimary, textSecondary));
+            // Sezioni principali
+            doc.add(buildOwnerRow(username, cf, regular, bold, textPrimary, textSecondary));
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                     .setMarginTop(12).setMarginBottom(18));
 
-            doc.add(buildDetailsAndAmount(emessoIl, validoFino, importo, regular, bold, textPrimary, textSecondary));
-            doc.add(buildBarcodeBlock(pdf, codice, regular, textSecondary));
-            doc.add(new Paragraph().setHeight(18));
-            doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary, lightGrayBg));
+            doc.add(buildDetailsAndAmount(createdDate, validUntil, amount, regular, bold, textPrimary, textSecondary));
+            doc.add(buildBarcodeBlock(pdf, barcodeTrxCode, regular, textSecondary));
+            doc.add(new Paragraph().setHeight(10));
+            doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary));
+            doc.add(new Paragraph().setHeight(2));
+            doc.add(buildPoweredByPari(regular, brandBlue));
+            doc.add(buildFooter(bold, regular, textSecondary));
 
-            doc.add(new Paragraph("Pari è un progetto dolor sit amet, consectetur adipiscing elit. Aenean commodo ligula eget dolor. "
-                    + "Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes. ")
-                    .add(new Link("Link al dev portal", PdfAction.createURI(devPortalLink))
-                            .setFontColor(brandBlue)
-                            .setUnderline()
-                    )
-                    .setFont(regular)
-                    .setFontSize(9)
-                    .setFontColor(textSecondary)
-                    .setTextAlignment(TextAlignment.CENTER)
-                    .setMarginTop(24));
-
-        } catch (Exception e) {
+        } catch (IOException | RuntimeException e) {
             log.error("Errore durante la generazione del PDF (initiativeId={}, trxCode={}, userId={})",
-                    Utilities.sanitizeString(initiativeId), Utilities.sanitizeString(trxCode), Utilities.sanitizeString(userId), e);
-            throw new RuntimeException("Errore durante la generazione del PDF "
-                    + "(initiativeId=" + initiativeId + ", trxCode=" + trxCode + ", userId=" + userId + ")", e);
+                    Utilities.sanitizeString(initiativeId),
+                    Utilities.sanitizeString(trxCode),
+                    Utilities.sanitizeString(userId), e);
+            throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
         }
-        return ReportDTO
-                .builder()
+
+        return ReportDTO.builder()
                 .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
                 .build();
     }
 
     /**
-     * Costruisce l'header con loghi (sx/dx) e titoli/iniziativa.
-     *
-     * @param regular     font regolare
-     * @param bold        font bold
-     * @param textPrimary colore primario del testo
-     * @param brandBlue   colore brand per "PARI"
-     * @return BlockElement da aggiungere al Document
+     * Crea l'header compatto con logo MIMIT e testo ministeriale.
      */
-    private BlockElement<?> buildHeader(PdfFont regular, PdfFont bold, Color textPrimary, Color brandBlue) {
-        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
+    private BlockElement<?> buildHeader(PdfFont regular, PdfFont bold, Color textPrimary) {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{0.55f, 5.45f}))
+                .useAllAvailableWidth()
+                .setBorder(Border.NO_BORDER)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE);
 
-        Div left = new Div();
-        Image logoSx = PdfUtils.loadImageOrNull(this.logoMimit, 80);
-        if (logoSx != null) left.add(logoSx.setMarginBottom(8));
-        left.add(new Paragraph("BONUS ELETTRODOMESTICI").setFont(bold).setFontSize(12).setFontColor(textPrimary).setMarginBottom(2));
-        left.add(new Paragraph("Ministero delle Imprese del Made in Italy").setFont(regular).setFontSize(10).setFontColor(textPrimary));
+        Image logo = PdfUtils.loadImageOrNull(this.logoMimit, 0, resourceLoader);
+        Cell logoCell = new Cell().setBorder(Border.NO_BORDER).setPadding(0);
+        if (logo != null) {
+            logo.setAutoScale(false).scaleToFit(45, 45).setHorizontalAlignment(HorizontalAlignment.LEFT);
+            logoCell.add(logo);
+        }
+        t.addCell(logoCell);
 
-        Div right = new Div().setTextAlignment(TextAlignment.RIGHT);
-        right.add(new Paragraph("Iniziativa fornita da").setFont(regular).setFontSize(10).setFontColor(textPrimary).setMarginBottom(2));
-        right.add(new Paragraph("PARI").setFont(bold).setFontSize(20).setFontColor(brandBlue));
-        Image logoDx = PdfUtils.loadImageOrNull(logoPari, 0);
-        if (logoDx != null) right.add(logoDx.setAutoScale(true));
+        Div textWrap = new Div().setMargin(0).setPadding(0);
+        textWrap.add(new Paragraph("BONUS ELETTRODOMESTICI")
+                .setFont(bold).setFontSize(12).setFontColor(textPrimary)
+                .setMarginTop(0).setMarginBottom(2));
+        textWrap.add(new Paragraph("Ministero delle Imprese e del Made in Italy")
+                .setFont(regular).setFontSize(10).setFontColor(textPrimary)
+                .setMargin(0));
 
-        t.addCell(PdfUtils.noBorderCell(left));
-        t.addCell(PdfUtils.noBorderCell(right));
+        Cell textCell = new Cell()
+                .setBorder(Border.NO_BORDER)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setPadding(0).setPaddingLeft(6);
+        textCell.add(textWrap);
+        t.addCell(textCell);
+
         return t.setMarginBottom(6);
     }
 
     /**
-     * Costruisce la riga con intestatario e codice fiscale, allineati a sx/dx.
+     * Crea la riga con intestatario e codice fiscale.
      */
     private BlockElement<?> buildOwnerRow(String intestatario, String cf,
                                           PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
@@ -206,7 +195,7 @@ public class PdfServiceImpl implements PdfService {
     }
 
     /**
-     * Costruisce la sezione "Dettagli del bonus" a due colonne (date a sx, importo e descrizione a dx).
+     * Crea il blocco con i dettagli del bonus (date) e l'importo massimo.
      */
     private BlockElement<?> buildDetailsAndAmount(LocalDate emessoIl, LocalDate validoFinoAl, BigDecimal importo,
                                                   PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
@@ -222,10 +211,9 @@ public class PdfServiceImpl implements PdfService {
         Div right = new Div();
         right.add(PdfUtils.smallLabel("Importo massimo disponibile", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
-        right.add(new Paragraph("Puoi usare il bonus per ottenere uno sconto ")
-                .add(new Text("fino al 30%").setFont(bold))
-                .add(" sul prezzo d’acquisto di ")
-                .add(new Text("un solo elettrodomestico").setFont(bold))
+        right.add(new Paragraph()
+                .add("Puoi usare il bonus per ottenere uno sconto ")
+                .add(new Text("fino al 30% sul prezzo d’acquisto di un solo elettrodomestico").setFont(bold))
                 .add(", nuovo e ad alta efficienza.")
                 .setFont(regular).setFontSize(10).setFontColor(textPrimary)
                 .setMarginTop(2).setMarginBottom(12));
@@ -236,109 +224,140 @@ public class PdfServiceImpl implements PdfService {
     }
 
     /**
-     * Costruisce il blocco con barcode Code128 e numero visibile.
+     * Crea il blocco del codice a barre (2 colonne: sinistra vuota, destra contenuto).
      */
     private BlockElement<?> buildBarcodeBlock(PdfDocument pdf, String code, PdfFont regular, Color textSecondary) {
-        Div wrap = new Div().setTextAlignment(TextAlignment.CENTER);
+        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+                .useAllAvailableWidth();
 
-        wrap.add(new Paragraph("CODICE A BARRE")
+        t.addCell(PdfUtils.noBorderCell(new Div()));
+
+        Div right = new Div();
+
+        right.add(new Paragraph("Codice a barre")
                 .setFont(regular)
-                .setFontSize(10)
+                .setFontSize(12)
                 .setFontColor(textSecondary)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setMarginTop(10)
                 .setMarginBottom(6));
 
         Barcode128 barcode = new Barcode128(pdf);
         barcode.setCodeType(Barcode128.CODE128);
         barcode.setCode(code);
+        barcode.setFont(regular);
+        barcode.setSize(14);
+        barcode.setBaseline(18);
+        barcode.setBarHeight(42);
+        barcode.setX(1.55f);
 
         Image barcodeImg = new Image(barcode.createFormXObject(pdf));
         barcodeImg.setAutoScale(false);
-        barcodeImg.setWidth(UnitValue.createPercentValue(36));
-        barcodeImg.setHorizontalAlignment(HorizontalAlignment.CENTER);
+        barcodeImg.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        right.add(barcodeImg.setMarginTop(2));
 
-        wrap.add(barcodeImg.setMarginTop(2));
-
-        return wrap;
+        t.addCell(PdfUtils.noBorderCell(right));
+        return t;
     }
 
     /**
-     * Costruisce la card "Come usare il bonus" con tre colonne (icona, titolo, descrizione).
+     * Crea il box con le tre istruzioni su come usare il bonus.
      */
-    private BlockElement<?> buildHowToBox(PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary, Color lightGrayBg) {
+    private BlockElement<?> buildHowToBox(PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
         Div card = new Div()
-                .setBackgroundColor(lightGrayBg)
                 .setPadding(16)
-                .setBorder(new SolidBorder(new DeviceGray(0.85f), 0.8f))
+                .setBorder(new SolidBorder(new DeviceGray(0.85f), 1f))
                 .setBorderRadius(new BorderRadius(8))
-                .setMarginTop(12);
+                .setMarginTop(12)
+                .setMarginBottom(30);
 
         card.add(new Paragraph("COME USARE IL BONUS")
                 .setTextAlignment(TextAlignment.CENTER)
-                .setFont(bold).setFontSize(11).setFontColor(textPrimary).setMarginBottom(14));
+                .setFont(bold)
+                .setFontSize(11)
+                .setFontColor(textPrimary)
+                .setMarginBottom(10));
 
-        Table grid = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1})).useAllAvailableWidth();
-        grid.setBorder(Border.NO_BORDER);
+        Table grid = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1}))
+                .useAllAvailableWidth()
+                .setBorder(Border.NO_BORDER);
 
-        grid.addCell(stepCell(iconWasher, "Scegli l’elettrodomestico da sostituire",
+        var stepStyle = new PdfUtils.StepStyle(regular, bold, textPrimary, textSecondary, resourceLoader);
+
+        grid.addCell(PdfUtils.stepCell(iconWasher, "Scegli l’elettrodomestico da sostituire",
                 "Scegli quale elettrodomestico vuoi smaltire perché ormai vecchio o consuma troppa energia.",
-                regular, bold, textPrimary, textSecondary));
-        grid.addCell(stepCell(iconHealthcard, "Porta con te la Tessera Sanitaria",
+                stepStyle));
+
+        grid.addCell(PdfUtils.stepCell(iconHealthcard, "Porta con te la Tessera Sanitaria",
                 "Mostrala, se richiesta, per eventuali controlli presso il punto vendita.",
-                regular, bold, textPrimary, textSecondary));
-        grid.addCell(stepCell(iconBarcode, "Mostra il codice a barre",
+                stepStyle));
+
+        grid.addCell(PdfUtils.stepCell(iconBarcode, "Mostra il codice a barre",
                 "Stampa questo buono o mostralo direttamente dal tuo dispositivo.",
-                regular, bold, textPrimary, textSecondary));
+                stepStyle));
 
         card.add(grid);
         return card;
     }
 
     /**
-     * Rende una cella del box "Come usare il bonus" con icona (o placeholder), titolo e descrizione centrati.
+     * Crea la riga centrata "Powered by" con logo PARI.
      */
-    private Cell stepCell(String iconPath, String heading, String desc,
-                          PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
-        Cell c = new Cell()
+    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue) {
+        Div box = new Div().setTextAlignment(TextAlignment.CENTER).setMarginTop(20);
+
+        Image pari = PdfUtils.loadImageOrNull(logoPari, 0, resourceLoader);
+
+        Table inline = new Table(new float[]{1, 1})
                 .setBorder(Border.NO_BORDER)
-                .setPadding(8)
-                .setTextAlignment(TextAlignment.CENTER);
+                .setHorizontalAlignment(HorizontalAlignment.CENTER);
 
-        Div d = new Div().setWidth(UnitValue.createPercentValue(100));
+        Cell left = new Cell().setBorder(Border.NO_BORDER)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setTextAlignment(TextAlignment.RIGHT)
+                .setPadding(0).setPaddingRight(8);
 
-        Image icon = PdfUtils.loadImageOrNull(iconPath, 0);
-        if (icon != null) {
-            icon.setAutoScale(true)
-                    .setMaxHeight(32)
-                    .setMarginBottom(6)
-                    .setHorizontalAlignment(HorizontalAlignment.CENTER);
-            d.add(icon);
+        Cell right = new Cell().setBorder(Border.NO_BORDER)
+                .setVerticalAlignment(VerticalAlignment.MIDDLE)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setPadding(0);
+
+        left.add(new Paragraph("Powered by").setFont(regular).setFontSize(10).setMargin(0));
+
+        if (pari != null) {
+            pari.setAutoScale(false).scaleToFit(80, 20);
+            right.add(pari);
         } else {
-            Div ph = new Div()
-                    .setWidth(36).setHeight(36)
-                    .setBackgroundColor(new DeviceGray(0.9f))
-                    .setBorderRadius(new BorderRadius(18))
-                    .setMarginBottom(6)
-                    .setHorizontalAlignment(HorizontalAlignment.CENTER);
-            d.add(ph);
+            right.add(new Paragraph("PARI").setFont(regular).setFontSize(12).setFontColor(brandBlue).setMargin(0));
         }
 
-        d.add(new Paragraph(heading)
-                .setFont(bold).setFontSize(10).setFontColor(textPrimary)
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(4));
+        inline.addCell(left);
+        inline.addCell(right);
 
-        d.add(new Paragraph(desc)
-                .setFont(regular).setFontSize(9).setFontColor(textSecondary)
-                .setTextAlignment(TextAlignment.CENTER));
-
-        c.add(d);
-        return c;
+        box.add(inline);
+        return box;
     }
 
-    private static BigDecimal getAmount(Long voucherAmount) {
-        if(voucherAmount != null){
-            return CommonUtilities.centsToEuro(voucherAmount);
-        }
-        return new BigDecimal(0);
+    /**
+     * Recupero il cf tramite chiamata al decrypt
+     */
+    private String getCf(String userId, String fiscalCode) {
+        return StringUtils.isNotBlank(fiscalCode) ? fiscalCode : decryptRestConnector.getPiiByToken(userId).getPii();
+    }
+
+    /**
+     * Crea il paragrafo informativo finale su Pari/PagoPA.
+     */
+    private BlockElement<?> buildFooter(PdfFont bold, PdfFont regular, Color textSecondary) {
+        return new Paragraph()
+                .add(new Text("Pari ").setFont(bold))
+                .add(new Text("è la piattaforma digitale, sviluppata da "))
+                .add(new Text("PagoPA S.p.A").setFont(bold))
+                .add(new Text(", che semplifica l'accesso a bonus e incentivi pubblici. La piattaforma permette di gestire tutti gli incentivi in un unico posto e di utilizzarli presso i commercianti convenzionati."))
+                .setFont(regular)
+                .setFontSize(9)
+                .setFontColor(textSecondary)
+                .setTextAlignment(TextAlignment.CENTER)
+                .setMarginTop(24);
     }
 }

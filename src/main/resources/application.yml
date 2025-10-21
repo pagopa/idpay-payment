@@ -9,6 +9,10 @@ mongo:
       max-retry: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_RETRY:5}
       max-millis-elapsed: ${MONGO_REQUEST_RATE_TOO_LARGE_BATCH_MAX_MILLIS_ELAPSED:0}
 
+blobStorage:
+  storageAccountName: ${BLOB_STORAGE_ACCOUNT_NAME:}
+  containerReference: ${BLOB_STORAGE_CONTAINER_REFERENCE:}
+
 spring:
   application:
     name: "@project.artifactId@"
@@ -198,15 +202,19 @@ app:
       delayTime: ${DELETE_DELAY_TIME:1000}
   timeoutPayment:
     seconds: ${TIMEOUT_PAYMENT_SECONDS:30}
+  extended-transactions:
+    staleMinutesThreshold: ${STALE_MINUTES_THRESHOLD:120}
+    sendExpiredSendBatchSize: ${EXPIRY_SEND_BATCH_SIZE:1000}
+    updateBatchSize: ${EXPIRY_UPDATE_BATCH_SIZE:10000}
 
 pdf:
   devPortalLink: ${DEV_PORTAL_LINK:https://developer.pagopa.it/pari/overview}
-  font: ${FONT:DejaVuSans.ttf}
-  logoMimit: ${LOGO_MIMIT:}
-  logoPari: ${LOGO_PARI:}
-  iconWasher: ${ICON_WASHER:}
-  iconHealthcard: ${ICON_HEALTCARD:}
-  iconBarcode: ${ICON_BARCODE:}
+  font: ${FONT:Helvetica}
+  logoMimit: ${LOGO_MIMIT:https://assets.cdn.io.pagopa.it/logos/organizations/97532760580.png}
+  logoPari: ${LOGO_PARI:classpath:static/icons/logo_pari.png}
+  iconWasher: ${ICON_WASHER:classpath:static/icons/icon_washer.png}
+  iconHealthcard: ${ICON_HEALTCARD:classpath:static/icons/icon_healthcard.png}
+  iconBarcode: ${ICON_BARCODE:classpath:static/icons/icon_barcode.png}
 
 
 management:

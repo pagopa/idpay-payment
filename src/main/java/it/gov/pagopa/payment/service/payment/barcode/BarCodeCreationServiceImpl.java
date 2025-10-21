@@ -78,6 +78,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
             Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
 
+            trxBarCodeCreationRequest.setVoucherAmountCents(residualBudgetCents);
             TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, false, initiative);
 
             trx.setAmountCents(residualBudgetCents);
@@ -101,6 +102,24 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
             checkVoucherAmountCents(trxBarCodeCreationRequest.getInitiativeId(), trxBarCodeCreationRequest.getVoucherAmountCents());
             TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
             return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
+
+        } catch (RuntimeException e) {
+            logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
+            throw e;
+        }
+    }
+
+    public TransactionInProgress createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
+                                                                String channel,
+                                                                String userId,
+                                                                OffsetDateTime trxEndDate) {
+
+        LocalDate today = LocalDate.now();
+
+        try {
+            InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
+            return transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), true, trxEndDate);
 
         } catch (RuntimeException e) {
             logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
