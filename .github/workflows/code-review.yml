@@ -13,6 +13,10 @@ on:
       - edited
       - synchronize
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
   pull-requests: write
@@ -57,7 +61,7 @@ jobs:
             -Dsonar.projectKey=${{ vars.SONARCLOUD_PROJECT_KEY }} \
             -Dsonar.organization=${{ vars.SONARCLOUD_ORG }} \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.token=$SONAR_TOKEN \
             -Dsonar.java.binaries=target/classes \
             -Dsonar.junit.reportPaths=target/surefire-reports \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
