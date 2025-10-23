@@ -215,7 +215,7 @@ public class PdfServiceImpl implements PdfService {
               try {
                 throw e;
               } catch (IOException ex) {
-                throw new RuntimeException(ex);
+                  throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
               }
             }
 
