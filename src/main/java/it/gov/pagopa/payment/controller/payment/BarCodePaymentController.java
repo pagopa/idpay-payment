@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -67,12 +68,9 @@ public interface BarCodePaymentController {
             @RequestHeader("X-Fiscal-Code") String fiscalCode
     );
 
-    @GetMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/preview-pdf")
+    @GetMapping(value = "/transactions/{transactionId}/preview-pdf")
     @ResponseStatus(code = HttpStatus.OK)
-    ResponseEntity<ReportDTO> downloadPreviewBarcode(
-        @PathVariable("initiativeId") String initiativeId,
-        @PathVariable("transactionId") String transactionId,
-        @PathVariable("trxCode") String trxCode,
-        @RequestHeader("X-Fiscal-Code") String fiscalCode
+    ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
+        @PathVariable("transactionId") String transactionId
     );
 }

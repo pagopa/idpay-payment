@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
+import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,9 +44,13 @@ class PdfServiceTest {
     @Mock
     private Resource pariPngResource;
 
+    @Mock
+    private TransactionInProgressRepository transactionInProgressRepository;
+
     private PdfServiceImpl newService() {
         return new PdfServiceImpl(
                 barCodePaymentService,        // mock
+                transactionInProgressRepository,
                 decryptRestConnector,         // mock
                 resourceLoader,               // mock
                 "DejaVuSans.ttf",             // se non presente, PdfUtils fa fallback a Helvetica
@@ -60,6 +65,7 @@ class PdfServiceTest {
     private PdfServiceImpl newServiceWithFont(String fontPath) {
         return new PdfServiceImpl(
                 barCodePaymentService,
+                transactionInProgressRepository,
                 decryptRestConnector,
                 resourceLoader,
                 fontPath,     // simula font inesistente per testare il fallback
@@ -256,6 +262,7 @@ class PdfServiceTest {
 
         PdfServiceImpl svc = new PdfServiceImpl(
                 barCodePaymentService,
+                transactionInProgressRepository,
                 decryptRestConnector,
                 resourceLoader,
                 "DejaVuSans.ttf",
@@ -345,6 +352,7 @@ class PdfServiceTest {
 
         PdfServiceImpl svc = new PdfServiceImpl(
                 barCodePaymentService,
+                transactionInProgressRepository,
                 decryptRestConnector,
                 resourceLoader,
                 "DejaVuSans.ttf",

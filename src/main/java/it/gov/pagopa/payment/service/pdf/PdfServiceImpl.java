@@ -16,6 +16,7 @@ import com.itextpdf.layout.properties.*;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -24,7 +25,6 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
-import java.math.RoundingMode;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -148,8 +148,9 @@ public class PdfServiceImpl implements PdfService {
     }
 
     @Override
-    public ReportDTO createPreauthPdf(String initiativeId, String transactionId, String fiscalCode) {
+    public ReportDTOWithTrxCode createPreauthPdf(String transactionId) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        String trxCode;
         try (PdfWriter writer = new PdfWriter(baos);
             PdfDocument pdf = new PdfDocument(writer);
             Document doc = new Document(pdf, PageSize.A4)) {
@@ -190,8 +191,8 @@ public class PdfServiceImpl implements PdfService {
 
 
             String prodotto = transactionInProgress.getAdditionalProperties().get("productName");
-            String trxCode = transactionInProgress.getTrxCode();
-
+            trxCode = transactionInProgress.getTrxCode();
+            String fiscalCode =  decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
             doc.add(buildCfAndDiscountRow(fiscalCode, discount, regular, bold, textPrimary, textSecondary));
 
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
@@ -206,14 +207,14 @@ public class PdfServiceImpl implements PdfService {
             doc.add(buildFooter(bold, regular, textSecondary));
 
         } catch (IOException | RuntimeException e) {
-            log.error("Errore durante la generazione del PDF (initiativeId={}, trxId={})",
-                Utilities.sanitizeString(initiativeId),
+            log.error("Errore durante la generazione del PDF (trxId={})",
                 Utilities.sanitizeString(transactionId), e);
             throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
         }
 
-        return ReportDTO.builder()
+        return ReportDTOWithTrxCode.builder()
             .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
+            .trxCode(trxCode)
             .build();
     }
 
@@ -274,11 +275,11 @@ public class PdfServiceImpl implements PdfService {
 
     private BlockElement<?> buildNotes(String transactionId, PdfFont regular, Color textSecondary) {
 
-        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
+        Table t = new Table(UnitValue.createPercentArray(new float[]{0.75f, 0.25f})).useAllAvailableWidth();
 
         Div left = new Div();
-        left.add(PdfUtils.smallLabel("Note:", regular, textSecondary));
-        left.add(PdfUtils.smallLabel("ID transazione: " + transactionId, regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("Note:", regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("ID transazione: " + transactionId, regular, textSecondary));
 
         t.addCell(PdfUtils.noBorderCell(left));
         return t.setMarginBottom(6);
