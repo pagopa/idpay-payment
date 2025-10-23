@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.repository;
 
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -12,4 +13,10 @@ public interface TransactionInProgressRepository  extends MongoRepository<Transa
     Optional<TransactionInProgress> findByInitiativeIdAndTrxCodeAndUserId(String initiativeId, String trxCode, String userId);
     List<TransactionInProgress> deleteByInitiativeId(String initiativeId);
     List<TransactionInProgress> findByUserIdAndInitiativeIdAndChannel(String userId, String initiativeId, String channel);
+    List<TransactionInProgress> findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+        String userId,
+        String initiativeId,
+        SyncTrxStatus status,
+        Boolean extendedAuthorization
+    );
 }
