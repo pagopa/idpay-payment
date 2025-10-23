@@ -71,6 +71,7 @@ public interface BarCodePaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     ResponseEntity<ReportDTO> downloadPreviewBarcode(
         @PathVariable("initiativeId") String initiativeId,
+        @PathVariable("transactionId") String transactionId,
         @PathVariable("trxCode") String trxCode,
         @RequestHeader("X-Fiscal-Code") String fiscalCode
     );
