@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -17,6 +18,7 @@ import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLogg
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.RestController;
@@ -127,5 +129,23 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
                 .body(reportDTO);
     }
 
+    @PerformanceLog(
+        value = "BAR_CODE_PREVIEW_PDF")
+    @Override
+    public ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
+        String transactionId) {
 
+        ReportDTOWithTrxCode reportDTO = pdfService.createPreauthPdf(transactionId);
+
+        ContentDisposition cd = ContentDisposition
+            .inline()
+            .filename(reportDTO.getTrxCode() + "_preautorizzazione.pdf", StandardCharsets.UTF_8)
+            .build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
+            .contentType(MediaType.APPLICATION_JSON)
+            .cacheControl(CacheControl.noStore())
+            .body(reportDTO);
+    }
 }

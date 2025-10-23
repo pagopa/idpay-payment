@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -65,5 +66,11 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId,
             @RequestHeader("X-Username") String username,
             @RequestHeader("X-Fiscal-Code") String fiscalCode
+    );
+
+    @GetMapping(value = "/transactions/{transactionId}/preview-pdf")
+    @ResponseStatus(code = HttpStatus.OK)
+    ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
+        @PathVariable("transactionId") String transactionId
     );
 }

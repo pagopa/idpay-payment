@@ -16,11 +16,16 @@ import com.itextpdf.layout.properties.*;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
+import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +43,7 @@ import java.util.Base64;
 public class PdfServiceImpl implements PdfService {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final TransactionInProgressRepository transactionInProgressRepository;
     private final DecryptRestConnector decryptRestConnector;
     private final ResourceLoader resourceLoader;
 
@@ -50,7 +56,8 @@ public class PdfServiceImpl implements PdfService {
 
 
     public PdfServiceImpl(
-            BarCodePaymentService barCodePaymentService, DecryptRestConnector decryptRestConnector,
+            BarCodePaymentService barCodePaymentService,
+        TransactionInProgressRepository transactionInProgressRepository, DecryptRestConnector decryptRestConnector,
             ResourceLoader resourceLoader,
             @Value("${pdf.font}") String font,
             @Value("${pdf.logoMimit}") String logoMimit,
@@ -60,7 +67,8 @@ public class PdfServiceImpl implements PdfService {
             @Value("${pdf.iconBarcode}") String iconBarcode
     ) {
         this.barCodePaymentService = barCodePaymentService;
-        this.decryptRestConnector = decryptRestConnector;
+      this.transactionInProgressRepository = transactionInProgressRepository;
+      this.decryptRestConnector = decryptRestConnector;
         this.resourceLoader = resourceLoader;
         this.font = font;
         this.logoMimit = logoMimit;
@@ -123,7 +131,7 @@ public class PdfServiceImpl implements PdfService {
             doc.add(new Paragraph().setHeight(10));
             doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary));
             doc.add(new Paragraph().setHeight(2));
-            doc.add(buildPoweredByPari(regular, brandBlue));
+            doc.add(buildPoweredByPari(regular, brandBlue, "Powered by"));
             doc.add(buildFooter(bold, regular, textSecondary));
 
         } catch (IOException | RuntimeException e) {
@@ -137,6 +145,89 @@ public class PdfServiceImpl implements PdfService {
         return ReportDTO.builder()
                 .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
                 .build();
+    }
+
+    @Override
+    public ReportDTOWithTrxCode createPreauthPdf(String transactionId) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        String trxCode;
+        try (PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document doc = new Document(pdf, PageSize.A4)) {
+
+            // Margini
+            doc.setMargins(36, 36, 48, 36);
+
+            // Font (con fallback gestito in PdfUtils)
+            PdfFont regular = PdfUtils.loadPdfFont(font, false, resourceLoader);
+            PdfFont bold = PdfUtils.loadPdfFont(font, true, resourceLoader);
+
+            // Palette
+            Color textPrimary   = new DeviceRgb(33, 37, 41);
+            Color textSecondary = new DeviceGray(0.35f);
+
+            Color textNote = new DeviceRgb(85, 92, 112);
+            Color brandBlue     = new DeviceRgb(0, 92, 230);
+
+            // Header + separatore
+            doc.add(buildHeader(regular, bold, textPrimary));
+
+            // Dati transazione
+            Optional<TransactionInProgress> optionalTransactionInProgress = transactionInProgressRepository.findById(transactionId);
+            TransactionInProgress transactionInProgress;
+
+            // Controllo presenza transazione
+            if (optionalTransactionInProgress.isEmpty()) {
+
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
+            }
+            transactionInProgress = optionalTransactionInProgress.get();
+
+            LocalDate createdDate = Utilities.getLocalDate(transactionInProgress.getTrxDate());
+            BigDecimal discount     = CommonUtilities.centsToEuro(transactionInProgress.getRewardCents());
+            BigDecimal total     = CommonUtilities.centsToEuro(transactionInProgress.getEffectiveAmountCents());
+
+            BigDecimal residualAmount     = total.subtract(discount);
+
+
+            String prodotto = transactionInProgress.getAdditionalProperties().get("productName");
+            trxCode = transactionInProgress.getTrxCode();
+            String fiscalCode =  decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+            doc.add(buildCfAndDiscountRow(fiscalCode, discount, regular, bold, textPrimary, textSecondary));
+
+            doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
+                .setMarginTop(6).setMarginBottom(18));
+            doc.add(buildProductDetailsAndDiscount(prodotto, trxCode, createdDate, total, residualAmount, regular, bold, textPrimary, textSecondary));
+
+            doc.add(new Paragraph().setHeight(2));
+            doc.add(buildNotes(transactionInProgress.getId(), regular, textNote));
+
+            doc.add(new Paragraph().setHeight(245));
+            doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
+            doc.add(buildFooter(bold, regular, textSecondary));
+
+        } catch (IOException | RuntimeException e) {
+
+            if (e instanceof TransactionNotFoundOrExpiredException) {
+
+                log.error("Errore durante la generazione del PDF (trxId={})",
+                    Utilities.sanitizeString(transactionId), e);
+              try {
+                throw e;
+              } catch (IOException ex) {
+                  throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
+              }
+            }
+
+            log.error("Errore durante la generazione del PDF (trxId={})",
+                Utilities.sanitizeString(transactionId), e);
+            throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
+        }
+
+        return ReportDTOWithTrxCode.builder()
+            .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
+            .trxCode(trxCode)
+            .build();
     }
 
     /**
@@ -194,6 +285,39 @@ public class PdfServiceImpl implements PdfService {
         return t.setMarginBottom(6);
     }
 
+    private BlockElement<?> buildNotes(String transactionId, PdfFont regular, Color textSecondary) {
+
+        Table t = new Table(UnitValue.createPercentArray(new float[]{0.75f, 0.25f})).useAllAvailableWidth();
+
+        Div left = new Div();
+        left.add(PdfUtils.smallLabelOriginalCase("Note:", regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("ID transazione: " + transactionId, regular, textSecondary));
+
+        t.addCell(PdfUtils.noBorderCell(left));
+        return t.setMarginBottom(6);
+    }
+
+    /**
+     * Crea la riga con codice fiscale e codice sconto.
+     */
+    private BlockElement<?> buildCfAndDiscountRow(String fiscalCode, BigDecimal importoSconto,
+        PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
+
+        Div left = new Div();
+        left.add(PdfUtils.smallLabelOriginalCase("Codice Fiscale del beneficiario", regular, textSecondary));
+        left.add(new Paragraph(fiscalCode).setFont(bold).setFontSize(12).setFontColor(textPrimary));
+
+        Div right = new Div();
+        right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+
+        t.addCell(PdfUtils.noBorderCell(left));
+        t.addCell(PdfUtils.noBorderCell(right));
+        return t.setMarginBottom(6);
+    }
+
+
     /**
      * Crea il blocco con i dettagli del bonus (date) e l'importo massimo.
      */
@@ -217,6 +341,37 @@ public class PdfServiceImpl implements PdfService {
                 .add(", nuovo e ad alta efficienza.")
                 .setFont(regular).setFontSize(10).setFontColor(textPrimary)
                 .setMarginTop(2).setMarginBottom(12));
+
+        t.addCell(PdfUtils.noBorderCell(left));
+        t.addCell(PdfUtils.noBorderCell(right));
+        return t.setMarginBottom(6);
+    }
+
+    /**
+     * Crea il blocco con i dettagli del prodotto (data) e l'importo dello sconto.
+     */
+    private BlockElement<?> buildProductDetailsAndDiscount(String prodotto, String trxCode, LocalDate dataDiEmissione, BigDecimal importo, BigDecimal spesaFinale,
+        PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
+        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
+
+        Div left = new Div();
+        left.add(new Paragraph("COSA STAI ACQUISTANDO").setFont(bold).setFontSize(11).setFontColor(textPrimary).setMarginBottom(10));
+        left.add(PdfUtils.smallLabelOriginalCase("Prodotto", regular, textSecondary));
+        left.add(new Paragraph(prodotto).setFont(bold).setFontSize(12).setMarginBottom(10));
+        left.add(PdfUtils.smallLabelOriginalCase("Data di emissione", regular, textSecondary));
+        left.add(new Paragraph(PdfUtils.formatDateIt(dataDiEmissione)).setFont(bold).setFontSize(12));
+
+        left.add(PdfUtils.smallLabelOriginalCase("Codice sconto", regular, textSecondary));
+        left.add(new Paragraph(trxCode.toUpperCase()).setFont(bold).setFontSize(12));
+
+        Div right = new Div();
+
+        right.add(new Paragraph().setHeight(22));
+        right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+
+        right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
 
         t.addCell(PdfUtils.noBorderCell(left));
         t.addCell(PdfUtils.noBorderCell(right));
@@ -303,7 +458,7 @@ public class PdfServiceImpl implements PdfService {
     /**
      * Crea la riga centrata "Powered by" con logo PARI.
      */
-    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue) {
+    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue, String text) {
         Div box = new Div().setTextAlignment(TextAlignment.CENTER).setMarginTop(20);
 
         Image pari = PdfUtils.loadImageOrNull(logoPari, 0, resourceLoader);
@@ -322,7 +477,7 @@ public class PdfServiceImpl implements PdfService {
                 .setTextAlignment(TextAlignment.LEFT)
                 .setPadding(0);
 
-        left.add(new Paragraph("Powered by").setFont(regular).setFontSize(10).setMargin(0));
+        left.add(new Paragraph(text).setFont(regular).setFontSize(10).setMargin(0));
 
         if (pari != null) {
             pari.setAutoScale(false).scaleToFit(80, 20);
@@ -350,7 +505,7 @@ public class PdfServiceImpl implements PdfService {
      */
     private BlockElement<?> buildFooter(PdfFont bold, PdfFont regular, Color textSecondary) {
         return new Paragraph()
-                .add(new Text("Pari ").setFont(bold))
+                .add(new Text("PARI ").setFont(bold))
                 .add(new Text("è la piattaforma digitale, sviluppata da "))
                 .add(new Text("PagoPA S.p.A").setFont(bold))
                 .add(new Text(", che semplifica l'accesso a bonus e incentivi pubblici. La piattaforma permette di gestire tutti gli incentivi in un unico posto e di utilizzarli presso i commercianti convenzionati."))

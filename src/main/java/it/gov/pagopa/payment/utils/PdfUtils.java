@@ -77,6 +77,22 @@ public final class PdfUtils {
     }
 
     /**
+     * Crea una piccola etichetta per campi descrittivi.
+     *
+     * @param text testo della label
+     * @param font font da usare
+     * @param color colore del testo
+     * @return Paragraph formattato
+     */
+    public static Paragraph smallLabelOriginalCase(String text, PdfFont font, Color color) {
+        return new Paragraph(text)
+            .setFont(font)
+            .setFontSize(9)
+            .setFontColor(color)
+            .setMarginBottom(2);
+    }
+
+    /**
      * Restituisce una cella senza bordo contenente l'elemento fornito.
      *
      * @param element IBlockElement da inserire nella cella
