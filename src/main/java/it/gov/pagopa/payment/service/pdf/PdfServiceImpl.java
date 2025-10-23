@@ -131,7 +131,7 @@ public class PdfServiceImpl implements PdfService {
             doc.add(new Paragraph().setHeight(10));
             doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary));
             doc.add(new Paragraph().setHeight(2));
-            doc.add(buildPoweredByPari(regular, brandBlue));
+            doc.add(buildPoweredByPari(regular, brandBlue, "Powered by"));
             doc.add(buildFooter(bold, regular, textSecondary));
 
         } catch (IOException | RuntimeException e) {
@@ -202,11 +202,23 @@ public class PdfServiceImpl implements PdfService {
             doc.add(new Paragraph().setHeight(2));
             doc.add(buildNotes(transactionInProgress.getId(), regular, textNote));
 
-            doc.add(new Paragraph().setHeight(2));
-            doc.add(buildPoweredByPari(regular, brandBlue));
+            doc.add(new Paragraph().setHeight(245));
+            doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
             doc.add(buildFooter(bold, regular, textSecondary));
 
         } catch (IOException | RuntimeException e) {
+
+            if (e instanceof TransactionNotFoundOrExpiredException) {
+
+                log.error("Errore durante la generazione del PDF (trxId={})",
+                    Utilities.sanitizeString(transactionId), e);
+              try {
+                throw e;
+              } catch (IOException ex) {
+                throw new RuntimeException(ex);
+              }
+            }
+
             log.error("Errore durante la generazione del PDF (trxId={})",
                 Utilities.sanitizeString(transactionId), e);
             throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
@@ -293,11 +305,11 @@ public class PdfServiceImpl implements PdfService {
         Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
 
         Div left = new Div();
-        left.add(PdfUtils.smallLabel("Codice Fiscale del beneficiario", regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("Codice Fiscale del beneficiario", regular, textSecondary));
         left.add(new Paragraph(fiscalCode).setFont(bold).setFontSize(12).setFontColor(textPrimary));
 
         Div right = new Div();
-        right.add(PdfUtils.smallLabel("Sconto", regular, textSecondary));
+        right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
 
         t.addCell(PdfUtils.noBorderCell(left));
@@ -344,19 +356,21 @@ public class PdfServiceImpl implements PdfService {
 
         Div left = new Div();
         left.add(new Paragraph("COSA STAI ACQUISTANDO").setFont(bold).setFontSize(11).setFontColor(textPrimary).setMarginBottom(10));
-        left.add(PdfUtils.smallLabel("Prodotto", regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("Prodotto", regular, textSecondary));
         left.add(new Paragraph(prodotto).setFont(bold).setFontSize(12).setMarginBottom(10));
-        left.add(PdfUtils.smallLabel("Data di emissione", regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("Data di emissione", regular, textSecondary));
         left.add(new Paragraph(PdfUtils.formatDateIt(dataDiEmissione)).setFont(bold).setFontSize(12));
 
-        left.add(PdfUtils.smallLabel("Codice sconto", regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("Codice sconto", regular, textSecondary));
         left.add(new Paragraph(trxCode.toUpperCase()).setFont(bold).setFontSize(12));
 
         Div right = new Div();
-        right.add(PdfUtils.smallLabel("Importo da scontare", regular, textSecondary));
+
+        right.add(new Paragraph().setHeight(22));
+        right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
 
-        right.add(PdfUtils.smallLabel("Spesa finale", regular, textSecondary));
+        right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
 
         t.addCell(PdfUtils.noBorderCell(left));
@@ -444,7 +458,7 @@ public class PdfServiceImpl implements PdfService {
     /**
      * Crea la riga centrata "Powered by" con logo PARI.
      */
-    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue) {
+    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue, String text) {
         Div box = new Div().setTextAlignment(TextAlignment.CENTER).setMarginTop(20);
 
         Image pari = PdfUtils.loadImageOrNull(logoPari, 0, resourceLoader);
@@ -463,7 +477,7 @@ public class PdfServiceImpl implements PdfService {
                 .setTextAlignment(TextAlignment.LEFT)
                 .setPadding(0);
 
-        left.add(new Paragraph("Powered by").setFont(regular).setFontSize(10).setMargin(0));
+        left.add(new Paragraph(text).setFont(regular).setFontSize(10).setMargin(0));
 
         if (pari != null) {
             pari.setAutoScale(false).scaleToFit(80, 20);
@@ -491,7 +505,7 @@ public class PdfServiceImpl implements PdfService {
      */
     private BlockElement<?> buildFooter(PdfFont bold, PdfFont regular, Color textSecondary) {
         return new Paragraph()
-                .add(new Text("Pari ").setFont(bold))
+                .add(new Text("PARI ").setFont(bold))
                 .add(new Text("è la piattaforma digitale, sviluppata da "))
                 .add(new Text("PagoPA S.p.A").setFont(bold))
                 .add(new Text(", che semplifica l'accesso a bonus e incentivi pubblici. La piattaforma permette di gestire tutti gli incentivi in un unico posto e di utilizzarli presso i commercianti convenzionati."))
