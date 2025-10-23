@@ -127,5 +127,25 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
                 .body(reportDTO);
     }
 
+    @PerformanceLog(
+        value = "BAR_CODE_PREVIEW_PDF")
+    @Override
+    public ResponseEntity<ReportDTO> downloadPreviewBarcode(
+        String initiativeId,
+        String trxCode,
+        String fiscalCode) {
 
+        ReportDTO reportDTO = pdfService.createPreauthPdf(initiativeId, trxCode, fiscalCode);
+
+        ContentDisposition cd = ContentDisposition
+            .inline()
+            .filename("barcode_" + trxCode + ".pdf", StandardCharsets.UTF_8)
+            .build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
+            .contentType(MediaType.APPLICATION_JSON)
+            .cacheControl(CacheControl.noStore())
+            .body(reportDTO);
+    }
 }
