@@ -19,13 +19,17 @@ on:
         required: false
         default: 'true'
       argocd_target_branch:
-          description: 'argocd target branch name'
-          required: false
-          default: 'main'
+        description: 'argocd target branch name'
+        required: false
+        default: 'main'
       postman_branch:
         description: postman branch name'
         required: false
         default: 'release-dev'
+
+permissions:
+  contents: read
+  packages: write
 
 env:
   # branch choosed by workflow_dispatch or by push event
@@ -84,5 +88,3 @@ jobs:
               "POSTMAN_BRANCH": "${{ github.event.inputs.postman_branch }}",
               "TRIGGER_MESSAGE": "idpay-payment"
             }
-
-
