@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +41,8 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
                         "Cannot operate on transaction with transactionCode [%s] in status %s".formatted(trxCode,trx.getStatus()));
             }
 
+            deleteUnusedVouchers(trx);
+
             trx.setStatus(SyncTrxStatus.CAPTURED);
             trx.setElaborationDateTime(LocalDateTime.now());
             repository.save(trx);
@@ -65,6 +68,27 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
         } catch (RuntimeException e) {
             auditUtilities.logErrorRetriveVoucher(intiativeId, trxCode, userId);
             throw e;
+        }
+    }
+
+    private void deleteUnusedVouchers(TransactionInProgress trx) {
+        List<TransactionInProgress> otherTrxs = repository
+            .findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+                trx.getUserId(),
+                trx.getInitiativeId(),
+                SyncTrxStatus.CREATED,
+                trx.getExtendedAuthorization()
+            );
+
+        if (!otherTrxs.isEmpty()) {
+            repository.deleteAll(otherTrxs);
+            otherTrxs.forEach(otherTrx ->
+                log.info("[CAPTURE_PAYMENT] Removed unused {} voucher (id={}) for user={} initiative={}",
+                    Boolean.TRUE.equals(otherTrx.getExtendedAuthorization()) ? "WEB" : "APP",
+                    otherTrx.getId(),
+                    trx.getUserId(),
+                    trx.getInitiativeId())
+            );
         }
     }
 }
