@@ -212,10 +212,10 @@ public class PdfServiceImpl implements PdfService {
                 .setMarginTop(6).setMarginBottom(18));
             doc.add(buildProductDetailsAndDiscount(pdf, codiceProdotto, prodotto, trxCode, createdDate, total, residualAmount, regular, bold, textPrimary, textSecondary));
 
-            doc.add(new Paragraph().setHeight(2));
+            doc.add(new Paragraph().setHeight(10));
             doc.add(buildNotes(transactionInProgress.getId(), regular, textNote));
 
-            doc.add(new Paragraph().setHeight(30));
+            doc.add(new Paragraph().setHeight(40));
             doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
             doc.add(buildFooter(bold, regular, textSecondary));
 
@@ -303,8 +303,8 @@ public class PdfServiceImpl implements PdfService {
         Table t = new Table(UnitValue.createPercentArray(new float[]{0.75f, 0.25f})).useAllAvailableWidth();
 
         Div left = new Div();
-        left.add(PdfUtils.smallLabelOriginalCase("Note:", regular, textSecondary));
-        left.add(PdfUtils.smallLabelOriginalCase("ID transazione: " + transactionId, regular, textSecondary));
+        left.add(PdfUtils.smallLabelOriginalCase("Note:", regular, textSecondary).setFontSize(8));
+        left.add(PdfUtils.smallLabelOriginalCase("ID transazione: " + transactionId, regular, textSecondary).setFontSize(8));
 
         t.addCell(PdfUtils.noBorderCell(left));
         return t.setMarginBottom(6);
@@ -320,7 +320,7 @@ public class PdfServiceImpl implements PdfService {
         Div left = new Div();
 
         Div right = new Div();
-        right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary));
+        right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary).setMarginTop(25f));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(6).setMarginTop(-5));
 
         t.addCell(PdfUtils.noBorderCell(left));
@@ -377,9 +377,11 @@ public class PdfServiceImpl implements PdfService {
 
         Div right = new Div();
 
-        right.add(new Paragraph().setHeight(16));
+        right.add(new Paragraph().setHeight(2));
         right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
+
+        right.add(new Paragraph().setHeight(3));
 
         addProductBarcodeDiv(pdf, productGtin, right, textSecondary, regular);
 
@@ -579,7 +581,7 @@ public class PdfServiceImpl implements PdfService {
                 .add(new Text("PARI ").setFont(bold))
                 .add(new Text("è la piattaforma digitale, sviluppata da "))
                 .add(new Text("PagoPA S.p.A").setFont(bold))
-                .add(new Text(", che semplifica l'accesso a bonus e incentivi pubblici. La piattaforma permette di gestire tutti gli incentivi in un unico posto e di utilizzarli presso i commercianti convenzionati."))
+                .add(new Text(", che semplifica l'accesso a bonus e incentivi pubblici. La \npiattaforma permette di gestire tutti gli incentivi in un unico posto e di utilizzarli presso i commercianti convenzionati."))
                 .setFont(regular)
                 .setFontSize(9)
                 .setFontColor(textSecondary)
