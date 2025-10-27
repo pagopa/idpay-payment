@@ -14,6 +14,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
+import java.util.HashMap;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -388,9 +389,14 @@ class PdfServiceTest {
         String trxCode = "PREAUTHCODE001";
         String userId = "USER_ID_FOR_DECRYPT";
         String fiscalCode = "MRARSS80A01H501Z";
+        String productGtin = "123456789012";
 
         TransactionInProgress mockTrx = createMockTransactionInProgress(
             transactionId, trxCode, userId, 3000L, 10000L, "Prodotto Test");
+
+        Map<String, String> properties = new HashMap<>(mockTrx.getAdditionalProperties());
+        properties.put("productGtin", productGtin);
+        mockTrx.setAdditionalProperties(properties);
 
         when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
@@ -433,9 +439,14 @@ class PdfServiceTest {
         String userId = "USER_FOR_DECRYPT";
         String fiscalCode = "MRARSS80A01H501Z";
         String productName = "LAVATRICE SUPER MODELLO X";
+        String productGtin = "987654321198";
 
         TransactionInProgress mockTrx = createMockTransactionInProgress(
             transactionId, trxCode, userId, 3000L, 10000L, productName);
+
+        Map<String, String> properties = new HashMap<>(mockTrx.getAdditionalProperties());
+        properties.put("productGtin", productGtin);
+        mockTrx.setAdditionalProperties(properties);
 
         when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));

@@ -189,20 +189,33 @@ public class PdfServiceImpl implements PdfService {
 
             BigDecimal residualAmount     = total.subtract(discount);
 
-
             String prodotto = transactionInProgress.getAdditionalProperties().get("productName");
+            String codiceProdotto = transactionInProgress.getAdditionalProperties().get("productGtin");
             trxCode = transactionInProgress.getTrxCode();
-            String fiscalCode =  decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
-            doc.add(buildCfAndDiscountRow(fiscalCode, discount, regular, bold, textPrimary, textSecondary));
+            String fiscalCode = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+
+            doc.add(buildDiscountRow(discount, regular, bold, textPrimary, textSecondary));
+
+            Table cfAndDiscountBarcodeTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
+                .useAllAvailableWidth();
+
+            // Left
+            cfAndDiscountBarcodeTable.addCell(buildBarcodeCell(pdf, fiscalCode,
+                "Codice Fiscale del beneficiario", regular, textSecondary));
+            // Right
+            cfAndDiscountBarcodeTable.addCell(buildBarcodeCell(pdf, trxCode,
+                "Codice sconto", regular, textSecondary));
+
+            doc.add(cfAndDiscountBarcodeTable);
 
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                 .setMarginTop(6).setMarginBottom(18));
-            doc.add(buildProductDetailsAndDiscount(prodotto, trxCode, createdDate, total, residualAmount, regular, bold, textPrimary, textSecondary));
+            doc.add(buildProductDetailsAndDiscount(pdf, codiceProdotto, prodotto, trxCode, createdDate, total, residualAmount, regular, bold, textPrimary, textSecondary));
 
             doc.add(new Paragraph().setHeight(2));
             doc.add(buildNotes(transactionInProgress.getId(), regular, textNote));
 
-            doc.add(new Paragraph().setHeight(245));
+            doc.add(new Paragraph().setHeight(30));
             doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
             doc.add(buildFooter(bold, regular, textSecondary));
 
@@ -298,19 +311,17 @@ public class PdfServiceImpl implements PdfService {
     }
 
     /**
-     * Crea la riga con codice fiscale e codice sconto.
+     * Crea la riga con codice sconto.
      */
-    private BlockElement<?> buildCfAndDiscountRow(String fiscalCode, BigDecimal importoSconto,
+    private BlockElement<?> buildDiscountRow(BigDecimal importoSconto,
         PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
         Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
 
         Div left = new Div();
-        left.add(PdfUtils.smallLabelOriginalCase("Codice Fiscale del beneficiario", regular, textSecondary));
-        left.add(new Paragraph(fiscalCode).setFont(bold).setFontSize(12).setFontColor(textPrimary));
 
         Div right = new Div();
         right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(6).setMarginTop(-5));
 
         t.addCell(PdfUtils.noBorderCell(left));
         t.addCell(PdfUtils.noBorderCell(right));
@@ -350,7 +361,7 @@ public class PdfServiceImpl implements PdfService {
     /**
      * Crea il blocco con i dettagli del prodotto (data) e l'importo dello sconto.
      */
-    private BlockElement<?> buildProductDetailsAndDiscount(String prodotto, String trxCode, LocalDate dataDiEmissione, BigDecimal importo, BigDecimal spesaFinale,
+    private BlockElement<?> buildProductDetailsAndDiscount(PdfDocument pdf, String productGtin, String prodotto, String trxCode, LocalDate dataDiEmissione, BigDecimal importo, BigDecimal spesaFinale,
         PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
         Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
 
@@ -366,16 +377,49 @@ public class PdfServiceImpl implements PdfService {
 
         Div right = new Div();
 
-        right.add(new Paragraph().setHeight(22));
+        right.add(new Paragraph().setHeight(16));
         right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
+
+        addProductBarcodeDiv(pdf, productGtin, right, textSecondary, regular);
 
         right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
+        right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
+
+        addProductBarcodeDiv(pdf, productGtin, right, textSecondary, regular);
 
         t.addCell(PdfUtils.noBorderCell(left));
         t.addCell(PdfUtils.noBorderCell(right));
-        return t.setMarginBottom(6);
+        return t.setMarginBottom(2);
+    }
+
+    /**
+     * Aggiunge ad un blocco il codice a barre del prodotto
+     */
+    private void addProductBarcodeDiv(PdfDocument pdf, String productGtin, Div div, Color textSecondary, PdfFont regular) {
+
+        div.add(new Paragraph("Codice a barre")
+            .setFont(regular)
+            .setFontSize(8)
+            .setFontColor(textSecondary)
+            .setTextAlignment(TextAlignment.LEFT)
+            .setMarginTop(10)
+            .setMarginBottom(6));
+
+        Barcode128 barcode = new Barcode128(pdf);
+        barcode.setCodeType(Barcode128.CODE128);
+        barcode.setCode(productGtin);
+        barcode.setFont(null);
+        barcode.setSize(0f);
+        barcode.setBaseline(0f);
+        barcode.setBarHeight(25.5F);
+
+        Image barcodeImg = new Image(barcode.createFormXObject(pdf));
+        barcodeImg.setAutoScale(false);
+        barcodeImg.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        div.add(barcodeImg.setMarginTop(2));
+
+        div.add(new Paragraph(productGtin.toUpperCase()).setFont(regular).setFontSize(12)).setMarginTop(20);
     }
 
     /**
@@ -413,6 +457,33 @@ public class PdfServiceImpl implements PdfService {
 
         t.addCell(PdfUtils.noBorderCell(right));
         return t;
+    }
+
+    /**
+     * Crea una cella codice a barre
+     */
+    private Cell buildBarcodeCell(PdfDocument pdf, String code, String title, PdfFont regular, Color textSecondary) {
+
+        Div div = new Div();
+
+        div.add(PdfUtils.smallLabelOriginalCase(title, regular, textSecondary));
+
+        Barcode128 barcode = new Barcode128(pdf);
+        barcode.setCodeType(Barcode128.CODE128);
+        barcode.setCode(code);
+        barcode.setFont(null);
+        barcode.setSize(0f);
+        barcode.setBaseline(0f);
+        barcode.setBarHeight(25.5F);
+
+        Image barcodeImg = new Image(barcode.createFormXObject(pdf));
+        barcodeImg.setAutoScale(false);
+        barcodeImg.setHorizontalAlignment(HorizontalAlignment.LEFT);
+        div.add(barcodeImg.setMarginTop(2));
+
+        div.add(new Paragraph(code.toUpperCase()).setFont(regular).setFontSize(12)).setMarginTop(20);
+
+        return PdfUtils.noBorderCell(div);
     }
 
     /**
