@@ -677,7 +677,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(expiredTrxResult);
 
     Assertions.assertEquals(transactionExpired.getTrxCode(), expiredTrxResult.getTrxCode());
-    Assertions.assertEquals(transactionExpired.getTrxDate(), expiredTrxResult.getTrxDate());
+    Assertions.assertEquals(transactionExpired.getTrxDate().toInstant(), expiredTrxResult.getTrxDate().toInstant());
     Assertions.assertEquals(transactionExpired.getIdTrxAcquirer(), expiredTrxResult.getIdTrxAcquirer());
     Assertions.assertEquals(transactionExpired.getOperationType(), expiredTrxResult.getOperationType());
 
@@ -755,7 +755,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(expiredTrxResult);
 
     Assertions.assertEquals(transactionExpired.getTrxCode(), expiredTrxResult.getTrxCode());
-    Assertions.assertEquals(transactionExpired.getTrxDate(), expiredTrxResult.getTrxDate());
+    Assertions.assertEquals(transactionExpired.getTrxDate().toInstant(), expiredTrxResult.getTrxDate().toInstant());
     Assertions.assertEquals(transactionExpired.getIdTrxAcquirer(), expiredTrxResult.getIdTrxAcquirer());
     Assertions.assertEquals(transactionExpired.getOperationType(), expiredTrxResult.getOperationType());
 
