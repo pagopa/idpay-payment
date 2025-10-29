@@ -210,7 +210,7 @@ public class PdfServiceImpl implements PdfService {
 
             doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
                 .setMarginTop(6).setMarginBottom(18));
-            doc.add(buildProductDetailsAndDiscount(pdf, codiceProdotto, prodotto, trxCode, createdDate, total, residualAmount, regular, bold, textPrimary, textSecondary));
+            doc.add(buildProductDetailsAndDiscount(pdf, codiceProdotto, prodotto, createdDate, total, residualAmount, regular, bold, textPrimary, textSecondary));
 
             doc.add(new Paragraph().setHeight(10));
             doc.add(buildNotes(transactionInProgress.getId(), regular, textNote));
@@ -361,7 +361,8 @@ public class PdfServiceImpl implements PdfService {
     /**
      * Crea il blocco con i dettagli del prodotto (data) e l'importo dello sconto.
      */
-    private BlockElement<?> buildProductDetailsAndDiscount(PdfDocument pdf, String productGtin, String prodotto, String trxCode, LocalDate dataDiEmissione, BigDecimal importo, BigDecimal spesaFinale,
+    private BlockElement<?> buildProductDetailsAndDiscount(PdfDocument pdf, String productGtin, String prodotto,
+        LocalDate dataDiEmissione, BigDecimal importo, BigDecimal spesaFinale,
         PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
         Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
 
@@ -381,12 +382,12 @@ public class PdfServiceImpl implements PdfService {
         right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
 
-        addProductBarcodeDiv(pdf, importo.toString().replaceAll("\\.", ","), right, textSecondary, regular);
+        addProductBarcodeDiv(pdf, importo.toString().replace("\\.", ","), right, textSecondary, regular);
 
         right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary).setMarginTop(18));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
 
-        addProductBarcodeDiv(pdf, spesaFinale.toString().replaceAll("\\.", ","), right, textSecondary, regular);
+        addProductBarcodeDiv(pdf, spesaFinale.toString().replace("\\.", ","), right, textSecondary, regular);
 
         t.addCell(PdfUtils.noBorderCell(left));
         t.addCell(PdfUtils.noBorderCell(right));
