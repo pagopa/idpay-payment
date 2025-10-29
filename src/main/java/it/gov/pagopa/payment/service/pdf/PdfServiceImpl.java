@@ -407,44 +407,6 @@ public class PdfServiceImpl implements PdfService {
     }
 
     /**
-     * Crea il blocco con i dettagli del prodotto (data) e l'importo dello sconto.
-     */
-    private BlockElement<?> buildProductDetailsAndDiscount(PdfDocument pdf, String productGtin, String prodotto,
-        LocalDate dataDiEmissione, BigDecimal importo, BigDecimal spesaFinale,
-        PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
-        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
-
-        Div left = new Div();
-        left.add(new Paragraph("COSA STAI ACQUISTANDO").setFont(bold).setFontSize(11).setFontColor(textPrimary).setMarginBottom(10));
-        left.add(PdfUtils.smallLabelOriginalCase("Prodotto", regular, textSecondary));
-        left.add(new Paragraph(prodotto).setFont(bold).setFontSize(12).setMarginBottom(10));
-        left.add(PdfUtils.smallLabelOriginalCase("Data di emissione", regular, textSecondary));
-        left.add(new Paragraph(PdfUtils.formatDateIt(dataDiEmissione)).setFont(bold).setFontSize(12));
-
-        left.add(PdfUtils.smallLabelOriginalCase("GTIN prodotto", regular, textSecondary));
-        left.add(new Paragraph(productGtin.toUpperCase()).setFont(bold).setFontSize(12));
-
-        Div right = new Div();
-
-        right.add(new Paragraph().setHeight(15));
-        right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
-
-        // Adjust decimal to italian currency format and add barcode
-        addProductBarcodeDiv(pdf, importo.toString().replace(".", ","), right, textSecondary, regular);
-
-        right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary).setMarginTop(18));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
-
-        // Adjust decimal to italian currency format and add barcode
-        addProductBarcodeDiv(pdf, spesaFinale.toString().replace(".", ","), right, textSecondary, regular);
-
-        t.addCell(PdfUtils.noBorderCell(left));
-        t.addCell(PdfUtils.noBorderCell(right));
-        return t.setMarginBottom(2);
-    }
-
-    /**
      * Aggiunge ad un blocco il codice a barre del prodotto
      */
     private void addProductBarcodeDiv(PdfDocument pdf, String productGtin, Div div, Color textSecondary, PdfFont regular) {
