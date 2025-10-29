@@ -372,23 +372,21 @@ public class PdfServiceImpl implements PdfService {
         left.add(PdfUtils.smallLabelOriginalCase("Data di emissione", regular, textSecondary));
         left.add(new Paragraph(PdfUtils.formatDateIt(dataDiEmissione)).setFont(bold).setFontSize(12));
 
-        left.add(PdfUtils.smallLabelOriginalCase("Codice sconto", regular, textSecondary));
-        left.add(new Paragraph(trxCode.toUpperCase()).setFont(bold).setFontSize(12));
+        left.add(PdfUtils.smallLabelOriginalCase("GTIN prodotto", regular, textSecondary));
+        left.add(new Paragraph(productGtin.toUpperCase()).setFont(bold).setFontSize(12));
 
         Div right = new Div();
 
-        right.add(new Paragraph().setHeight(2));
+        right.add(new Paragraph().setHeight(15));
         right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
 
-        right.add(new Paragraph().setHeight(3));
+        addProductBarcodeDiv(pdf, importo.toString().replaceAll("\\.", ","), right, textSecondary, regular);
 
-        addProductBarcodeDiv(pdf, productGtin, right, textSecondary, regular);
-
-        right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary));
+        right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary).setMarginTop(18));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
 
-        addProductBarcodeDiv(pdf, productGtin, right, textSecondary, regular);
+        addProductBarcodeDiv(pdf, spesaFinale.toString().replaceAll("\\.", ","), right, textSecondary, regular);
 
         t.addCell(PdfUtils.noBorderCell(left));
         t.addCell(PdfUtils.noBorderCell(right));
@@ -420,8 +418,6 @@ public class PdfServiceImpl implements PdfService {
         barcodeImg.setAutoScale(false);
         barcodeImg.setHorizontalAlignment(HorizontalAlignment.LEFT);
         div.add(barcodeImg.setMarginTop(2));
-
-        div.add(new Paragraph(productGtin.toUpperCase()).setFont(regular).setFontSize(12)).setMarginTop(20);
     }
 
     /**
