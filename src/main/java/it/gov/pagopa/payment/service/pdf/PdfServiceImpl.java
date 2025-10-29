@@ -382,12 +382,14 @@ public class PdfServiceImpl implements PdfService {
         right.add(PdfUtils.smallLabelOriginalCase("Importo da scontare", regular, textSecondary));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
 
-        addProductBarcodeDiv(pdf, importo.toString().replace("\\.", ","), right, textSecondary, regular);
+        // Adjust decimal to italian currency format and add barcode
+        addProductBarcodeDiv(pdf, importo.toString().replace(".", ","), right, textSecondary, regular);
 
         right.add(PdfUtils.smallLabelOriginalCase("Spesa finale", regular, textSecondary).setMarginTop(18));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(spesaFinale)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(-5).setMarginTop(-5));
 
-        addProductBarcodeDiv(pdf, spesaFinale.toString().replace("\\.", ","), right, textSecondary, regular);
+        // Adjust decimal to italian currency format and add barcode
+        addProductBarcodeDiv(pdf, spesaFinale.toString().replace(".", ","), right, textSecondary, regular);
 
         t.addCell(PdfUtils.noBorderCell(left));
         t.addCell(PdfUtils.noBorderCell(right));
