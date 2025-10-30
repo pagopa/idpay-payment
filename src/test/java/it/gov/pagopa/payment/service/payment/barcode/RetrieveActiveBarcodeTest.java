@@ -78,6 +78,7 @@ class RetrieveActiveBarcodeTest {
                 .thenReturn(List.of(trx1, trx2, trx3));
 
         TransactionBarCodeResponse trxExpected = transactionBarCodeInProgress2TransactionResponseMapperMock.apply(trx2);
+        trxExpected.setResidualBudgetCents(trxExpected.getVoucherAmountCents());
 
         //When
         TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
