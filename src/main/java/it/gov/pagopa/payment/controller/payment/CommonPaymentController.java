@@ -45,9 +45,9 @@ public interface CommonPaymentController {
             @RequestPart("file") MultipartFile file
     );
 
-    @PostMapping("/transactions/{transactionId}/reward")
+    @PostMapping("/transactions/{transactionId}/invoice")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    void rewardTransaction(
+    void invoiceTransaction(
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
         @RequestHeader("x-point-of-sale-id") String pointOfSaleId,

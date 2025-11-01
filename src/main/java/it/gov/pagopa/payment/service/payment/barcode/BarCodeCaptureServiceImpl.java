@@ -45,6 +45,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
 
             trx.setStatus(SyncTrxStatus.CAPTURED);
             trx.setElaborationDateTime(LocalDateTime.now());
+            trx.setUpdateDate(LocalDateTime.now());
             repository.save(trx);
 
             auditUtilities.logCapturePayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());

@@ -182,6 +182,7 @@ app:
     expirations:
       cancelMinutes: ${COMMON_PAYMENT_CANCEL_EXPIRE_MINUTES:${PAYMENT_CANCEL_EXPIRE_MINUTES:10080}}
       authorizationMinutes: ${COMMON_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
+      minDaysToInvoiceTransaction: ${COMMON_PAYMENT_INVOICE_MIN_DAYS:0}
   qrCode:
     throttlingSeconds: ${QR_CODE_PAYMENT_THROTTLING_SECONDS:${PAYMENT_THROTTLING_SECONDS:1}}
     expirations:
