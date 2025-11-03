@@ -65,7 +65,7 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if(trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())){
+            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(trx.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
