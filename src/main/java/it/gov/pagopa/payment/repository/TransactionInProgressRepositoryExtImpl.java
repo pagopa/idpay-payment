@@ -392,11 +392,11 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             .withValue(
                 ConditionalOperators.switchCases(
                     ConditionalOperators.Switch.CaseOperator.when(
-                            ComparisonOperators.valueOf(FIELD_STATUS).equalToValue("AUTHORIZED"))
+                            ComparisonOperators.valueOf(FIELD_STATUS).equalToValue(SyncTrxStatus.AUTHORIZED.name()))
                         .then("Da autorizzare"),
                     ConditionalOperators.Switch.CaseOperator.when(
-                            ComparisonOperators.valueOf(FIELD_STATUS).equalToValue("CAPTURED"))
-                        .then("Da rimborsare")
+                            ComparisonOperators.valueOf(FIELD_STATUS).equalToValue(SyncTrxStatus.CAPTURED.name()))
+                        .then("Fattura da caricare")
                 ).defaultTo("Altro")
             ).build(),
         Aggregation.match(criteria),
