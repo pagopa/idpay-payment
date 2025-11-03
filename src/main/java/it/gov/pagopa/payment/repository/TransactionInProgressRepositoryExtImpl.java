@@ -396,13 +396,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                         .then("Da autorizzare"),
                     ConditionalOperators.Switch.CaseOperator.when(
                             ComparisonOperators.valueOf(FIELD_STATUS).equalToValue(SyncTrxStatus.CAPTURED.name()))
-                        .then("Fattura da caricare"),
-                    ConditionalOperators.Switch.CaseOperator.when(
-                            ComparisonOperators.valueOf(FIELD_STATUS).equalToValue(SyncTrxStatus.INVOICED.name()))
-                        .then("Preso in carico"),
-                    ConditionalOperators.Switch.CaseOperator.when(
-                            ComparisonOperators.valueOf(FIELD_STATUS).equalToValue(SyncTrxStatus.REFUNDED.name()))
-                        .then("Stornato")
+                        .then("Fattura da caricare")
                 ).defaultTo("Altro")
             ).build(),
         Aggregation.match(criteria),
