@@ -29,6 +29,8 @@ public class PointOfSaleTransactionDTO {
     private Long rewardAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime trxDate;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime trxChargeDate;
     private Long trxExpirationSeconds;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime updateDate;

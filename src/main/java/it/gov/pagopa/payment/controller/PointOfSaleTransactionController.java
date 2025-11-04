@@ -18,5 +18,5 @@ public interface PointOfSaleTransactionController {
                                                               @RequestParam(required = false) String fiscalCode,
                                                               @RequestParam(required = false) String status,
                                                               @RequestParam(required = false) String productGtin,
-                                                              @PageableDefault(sort = "updateDate", direction = Sort.Direction.DESC) Pageable pageable);
+                                                              @PageableDefault(sort = "trxChargeDate", direction = Sort.Direction.DESC) Pageable pageable);
 }
