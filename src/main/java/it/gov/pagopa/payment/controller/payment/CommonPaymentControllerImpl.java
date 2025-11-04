@@ -21,7 +21,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
     private final CommonReversalServiceImpl commonReversalService;
-    private final CommonRewardServiceImpl commonRewardService;
+    private final CommonInvoiceServiceImpl commonInvoiceService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
     private final QRCodeExpirationService qrCodeExpirationService; // used just to force the expiration: this behavior is the same for all channels
 
@@ -29,14 +29,14 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                                        @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
                                        @Qualifier("commonReversal") CommonReversalServiceImpl commonReversalService,
-                                       @Qualifier("commonReward") CommonRewardServiceImpl commonRewardService,
+                                       @Qualifier("commonInvoice") CommonInvoiceServiceImpl commonInvoiceService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
                                        QRCodeExpirationService qrCodeExpirationService) {
         this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
         this.commonReversalService = commonReversalService;
-        this.commonRewardService = commonRewardService;
+        this.commonInvoiceService = commonInvoiceService;
         this.commonStatusTransactionService = commonStatusTransactionService;
         this.qrCodeExpirationService = qrCodeExpirationService;
     }
@@ -96,18 +96,18 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     }
 
     @Override
-    @PerformanceLog(value = "REWARD_TRANSACTION")
-    public void rewardTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
+    @PerformanceLog(value = "INVOICE_TRANSACTION")
+    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
         final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
 
         log.info(
-            "[REWARD_TRANSACTION] The merchant {} is requesting a reward for the transactionId {} at POS {}",
+            "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} at POS {}",
             sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
         );
-        commonRewardService.rewardTransaction(transactionId, merchantId, pointOfSaleId, file);
+        commonInvoiceService.invoiceTransaction(transactionId, merchantId, pointOfSaleId, file);
     }
 
     @Override

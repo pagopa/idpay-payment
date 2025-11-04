@@ -16,7 +16,6 @@ import java.math.BigDecimal;
 @With
 public class PreviewPaymentRequestDTO {
 
-  @NotBlank(message = "productName must not be blank")
   @JsonProperty("productName")
   private String productName;
 
