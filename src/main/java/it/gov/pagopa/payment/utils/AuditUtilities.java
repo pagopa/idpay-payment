@@ -197,7 +197,7 @@ public class AuditUtilities {
                 dto.getTrxCode(),
                 dto.getUserId(),
                 String.valueOf(dto.getRewardCents()),
-                dto.getInvoiceFilename(),
+                dto.getCreditNoteFilename(),
                 dto.getMerchantId(),
                 dto.getPointOfSaleId()
         );

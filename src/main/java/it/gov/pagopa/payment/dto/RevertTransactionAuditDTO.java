@@ -13,7 +13,8 @@ public class RevertTransactionAuditDTO {
   private String trxCode;
   private String userId;
   private Long rewardCents;
-  private String invoiceFilename;
+  private String creditNoteFilename;
+  private String creditNoteNumber;
   private String merchantId;
   private String pointOfSaleId;
 }

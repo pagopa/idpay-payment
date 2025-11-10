@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
-import it.gov.pagopa.payment.model.InvoiceFile;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -47,10 +47,11 @@ public class CommonInvoiceServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
+    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String invoiceNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
+            Utilities.checkDocumentNumberOrThrow(invoiceNumber);
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the invoiced status
             TransactionInProgress trx = repository.findById(transactionId)
@@ -70,13 +71,16 @@ public class CommonInvoiceServiceImpl {
             }
 
             // Uploading invoice to storage
-            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                     merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
             // updating the transaction status to invoiced
             trx.setStatus(SyncTrxStatus.INVOICED);
-            trx.setInvoiceFile(InvoiceFile.builder().filename(file.getOriginalFilename()).build());
+            trx.setInvoiceData(InvoiceData.builder()
+                .filename(file.getOriginalFilename())
+                .docNumber(invoiceNumber)
+                .build());
 
             // sending the transaction invoice notification (to store it in transaction db collection)
             sendInvoiceTransactionNotification(trx);
@@ -89,6 +93,7 @@ public class CommonInvoiceServiceImpl {
                     trx.getUserId(),
                     ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
                     path,
+                    invoiceNumber,
                     merchantId,
                     pointOfSaleId
             );
