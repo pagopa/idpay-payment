@@ -138,39 +138,39 @@ class PdfServiceTest {
 
             // Header + titolo
             assertTrue(norm.contains("BONUS ELETTRODOMESTICI"),
-                () -> "Missing 'BONUS ELETTRODOMESTICI' in:\n" + norm);
+                    () -> "Missing 'BONUS ELETTRODOMESTICI' in:\n" + norm);
             // Ministero: verifichiamo per parole chiave per evitare problemi di spazi/punteggiatura
             assertTrue(norm.contains("MINISTERO") && norm.contains("IMPRESE") && norm.contains("MADE") && norm.contains("ITALY"),
-                () -> "Missing ministero line keywords in:\n" + norm);
+                    () -> "Missing ministero line keywords in:\n" + norm);
 
             // Intestatario/CF
             assertTrue(norm.contains("GIOVANNA") && norm.contains("BELTRAMIN"),
-                () -> "Missing name in:\n" + norm);
+                    () -> "Missing name in:\n" + norm);
             assertTrue(norm.contains("BLTGVN78A52C409X"),
-                () -> "Missing CF in:\n" + norm);
-            assertTrue(norm.contains("DETTAGLI DEL BONUS".replaceAll("[^A-Z0-9]+"," ")),
-                () -> "Missing 'DETTAGLI DEL BONUS' in:\n" + norm);
+                    () -> "Missing CF in:\n" + norm);
+            assertTrue(norm.contains("DETTAGLI DEL BONUS".replaceAll("[^A-Z0-9]+", " ")),
+                    () -> "Missing 'DETTAGLI DEL BONUS' in:\n" + norm);
 
             // Sezione barcode
-            assertTrue(norm.contains("CODICE A BARRE".replaceAll("[^A-Z0-9]+"," ")),
-                () -> "Missing 'CODICE A BARRE' in:\n" + norm);
+            assertTrue(norm.contains("CODICE A BARRE".replaceAll("[^A-Z0-9]+", " ")),
+                    () -> "Missing 'CODICE A BARRE' in:\n" + norm);
 
             // Box "Come usare il bonus" + step (controllo per parole chiave)
-            assertTrue(norm.contains("COME USARE IL BONUS".replaceAll("[^A-Z0-9]+"," ")),
-                () -> "Missing 'COME USARE IL BONUS' in:\n" + norm);
+            assertTrue(norm.contains("COME USARE IL BONUS".replaceAll("[^A-Z0-9]+", " ")),
+                    () -> "Missing 'COME USARE IL BONUS' in:\n" + norm);
             assertTrue(norm.contains("SCEGLI") && norm.contains("ELETTRODOMESTICO") && norm.contains("SOSTITUIRE"),
-                () -> "Missing step 1 keywords in:\n" + norm);
+                    () -> "Missing step 1 keywords in:\n" + norm);
             assertTrue(norm.contains("PORTA") && norm.contains("TESSERA") && norm.contains("SANITARIA"),
-                () -> "Missing step 2 keywords in:\n" + norm);
+                    () -> "Missing step 2 keywords in:\n" + norm);
             assertTrue(norm.contains("MOSTRA") && norm.contains("CODICE") && norm.contains("BARRE"),
-                () -> "Missing step 3 keywords in:\n" + norm);
+                    () -> "Missing step 3 keywords in:\n" + norm);
 
             // Powered by + Pari/PagoPA (gestiamo S.P.A. che spesso esce come 'S P A')
-            boolean hasPowered = norm.contains("POWERED BY");
+            boolean hasFooterPhrase = norm.contains("IL BONUS ELETTRODOMESTICI E REALIZZATO TRAMITE");
             boolean hasPari = norm.contains("PARI");
-            boolean hasPagoPA = norm.contains("PAGOPA") && norm.contains("SPA"); // S.P.A → "SPA"
-            assertTrue(hasPowered && (hasPari || hasPagoPA),
-                () -> "Missing 'Powered by' and brand in:\n" + norm);
+            boolean hasPagoPA = norm.contains("PAGOPA") && norm.contains("SPA");
+            assertTrue(hasFooterPhrase && (hasPari || hasPagoPA),
+                    () -> "Missing footer phrase or brand in:\n" + norm);
         }
     }
 
@@ -299,8 +299,8 @@ class PdfServiceTest {
             assertTrue(norm.contains("BONUS ELETTRODOMESTICI"),
                 () -> "Manca 'BONUS ELETTRODOMESTICI' in:\n" + norm);
 
-            assertTrue(norm.contains("POWERED BY"),
-                () -> "Manca 'POWERED BY' in:\n" + norm);
+            assertTrue(norm.contains("IL BONUS ELETTRODOMESTICI E REALIZZATO TRAMITE"),
+                    () -> "Manca la frase 'Il Bonus Elettrodomestici è realizzato tramite' in:\n" + norm);
 
             boolean hasPagoPA = norm.contains("PAGOPA");
             boolean hasSpa = norm.contains(" SPA ") || norm.contains(" S P A ");

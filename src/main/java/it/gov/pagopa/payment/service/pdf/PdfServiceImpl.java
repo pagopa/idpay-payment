@@ -131,7 +131,7 @@ public class PdfServiceImpl implements PdfService {
             doc.add(new Paragraph().setHeight(10));
             doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary));
             doc.add(new Paragraph().setHeight(2));
-            doc.add(buildPoweredByPari(regular, brandBlue, "Powered by"));
+            doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
             doc.add(buildFooter(bold, regular, textSecondary));
 
         } catch (IOException | RuntimeException e) {
