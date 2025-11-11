@@ -28,9 +28,13 @@ public final class Utilities {
     }
 
     public static void checkFileExtensionOrThrow(MultipartFile file) {
-        if (file == null || file.getOriginalFilename() == null ||
-            (!file.getOriginalFilename().toLowerCase().endsWith(".pdf") &&
-                !file.getOriginalFilename().toLowerCase().endsWith(".xml"))) {
+        if (file == null) {
+            throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File is required");
+        }
+
+        String filename = file.getOriginalFilename();
+        if (filename == null ||
+            (!filename.toLowerCase().endsWith(".pdf") && !filename.toLowerCase().endsWith(".xml"))) {
             throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
         }
     }

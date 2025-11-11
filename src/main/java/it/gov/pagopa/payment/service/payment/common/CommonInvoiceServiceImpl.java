@@ -47,11 +47,11 @@ public class CommonInvoiceServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String invoiceNumber) {
+    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
-            Utilities.checkDocumentNumberOrThrow(invoiceNumber);
+            Utilities.checkDocumentNumberOrThrow(docNumber);
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the invoiced status
             TransactionInProgress trx = repository.findById(transactionId)
@@ -79,7 +79,7 @@ public class CommonInvoiceServiceImpl {
             trx.setStatus(SyncTrxStatus.INVOICED);
             trx.setInvoiceData(InvoiceData.builder()
                 .filename(file.getOriginalFilename())
-                .docNumber(invoiceNumber)
+                .docNumber(docNumber)
                 .build());
 
             // sending the transaction invoice notification (to store it in transaction db collection)
@@ -93,7 +93,7 @@ public class CommonInvoiceServiceImpl {
                     trx.getUserId(),
                     ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
                     path,
-                    invoiceNumber,
+                    docNumber,
                     merchantId,
                     pointOfSaleId
             );
@@ -107,7 +107,7 @@ public class CommonInvoiceServiceImpl {
             throw e;
         } catch (IOException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Error uploading invoice file", false, e);
         }
 
     }

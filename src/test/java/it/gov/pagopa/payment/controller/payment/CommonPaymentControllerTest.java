@@ -209,7 +209,7 @@ class CommonPaymentControllerTest {
   void reversalTransaction() throws Exception {
     MultipartFile file = Mockito.mock(MultipartFile.class);
 
-    MockPart docNumberPart = new MockPart("creditNoteNumber", DOCUMENT_NUMBER.getBytes());
+    MockPart docNumberPart = new MockPart("docNumber", DOCUMENT_NUMBER.getBytes());
     docNumberPart.getHeaders().setContentType(MediaType.TEXT_PLAIN);
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -232,7 +232,7 @@ class CommonPaymentControllerTest {
   void invoiceTransaction() throws Exception {
     MultipartFile file = Mockito.mock(MultipartFile.class);
 
-    MockPart docNumberPart = new MockPart("invoiceNumber", DOCUMENT_NUMBER.getBytes());
+    MockPart docNumberPart = new MockPart("docNumber", DOCUMENT_NUMBER.getBytes());
     docNumberPart.getHeaders().setContentType(MediaType.TEXT_PLAIN);
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders

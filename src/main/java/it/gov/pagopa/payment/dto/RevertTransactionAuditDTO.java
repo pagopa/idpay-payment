@@ -14,7 +14,7 @@ public class RevertTransactionAuditDTO {
   private String userId;
   private Long rewardCents;
   private String creditNoteFilename;
-  private String creditNoteNumber;
+  private String docNumber;
   private String merchantId;
   private String pointOfSaleId;
 }

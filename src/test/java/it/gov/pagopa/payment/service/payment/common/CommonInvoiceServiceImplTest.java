@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 class CommonInvoiceServiceImplTest {
@@ -138,8 +139,19 @@ class CommonInvoiceServiceImplTest {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
                 () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, null, DOCUMENT_NUMBER));
+        assertEquals("File is required", ex.getMessage());
+    }
+
+    @Test
+    void invoiceTransaction_invalidFileExtension_shouldThrowInvalidInvoiceFormatException() {
+        MultipartFile invalidFile = new MockMultipartFile("file", "invoice.txt", "text/plain", "dummy".getBytes());
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+
+        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
+            () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile, DOCUMENT_NUMBER));
         assertEquals("File must be a PDF or XML", ex.getMessage());
     }
+
 
     @Test
     void invoiceTransaction_nullFileName_shouldThrowInvalidInvoiceFormatException() {

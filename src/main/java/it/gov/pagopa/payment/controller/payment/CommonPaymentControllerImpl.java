@@ -82,7 +82,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String creditNoteNumber) {
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
@@ -92,12 +92,12 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} at POS {}",
                 sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
         );
-        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file, creditNoteNumber);
+        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
     }
 
     @Override
     @PerformanceLog(value = "INVOICE_TRANSACTION")
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String invoiceNumber) {
+    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
@@ -107,7 +107,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
             "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} at POS {}",
             sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
         );
-        commonInvoiceService.invoiceTransaction(transactionId, merchantId, pointOfSaleId, file, invoiceNumber);
+        commonInvoiceService.invoiceTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
     }
 
     @Override

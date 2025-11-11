@@ -42,11 +42,11 @@ public class CommonReversalServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String creditNoteNumber) {
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
-            Utilities.checkDocumentNumberOrThrow(creditNoteNumber);
+            Utilities.checkDocumentNumberOrThrow(docNumber);
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             TransactionInProgress trx = repository.findById(transactionId)
@@ -70,7 +70,7 @@ public class CommonReversalServiceImpl {
             trx.setStatus(SyncTrxStatus.REFUNDED);
             trx.setCreditNoteData(InvoiceData.builder()
                 .filename(file.getOriginalFilename())
-                .docNumber(creditNoteNumber)
+                .docNumber(docNumber)
                 .build());
 
             // sending the transaction reversal notification
@@ -84,7 +84,7 @@ public class CommonReversalServiceImpl {
                     trx.getUserId(),
                     ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
                     path,
-                    creditNoteNumber,
+                    docNumber,
                     merchantId,
                     pointOfSaleId
             );
@@ -98,7 +98,7 @@ public class CommonReversalServiceImpl {
             throw e;
         } catch (IOException e) {
             auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Error uploading credit note file", false, e);
         }
 
     }
