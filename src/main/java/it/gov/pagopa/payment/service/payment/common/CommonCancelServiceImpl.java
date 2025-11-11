@@ -32,8 +32,7 @@ import org.springframework.stereotype.Service;
 @Service("commonCancel")
 public class CommonCancelServiceImpl {
 
-    private final Duration cancelExpiration;
-    private final BarCodeCreationServiceImpl barCodeCreationService;
+  private final BarCodeCreationServiceImpl barCodeCreationService;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -56,8 +55,7 @@ public class CommonCancelServiceImpl {
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
-        this.cancelExpiration = Duration.ofMinutes(cancelExpirationMinutes);
-        this.barCodeCreationService = barCodeCreationService;
+    this.barCodeCreationService = barCodeCreationService;
   }
 
   public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
