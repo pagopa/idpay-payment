@@ -39,10 +39,11 @@ public interface CommonPaymentController {
     @PostMapping("/transactions/{transactionId}/reversal")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     void reversalTransaction(
-            @PathVariable("transactionId") String transactionId,
-            @RequestHeader("x-merchant-id") String merchantId,
-            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
-            @RequestPart("file") MultipartFile file
+        @PathVariable("transactionId") String transactionId,
+        @RequestHeader("x-merchant-id") String merchantId,
+        @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+        @RequestPart("file") MultipartFile file,
+        @RequestPart("docNumber") String docNumber
     );
 
     @PostMapping("/transactions/{transactionId}/invoice")
@@ -51,7 +52,8 @@ public interface CommonPaymentController {
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
         @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
-        @RequestPart("file") MultipartFile file
+        @RequestPart("file") MultipartFile file,
+        @RequestPart("docNumber") String docNumber
     );
 
     @GetMapping("/{transactionId}/status")
