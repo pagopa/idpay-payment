@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
@@ -35,7 +34,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 
-import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.mockito.Mockito.verify;
@@ -44,8 +42,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCancelServiceTest {
-
-  private final long cancelExpirationMinutes = 5;
 
   @Mock
   private TransactionInProgressRepository repositoryMock;
@@ -66,7 +62,6 @@ class CommonCancelServiceTest {
   void init() {
     service =
         new CommonCancelServiceImpl(
-            cancelExpirationMinutes,
             repositoryMock,
             rewardCalculatorConnectorMock,
             notifierServiceMock,
@@ -134,25 +129,6 @@ class CommonCancelServiceTest {
     } catch (OperationNotAllowedException e) {
       Assertions.assertEquals(ExceptionCode.TRX_DELETE_NOT_ALLOWED, e.getCode());
       Assertions.assertEquals("Cannot cancel transaction with transactionId [TRXID]",
-          e.getMessage());
-    }
-  }
-
-  @Test
-  void testTrxExpired() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
-        SyncTrxStatus.AUTHORIZED);
-    trx.setMerchantId("MERCHID");
-    trx.setAcquirerId("ACQID");
-    trx.setTrxDate(OffsetDateTime.now().minusMinutes(cancelExpirationMinutes + 1));
-    when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
-
-    try {
-      service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
-      Assertions.fail("Expected exception");
-    } catch (OperationNotAllowedException e) {
-      Assertions.assertEquals(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, e.getCode());
-      Assertions.assertEquals("Cannot cancel expired transaction with transactionId [TRXID]",
           e.getMessage());
     }
   }
