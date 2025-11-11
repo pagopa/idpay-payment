@@ -16,16 +16,11 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -43,7 +38,6 @@ public class CommonCancelServiceImpl {
 
 
   public CommonCancelServiceImpl(
-          @Value("${app.common.expirations.cancelMinutes}") long cancelExpirationMinutes,
           TransactionInProgressRepository repository,
           RewardCalculatorConnector rewardCalculatorConnector,
           TransactionNotifierService notifierService,

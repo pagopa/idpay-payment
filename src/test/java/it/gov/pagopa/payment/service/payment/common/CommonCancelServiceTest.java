@@ -43,8 +43,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CommonCancelServiceTest {
 
-  private final long cancelExpirationMinutes = 5;
-
   @Mock
   private TransactionInProgressRepository repositoryMock;
   @Mock
@@ -64,7 +62,6 @@ class CommonCancelServiceTest {
   void init() {
     service =
         new CommonCancelServiceImpl(
-            cancelExpirationMinutes,
             repositoryMock,
             rewardCalculatorConnectorMock,
             notifierServiceMock,
