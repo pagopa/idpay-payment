@@ -138,25 +138,6 @@ class CommonCancelServiceTest {
     }
   }
 
-  @Test
-  void testTrxExpired() {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
-        SyncTrxStatus.AUTHORIZED);
-    trx.setMerchantId("MERCHID");
-    trx.setAcquirerId("ACQID");
-    trx.setTrxDate(OffsetDateTime.now().minusMinutes(cancelExpirationMinutes + 1));
-    when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
-
-    try {
-      service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
-      Assertions.fail("Expected exception");
-    } catch (OperationNotAllowedException e) {
-      Assertions.assertEquals(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED, e.getCode());
-      Assertions.assertEquals("Cannot cancel expired transaction with transactionId [TRXID]",
-          e.getMessage());
-    }
-  }
-
   @ParameterizedTest
   @CsvSource({
       "CREATED,false",

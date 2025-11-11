@@ -67,7 +67,7 @@ public class CommonCancelServiceImpl {
       if (isDeletableImmediately(trx)) {
         repository.deleteById(trxId);
       } else if (SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())) {
-        handleAuthorizedTransaction(trx, trxId);
+        handleAuthorizedTransaction(trx);
       } else {
         throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED,
             "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
@@ -99,11 +99,7 @@ public class CommonCancelServiceImpl {
     return SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus());
   }
 
-  private void handleAuthorizedTransaction(TransactionInProgress trx, String trxId) {
-    if (cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0) {
-      throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED,
-          "Cannot cancel expired transaction with transactionId [%s]".formatted(trxId));
-    }
+  private void handleAuthorizedTransaction(TransactionInProgress trx) {
 
     boolean isReset = trx.getExtendedAuthorization();
     AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
