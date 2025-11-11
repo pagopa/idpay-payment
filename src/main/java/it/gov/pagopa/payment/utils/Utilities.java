@@ -38,10 +38,4 @@ public final class Utilities {
             throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
         }
     }
-
-    public static void checkDocumentNumberOrThrow(String documentNumber) {
-        if (documentNumber == null || documentNumber.isBlank()) {
-            throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "Document number is required");
-        }
-    }
 }

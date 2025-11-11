@@ -51,7 +51,6 @@ public class CommonInvoiceServiceImpl {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
-            Utilities.checkDocumentNumberOrThrow(docNumber);
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the invoiced status
             TransactionInProgress trx = repository.findById(transactionId)
