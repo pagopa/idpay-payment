@@ -678,7 +678,7 @@ class TransactionInProgressRepositoryExtImplTest {
     TransactionInProgress transactionExpired =
         TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
     transactionExpired.setTrxDate(
-        OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES));
+        OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS).minusMinutes(EXPIRATION_MINUTES).minusSeconds(1));
     transactionInProgressRepository.save(transactionExpired);
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(
