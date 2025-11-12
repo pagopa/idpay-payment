@@ -26,7 +26,8 @@ class AuditUtilitiesTest {
     private static final String MERCHANT_ID = "TEST_MERCHANT_ID";
     private static final String POINT_OF_SALE_ID = "TEST_POINT_OF_SALE_ID";
     public static final long REWARD_CENTS = 0L;
-    public static final String INVOICE_FILE_NAME = "TEST_INVOICE_FILE_NAME";
+    public static final String CREDIT_NOTE_FILE_NAME = "TEST_CREDIT_NOTE_FILE_NAME";
+    public static final String CREDIT_NOTE_NUMBER = "FPR 192/25";
     public static final String TRX_ID = "TEST_TRX_ID";
     private static final String FLOW_CAUSE = "TRANSACTION_AUTHORIZATION_EXPIRED";
     private final AuditUtilities auditUtilities = new AuditUtilities();
@@ -265,7 +266,8 @@ class AuditUtilitiesTest {
                 TRX_CODE,
                 USER_ID,
                 REWARD_CENTS,
-                INVOICE_FILE_NAME,
+                CREDIT_NOTE_FILE_NAME,
+                CREDIT_NOTE_NUMBER,
                 MERCHANT_ID,
                 POINT_OF_SALE_ID
         );

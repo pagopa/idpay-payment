@@ -81,5 +81,6 @@ public class TransactionInProgress {
   private OffsetDateTime initiativeEndDate;
   private Long voucherAmountCents;
 
-  private InvoiceFile invoiceFile;
+  private InvoiceData invoiceData;
+  private InvoiceData creditNoteData;
 }

@@ -14,6 +14,7 @@ public class TransactionAuditDTO {
   private String userId;
   private Long rewardCents;
   private String invoiceFilename;
+  private String docNumber;
   private String merchantId;
   private String pointOfSaleId;
 }
