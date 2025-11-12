@@ -114,6 +114,7 @@ public class CommonCancelServiceImpl {
       trx.setRewards(refund.getRewards());
       trx.setElaborationDateTime(LocalDateTime.now());
       sendCancelledTransactionNotification(trx, isReset);
+      repository.deleteById(trx.getId());
 
       if (isReset) {
         TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
@@ -122,8 +123,6 @@ public class CommonCancelServiceImpl {
         repository.save(newTransaction);
       }
     }
-    repository.deleteById(trx.getId());
-
   }
 
   private void logCancelTransactionAudit(TransactionInProgress trx, String merchantId, String pointOfSaleId) {
