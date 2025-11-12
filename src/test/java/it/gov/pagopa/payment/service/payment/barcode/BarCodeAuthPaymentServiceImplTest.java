@@ -68,7 +68,7 @@ class BarCodeAuthPaymentServiceImplTest {
     private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
             .amountCents(AMOUNT_CENTS)
             .idTrxAcquirer(ID_TRX_ACQUIRER)
-            .additionalProperties(Map.of("gtin","123123"))
+            .additionalProperties(Map.of("productGtin","123123"))
             .build();
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
