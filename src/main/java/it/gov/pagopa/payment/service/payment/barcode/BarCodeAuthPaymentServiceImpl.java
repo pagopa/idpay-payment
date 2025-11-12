@@ -42,6 +42,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private final DecryptRestConnector decryptRestConnector;
     protected final AuditUtilities auditUtilities;
 
+    private static final String PRODUCT_GTIN_KEY = "productGtin";
+
     public BarCodeAuthPaymentServiceImpl(PaymentCheckService paymentCheckService,
                                          BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
@@ -108,7 +110,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
             }
 
-            if(authBarCodePaymentDTO.getAdditionalProperties() == null || StringUtils.isEmpty(authBarCodePaymentDTO.getAdditionalProperties().get("productGtin"))){
+            if(authBarCodePaymentDTO.getAdditionalProperties() == null || StringUtils.isEmpty(authBarCodePaymentDTO.getAdditionalProperties().get(PRODUCT_GTIN_KEY))){
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid AdditionalProperties");
                 throw new TransactionInvalidException(ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, "Cannot authorize transaction with invalid AdditionalProperties");
             }
@@ -116,7 +118,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
             commonAuthService.checkAuth(trxCode, trx);
 
-            String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get("productGtin"));
+            String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get(PRODUCT_GTIN_KEY));
             ProductDTO productDTO = paymentCheckService.validateProduct(sanitizedProductGtin);
 
             trx.setAdditionalProperties(buildAdditionalProperties(productDTO));
@@ -147,7 +149,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private Map<String, String> buildAdditionalProperties(ProductDTO productDTO){
         Map<String, String> additionalProperties = new HashMap<>();
         additionalProperties.put("productName", productDTO.getProductName());
-        additionalProperties.put("productGtin", productDTO.getGtinCode());
+        additionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
         return additionalProperties;
     }
 
