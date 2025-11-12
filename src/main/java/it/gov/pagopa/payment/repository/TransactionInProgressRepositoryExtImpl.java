@@ -19,6 +19,7 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -311,7 +312,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
       criteria.and(Fields.pointOfSaleId).is(pointOfSaleId);
     }
     if (StringUtils.isNotBlank(productGtin)) {
-      criteria.and(FIELD_PRODUCT_GTIN).is(productGtin);
+      criteria.and(FIELD_PRODUCT_GTIN).is(productGtin)
+          .regex(".*" + Pattern.quote(productGtin) + ".*", "i");
     }
     if (StringUtils.isNotBlank(status)) {
       criteria.and(Fields.status).is(status);
