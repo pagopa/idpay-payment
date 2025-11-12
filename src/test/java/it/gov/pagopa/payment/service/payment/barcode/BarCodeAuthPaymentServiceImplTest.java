@@ -124,6 +124,22 @@ class BarCodeAuthPaymentServiceImplTest {
         assertEquals(transactionInProgress.getTrxCode(), result.getTrxCode());
     }
 
+    @Test
+    void barCodeAuthPayment_invalidAdditionalProperties() {
+        // Given
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(100L)
+                .idTrxAcquirer("")
+                .build();
+
+        // When
+        TransactionInvalidException result =
+                assertThrows(TransactionInvalidException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        // Then
+        assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
+    }
+
     @ParameterizedTest
     @ValueSource(longs = {-100, 0})
     void barCodeAuthPayment_invalidAmount(long amountCents) {

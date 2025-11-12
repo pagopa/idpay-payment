@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import io.micrometer.common.util.StringUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
@@ -105,6 +106,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
+            }
+
+            if(authBarCodePaymentDTO.getAdditionalProperties() == null || StringUtils.isEmpty(authBarCodePaymentDTO.getAdditionalProperties().get("productGtin"))){
+                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid AdditionalProperties");
+                throw new TransactionInvalidException(ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, "Cannot authorize transaction with invalid AdditionalProperties");
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
