@@ -68,7 +68,7 @@ class BarCodeAuthPaymentServiceImplTest {
     private static final AuthBarCodePaymentDTO AUTH_BAR_CODE_PAYMENT_DTO = AuthBarCodePaymentDTO.builder()
             .amountCents(AMOUNT_CENTS)
             .idTrxAcquirer(ID_TRX_ACQUIRER)
-            .additionalProperties(Map.of("gtin","123123"))
+            .additionalProperties(Map.of("productGtin","123123"))
             .build();
 
     BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
@@ -122,6 +122,22 @@ class BarCodeAuthPaymentServiceImplTest {
         TestUtils.checkNotNullFields(result, "rejectionReasons", "splitPayment",
                 "residualAmountCents");
         assertEquals(transactionInProgress.getTrxCode(), result.getTrxCode());
+    }
+
+    @Test
+    void barCodeAuthPayment_invalidAdditionalProperties() {
+        // Given
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(100L)
+                .idTrxAcquirer("")
+                .build();
+
+        // When
+        TransactionInvalidException result =
+                assertThrows(TransactionInvalidException.class, () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        // Then
+        assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
     }
 
     @ParameterizedTest

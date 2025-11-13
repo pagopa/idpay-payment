@@ -16,6 +16,7 @@ public class PaymentConstants {
   public static final String REWARD_CALCULATOR_TRX_ALREADY_CANCELLED = "REWARD_CALCULATOR_TRX_ALREADY_CANCELLED";
 
   public static final class ExceptionCode {
+    public static final String TRX_ADDITIONAL_PROPERTIES_NOT_EXIST = "PAYMENT_ADDITIONAL_PROPERTIES_IS_NULL_OR_EMPTY";
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_OR_EXPIRED";
     public static final String TRX_USER_NOT_ASSOCIATED = "PAYMENT_USER_NOT_ASSOCIATED";
     public static final String TRX_ALREADY_ASSIGNED = "PAYMENT_ALREADY_ASSIGNED";
