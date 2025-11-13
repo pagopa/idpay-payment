@@ -43,7 +43,7 @@ public interface CommonPaymentController {
         @RequestHeader("x-merchant-id") String merchantId,
         @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
         @RequestPart("file") MultipartFile file,
-        @RequestPart("docNumber") String docNumber
+        @RequestPart(value = "docNumber", required = false) String docNumber
     );
 
     @PostMapping("/transactions/{transactionId}/invoice")
@@ -53,7 +53,7 @@ public interface CommonPaymentController {
         @RequestHeader("x-merchant-id") String merchantId,
         @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
         @RequestPart("file") MultipartFile file,
-        @RequestPart("docNumber") String docNumber
+        @RequestPart(value = "docNumber", required = false) String docNumber
     );
 
     @GetMapping("/{transactionId}/status")
