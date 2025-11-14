@@ -20,6 +20,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     private final CommonCreationServiceImpl commonCreationService;
     private final CommonConfirmServiceImpl commonConfirmService;
     private final CommonCancelServiceImpl commonCancelService;
+    private final CommonCancelServiceBatchImpl commonCancelServiceBatch;
     private final CommonReversalServiceImpl commonReversalService;
     private final CommonInvoiceServiceImpl commonInvoiceService;
     private final CommonStatusTransactionServiceImpl commonStatusTransactionService;
@@ -28,6 +29,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     public CommonPaymentControllerImpl(@Qualifier("commonCreate") CommonCreationServiceImpl commonCreationService,
                                        @Qualifier("commonConfirm") CommonConfirmServiceImpl commonConfirmService,
                                        @Qualifier("commonCancel") CommonCancelServiceImpl commonCancelService,
+                                       @Qualifier("commonCancelBatch") CommonCancelServiceBatchImpl commonCancelServiceBatch,
                                        @Qualifier("commonReversal") CommonReversalServiceImpl commonReversalService,
                                        @Qualifier("commonInvoice") CommonInvoiceServiceImpl commonInvoiceService,
                                        CommonStatusTransactionServiceImpl commonStatusTransactionService,
@@ -35,6 +37,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         this.commonCreationService = commonCreationService;
         this.commonConfirmService = commonConfirmService;
         this.commonCancelService = commonCancelService;
+        this.commonCancelServiceBatch = commonCancelServiceBatch;
         this.commonReversalService = commonReversalService;
         this.commonInvoiceService = commonInvoiceService;
         this.commonStatusTransactionService = commonStatusTransactionService;
@@ -114,7 +117,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     @PerformanceLog(value = "CANCEL_PENDING_TRANSACTIONS")
     public void cancelPendingTransactions() {
         log.info("[CANCEL_PENDING_TRANSACTIONS] Request to reject all transactions in AUTHORIZED status");
-        commonCancelService.rejectPendingTransactions();
+        commonCancelServiceBatch.rejectPendingTransactions();
     }
 
     @Override

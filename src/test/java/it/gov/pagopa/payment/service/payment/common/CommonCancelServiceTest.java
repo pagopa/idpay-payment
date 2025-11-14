@@ -16,7 +16,6 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -302,32 +301,6 @@ class CommonCancelServiceTest {
     verifyNoInteractions(paymentErrorNotifierServiceMock);
   }
 
-  @Test
-  void testRejectPendingTransactions_ok() {
-    TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(0,
-        SyncTrxStatus.AUTHORIZED);
-    TransactionInProgress trx2 = TransactionInProgressFaker.mockInstance(1,
-        SyncTrxStatus.AUTHORIZED);
-
-    when(repositoryMock.findPendingTransactions(100))
-        .thenReturn(List.of(trx1, trx2))
-        .thenReturn(List.of());
-
-    CommonCancelServiceImpl spyService = Mockito.spy(service);
-    Mockito.doNothing().when(spyService).cancelTransaction(
-        Mockito.anyString(),
-        Mockito.anyString(),
-        Mockito.anyString(),
-        Mockito.anyString()
-    );
-
-    spyService.rejectPendingTransactions();
-
-    verify(repositoryMock, Mockito.times(2)).findPendingTransactions(100);
-    verify(spyService, Mockito.times(2))
-        .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.anyString());
-  }
 }
 
 

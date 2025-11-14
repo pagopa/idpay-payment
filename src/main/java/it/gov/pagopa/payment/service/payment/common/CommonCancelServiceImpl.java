@@ -17,13 +17,10 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.time.LocalDateTime;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -31,37 +28,33 @@ import org.springframework.transaction.annotation.Transactional;
 public class CommonCancelServiceImpl {
 
   private final BarCodeCreationServiceImpl barCodeCreationService;
-    private final TransactionInProgressRepository repository;
-    private final RewardCalculatorConnector rewardCalculatorConnector;
-    private final TransactionNotifierService notifierService;
-    private final PaymentErrorNotifierService paymentErrorNotifierService;
-    private final AuditUtilities auditUtilities;
-    private static final String RESET_TRANSACTION = "RESET_TRANSACTION";
-    private static final String CANCEL_TRANSACTION = "CANCEL_TRANSACTION";
-    private CommonCancelServiceImpl self;
+  private final TransactionInProgressRepository repository;
+  private final RewardCalculatorConnector rewardCalculatorConnector;
+  private final TransactionNotifierService notifierService;
+  private final PaymentErrorNotifierService paymentErrorNotifierService;
+  private final AuditUtilities auditUtilities;
+  private static final String RESET_TRANSACTION = "RESET_TRANSACTION";
+  private static final String CANCEL_TRANSACTION = "CANCEL_TRANSACTION";
 
-  @Autowired
-    public void setSelf(CommonCancelServiceImpl self) {
-      this.self = self;
-    }
 
   public CommonCancelServiceImpl(
-          TransactionInProgressRepository repository,
-          RewardCalculatorConnector rewardCalculatorConnector,
-          TransactionNotifierService notifierService,
-          PaymentErrorNotifierService paymentErrorNotifierService,
-          AuditUtilities auditUtilities,
-          BarCodeCreationServiceImpl barCodeCreationService) {
-        this.repository = repository;
-        this.rewardCalculatorConnector = rewardCalculatorConnector;
-        this.notifierService = notifierService;
-        this.paymentErrorNotifierService = paymentErrorNotifierService;
-        this.auditUtilities = auditUtilities;
+      TransactionInProgressRepository repository,
+      RewardCalculatorConnector rewardCalculatorConnector,
+      TransactionNotifierService notifierService,
+      PaymentErrorNotifierService paymentErrorNotifierService,
+      AuditUtilities auditUtilities,
+      BarCodeCreationServiceImpl barCodeCreationService) {
+    this.repository = repository;
+    this.rewardCalculatorConnector = rewardCalculatorConnector;
+    this.notifierService = notifierService;
+    this.paymentErrorNotifierService = paymentErrorNotifierService;
+    this.auditUtilities = auditUtilities;
     this.barCodeCreationService = barCodeCreationService;
   }
 
-  @Transactional(propagation = Propagation.MANDATORY)
-  public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
+  @Transactional
+  public void cancelTransaction(String trxId, String merchantId, String acquirerId,
+      String pointOfSaleId) {
     try {
       TransactionInProgress trx = findAndValidateTransaction(trxId, merchantId, acquirerId);
 
@@ -74,7 +67,9 @@ public class CommonCancelServiceImpl {
             "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
       }
 
-      log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
+      log.info(
+          "[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled",
+          trx.getId(), trx.getTrxCode());
       logCancelTransactionAudit(trx, merchantId, pointOfSaleId);
 
     } catch (RuntimeException e) {
@@ -83,7 +78,8 @@ public class CommonCancelServiceImpl {
     }
   }
 
-  private TransactionInProgress findAndValidateTransaction(String trxId, String merchantId, String acquirerId) {
+  private TransactionInProgress findAndValidateTransaction(String trxId, String merchantId,
+      String acquirerId) {
     TransactionInProgress trx = repository.findById(trxId)
         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
             "Cannot find transaction with transactionId [%s]".formatted(trxId)));
@@ -97,7 +93,8 @@ public class CommonCancelServiceImpl {
   }
 
   private boolean isDeletableImmediately(TransactionInProgress trx) {
-    return SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus());
+    return SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(
+        trx.getStatus());
   }
 
   protected void handleAuthorizedTransaction(TransactionInProgress trx) {
@@ -113,7 +110,10 @@ public class CommonCancelServiceImpl {
       trx.setElaborationDateTime(LocalDateTime.now());
 
       if (isReset) {
-        TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
+        TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(
+            new TransactionBarCodeCreationRequest(trx.getInitiativeId(),
+                trx.getVoucherAmountCents()), trx.getChannel(), trx.getUserId(),
+            trx.getTrxEndDate());
         newTransaction.setTrxCode(trx.getTrxCode());
         newTransaction.setTrxDate(trx.getTrxDate());
         repository.save(newTransaction);
@@ -124,7 +124,8 @@ public class CommonCancelServiceImpl {
 
   }
 
-  private void logCancelTransactionAudit(TransactionInProgress trx, String merchantId, String pointOfSaleId) {
+  private void logCancelTransactionAudit(TransactionInProgress trx, String merchantId,
+      String pointOfSaleId) {
     CancelTransactionAuditDTO dto = new CancelTransactionAuditDTO(
         trx.getInitiativeId(),
         trx.getId(),
@@ -139,39 +140,31 @@ public class CommonCancelServiceImpl {
   }
 
 
-    private void sendCancelledTransactionNotification(TransactionInProgress trx, boolean isReset) {
-        try {
-            log.info("[{}][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: trxId {} - merchantId {} - acquirerId {}",
-                    isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
-            if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while cancelling Authorized Payment notify");
-            }
-        } catch (Exception e) {
-            if (!paymentErrorNotifierService.notifyCancelPayment(
-                    notifierService.buildMessage(trx, trx.getUserId()),
-                    "[%s] An error occurred while publishing the cancellation authorized result: trxId %s - merchantId %s - acquirerId %s"
-                            .formatted(isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
-                    true,
-                    e)
-            ) {
-                log.error("[{}][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}",
-                        isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(), trx.getUserId(), trx.getAcquirerId(), e);
-            }
-        }
+  private void sendCancelledTransactionNotification(TransactionInProgress trx, boolean isReset) {
+    try {
+      log.info(
+          "[{}][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: trxId {} - merchantId {} - acquirerId {}",
+          isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(), trx.getMerchantId(),
+          trx.getAcquirerId());
+      if (!notifierService.notify(trx, trx.getUserId())) {
+        throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR,
+            "Something gone wrong while cancelling Authorized Payment notify");
+      }
+    } catch (Exception e) {
+      if (!paymentErrorNotifierService.notifyCancelPayment(
+          notifierService.buildMessage(trx, trx.getUserId()),
+          "[%s] An error occurred while publishing the cancellation authorized result: trxId %s - merchantId %s - acquirerId %s"
+              .formatted(isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(),
+                  trx.getMerchantId(), trx.getAcquirerId()),
+          true,
+          e)
+      ) {
+        log.error(
+            "[{}][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}",
+            isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, trx.getId(), trx.getUserId(),
+            trx.getAcquirerId(), e);
+      }
     }
+  }
 
-    public void rejectPendingTransactions() {
-        List<TransactionInProgress> transactions;
-        int pageSize = 100;
-        do {
-            transactions = repository.findPendingTransactions(pageSize);
-            log.info("[CANCEL_AUTHORIZED_TRANSACTIONS] Transactions to cancel: {} / {}", transactions.size(), pageSize);
-            transactions.forEach(transaction ->
-                    self.cancelTransaction(
-                            transaction.getId(),
-                            transaction.getMerchantId(),
-                            transaction.getAcquirerId(),
-                            transaction.getPointOfSaleId()));
-        } while (!transactions.isEmpty());
-    }
 }

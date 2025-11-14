@@ -60,6 +60,10 @@ class CommonPaymentControllerTest {
   private CommonCancelServiceImpl commonCancelServiceMock;
 
   @MockitoBean
+  @Qualifier("commonCancelBatch")
+  private CommonCancelServiceBatchImpl commonCancelServiceBatchMock;
+
+  @MockitoBean
   private QRCodeExpirationService qrCodeExpirationServiceMock;
 
   @MockitoBean
@@ -335,14 +339,14 @@ class CommonPaymentControllerTest {
 
   @Test
   void cancelPendingTransactions_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).rejectPendingTransactions();
+    Mockito.doNothing().when(commonCancelServiceBatchMock).rejectPendingTransactions();
 
     mockMvc.perform(MockMvcRequestBuilders
             .delete("/idpay/payment/pendingTransactions")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).rejectPendingTransactions();
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
+    Mockito.verify(commonCancelServiceBatchMock, Mockito.times(1)).rejectPendingTransactions();
+    Mockito.verifyNoMoreInteractions(commonCancelServiceBatchMock);
   }
 }
