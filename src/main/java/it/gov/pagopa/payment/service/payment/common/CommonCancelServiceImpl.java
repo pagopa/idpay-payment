@@ -22,6 +22,7 @@ import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service("commonCancel")
@@ -52,6 +53,7 @@ public class CommonCancelServiceImpl {
     this.barCodeCreationService = barCodeCreationService;
   }
 
+  @Transactional
   public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
     try {
       TransactionInProgress trx = findAndValidateTransaction(trxId, merchantId, acquirerId);
@@ -91,17 +93,17 @@ public class CommonCancelServiceImpl {
     return SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus());
   }
 
-  private void handleAuthorizedTransaction(TransactionInProgress trx) {
+  protected void handleAuthorizedTransaction(TransactionInProgress trx) {
 
     boolean isReset = trx.getExtendedAuthorization();
     AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
 
+    repository.deleteById(trx.getId());
     if (refund != null) {
       trx.setStatus(SyncTrxStatus.CANCELLED);
       trx.setRewardCents(refund.getRewardCents());
       trx.setRewards(refund.getRewards());
       trx.setElaborationDateTime(LocalDateTime.now());
-      sendCancelledTransactionNotification(trx, isReset);
 
       if (isReset) {
         TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
@@ -109,8 +111,9 @@ public class CommonCancelServiceImpl {
         newTransaction.setTrxDate(trx.getTrxDate());
         repository.save(newTransaction);
       }
+      sendCancelledTransactionNotification(trx, isReset);
     }
-    repository.deleteById(trx.getId());
+
 
   }
 
