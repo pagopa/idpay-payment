@@ -153,6 +153,7 @@ public class CommonCancelServiceImpl {
         }
     }
 
+    @Transactional
     public void rejectPendingTransactions() {
         List<TransactionInProgress> transactions;
         int pageSize = 100;
