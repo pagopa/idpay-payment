@@ -47,13 +47,14 @@ public class PdfServiceImpl implements PdfService {
     private final DecryptRestConnector decryptRestConnector;
     private final ResourceLoader resourceLoader;
 
+
     private final String font;
     private final String logoMimit;
     private final String logoPari;
     private final String iconWasher;
     private final String iconHealthcard;
     private final String iconBarcode;
-
+    private static final String LABEL_BARCODE = "Codice a barre";
 
     public PdfServiceImpl(
             BarCodePaymentService barCodePaymentService,
@@ -192,7 +193,7 @@ public class PdfServiceImpl implements PdfService {
             String prodotto = transactionInProgress.getAdditionalProperties().get("productName");
             String codiceProdotto = transactionInProgress.getAdditionalProperties().get("productGtin");
             trxCode = transactionInProgress.getTrxCode();
-            String fiscalCode = "BRTVNL63E26X666A";
+            String fiscalCode = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
 
             doc.add(buildDiscountRow(pdf, discount, regular, bold, textPrimary, textSecondary));
 
@@ -344,7 +345,7 @@ public class PdfServiceImpl implements PdfService {
         Div right = new Div();
         right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary).setMarginTop(25f));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(6).setMarginTop(-5));
-        right.add(new Paragraph("Codice a barre")
+        right.add(new Paragraph(LABEL_BARCODE)
                 .setFont(regular)
                 .setFontSize(8)
                 .setFontColor(textSecondary)
@@ -431,7 +432,7 @@ public class PdfServiceImpl implements PdfService {
      */
     private void addProductBarcodeDiv(PdfDocument pdf, String productGtin, Div div, Color textSecondary, PdfFont regular) {
 
-        div.add(new Paragraph("Codice a barre")
+        div.add(new Paragraph(LABEL_BARCODE)
             .setFont(regular)
             .setFontSize(8)
             .setFontColor(textSecondary)
@@ -464,7 +465,7 @@ public class PdfServiceImpl implements PdfService {
 
         Div right = new Div();
 
-        right.add(new Paragraph("Codice a barre")
+        right.add(new Paragraph(LABEL_BARCODE)
                 .setFont(regular)
                 .setFontSize(12)
                 .setFontColor(textSecondary)
