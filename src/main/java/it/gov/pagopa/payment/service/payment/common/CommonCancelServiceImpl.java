@@ -161,7 +161,7 @@ public class CommonCancelServiceImpl {
             transactions = repository.findPendingTransactions(pageSize);
             log.info("[CANCEL_AUTHORIZED_TRANSACTIONS] Transactions to cancel: {} / {}", transactions.size(), pageSize);
             transactions.forEach(transaction ->
-                    this.cancelTransaction(
+                    cancelTransaction(
                             transaction.getId(),
                             transaction.getMerchantId(),
                             transaction.getAcquirerId(),
