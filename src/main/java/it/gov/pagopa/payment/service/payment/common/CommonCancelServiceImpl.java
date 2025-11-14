@@ -21,7 +21,9 @@ import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -36,7 +38,12 @@ public class CommonCancelServiceImpl {
     private final AuditUtilities auditUtilities;
     private static final String RESET_TRANSACTION = "RESET_TRANSACTION";
     private static final String CANCEL_TRANSACTION = "CANCEL_TRANSACTION";
+    private CommonCancelServiceImpl self;
 
+  @Autowired
+    public void setSelf(CommonCancelServiceImpl self) {
+      this.self = self;
+    }
 
   public CommonCancelServiceImpl(
           TransactionInProgressRepository repository,
@@ -53,7 +60,7 @@ public class CommonCancelServiceImpl {
     this.barCodeCreationService = barCodeCreationService;
   }
 
-  @Transactional
+  @Transactional(propagation = Propagation.MANDATORY)
   public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
     try {
       TransactionInProgress trx = findAndValidateTransaction(trxId, merchantId, acquirerId);
@@ -153,7 +160,6 @@ public class CommonCancelServiceImpl {
         }
     }
 
-    @Transactional
     public void rejectPendingTransactions() {
         List<TransactionInProgress> transactions;
         int pageSize = 100;
@@ -161,7 +167,7 @@ public class CommonCancelServiceImpl {
             transactions = repository.findPendingTransactions(pageSize);
             log.info("[CANCEL_AUTHORIZED_TRANSACTIONS] Transactions to cancel: {} / {}", transactions.size(), pageSize);
             transactions.forEach(transaction ->
-                    cancelTransaction(
+                    self.cancelTransaction(
                             transaction.getId(),
                             transaction.getMerchantId(),
                             transaction.getAcquirerId(),
