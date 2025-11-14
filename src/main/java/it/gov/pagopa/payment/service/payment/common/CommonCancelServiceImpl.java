@@ -96,12 +96,12 @@ public class CommonCancelServiceImpl {
     boolean isReset = trx.getExtendedAuthorization();
     AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
 
+    repository.deleteById(trx.getId());
     if (refund != null) {
       trx.setStatus(SyncTrxStatus.CANCELLED);
       trx.setRewardCents(refund.getRewardCents());
       trx.setRewards(refund.getRewards());
       trx.setElaborationDateTime(LocalDateTime.now());
-      sendCancelledTransactionNotification(trx, isReset);
 
       if (isReset) {
         TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
@@ -109,8 +109,9 @@ public class CommonCancelServiceImpl {
         newTransaction.setTrxDate(trx.getTrxDate());
         repository.save(newTransaction);
       }
+      sendCancelledTransactionNotification(trx, isReset);
     }
-    repository.deleteById(trx.getId());
+
 
   }
 
