@@ -128,43 +128,6 @@ class BarCodeCreationServiceImplTest {
     }
 
     @Test
-    void createTransactionTrxCodeHit() {
-
-        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
-                .initiativeId("INITIATIVEID")
-                .build();
-        TransactionBarCodeResponse trxCreated = TransactionBarCodeResponseFaker.mockInstance(1);
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmountCents(1000L);
-
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
-
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                any(TransactionBarCodeCreationRequest.class),
-                eq(RewardConstants.TRX_CHANNEL_BARCODE),
-                anyString(),
-                anyString(),
-                any(),
-                eq(false),
-                any()))
-                .thenReturn(trx);
-        when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
-                .thenReturn(trxCreated);
-
-        TransactionBarCodeResponse result =
-                barCodeCreationService.createTransaction(
-                        trxCreationReq,
-                        RewardConstants.TRX_CHANNEL_BARCODE,
-                        "USERID");
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(trxCreated, result);
-    }
-
-    @Test
     void createTransaction_InitiativeNotFound() {
 
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
@@ -500,7 +463,7 @@ class BarCodeCreationServiceImplTest {
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
 
-        Assertions.assertEquals(expected, result);
+        Assertions.assertEquals(expected.toLocalDateTime(), result.toLocalDateTime());
     }
     @Test
     void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeNull()  {

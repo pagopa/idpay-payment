@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -80,6 +81,91 @@ class BarCodeCaptureServiceImplTest {
         TransactionBarCodeResponse result = service.capturePayment("trxCode");
 
         Assertions.assertEquals(result, mapper.apply(trx));
+    }
+
+    @Test
+    void capturePayment_deletesWebVoucher_whenTransactionIsApp() {
+        TransactionInProgress trxCurrent = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        trxCurrent.setExtendedAuthorization(false);
+        trxCurrent.setUserId("USER01");
+        trxCurrent.setInitiativeId("INIT01");
+
+        TransactionInProgress trxOther = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+        trxOther.setExtendedAuthorization(true);
+        trxOther.setUserId("USER01");
+        trxOther.setInitiativeId("INIT01");
+
+        when(repositoryMock.findByTrxCode("trxCurrent")).thenReturn(Optional.of(trxCurrent));
+        when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+            trxCurrent.getUserId(),
+            trxCurrent.getInitiativeId(),
+            SyncTrxStatus.CREATED,
+            trxCurrent.getExtendedAuthorization()
+        )).thenReturn(List.of(trxOther));
+        doNothing().when(repositoryMock).deleteAll(anyList());
+        when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
+        when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
+
+        TransactionBarCodeResponse response = service.capturePayment("trxCurrent");
+
+        assertNotNull(response);
+        verify(repositoryMock).deleteAll(List.of(trxOther));
+        verify(repositoryMock).save(trxCurrent);
+    }
+
+    @Test
+    void capturePayment_deletesAppVoucher_whenTransactionIsWeb() {
+        TransactionInProgress trxCurrent = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        trxCurrent.setExtendedAuthorization(true);
+        trxCurrent.setUserId("USER01");
+        trxCurrent.setInitiativeId("INIT01");
+
+        TransactionInProgress trxOther = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+        trxOther.setExtendedAuthorization(false);
+        trxOther.setUserId("USER01");
+        trxOther.setInitiativeId("INIT01");
+
+        when(repositoryMock.findByTrxCode("trxCurrent")).thenReturn(Optional.of(trxCurrent));
+        when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+            trxCurrent.getUserId(),
+            trxCurrent.getInitiativeId(),
+            SyncTrxStatus.CREATED,
+            trxCurrent.getExtendedAuthorization()
+        )).thenReturn(List.of(trxOther));
+        doNothing().when(repositoryMock).deleteAll(anyList());
+        when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
+        when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
+
+        TransactionBarCodeResponse response = service.capturePayment("trxCurrent");
+
+        assertNotNull(response);
+        verify(repositoryMock).deleteAll(List.of(trxOther));
+        verify(repositoryMock).save(trxCurrent);
+    }
+
+    @Test
+    void capturePayment_noUnusedVouchers_deleteNotCalled() {
+        TransactionInProgress trxCurrent = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        trxCurrent.setExtendedAuthorization(false);
+        trxCurrent.setUserId("USER01");
+        trxCurrent.setInitiativeId("INIT01");
+
+        when(repositoryMock.findByTrxCode("trxCurrent")).thenReturn(Optional.of(trxCurrent));
+        when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+            trxCurrent.getUserId(),
+            trxCurrent.getInitiativeId(),
+            SyncTrxStatus.CREATED,
+            trxCurrent.getExtendedAuthorization()
+        )).thenReturn(List.of());
+
+        when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
+        when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
+
+        TransactionBarCodeResponse response = service.capturePayment("trxCurrent");
+
+        assertNotNull(response);
+        verify(repositoryMock, never()).deleteAll(anyList());
+        verify(repositoryMock).save(trxCurrent);
     }
 
     @Test

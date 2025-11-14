@@ -14,16 +14,17 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-class CommonRewardServiceImplTest {
+class CommonInvoiceServiceImplTest {
     @Mock
     private TransactionInProgressRepository repository;
     @Mock
@@ -37,13 +38,13 @@ class CommonRewardServiceImplTest {
     @Mock
     private MultipartFile file;
 
-    @InjectMocks
-    private CommonRewardServiceImpl service;
+    private CommonInvoiceServiceImpl service;
 
-    private final String TRANSACTION_ID = "trxId";
-    private final String MERCHANT_ID = "merchantId";
-    private final String POS_ID = "posId";
-    private final String FILENAME = "invoice.pdf";
+    private static final String TRANSACTION_ID = "trxId";
+    private static final String MERCHANT_ID = "merchantId";
+    private static final String POS_ID = "posId";
+    private static final String FILENAME = "invoice.pdf";
+    private static final String DOCUMENT_NUMBER = "FPR 192/25";
 
     private TransactionInProgress trx;
 
@@ -64,116 +65,156 @@ class CommonRewardServiceImplTest {
                 .userId("userId")
                 .rewardCents(100L)
                 .build();
+
+        service = new CommonInvoiceServiceImpl(
+                0,
+                repository,
+                notifierService,
+                paymentErrorNotifierService,
+                fileStorageClient,
+                auditUtilities
+        );
     }
 
     @Test
-    void rewardTransaction_success() {
+    void invoiceTransaction_success() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
-        service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
+        service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
         Mockito.verify(repository).deleteById(TRANSACTION_ID);
-        Mockito.verify(auditUtilities).logRewardTransaction(any());
-        assertEquals(SyncTrxStatus.REWARDED, trx.getStatus());
-        assertEquals(FILENAME, trx.getInvoiceFile().getFilename());
+        Mockito.verify(auditUtilities).logInvoiceTransaction(any());
+        assertEquals(SyncTrxStatus.INVOICED, trx.getStatus());
+        assertEquals(FILENAME, trx.getInvoiceData().getFilename());
+        assertEquals(DOCUMENT_NUMBER, trx.getInvoiceData().getDocNumber());
     }
 
     @Test
-    void rewardTransaction_transactionNotFound() {
+    void invoiceTransaction_transactionNotFound() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.empty());
         assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
-        Mockito.verify(auditUtilities).logErrorRewardTransaction(TRANSACTION_ID, MERCHANT_ID);
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
+        Mockito.verify(auditUtilities).logErrorInvoiceTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
     @Test
-    void rewardTransaction_merchantMismatch() {
+    void invoiceTransaction_merchantMismatch() {
         trx.setMerchantId("otherMerchant");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
-        Mockito.verify(auditUtilities).logErrorRewardTransaction(TRANSACTION_ID, MERCHANT_ID);
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
+        Mockito.verify(auditUtilities).logErrorInvoiceTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
     @Test
-    void rewardTransaction_posMismatch() {
+    void invoiceTransaction_posMismatch() {
         trx.setPointOfSaleId("otherPos");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
-        Mockito.verify(auditUtilities).logErrorRewardTransaction(TRANSACTION_ID, MERCHANT_ID);
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
+        Mockito.verify(auditUtilities).logErrorInvoiceTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
     @Test
-    void rewardTransaction_statusNotCaptured() {
+    void invoiceTransaction_statusNotCaptured() {
         trx.setStatus(SyncTrxStatus.CREATED);
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(OperationNotAllowedException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
-        Mockito.verify(auditUtilities).logErrorRewardTransaction(TRANSACTION_ID, MERCHANT_ID);
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
+        Mockito.verify(auditUtilities).logErrorInvoiceTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
     @Test
-    void rewardTransaction_invalidFileFormat_shouldThrowInvalidInvoiceFormatException() {
+    void invoiceTransaction_invalidFileFormat_shouldThrowInvalidInvoiceFormatException() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         MultipartFile invalidFile = Mockito.mock(MultipartFile.class);
         Mockito.when(invalidFile.getOriginalFilename()).thenReturn("document.txt");
         InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile));
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile, DOCUMENT_NUMBER));
         assertEquals("File must be a PDF or XML", ex.getMessage());
     }
 
     @Test
-    void rewardTransaction_nullFile_shouldThrowInvalidInvoiceFormatException() {
+    void invoiceTransaction_nullFile_shouldThrowInvalidInvoiceFormatException() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, null));
-        assertEquals("File must be a PDF or XML", ex.getMessage());
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, null, DOCUMENT_NUMBER));
+        assertEquals("File is required", ex.getMessage());
     }
 
     @Test
-    void rewardTransaction_nullFileName_shouldThrowInvalidInvoiceFormatException() {
+    void invoiceTransaction_invalidFileExtension_shouldThrowInvalidInvoiceFormatException() {
+        MultipartFile invalidFile = new MockMultipartFile("file", "invoice.txt", "text/plain", "dummy".getBytes());
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+
+        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
+            () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile, DOCUMENT_NUMBER));
+        assertEquals("File must be a PDF or XML", ex.getMessage());
+    }
+
+
+    @Test
+    void invoiceTransaction_nullFileName_shouldThrowInvalidInvoiceFormatException() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         MultipartFile fileWithNullName = Mockito.mock(MultipartFile.class);
         Mockito.when(fileWithNullName.getOriginalFilename()).thenReturn(null);
         InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, fileWithNullName));
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, fileWithNullName, DOCUMENT_NUMBER));
         assertEquals("File must be a PDF or XML", ex.getMessage());
     }
 
     @Test
-    void rewardTransaction_runtimeException_shouldLogAndThrow() {
+    void invoiceTransaction_runtimeException_shouldLogAndThrow() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenThrow(new RuntimeException("Generic error"));
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
         assertEquals("Generic error", ex.getMessage());
-        Mockito.verify(auditUtilities).logErrorRewardTransaction(TRANSACTION_ID, MERCHANT_ID);
+        Mockito.verify(auditUtilities).logErrorInvoiceTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
     @Test
-    void rewardTransaction_ioException_shouldLogAndThrow() {
+    void invoiceTransaction_ioException_shouldLogAndThrow() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
         assertEquals("IO error", ex.getCause().getMessage());
-        Mockito.verify(auditUtilities).logErrorRewardTransaction(TRANSACTION_ID, MERCHANT_ID);
+        Mockito.verify(auditUtilities).logErrorInvoiceTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
     @Test
-    void sendRewardTransactionNotification_notifyReturnsFalse_shouldThrowInternalServerErrorException() {
+    void sendInvoiceTransactionNotification_notifyReturnsFalse_shouldThrowInternalServerErrorException() {
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
         assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
     }
 
     @Test
-    void rewardTransaction_shouldSetCorrectInvoicePath() {
+    void invoiceTransaction_shouldSetCorrectInvoicePath() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
-        service.rewardTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+        service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
+        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                 MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
         Mockito.verify(fileStorageClient).upload(any(), eq(expectedPath), anyString());
+    }
+
+    @Test
+    void shouldThrowOperationNotAllowedException_whenTrxIsTooRecent() {
+        service = new CommonInvoiceServiceImpl(
+                30,
+                repository,
+                notifierService,
+                paymentErrorNotifierService,
+                fileStorageClient,
+                auditUtilities
+        );
+
+        trx.setElaborationDateTime(LocalDateTime.now().minusDays(1)); // 1 giorno fa rispetto a oggi
+
+        Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        assertThrows( OperationNotAllowedException.class, () -> {
+            service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
+        });
     }
 }

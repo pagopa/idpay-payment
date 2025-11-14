@@ -197,16 +197,16 @@ public class AuditUtilities {
                 dto.getTrxCode(),
                 dto.getUserId(),
                 String.valueOf(dto.getRewardCents()),
-                dto.getInvoiceFilename(),
+                dto.getCreditNoteFilename(),
                 dto.getMerchantId(),
                 dto.getPointOfSaleId()
         );
     }
 
-    public void logRewardTransaction(TransactionAuditDTO dto) {
+    public void logInvoiceTransaction(TransactionAuditDTO dto) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_TRXCODE_MERCHANTID,
-                "Merchant rewarded the transaction",
+                "Merchant invoiced the transaction",
                 dto.getInitiativeId(), dto.getTrxId(), dto.getTrxCode(), dto.getMerchantId()
         );
     }
@@ -225,10 +225,10 @@ public class AuditUtilities {
         );
     }
 
-    public void logErrorRewardTransaction(String trxId, String merchantId) {
+    public void logErrorInvoiceTransaction(String trxId, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_MERCHANTID,
-                "Merchant reversed the transaction - KO", trxId, merchantId
+                "Merchant invoiced the transaction - KO", trxId, merchantId
         );
     }
 

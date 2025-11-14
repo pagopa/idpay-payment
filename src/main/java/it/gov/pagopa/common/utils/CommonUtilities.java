@@ -25,7 +25,7 @@ public class CommonUtilities {
 
   public static Pageable getPageable(Pageable pageable) {
     if (pageable == null) {
-      return PageRequest.of(0, 10, Sort.by("updateDate").descending());
+      return PageRequest.of(0, 10, Sort.by("trxChargeDate").descending());
     }
     return pageable;
   }

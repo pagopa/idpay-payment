@@ -16,24 +16,18 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service("commonCancel")
 public class CommonCancelServiceImpl {
 
-    private final Duration cancelExpiration;
-    private final BarCodeCreationServiceImpl barCodeCreationService;
+  private final BarCodeCreationServiceImpl barCodeCreationService;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -44,7 +38,6 @@ public class CommonCancelServiceImpl {
 
 
   public CommonCancelServiceImpl(
-          @Value("${app.common.expirations.cancelMinutes}") long cancelExpirationMinutes,
           TransactionInProgressRepository repository,
           RewardCalculatorConnector rewardCalculatorConnector,
           TransactionNotifierService notifierService,
@@ -56,8 +49,7 @@ public class CommonCancelServiceImpl {
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
-        this.cancelExpiration = Duration.ofMinutes(cancelExpirationMinutes);
-        this.barCodeCreationService = barCodeCreationService;
+    this.barCodeCreationService = barCodeCreationService;
   }
 
   public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
@@ -67,7 +59,7 @@ public class CommonCancelServiceImpl {
       if (isDeletableImmediately(trx)) {
         repository.deleteById(trxId);
       } else if (SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())) {
-        handleAuthorizedTransaction(trx, trxId);
+        handleAuthorizedTransaction(trx);
       } else {
         throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED,
             "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
@@ -99,11 +91,7 @@ public class CommonCancelServiceImpl {
     return SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus());
   }
 
-  private void handleAuthorizedTransaction(TransactionInProgress trx, String trxId) {
-    if (cancelExpiration.compareTo(Duration.between(trx.getTrxDate(), OffsetDateTime.now())) < 0) {
-      throw new OperationNotAllowedException(ExceptionCode.PAYMENT_TRANSACTION_EXPIRED,
-          "Cannot cancel expired transaction with transactionId [%s]".formatted(trxId));
-    }
+  private void handleAuthorizedTransaction(TransactionInProgress trx) {
 
     boolean isReset = trx.getExtendedAuthorization();
     AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);

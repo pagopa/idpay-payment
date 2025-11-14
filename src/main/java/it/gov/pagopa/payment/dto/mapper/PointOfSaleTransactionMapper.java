@@ -46,6 +46,7 @@ public class PointOfSaleTransactionMapper {
                 trx.getAmountCents(),
                 trx.getRewardCents() != null ? trx.getRewardCents() : Long.valueOf(0),
                 trx.getTrxDate().toLocalDateTime(),
+                trx.getTrxChargeDate().toLocalDateTime(),
                 CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 trx.getUpdateDate(),
                 trx.getStatus(),

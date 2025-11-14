@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
-import it.gov.pagopa.payment.model.InvoiceFile;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
@@ -42,7 +42,7 @@ public class CommonReversalServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file) {
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
@@ -61,13 +61,16 @@ public class CommonReversalServiceImpl {
             }
 
             // Uploading invoice to storage
-            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
                     merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
             // updating the transaction
             trx.setStatus(SyncTrxStatus.REFUNDED);
-            trx.setInvoiceFile(InvoiceFile.builder().filename(file.getOriginalFilename()).build());
+            trx.setCreditNoteData(InvoiceData.builder()
+                .filename(file.getOriginalFilename())
+                .docNumber(docNumber)
+                .build());
 
             // sending the transaction reversal notification
             sendReversedTransactionNotification(trx);
@@ -80,6 +83,7 @@ public class CommonReversalServiceImpl {
                     trx.getUserId(),
                     ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
                     path,
+                    docNumber,
                     merchantId,
                     pointOfSaleId
             );
@@ -93,7 +97,7 @@ public class CommonReversalServiceImpl {
             throw e;
         } catch (IOException e) {
             auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
-            throw new RuntimeException(e.getMessage(), e);
+            throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Error uploading credit note file", false, e);
         }
 
     }

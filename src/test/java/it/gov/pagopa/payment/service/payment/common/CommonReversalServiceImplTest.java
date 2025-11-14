@@ -44,10 +44,11 @@ class CommonReversalServiceImplTest {
     @InjectMocks
     private CommonReversalServiceImpl service;
 
-    private final String TRANSACTION_ID = "trxId";
-    private final String MERCHANT_ID = "merchantId";
-    private final String POS_ID = "posId";
-    private final String FILENAME = "invoice.pdf";
+    private static final String TRANSACTION_ID = "trxId";
+    private static final String MERCHANT_ID = "merchantId";
+    private static final String POS_ID = "posId";
+    private static final String FILENAME = "creditNote.pdf";
+    public static final String CREDIT_NOTE_NUMBER = "FPR 192/25";
 
     private TransactionInProgress trx;
 
@@ -75,20 +76,20 @@ class CommonReversalServiceImplTest {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
 
-        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
+        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);
 
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
         Mockito.verify(repository).deleteById(TRANSACTION_ID);
         Mockito.verify(auditUtilities).logReverseTransaction(any());
         assertEquals(SyncTrxStatus.REFUNDED, trx.getStatus());
-        assertEquals(FILENAME, trx.getInvoiceFile().getFilename());
+        assertEquals(FILENAME, trx.getCreditNoteData().getFilename());
     }
 
     @Test
     void reversalTransaction_transactionNotFound() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.empty());
         assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
@@ -97,7 +98,7 @@ class CommonReversalServiceImplTest {
         trx.setMerchantId("otherMerchant");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
@@ -106,7 +107,7 @@ class CommonReversalServiceImplTest {
         trx.setPointOfSaleId("otherPos");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
@@ -115,7 +116,7 @@ class CommonReversalServiceImplTest {
         trx.setStatus(SyncTrxStatus.CREATED);
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(OperationNotAllowedException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
 
@@ -123,7 +124,7 @@ class CommonReversalServiceImplTest {
     void reversalTransaction_runtimeException_shouldLogAndThrow() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenThrow(new RuntimeException("Generic error"));
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         assertEquals("Generic error", ex.getMessage());
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
@@ -133,7 +134,7 @@ class CommonReversalServiceImplTest {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
         RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         assertEquals("IO error", ex.getCause().getMessage());
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
     }
@@ -142,15 +143,15 @@ class CommonReversalServiceImplTest {
     void sendReversedTransactionNotification_notifyReturnsFalse_shouldThrowTransactionNotFoundOrExpiredException() {
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
         assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
     }
 
     @Test
     void reversalTransaction_shouldSetCorrectInvoicePath() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
-        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file);
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/%s",
+        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);
+        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
                 MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
         Mockito.verify(fileStorageClient).upload(any(), eq(expectedPath), anyString());
     }
@@ -161,7 +162,7 @@ class CommonReversalServiceImplTest {
         MultipartFile invalidFile = Mockito.mock(MultipartFile.class);
         Mockito.when(invalidFile.getOriginalFilename()).thenReturn("document.txt");
         InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile));
+                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile, CREDIT_NOTE_NUMBER));
         assertEquals("File must be a PDF or XML", ex.getMessage());
     }
 

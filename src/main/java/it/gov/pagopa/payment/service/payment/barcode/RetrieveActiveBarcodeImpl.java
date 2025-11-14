@@ -42,6 +42,10 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
             }
         }
 
+        if(null != latest) {
+            latest.setAmountCents(latest.getVoucherAmountCents());
+        }
+
         return transactionBarCodeInProgress2TransactionResponseMapper.apply(latest);
     }
 }
