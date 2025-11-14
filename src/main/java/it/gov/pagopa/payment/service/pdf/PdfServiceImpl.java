@@ -25,6 +25,9 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -192,9 +195,9 @@ public class PdfServiceImpl implements PdfService {
             String prodotto = transactionInProgress.getAdditionalProperties().get("productName");
             String codiceProdotto = transactionInProgress.getAdditionalProperties().get("productGtin");
             trxCode = transactionInProgress.getTrxCode();
-            String fiscalCode = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+            String fiscalCode = "BRTVNL63E26X666A";
 
-            doc.add(buildDiscountRow(discount, regular, bold, textPrimary, textSecondary));
+            doc.add(buildDiscountRow(pdf, discount, regular, bold, textPrimary, textSecondary));
 
             Table cfAndDiscountBarcodeTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
                 .useAllAvailableWidth();
@@ -245,7 +248,12 @@ public class PdfServiceImpl implements PdfService {
                 Utilities.sanitizeString(transactionId), e);
             throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
         }
-
+        try {
+            Files.write(Paths.get("preauth.pdf"), baos.toByteArray());
+            System.out.println("PDF salvato in preauth.pdf");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return ReportDTOWithTrxCode.builder()
             .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
             .trxCode(trxCode)
@@ -322,18 +330,39 @@ public class PdfServiceImpl implements PdfService {
     /**
      * Crea la riga con codice sconto.
      */
-    private BlockElement<?> buildDiscountRow(BigDecimal importoSconto,
+    private BlockElement<?> buildDiscountRow(PdfDocument pdf, BigDecimal importoSconto,
         PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
+        
         Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
 
         Div left = new Div();
+        t.addCell(PdfUtils.noBorderCell(left));
+
+        Barcode128 barcode = new Barcode128(pdf);
+        barcode.setCodeType(Barcode128.CODE128);
+        barcode.setCode(String.valueOf(importoSconto));
+        barcode.setFont(null);
+        barcode.setSize(0f);
+        barcode.setBaseline(0f);
+        barcode.setBarHeight(25.5F);
+
+        Image barcodeImg = new Image(barcode.createFormXObject(pdf));
+        barcodeImg.setAutoScale(false);
+        barcodeImg.setHorizontalAlignment(HorizontalAlignment.LEFT);
 
         Div right = new Div();
         right.add(PdfUtils.smallLabelOriginalCase("Sconto", regular, textSecondary).setMarginTop(25f));
         right.add(new Paragraph(PdfUtils.formatCurrencyIt(importoSconto)).setFont(bold).setFontSize(20).setFontColor(textPrimary).setMarginBottom(6).setMarginTop(-5));
-
-        t.addCell(PdfUtils.noBorderCell(left));
+        right.add(new Paragraph("Codice a barre")
+                .setFont(regular)
+                .setFontSize(8)
+                .setFontColor(textSecondary)
+                .setTextAlignment(TextAlignment.LEFT)
+                .setMarginTop(5)
+                .setMarginBottom(6));
+        right.add(barcodeImg.setMarginTop(2));
         t.addCell(PdfUtils.noBorderCell(right));
+
         return t.setMarginBottom(6);
     }
 
