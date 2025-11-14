@@ -25,10 +25,6 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
-
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,6 +36,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -247,12 +244,6 @@ public class PdfServiceImpl implements PdfService {
             log.error("Errore durante la generazione del PDF (trxId={})",
                 Utilities.sanitizeString(transactionId), e);
             throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
-        }
-        try {
-            Files.write(Paths.get("preauth.pdf"), baos.toByteArray());
-            System.out.println("PDF salvato in preauth.pdf");
-        } catch (IOException e) {
-            e.printStackTrace();
         }
         return ReportDTOWithTrxCode.builder()
             .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
