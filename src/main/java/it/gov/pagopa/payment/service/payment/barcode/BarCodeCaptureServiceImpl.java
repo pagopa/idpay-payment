@@ -33,7 +33,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
 
     public TransactionBarCodeResponse capturePayment(String trxCode) {
         try {
-            TransactionInProgress trx = repository.findByTrxCode(trxCode)
+            TransactionInProgress trx = repository.findByTrxCode(trxCode.toLowerCase())
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
             if(!trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)){

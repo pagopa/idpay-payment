@@ -95,7 +95,7 @@ class BarCodeCaptureServiceImplTest {
         trxOther.setUserId("USER01");
         trxOther.setInitiativeId("INIT01");
 
-        when(repositoryMock.findByTrxCode("trxCurrent")).thenReturn(Optional.of(trxCurrent));
+        when(repositoryMock.findByTrxCode("trxcurrent")).thenReturn(Optional.of(trxCurrent));
         when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
             trxCurrent.getUserId(),
             trxCurrent.getInitiativeId(),
@@ -106,7 +106,7 @@ class BarCodeCaptureServiceImplTest {
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
         when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
 
-        TransactionBarCodeResponse response = service.capturePayment("trxCurrent");
+        TransactionBarCodeResponse response = service.capturePayment("trxcurrent");
 
         assertNotNull(response);
         verify(repositoryMock).deleteAll(List.of(trxOther));
@@ -125,7 +125,7 @@ class BarCodeCaptureServiceImplTest {
         trxOther.setUserId("USER01");
         trxOther.setInitiativeId("INIT01");
 
-        when(repositoryMock.findByTrxCode("trxCurrent")).thenReturn(Optional.of(trxCurrent));
+        when(repositoryMock.findByTrxCode("trxcurrent")).thenReturn(Optional.of(trxCurrent));
         when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
             trxCurrent.getUserId(),
             trxCurrent.getInitiativeId(),
@@ -136,7 +136,7 @@ class BarCodeCaptureServiceImplTest {
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
         when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
 
-        TransactionBarCodeResponse response = service.capturePayment("trxCurrent");
+        TransactionBarCodeResponse response = service.capturePayment("trxcurrent");
 
         assertNotNull(response);
         verify(repositoryMock).deleteAll(List.of(trxOther));
@@ -150,7 +150,7 @@ class BarCodeCaptureServiceImplTest {
         trxCurrent.setUserId("USER01");
         trxCurrent.setInitiativeId("INIT01");
 
-        when(repositoryMock.findByTrxCode("trxCurrent")).thenReturn(Optional.of(trxCurrent));
+        when(repositoryMock.findByTrxCode("trxcurrent")).thenReturn(Optional.of(trxCurrent));
         when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
             trxCurrent.getUserId(),
             trxCurrent.getInitiativeId(),
@@ -161,7 +161,7 @@ class BarCodeCaptureServiceImplTest {
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
         when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
 
-        TransactionBarCodeResponse response = service.capturePayment("trxCurrent");
+        TransactionBarCodeResponse response = service.capturePayment("trxcurrent");
 
         assertNotNull(response);
         verify(repositoryMock, never()).deleteAll(anyList());
