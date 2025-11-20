@@ -83,4 +83,6 @@ public class TransactionInProgress {
 
   private InvoiceData invoiceData;
   private InvoiceData creditNoteData;
+
+  private PointOfSaleDetail pointOfSaleDetail;
 }

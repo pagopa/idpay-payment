@@ -81,6 +81,8 @@ public class CommonInvoiceServiceImpl {
                 .docNumber(docNumber)
                 .build());
 
+            //TODO add merchantConnector
+
             // sending the transaction invoice notification (to store it in transaction db collection)
             sendInvoiceTransactionNotification(trx);
 
