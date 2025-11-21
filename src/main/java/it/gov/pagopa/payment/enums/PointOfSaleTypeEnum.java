@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.enums;
 
-public enum PointOfSaleType {
+public enum PointOfSaleTypeEnum {
   ONLINE,
   PHYSICAL
 }
