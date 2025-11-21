@@ -4,9 +4,12 @@ import feign.FeignException;
 import feign.Request;
 import feign.RequestTemplate;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.exception.custom.MerchantInvocationException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.PosNotFoundException;
 import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -33,6 +36,7 @@ class MerchantConnectorImplTest {
 
     private static final String MERCHANT_ID = "MERCHANTID1";
     private static final String INITIATIVEID = "INITIATIVEID1";
+    private static final String POINT_OF_SALE_ID = "POSID1";
 
     @Test
     void getMerchantDetail(){
@@ -91,6 +95,62 @@ class MerchantConnectorImplTest {
         assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
 
         verify(restClient, times(1)).merchantDetail(MERCHANT_ID,INITIATIVEID);
+    }
+
+    @Test
+    void getPointOfSale(){
+        PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
+                .type(PointOfSaleTypeEnum.PHYSICAL)
+                .franchiseName("Franchise Test")
+                .businessName("Business Test")
+                .fiscalCode("FISCALCODE123")
+                .vatNumber("12345678901")
+                .build();
+
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+                .thenReturn(pointOfSaleDTO);
+
+        PointOfSaleDTO result = merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(pointOfSaleDTO, result);
+
+        verify(restClient, times(1)).getPointOfSale(anyString(), anyString());
+    }
+
+    @Test
+    void getPointOfSalePosNotFoundException(){
+        Request request = Request.create(Request.HttpMethod.GET, "url",
+                new HashMap<>(), null, new RequestTemplate());
+        FeignException feignExceptionMock = new FeignException.NotFound("", request, null, null);
+
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+                .thenThrow(feignExceptionMock);
+
+        PosNotFoundException exception = assertThrows(PosNotFoundException.class, () -> merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID));
+
+        Assertions.assertNotNull(exception);
+        assertEquals(PaymentConstants.ExceptionCode.POINT_OF_SALE_NOT_FOUND, exception.getCode());
+
+        verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
+    }
+
+    @Test
+    void getPointOfSaleInvocationException(){
+
+        Request request = Request.create(Request.HttpMethod.GET, "url",
+                new HashMap<>(), null, new RequestTemplate());
+        FeignException feignExceptionMock = new FeignException.InternalServerError("", request, null, null);
+
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+                .thenThrow(feignExceptionMock);
+
+        MerchantInvocationException exception = assertThrows(MerchantInvocationException.class, () -> merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID));
+
+        Assertions.assertNotNull(exception);
+        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
+
+        verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
     }
 
 

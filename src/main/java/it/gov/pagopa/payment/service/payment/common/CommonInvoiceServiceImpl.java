@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
@@ -31,6 +33,7 @@ public class CommonInvoiceServiceImpl {
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
+    private final MerchantConnector merchantConnector;
 
     public CommonInvoiceServiceImpl(
             @Value("${app.common.expirations.minDaysToInvoiceTransaction:0}") long minDaysToInvoiceTransaction,
@@ -38,13 +41,14 @@ public class CommonInvoiceServiceImpl {
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
             FileStorageClient fileStorageClient,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
         this.repository = repository;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
+      this.merchantConnector = merchantConnector;
     }
 
     public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
@@ -80,6 +84,13 @@ public class CommonInvoiceServiceImpl {
                 .filename(file.getOriginalFilename())
                 .docNumber(docNumber)
                 .build());
+
+            if (trx.getFranchiseName() == null || trx.getPointOfSaleType() == null) {
+                PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
+
+                trx.setFranchiseName(pointOfSaleDTO.getFranchiseName());
+                trx.setPointOfSaleType(pointOfSaleDTO.getType().name());
+            }
 
             // sending the transaction invoice notification (to store it in transaction db collection)
             sendInvoiceTransactionNotification(trx);
