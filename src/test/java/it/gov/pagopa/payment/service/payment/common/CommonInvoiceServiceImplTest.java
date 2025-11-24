@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -83,10 +82,17 @@ class CommonInvoiceServiceImplTest {
         );
     }
 
-    @Disabled
     @Test
     void invoiceTransaction_success() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+
+        PointOfSaleDTO pos = PointOfSaleDTO.builder()
+            .franchiseName("Test")
+            .type(PointOfSaleTypeEnum.PHYSICAL)
+            .build();
+        Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID))
+            .thenReturn(pos);
+
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
         service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
@@ -197,10 +203,16 @@ class CommonInvoiceServiceImplTest {
                 () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
     }
 
-    @Disabled
     @Test
     void invoiceTransaction_shouldSetCorrectInvoicePath() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+
+        PointOfSaleDTO pos = PointOfSaleDTO.builder()
+            .franchiseName("Franchise Test")
+            .type(PointOfSaleTypeEnum.PHYSICAL)
+            .build();
+
+        Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID)).thenReturn(pos);
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
         service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
         String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
