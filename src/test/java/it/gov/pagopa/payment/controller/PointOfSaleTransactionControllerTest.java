@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
+import it.gov.pagopa.payment.configuration.ServiceExceptionConfig;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
@@ -32,7 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PointOfSaleTransactionControllerImpl.class)
-@Import({JsonConfig.class, PaymentErrorManagerConfig.class})
+@Import({JsonConfig.class, PaymentErrorManagerConfig.class, ServiceExceptionConfig.class})
 class PointOfSaleTransactionControllerTest {
 
     @Autowired
@@ -71,6 +72,7 @@ class PointOfSaleTransactionControllerTest {
                 get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
                         INITIATIVE_ID, POINT_OF_SALE_ID)
                         .header("x-merchant-id", MERCHANT_ID)
+                        .header("x-point-of-sale-id", POINT_OF_SALE_ID)
                         .param("fiscalCode", FISCAL_CODE)
                         .param("page", "1")
                         .param("size", "10")
@@ -94,4 +96,24 @@ class PointOfSaleTransactionControllerTest {
                 anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any());
         Mockito.verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
     }
+
+  @Test
+  void getPointOfSaleTransactionsList_unauthorizedPointOfSale_shouldReturn403() throws Exception {
+    MvcResult result = mockMvc.perform(
+            get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
+                INITIATIVE_ID, POINT_OF_SALE_ID)
+                .header("x-merchant-id", MERCHANT_ID)
+                .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
+                .param("fiscalCode", FISCAL_CODE)
+                .param("page", "1")
+                .param("size", "10")
+                .param("status", SyncTrxStatus.AUTHORIZED.toString())
+                .param("productGtin", PRODUCT_GTIN)
+        )
+        .andExpect(status().isForbidden())
+        .andReturn();
+
+    String content = result.getResponse().getContentAsString();
+    Assertions.assertTrue(content.contains("not authorized for the current token"));
+  }
 }
