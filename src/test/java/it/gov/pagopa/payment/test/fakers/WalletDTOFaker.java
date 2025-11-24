@@ -10,6 +10,7 @@ public class WalletDTOFaker {
         return WalletDTO.builder()
                 .initiativeId("INITIATIVEID%d".formatted(bias))
                 .initiativeName("INITIATIVENAME%d".formatted(bias))
+                .familyId("FAMILYID%d".formatted(bias))
                 .status(walletStatus);
     }
 

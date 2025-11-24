@@ -92,7 +92,7 @@ class CommonAuthServiceImplTest {
         commonVerifyForAuthPayment(transaction);
         assertEquals(authPaymentDTO, result);
         TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-                "residualAmountCents");
+                "residualAmountCents","familyId"/* can be null? */ );
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         assertTrue(result.getRejectionReasons().isEmpty());
         assertEquals(Collections.emptyList(), result.getRejectionReasons());
