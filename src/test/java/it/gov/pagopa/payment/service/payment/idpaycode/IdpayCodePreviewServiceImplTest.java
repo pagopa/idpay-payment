@@ -83,7 +83,7 @@ class IdpayCodePreviewServiceImplTest {
 
         //Then
         Assertions.assertNotNull(result);
-        TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment","residualAmountCents","familyId"/* can be null? */);
+        TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment","residualAmountCents");
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
     }
@@ -126,8 +126,7 @@ class IdpayCodePreviewServiceImplTest {
                 "residualBudgetCents",
                 "secondFactor",
                 "splitPayment",
-                "residualAmountCents",
-                "familyId"/* can be null? */
+                "residualAmountCents"
         );
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());

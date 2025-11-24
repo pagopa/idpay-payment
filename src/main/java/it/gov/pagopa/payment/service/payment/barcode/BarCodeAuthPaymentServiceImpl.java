@@ -128,7 +128,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
             WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(trx.getInitiativeId(), trx.getUserId());
 
-            setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId, pointOfSaleId);
+            setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
 
             commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
@@ -140,7 +140,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
-            authPaymentDTO.setFamilyId(walletDTO.getFamilyId());
             return authPaymentDTO;
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);
@@ -164,7 +163,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     private static void setTrxFields(String merchantId, AuthBarCodePaymentDTO authBarCodePaymentDTO,
-                                     TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId, String pointOfSaleId) {
+                                     TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId, String pointOfSaleId,
+                                     String familyId) {
         trx.setAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setEffectiveAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setIdTrxAcquirer(authBarCodePaymentDTO.getIdTrxAcquirer());
@@ -175,5 +175,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         trx.setAcquirerId(acquirerId);
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
         trx.setPointOfSaleId(pointOfSaleId);
+        trx.setFamilyId(familyId);
     }
 }

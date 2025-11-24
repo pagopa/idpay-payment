@@ -77,7 +77,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-            "residualAmountCents","familyId"/* can be null? */);
+            "residualAmountCents");
 
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatusForPreview(any(), any(), any(),anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
@@ -101,7 +101,7 @@ class QRCodePreAuthServiceImplTest {
 
     Assertions.assertNotNull(result);
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-            "residualAmountCents","familyId"/* can be null? */);
+            "residualAmountCents");
 
     verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
     verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());

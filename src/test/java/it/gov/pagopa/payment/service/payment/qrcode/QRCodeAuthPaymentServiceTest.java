@@ -69,7 +69,7 @@ class QRCodeAuthPaymentServiceTest {
     verify(qrCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(any());
 
     TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-            "residualAmountCents","familyId"/* can be null? */);
+            "residualAmountCents");
     assertEquals(transaction.getTrxCode(), result.getTrxCode());
     assertTrue(result.getRejectionReasons().isEmpty());
     assertEquals(Collections.emptyList(), result.getRejectionReasons());

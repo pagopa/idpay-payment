@@ -21,8 +21,6 @@ class AuthPaymentIdpayCodeMapperTest {
 
         AuthPaymentIdpayCodeDTO result = authPaymentIdpayCodeMapper.authPaymentMapper(authPayment, secondFactor);
 
-        /* To set from trx? */
-        result.setFamilyId("familyId");
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(authPayment.getId(), result.getId());

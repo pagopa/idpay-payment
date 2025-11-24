@@ -59,8 +59,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
     AuthPaymentDTO result = mapper.rewardResponseMap(responseDTO, transaction);
 
-    /* To set from trx? */
-    result.setFamilyId("familyId");
 
     assertAll(() -> {
       assertNotNull(result);
@@ -88,8 +86,7 @@ import static org.junit.jupiter.api.Assertions.*;
      transaction.setRejectionReasons(List.of());
 
      AuthPaymentDTO result = mapper.rewardResponseMap(responseDTO, transaction);
-       /* To set from trx? */
-       result.setFamilyId("familyId");
+
 
      assertAll(() -> {
        assertNotNull(result);
@@ -115,8 +112,7 @@ import static org.junit.jupiter.api.Assertions.*;
          transaction.setRejectionReasons(null);
 
          AuthPaymentDTO result = mapper.rewardResponseMap(responseDTO, transaction);
-         /* To set from trx? */
-         result.setFamilyId("familyId");
+
          assertAll(() -> {
              assertNotNull(result);
              assertEquals(responseDTO.getTransactionId(), result.getId());

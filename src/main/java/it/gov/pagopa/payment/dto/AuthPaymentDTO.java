@@ -42,5 +42,4 @@ public class AuthPaymentDTO {
 
   private Map<String, String> additionalProperties;
 
-  private String familyId;
 }

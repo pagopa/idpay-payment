@@ -185,6 +185,8 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1,OnboardingStatus.ONBOARDED.getValue());
+        walletDTO.setFamilyId("familyId");
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transactionInProgress.getTrxCode()))
                 .thenReturn(transactionInProgress);
 
@@ -193,6 +195,9 @@ class BarCodeAuthPaymentServiceImplTest {
 
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
+
+        when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(),transactionInProgress.getUserId()))
+                .thenReturn(walletDTO);
 
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
         when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
