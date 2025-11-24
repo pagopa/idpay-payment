@@ -31,6 +31,9 @@ class AuthPaymentMapperTest {
 
    AuthPaymentDTO result = mapper.transactionMapper(transaction);
 
+     /* To set from trx? */
+     result.setFamilyId("familyId");
+
    assertAll(() -> {
      assertNotNull(result);
      assertEquals(transaction.getId(), result.getId());

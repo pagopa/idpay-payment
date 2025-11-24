@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment.common;
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
+import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -153,6 +154,19 @@ public class CommonAuthServiceImpl {
         }
     }
 
+    public WalletDTO checkWalletStatusAndReturn(String initiativeId, String userId){
+        WalletDTO walletDTO = walletConnector.getWallet(initiativeId, userId);
+        String walletStatus = walletDTO.getStatus();
+
+        if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
+            throw new UserSuspendedException("The user has been suspended for initiative [%s]".formatted(initiativeId));
+        }
+
+        if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(walletStatus)){
+            throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
+        }
+        return  walletDTO;
+    }
     public void checkAuth(String trxCode, TransactionInProgress trx){
         if (trx == null) {
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
