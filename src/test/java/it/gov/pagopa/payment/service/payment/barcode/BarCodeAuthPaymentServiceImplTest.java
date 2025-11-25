@@ -1,10 +1,12 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import com.azure.resourcemanager.monitor.models.OnboardingStatus;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
+import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
@@ -21,10 +23,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.ProductDTOFaker;
-import it.gov.pagopa.payment.test.fakers.RewardFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -97,6 +96,8 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(0, OnboardingStatus.ONBOARDED.getValue());
+
         Reward reward = RewardFaker.mockInstance(1);
         reward.setCounters(new RewardCounters());
 
@@ -115,7 +116,8 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(pointOfSaleDTO);
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenReturn(authPaymentDTO);
-
+        when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(),transactionInProgress.getUserId()))
+                .thenReturn(walletDTO);
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
 
         when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
@@ -191,6 +193,9 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1,OnboardingStatus.ONBOARDED.getValue());
+        walletDTO.setFamilyId("familyId");
+
         PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
                 .type(PointOfSaleTypeEnum.PHYSICAL)
                 .franchiseName("Test Franchise")
@@ -207,6 +212,9 @@ class BarCodeAuthPaymentServiceImplTest {
 
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
+
+        when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(),transactionInProgress.getUserId()))
+                .thenReturn(walletDTO);
 
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
         when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
