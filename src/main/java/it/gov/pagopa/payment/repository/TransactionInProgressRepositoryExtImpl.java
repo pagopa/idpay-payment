@@ -212,6 +212,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             .set(Fields.merchantId, trx.getMerchantId())
             .set(Fields.additionalProperties, trx.getAdditionalProperties())
             .set(Fields.pointOfSaleId, trx.getPointOfSaleId())
+            .set(Fields.franchiseName, trx.getFranchiseName())
+            .set(Fields.pointOfSaleType, trx.getPointOfSaleType())
             .currentDate(Fields.updateDate),
         TransactionInProgress.class);
   }

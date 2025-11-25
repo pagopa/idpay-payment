@@ -46,6 +46,7 @@ public class PaymentConstants {
     public static final String IDPAYCODE_NOT_FOUND = "PAYMENT_IDPAYCODE_NOT_FOUND";
     public static final String MERCHANT_NOT_ONBOARDED = "PAYMENT_MERCHANT_NOT_ONBOARDED";
     public static final String PRODUCT_NOT_FOUND = "PAYMENT_PRODUCT_NOT_FOUND";
+    public static final String POINT_OF_SALE_NOT_FOUND = "PAYMENT_POINT_OF_SALE_NOT_FOUND";
     public static final String PRODUCT_NOT_VALID = "PAYMENT_PRODUCT_NOT_VALID";
     public static final String PAYMENT_INVALID_REQUEST = "PAYMENT_INVALID_REQUEST";
     public static final String PAYMENT_CANNOT_GUARANTEE_REWARD = "PAYMENT_CANNOT_GUARANTEE_REWARD";
