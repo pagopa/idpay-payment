@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.PosNotFoundException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.PointOfSaleTransactionService;
 import it.gov.pagopa.payment.test.fakers.PointOfSaleTransactionDTOFaker;
@@ -116,4 +117,53 @@ class PointOfSaleTransactionControllerTest {
     String content = result.getResponse().getContentAsString();
     Assertions.assertTrue(content.contains("not authorized for the current token"));
   }
+
+  @Test
+  void getPointOfSaleTransactionsList_withoutPointOfSaleHeader() throws Exception {
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    PageRequest pageRequest = PageRequest.of(0, 10);
+    Page<TransactionInProgress> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
+
+    Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
+            anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+        .thenReturn(trxPage);
+
+    PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    dto.setFiscalCode(FISCAL_CODE);
+
+    Mockito.when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
+        .thenReturn(dto);
+
+    MvcResult result = mockMvc.perform(
+        get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
+            INITIATIVE_ID, POINT_OF_SALE_ID)
+            .header("x-merchant-id", MERCHANT_ID)
+            .param("fiscalCode", FISCAL_CODE)
+            .param("page", "1")
+            .param("size", "10")
+            .param("status", SyncTrxStatus.AUTHORIZED.toString())
+            .param("productGtin", PRODUCT_GTIN)
+    ).andExpect(status().isOk()).andReturn();
+
+    PointOfSaleTransactionsListDTO actual = objectMapper.readValue(
+        result.getResponse().getContentAsString(),
+        PointOfSaleTransactionsListDTO.class
+    );
+
+    Assertions.assertNotNull(actual);
+    Assertions.assertEquals(1, actual.getTotalElements());
+  }
+
+  @Test
+  void constructor_withMessage_shouldInitializeCorrectly() {
+    String message = "POS not found";
+
+    PosNotFoundException ex = new PosNotFoundException(message);
+
+    Assertions.assertNotNull(ex);
+    Assertions.assertEquals("POS not found", ex.getMessage());
+    Assertions.assertEquals("PAYMENT_POINT_OF_SALE_NOT_FOUND", ex.getCode());
+    Assertions.assertNull(ex.getCause());
+  }
 }
+

@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
 import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.PointOfSaleTransactionService;
-import java.util.Objects;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,12 +30,13 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String tokenPointOfSaleId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
         log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", ""));
 
-      if (!Objects.equals(pointOfSaleId, tokenPointOfSaleId)) {
-        throw new PointOfSaleNotAllowedException(
-            "The point-of-sale with id [%s] is not authorized for the current token [%s]"
-                .formatted(pointOfSaleId, tokenPointOfSaleId)
-        );
-      }
+      if (tokenPointOfSaleId != null && (!Utilities.sanitizeString(tokenPointOfSaleId)
+          .equals(Utilities.sanitizeString(pointOfSaleId)))){
+
+          throw new PointOfSaleNotAllowedException(
+              "The point-of-sale with id [%s] is not authorized for the current token [%s]"
+                  .formatted(pointOfSaleId, tokenPointOfSaleId));
+         }
 
       Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
                 merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, pageable);
