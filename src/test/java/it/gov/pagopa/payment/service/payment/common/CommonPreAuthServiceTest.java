@@ -66,13 +66,12 @@ class CommonPreAuthServiceTest {
   void relateUser() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "rewardCents", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "rewardCents", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData", "familyId");
 
     verify(walletConnectorMock, times(1)).getWallet("INITIATIVEID1", USER_ID1);
   }
@@ -83,13 +82,12 @@ class CommonPreAuthServiceTest {
     trx.setUserId(USER_ID1);
 
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData","familyId");
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }
