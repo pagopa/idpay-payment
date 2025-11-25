@@ -3,13 +3,14 @@ package it.gov.pagopa.payment.service.payment.barcode;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
-import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
+import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
@@ -99,12 +100,19 @@ class BarCodeAuthPaymentServiceImplTest {
         Reward reward = RewardFaker.mockInstance(1);
         reward.setCounters(new RewardCounters());
 
+        PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
+                .type(PointOfSaleTypeEnum.PHYSICAL)
+                .franchiseName("Test Franchise")
+                .businessName("Test Business")
+                .fiscalCode("FISCALCODE123")
+                .vatNumber("12345678901")
+                .build();
 
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transactionInProgress.getTrxCode()))
                 .thenReturn(transactionInProgress);
 
-        when(merchantConnector.merchantDetail(MERCHANT_ID, transactionInProgress.getInitiativeId()))
-                .thenReturn(MerchantDetailDTO.builder().build());
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID))
+                .thenReturn(pointOfSaleDTO);
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenReturn(authPaymentDTO);
 
@@ -183,11 +191,19 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
 
+        PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
+                .type(PointOfSaleTypeEnum.PHYSICAL)
+                .franchiseName("Test Franchise")
+                .businessName("Test Business")
+                .fiscalCode("FISCALCODE123")
+                .vatNumber("12345678901")
+                .build();
+
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transactionInProgress.getTrxCode()))
                 .thenReturn(transactionInProgress);
 
-        when(merchantConnector.merchantDetail(MERCHANT_ID, transactionInProgress.getInitiativeId()))
-                .thenReturn(MerchantDetailDTO.builder().build());
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID))
+                .thenReturn(pointOfSaleDTO);
 
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
@@ -200,6 +216,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         // Then
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS, result.getCode());
+        verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
 
     }
 
@@ -256,5 +273,117 @@ class BarCodeAuthPaymentServiceImplTest {
                         barCodeAuthPaymentService.previewPayment("gtin", "trxCode", 95000L));
 
         assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
+    }
+
+    @Test
+    void barCodeAuthPayment_invalidAdditionalProperties_emptyProductGtin() {
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(100L)
+                .idTrxAcquirer("ID")
+                .additionalProperties(Map.of("productGtin", ""))
+                .build();
+
+        TransactionInvalidException result =
+                assertThrows(TransactionInvalidException.class, () ->
+                        barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
+        verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
+    }
+
+    @Test
+    void barCodeAuthPayment_checkAuthThrowsException() {
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1))
+                .thenReturn(transactionInProgress);
+
+        doThrow(new TransactionInvalidException(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, "Invalid status"))
+                .when(commonAuthServiceMock).checkAuth(eq(TRX_CODE1), any());
+
+        TransactionInvalidException result =
+                assertThrows(TransactionInvalidException.class, () ->
+                        barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
+        verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
+    }
+
+    @Test
+    void barCodeAuthPayment_checkTrxStatusToInvokePreAuthThrowsException() {
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
+                .type(PointOfSaleTypeEnum.PHYSICAL)
+                .franchiseName("Test Franchise")
+                .businessName("Test Business")
+                .fiscalCode("FISCALCODE123")
+                .vatNumber("12345678901")
+                .build();
+
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1))
+                .thenReturn(transactionInProgress);
+
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID))
+                .thenReturn(pointOfSaleDTO);
+
+        ProductDTO productDTO = ProductDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
+
+        doThrow(new TransactionInvalidException(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, "Status error"))
+                .when(commonAuthServiceMock).checkTrxStatusToInvokePreAuth(any());
+
+        TransactionInvalidException result =
+                assertThrows(TransactionInvalidException.class, () ->
+                        barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
+        verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
+    }
+
+    @Test
+    void barCodeAuthPayment_verifyTransactionFieldsAreSet() {
+        TransactionInProgress transactionInProgress =
+                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        transactionInProgress.setUserId(USER_ID);
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+
+        PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
+                .type(PointOfSaleTypeEnum.ONLINE)
+                .franchiseName("Online Franchise")
+                .businessName("Online Business")
+                .fiscalCode("ONLINE123")
+                .vatNumber("98765432109")
+                .build();
+
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(transactionInProgress.getTrxCode()))
+                .thenReturn(transactionInProgress);
+
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID))
+                .thenReturn(pointOfSaleDTO);
+        when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress))
+                .thenReturn(authPaymentDTO);
+
+        ProductDTO productDTO = ProductDTOFaker.mockInstance();
+        when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
+
+        barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
+
+        assertEquals(AMOUNT_CENTS, transactionInProgress.getAmountCents());
+        assertEquals(AMOUNT_CENTS, transactionInProgress.getEffectiveAmountCents());
+        assertEquals(ID_TRX_ACQUIRER, transactionInProgress.getIdTrxAcquirer());
+        assertEquals(MERCHANT_ID, transactionInProgress.getMerchantId());
+        assertEquals("Online Business", transactionInProgress.getBusinessName());
+        assertEquals("ONLINE123", transactionInProgress.getMerchantFiscalCode());
+        assertEquals("98765432109", transactionInProgress.getVat());
+        assertEquals("Online Franchise", transactionInProgress.getFranchiseName());
+        assertEquals("ONLINE", transactionInProgress.getPointOfSaleType());
+        assertEquals(ACQUIRER_ID, transactionInProgress.getAcquirerId());
+        assertEquals(PaymentConstants.CURRENCY_EUR, transactionInProgress.getAmountCurrency());
+        assertEquals(POINTOFSALE_ID, transactionInProgress.getPointOfSaleId());
     }
 }
