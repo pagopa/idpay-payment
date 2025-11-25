@@ -21,7 +21,6 @@ class AuthPaymentIdpayCodeMapperTest {
 
         AuthPaymentIdpayCodeDTO result = authPaymentIdpayCodeMapper.authPaymentMapper(authPayment, secondFactor);
 
-
         Assertions.assertNotNull(result);
         Assertions.assertEquals(authPayment.getId(), result.getId());
         Assertions.assertEquals(authPayment.getRewardCents(), result.getRewardCents());
