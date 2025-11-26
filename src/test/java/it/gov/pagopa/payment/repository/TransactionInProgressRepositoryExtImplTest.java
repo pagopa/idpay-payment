@@ -124,7 +124,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
   }
 
   @Test
@@ -147,7 +148,7 @@ class TransactionInProgressRepositoryExtImplTest {
     TestUtils.checkNotNullFields(
         result, "userId", "elaborationDateTime", "reward", "rejectionReasons", "rewards",
         "authDate", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate",
-        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType");
+        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId");
 
     TooManyRequestsException exception =
         assertThrows(
@@ -214,7 +215,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
     Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
   }
@@ -250,7 +252,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
     Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
 
   }
@@ -281,7 +284,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
 
     transactionInProgress.setTrxDate(OffsetDateTime.now().minusDays(30));
     transactionInProgress.setTrxEndDate(OffsetDateTime.now().minusDays(11));
@@ -318,7 +322,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
 
     transactionInProgress.setTrxDate(
         OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
@@ -359,7 +364,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultUpdate.getStatus());
     Assertions.assertEquals(USER_ID, resultUpdate.getUserId());
   }
@@ -388,7 +394,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
 
     AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
     preview.setRewardCents(500L);
@@ -409,7 +416,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(
         resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate", "initiativeEndDate",
-        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType");
+        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -439,7 +446,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
 
     transactionInProgress.setStatus(SyncTrxStatus.IDENTIFIED);
     transactionInProgress.setUserId("USERID1");
@@ -460,7 +468,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(
         resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate", "initiativeEndDate",
-        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType");
+        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -490,7 +498,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "invoiceData",
         "creditNoteData",
         "franchiseName",
-        "pointOfSaleType");
+        "pointOfSaleType",
+        "familyId");
 
     transactionInProgressRepository.updateTrxRejected(
         "MOCKEDTRANSACTION_qr-code_1", "USERID1", List.of("REJECTIONREASON1"),
@@ -499,7 +508,8 @@ class TransactionInProgressRepositoryExtImplTest {
         transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward",
-        "rewards", "trxChargeDate", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType");
+        "rewards", "trxChargeDate", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData",
+        "franchiseName", "pointOfSaleType", "familyId");
     Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -907,7 +917,7 @@ class TransactionInProgressRepositoryExtImplTest {
         "acquirerId", "amountCents", "effectiveAmountCents", "amountCurrency", "merchantFiscalCode",
         "merchantId", "invoiceData", "creditNoteData",
         "idTrxAcquirer", "idTrxIssuer", "mcc", "businessName", "initiativeRejectionReasons",
-        "initiativeEndDate", "voucherAmountCents", "franchiseName", "pointOfSaleType");
+        "initiativeEndDate", "voucherAmountCents", "franchiseName", "pointOfSaleType", "familyId");
 
     transactionInProgressRepository.updateTrxRejected(transactionInProgress2,
         List.of("REJECTIONREASON1"),
@@ -918,7 +928,8 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(resultSecondSave,
         "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer",
-        "mcc", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType");
+        "mcc", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData",
+        "franchiseName", "pointOfSaleType", "familyId");
     Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }

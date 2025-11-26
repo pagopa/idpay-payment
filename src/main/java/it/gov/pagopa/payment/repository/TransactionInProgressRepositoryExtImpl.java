@@ -251,6 +251,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         .set(Fields.rewards, authPaymentDTO.getRewards())
         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
         .set(Fields.counterVersion, authPaymentDTO.getCounters().getVersion())
+        .set(Fields.familyId,trx.getFamilyId())
         .currentDate(Fields.updateDate);
 
     if (RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())) {
@@ -262,7 +263,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
           .set(Fields.businessName, trx.getBusinessName())
           .set(Fields.vat, trx.getVat())
           .set(Fields.merchantFiscalCode, trx.getMerchantFiscalCode())
-          .set(Fields.acquirerId, trx.getAcquirerId());
+          .set(Fields.acquirerId, trx.getAcquirerId())
+          .set(Fields.familyId,trx.getFamilyId());
     }
 
     return mongoTemplate.updateFirst(

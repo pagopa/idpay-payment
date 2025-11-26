@@ -339,6 +339,48 @@ class CommonAuthServiceImplTest {
         assertEquals("Cannot find transaction with trxCode [%s]".formatted(TRX_CODE), resultException.getMessage());
     }
 
+    @Test
+    void checkWalletStatusAndReturn_ok() {
+        when(walletConnectorMock.getWallet("INITIATIVE1", "USER1"))
+            .thenReturn(walletWithStatus("REFUNDABLE"));
+
+        WalletDTO result = commonAuthService.checkWalletStatusAndReturn("INITIATIVE1", "USER1");
+
+        assertNotNull(result);
+        assertEquals("REFUNDABLE", result.getStatus());
+        verify(walletConnectorMock, times(1)).getWallet("INITIATIVE1", "USER1");
+        verifyNoInteractions(auditUtilitiesMock, rewardCalculatorConnectorMock, transactionInProgressRepositoryMock);
+    }
+
+    @Test
+    void checkWalletStatusAndReturn_suspended() {
+        when(walletConnectorMock.getWallet("INITIATIVE1", "USER1"))
+            .thenReturn(walletWithStatus("SUSPENDED"));
+
+        UserSuspendedException ex = assertThrows(UserSuspendedException.class,
+            () -> commonAuthService.checkWalletStatusAndReturn("INITIATIVE1", "USER1"));
+
+        assertTrue(ex.getMessage().contains("INITIATIVE1"));
+        verify(walletConnectorMock, times(1)).getWallet("INITIATIVE1", "USER1");
+    }
+
+    @Test
+    void checkWalletStatusAndReturn_unsubscribed() {
+        when(walletConnectorMock.getWallet("INITIATIVE1", "USER1"))
+            .thenReturn(walletWithStatus("UNSUBSCRIBED"));
+
+        UserNotOnboardedException ex = assertThrows(UserNotOnboardedException.class,
+            () -> commonAuthService.checkWalletStatusAndReturn("INITIATIVE1", "USER1"));
+
+        assertTrue(ex.getMessage().contains("INITIATIVE1"));
+        verify(walletConnectorMock, times(1)).getWallet("INITIATIVE1", "USER1");
+    }
+
+    private WalletDTO walletWithStatus(String status) {
+        WalletDTO w = new WalletDTO();
+        w.setStatus(status);
+        return w;
+    }
 
     private static TransactionInProgress getTransactionInProgress() {
         TransactionInProgress transaction =
