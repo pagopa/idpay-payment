@@ -115,7 +115,7 @@ class PointOfSaleTransactionControllerTest {
         .andReturn();
 
     String content = result.getResponse().getContentAsString();
-    Assertions.assertTrue(content.contains("not authorized for the current token"));
+    Assertions.assertTrue(content.contains("Point of sale mismatch"));
   }
 
   @Test
