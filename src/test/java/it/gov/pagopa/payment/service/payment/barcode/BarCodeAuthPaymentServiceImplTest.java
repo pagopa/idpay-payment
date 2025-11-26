@@ -331,6 +331,10 @@ class BarCodeAuthPaymentServiceImplTest {
                 .vatNumber("12345678901")
                 .build();
 
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(0, OnboardingStatus.ONBOARDED.getValue());
+        when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(),transactionInProgress.getUserId()))
+                .thenReturn(walletDTO);
+
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1))
                 .thenReturn(transactionInProgress);
 
@@ -378,6 +382,10 @@ class BarCodeAuthPaymentServiceImplTest {
 
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
         when(paymentCheckService.validateProduct(any())).thenReturn(productDTO);
+
+        WalletDTO walletDTO = WalletDTOFaker.mockInstance(0, OnboardingStatus.ONBOARDED.getValue());
+        when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(),transactionInProgress.getUserId()))
+                .thenReturn(walletDTO);
 
         barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
