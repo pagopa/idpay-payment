@@ -76,6 +76,7 @@ public class CommonInvoiceServiceImpl {
 
             // updating the transaction status to invoiced
             trx.setStatus(SyncTrxStatus.INVOICED);
+            trx.setUpdateDate(LocalDateTime.now());
             trx.setInvoiceData(InvoiceData.builder()
                 .filename(file.getOriginalFilename())
                 .docNumber(docNumber)
