@@ -63,6 +63,7 @@ public class TransactionInProgress {
   @Builder.Default
   private List<String> rejectionReasons = new ArrayList<>();
   private String userId;
+  private String familyId;
   private SyncTrxStatus status;
   private String channel;
   @Builder.Default
@@ -83,4 +84,7 @@ public class TransactionInProgress {
 
   private InvoiceData invoiceData;
   private InvoiceData creditNoteData;
+
+  private String franchiseName;
+  private String pointOfSaleType;
 }
