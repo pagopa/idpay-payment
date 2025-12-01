@@ -35,7 +35,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
 
           throw new PointOfSaleNotAllowedException(
               "Point of sale mismatch: expected [%s], but received [%s]"
-                  .formatted(pointOfSaleId, tokenPointOfSaleId));
+                  .formatted(tokenPointOfSaleId, pointOfSaleId));
          }
 
       Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
