@@ -22,7 +22,7 @@ public class WalletDTO {
     private LocalDate endDate;
     private int nInstr;
     private Long amountCents;
-    private Long initialAmoutCents; // total budget assigned
+    private Long initialAmountCents; // total budget assigned
     private Long accruedCents;
     private Long refundedCents;
     private LocalDateTime lastCounterUpdate;
