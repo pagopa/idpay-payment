@@ -196,7 +196,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
             throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(initiativeId));
         }
 
-        return wallet.getInitialAmoutCents();
+        return wallet.getInitialAmountCents();
     }
 
     private void checkVoucherAmountCents(String initiativeId, Long voucherAmountCents){
