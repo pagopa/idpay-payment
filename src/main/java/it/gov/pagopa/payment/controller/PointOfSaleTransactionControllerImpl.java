@@ -3,8 +3,10 @@ package it.gov.pagopa.payment.controller;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
+import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.PointOfSaleTransactionService;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -25,10 +27,18 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String tokenPointOfSaleId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
         log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", ""));
 
-        Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
+      if (tokenPointOfSaleId != null && (!Utilities.sanitizeString(tokenPointOfSaleId)
+          .equals(Utilities.sanitizeString(pointOfSaleId)))){
+
+          throw new PointOfSaleNotAllowedException(
+              "Point of sale mismatch: expected [%s], but received [%s]"
+                  .formatted(tokenPointOfSaleId, pointOfSaleId));
+         }
+
+      Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
                 merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, pageable);
 
         List<PointOfSaleTransactionDTO> dtos = page.getContent().stream()

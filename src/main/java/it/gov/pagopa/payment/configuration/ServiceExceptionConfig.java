@@ -32,6 +32,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(UserNotAllowedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(UserNotOnboardedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(UserSuspendedException.class, HttpStatus.FORBIDDEN);
+    exceptionMap.put(PointOfSaleNotAllowedException.class, HttpStatus.FORBIDDEN);
 
     // NotFound
     exceptionMap.put(IdpaycodeNotFoundException.class, HttpStatus.NOT_FOUND);

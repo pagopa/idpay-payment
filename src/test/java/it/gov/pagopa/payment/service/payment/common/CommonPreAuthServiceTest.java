@@ -71,7 +71,7 @@ class CommonPreAuthServiceTest {
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "rewardCents", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData", "familyId");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "rewardCents", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId");
 
     verify(walletConnectorMock, times(1)).getWallet("INITIATIVEID1", USER_ID1);
   }
@@ -87,7 +87,7 @@ class CommonPreAuthServiceTest {
     TransactionInProgress result = commonPreAuthService.relateUser(trx, USER_ID1);
 
     Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData","familyId");
+    TestUtils.checkNotNullFields(result, "elaborationDateTime", "reward", "trxChargeDate", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId");
 
     verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
   }

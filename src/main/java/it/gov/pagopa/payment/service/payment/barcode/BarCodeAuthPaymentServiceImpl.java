@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.service.payment.barcode;
 import io.micrometer.common.util.StringUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
-import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -124,11 +124,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
             trx.setAdditionalProperties(buildAdditionalProperties(productDTO));
 
-            MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
+            PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
 
             WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(trx.getInitiativeId(), trx.getUserId());
 
-            setTrxFields(merchantId, authBarCodePaymentDTO, trx, merchantDetail, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
+            setTrxFields(merchantId, authBarCodePaymentDTO, trx, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
 
             commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
@@ -163,15 +163,17 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     private static void setTrxFields(String merchantId, AuthBarCodePaymentDTO authBarCodePaymentDTO,
-                                     TransactionInProgress trx, MerchantDetailDTO merchantDetail, String acquirerId, String pointOfSaleId,
+                                     TransactionInProgress trx, PointOfSaleDTO pointOfSaleDTO, String acquirerId, String pointOfSaleId,
                                      String familyId) {
         trx.setAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setEffectiveAmountCents(authBarCodePaymentDTO.getAmountCents());
         trx.setIdTrxAcquirer(authBarCodePaymentDTO.getIdTrxAcquirer());
         trx.setMerchantId(merchantId);
-        trx.setBusinessName(merchantDetail.getBusinessName());
-        trx.setMerchantFiscalCode(merchantDetail.getFiscalCode());
-        trx.setVat(merchantDetail.getVatNumber());
+        trx.setBusinessName(pointOfSaleDTO.getBusinessName());
+        trx.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
+        trx.setVat(pointOfSaleDTO.getVatNumber());
+        trx.setFranchiseName(pointOfSaleDTO.getFranchiseName());
+        trx.setPointOfSaleType(pointOfSaleDTO.getType().name());
         trx.setAcquirerId(acquirerId);
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
         trx.setPointOfSaleId(pointOfSaleId);
