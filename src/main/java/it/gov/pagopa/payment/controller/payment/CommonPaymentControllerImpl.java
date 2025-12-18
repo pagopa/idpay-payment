@@ -118,6 +118,13 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
     }
 
     @Override
+    @PerformanceLog(value = "CANCEL_AUTHORIZATION_EXPIRED")
+    public void cancelAuthorizationExpired( String initiativeId, long expirationMinutes) {
+        log.info("[CANCEL_AUTHORIZATION_EXPIRED] Request to cancel all transactions with authorization expired");
+        commonCancelService.cancelAuthorizationExpired(initiativeId, expirationMinutes);
+    }
+
+    @Override
     @PerformanceLog("GET_STATUS_TRANSACTION")
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
         log.info("[GET_STATUS_TRANSACTION] The Merchant {} requested to retrieve status of transaction {} ", merchantId, transactionId);
