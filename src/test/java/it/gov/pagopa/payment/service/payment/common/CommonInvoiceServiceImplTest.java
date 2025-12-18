@@ -96,7 +96,7 @@ class CommonInvoiceServiceImplTest {
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
         service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
-        Mockito.verify(repository).deleteById(TRANSACTION_ID);
+        Mockito.verify(repository).save(trx);
         Mockito.verify(auditUtilities).logInvoiceTransaction(any());
         assertEquals(SyncTrxStatus.INVOICED, trx.getStatus());
         assertEquals(FILENAME, trx.getInvoiceData().getFilename());
