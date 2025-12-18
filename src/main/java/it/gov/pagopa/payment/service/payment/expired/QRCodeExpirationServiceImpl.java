@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment.expired;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -17,7 +16,7 @@ public class QRCodeExpirationServiceImpl implements QRCodeExpirationService {
         this.cancelExpiredService = cancelExpiredService;
     }
 
-    @Scheduled(cron = "${app.qrCode.expirations.schedule.authorizationExpired}")
+    // @Scheduled(cron = "${app.qrCode.expirations.schedule.authorizationExpired}")
     void scheduleAuthorizationExpired() {
         log.info("[EXPIRED_QR_CODE][TRANSACTION_AUTHORIZATION_EXPIRED] Starting schedule to handle transactions with authorization expired");
         Long count = authorizationExpiredService.execute();

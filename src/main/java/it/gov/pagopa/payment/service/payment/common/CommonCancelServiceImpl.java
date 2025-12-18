@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.performancelogger.PerformanceLogger;
+import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
@@ -16,12 +18,14 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.LocalDateTime;
-import java.util.List;
-
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service("commonCancel")
@@ -165,4 +169,124 @@ public class CommonCancelServiceImpl {
                             transaction.getPointOfSaleId()));
         } while (!transactions.isEmpty());
     }
+
+    public void cancelAuthorizationExpired(String initiativeId, long expirationMinutes) {
+      while (true) {
+
+            List<TransactionInProgress> batch =
+                    fetchExpiredTransactions(initiativeId, expirationMinutes);
+
+            if (batch.isEmpty()) {
+                log.debug("[{}] No more expired transactions found", "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE);
+                break;
+            }
+
+            lockBatch(batch);
+            processBatch(batch);
+        }
+    }
+    private List<TransactionInProgress> fetchExpiredTransactions(
+            String initiativeId,
+            long expirationMinutes) {
+
+        return repository.findExpiredTransactions(
+                initiativeId,
+                expirationMinutes,
+                100
+        );
+    }
+    private void lockBatch(List<TransactionInProgress> batch) {
+        repository.lockTransactions(batch);
+    }
+
+    private void processBatch(List<TransactionInProgress> batch) {
+
+        List<String> deletableIds = new ArrayList<>();
+
+        for (TransactionInProgress trx : batch) {
+            processSingleTransaction(trx, deletableIds);
+        }
+
+        deleteProcessedTransactions(deletableIds);
+    }
+    private void processSingleTransaction(TransactionInProgress trx, List<String> deletableIds) {
+        logTransactionStart(trx);
+
+        try {
+            boolean canDelete = PerformanceLogger.execute(
+                    "EXPIRED_" + RewardConstants.TRX_CHANNEL_QRCODE,
+                    () -> handleExpiredTransactionBulk(trx),
+                    result -> "Evaluated transaction with ID %s due to TRANSACTION_AUTHORIZATION_EXPIRED"
+                            .formatted(trx.getId())
+            );
+
+            if (canDelete) {
+                deletableIds.add(trx.getId());
+            }
+
+            auditUtilities.logExpiredTransaction(
+                    trx.getInitiativeId(),
+                    trx.getId(),
+                    trx.getTrxCode(),
+                    trx.getUserId(),
+                    "TRANSACTION_AUTHORIZATION_EXPIRED"
+            );
+
+        } catch (Exception e) {
+            logAndAuditError(trx, e);
+        }
+    }
+
+    private void logTransactionStart(TransactionInProgress trx) {
+        log.info("[{}] [{}] Managing expired transaction trxId={}, status={}, trxDate={}",
+                "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                "TRANSACTION_AUTHORIZATION_EXPIRED",
+                trx.getId(),
+                trx.getStatus(),
+                trx.getTrxDate());
+    }
+
+    private void logAndAuditError(TransactionInProgress trx, Exception e) {
+        log.error("[{}] [{}] Error handling transaction {}: {}",
+                "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                "TRANSACTION_AUTHORIZATION_EXPIRED",
+                trx.getId(),
+                e.getMessage());
+
+        auditUtilities.logErrorExpiredTransaction(
+                trx.getInitiativeId(),
+                trx.getId(),
+                trx.getTrxCode(),
+                trx.getUserId(),
+                "TRANSACTION_AUTHORIZATION_EXPIRED"
+        );
+    }
+    private void deleteProcessedTransactions(List<String> deletableIds) {
+        if (!deletableIds.isEmpty()) {
+            repository.bulkDeleteByIds(deletableIds);
+        }
+    }
+
+    protected boolean handleExpiredTransactionBulk(TransactionInProgress trx) {
+        if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
+            try {
+                rewardCalculatorConnector.cancelTransaction(trx);
+            } catch (TransactionNotFoundOrExpiredException e) {
+                log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
+                        "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                        "TRANSACTION_AUTHORIZATION_EXPIRED",
+                        trx.getId());
+            } catch (ServiceException e) {
+                log.warn("[{}] [{}] ServiceException cancelling transaction {}: {}",
+                        "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                        "TRANSACTION_AUTHORIZATION_EXPIRED",
+                        trx.getId(),
+                        e.getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
+
 }
