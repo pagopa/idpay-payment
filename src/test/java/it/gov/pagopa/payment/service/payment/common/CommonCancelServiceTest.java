@@ -328,6 +328,24 @@ class CommonCancelServiceTest {
         .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
             Mockito.anyString());
   }
+
+  @Test
+  void testDeleteLapseTransactions_ok() {
+    TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(0,
+            SyncTrxStatus.IDENTIFIED);
+    TransactionInProgress trx2 = TransactionInProgressFaker.mockInstance(1,
+            SyncTrxStatus.CREATED);
+    TransactionInProgress trx3 = TransactionInProgressFaker.mockInstance(1,
+            SyncTrxStatus.REJECTED);
+
+    when(repositoryMock.findLapsedTransaction("INITIATIVE_ID",100))
+            .thenReturn(List.of(trx1, trx2,trx3))
+            .thenReturn(List.of());
+
+    service.deleteLapsedTransaction("INITIATIVE_ID");
+
+    verify(repositoryMock, Mockito.times(2)).findLapsedTransaction("INITIATIVE_ID",100);
+  }
 }
 
 
