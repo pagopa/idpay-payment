@@ -67,4 +67,7 @@ public interface CommonPaymentController {
     @PutMapping("/force-expiration/authorization/{initiativeId}")
     Long forceAuthorizationTrxExpiration(@PathVariable("initiativeId") String initiativeId);
 
+    @DeleteMapping("/deleteInvoicedTransaction")
+    @ResponseStatus(code = HttpStatus.OK)
+    void deleteInvoicedTransaction();
 }

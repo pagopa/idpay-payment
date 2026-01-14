@@ -345,4 +345,18 @@ class CommonPaymentControllerTest {
     Mockito.verify(commonCancelServiceMock, Mockito.times(1)).rejectPendingTransactions();
     Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
   }
+
+
+  @Test
+  void testDeleteInvoicedTransaction_ok() throws Exception {
+    Mockito.doNothing().when(commonCancelServiceMock).deleteInvoicedTransaction();
+
+    mockMvc.perform(MockMvcRequestBuilders
+                    .delete("/idpay/payment/deleteInvoicedTransaction")
+                    .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).deleteInvoicedTransaction();
+    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
+  }
 }

@@ -16,12 +16,14 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.LocalDateTime;
-import java.util.List;
-
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Service("commonCancel")
@@ -165,4 +167,61 @@ public class CommonCancelServiceImpl {
                             transaction.getPointOfSaleId()));
         } while (!transactions.isEmpty());
     }
+
+
+    public void deleteInvoicedTransaction() {
+        while (true) {
+
+            List<TransactionInProgress> batch =
+                    fetchInvoicedTransaction();
+
+            if (batch.isEmpty()) {
+                log.debug("[{}] No more expired transactions found", "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE);
+                break;
+            }
+
+            lockBatch(batch);
+            processBatch(batch);
+        }
+    }
+    private List<TransactionInProgress> fetchInvoicedTransaction() {
+
+        return repository.findInvoicedTransaction(
+                100
+        );
+    }
+    private void lockBatch(List<TransactionInProgress> batch) {
+        repository.lockTransactions(batch);
+    }
+
+    private void processBatch(List<TransactionInProgress> batch) {
+
+        List<String> deletableIds = new ArrayList<>();
+
+        for (TransactionInProgress trx : batch) {
+            processSingleTransaction(trx, deletableIds);
+        }
+
+        deleteProcessedTransactions(deletableIds);
+    }
+
+    private void processSingleTransaction(TransactionInProgress trx, List<String> deletableIds) {
+        logInvoicedTransactionStart(trx);
+        deletableIds.add(trx.getId());
+    }
+
+    private void logInvoicedTransactionStart(TransactionInProgress trx) {
+        log.info("[{}] Managing expired transaction trxId={}, status={}, trxDate={}",
+                "DELETE_INVOICED_TRANSACTION",
+                trx.getId(),
+                trx.getStatus(),
+                trx.getTrxDate());
+    }
+
+    private void deleteProcessedTransactions(List<String> deletableIds) {
+        if (!deletableIds.isEmpty()) {
+            repository.bulkDeleteByIds(deletableIds);
+        }
+    }
+
 }
