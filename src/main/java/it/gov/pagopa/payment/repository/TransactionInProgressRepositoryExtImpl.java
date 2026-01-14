@@ -581,25 +581,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
 
   @Override
-  public void lockTransactions(List<TransactionInProgress> transactions) {
-
-    List<String> ids = transactions.stream()
-            .map(TransactionInProgress::getId)
-            .toList();
-
-    Query query = Query.query(
-            Criteria.where(Fields.id).in(ids)
-    );
-
-    Update update = new Update()
-            .currentDate(Fields.elaborationDateTime);
-
-    mongoTemplate.updateMulti(query, update, TransactionInProgress.class);
-  }
-
-
-
-  @Override
   public void bulkDeleteByIds(List<String> ids) {
     Query query = Query.query(
             Criteria.where(Fields.id).in(ids)

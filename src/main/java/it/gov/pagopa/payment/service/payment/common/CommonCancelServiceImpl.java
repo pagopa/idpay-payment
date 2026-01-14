@@ -177,11 +177,10 @@ public class CommonCancelServiceImpl {
                     fetchLapsedTransaction(initiativeId);
 
             if (batch.isEmpty()) {
-                log.debug("[{}] No more expired transactions found", "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE);
+                log.debug("[{}] No more expired transactions found", "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE);
                 break;
             }
 
-            lockBatch(batch);
             processBatch(batch);
         }
     }
@@ -192,9 +191,6 @@ public class CommonCancelServiceImpl {
                 initiativeId,
                100
         );
-    }
-    private void lockBatch(List<TransactionInProgress> batch) {
-        repository.lockTransactions(batch);
     }
 
     private void processBatch(List<TransactionInProgress> batch) {
@@ -212,9 +208,9 @@ public class CommonCancelServiceImpl {
 
         try {
             boolean canDelete = PerformanceLogger.execute(
-                    "EXPIRED_" + RewardConstants.TRX_CHANNEL_QRCODE,
+                    "LAPSED" + RewardConstants.TRX_CHANNEL_QRCODE,
                     () -> handleExpiredTransactionBulk(trx),
-                    result -> "Evaluated transaction with ID %s due to TRANSACTION_AUTHORIZATION_EXPIRED"
+                    result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
                             .formatted(trx.getId())
             );
 
@@ -227,7 +223,7 @@ public class CommonCancelServiceImpl {
                     trx.getId(),
                     trx.getTrxCode(),
                     trx.getUserId(),
-                    "TRANSACTION_AUTHORIZATION_EXPIRED"
+                    "DELETE_LAPSED_TRANSACTION"
             );
 
         } catch (Exception e) {
@@ -236,9 +232,9 @@ public class CommonCancelServiceImpl {
     }
 
     private void logTransactionStart(TransactionInProgress trx) {
-        log.info("[{}] [{}] Managing expired transaction trxId={}, status={}, trxDate={}",
-                "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                "TRANSACTION_AUTHORIZATION_EXPIRED",
+        log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
+                "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                "DELETE_LAPSED_TRANSACTION",
                 trx.getId(),
                 trx.getStatus(),
                 trx.getTrxDate());
@@ -246,8 +242,8 @@ public class CommonCancelServiceImpl {
 
     private void logAndAuditError(TransactionInProgress trx, Exception e) {
         log.error("[{}] [{}] Error handling transaction {}: {}",
-                "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                "TRANSACTION_AUTHORIZATION_EXPIRED",
+                "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                "DELETE_LAPSED_TRANSACTION",
                 trx.getId(),
                 e.getMessage());
 
@@ -256,7 +252,7 @@ public class CommonCancelServiceImpl {
                 trx.getId(),
                 trx.getTrxCode(),
                 trx.getUserId(),
-                "TRANSACTION_AUTHORIZATION_EXPIRED"
+                "DELETE_LAPSED_TRANSACTION"
         );
     }
     private void deleteProcessedTransactions(List<String> deletableIds) {
@@ -271,13 +267,13 @@ public class CommonCancelServiceImpl {
                 rewardCalculatorConnector.cancelTransaction(trx);
             } catch (TransactionNotFoundOrExpiredException e) {
                 log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
-                        "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                        "TRANSACTION_AUTHORIZATION_EXPIRED",
+                        "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
+                        "DELETE_LAPSED_TRANSACTION",
                         trx.getId());
             } catch (ServiceException e) {
                 log.warn("[{}] [{}] ServiceException cancelling transaction {}: {}",
-                        "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                        "TRANSACTION_AUTHORIZATION_EXPIRED",
+                        "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE,
+                        "DELETE_LAPSED_TRANSACTION",
                         trx.getId(),
                         e.getMessage());
                 return false;
