@@ -562,16 +562,11 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     OffsetDateTime now = OffsetDateTime.now();
 
-    Criteria baseCriteria = Criteria.where(Fields.trxEndDate)
+    Criteria criteria = Criteria.where(Fields.trxEndDate)
             .lt(now)
             .and(Fields.status)
             .in(IDENTIFIED, CREATED, REJECTED)
             .and(Fields.extendedAuthorization).ne(true);
-
-    Criteria criteria = new Criteria().orOperator(
-            baseCriteria,
-            Criteria.where(Fields.status).is(INVOICED)
-    );
 
     if (initiativeId != null) {
       criteria.and(Fields.initiativeId).is(initiativeId);
