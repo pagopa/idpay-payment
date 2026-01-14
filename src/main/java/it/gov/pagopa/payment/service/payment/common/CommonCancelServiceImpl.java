@@ -27,11 +27,15 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static it.gov.pagopa.payment.constants.PaymentConstants.DELETE_LAPSED_TRANSACTION;
+import static it.gov.pagopa.payment.constants.PaymentConstants.LAPSED;
+
 @Slf4j
 @Service("commonCancel")
 public class CommonCancelServiceImpl {
 
-  private final BarCodeCreationServiceImpl barCodeCreationService;
+
+    private final BarCodeCreationServiceImpl barCodeCreationService;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -177,7 +181,7 @@ public class CommonCancelServiceImpl {
                     fetchLapsedTransaction(initiativeId);
 
             if (batch.isEmpty()) {
-                log.debug("[{}] No more expired transactions found", "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE);
+                log.debug("[{}] No more expired transactions found", LAPSED+RewardConstants.TRX_CHANNEL_QRCODE);
                 break;
             }
 
@@ -208,7 +212,7 @@ public class CommonCancelServiceImpl {
 
         try {
             boolean canDelete = PerformanceLogger.execute(
-                    "LAPSED" + RewardConstants.TRX_CHANNEL_QRCODE,
+                    LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
                     () -> handleExpiredTransactionBulk(trx),
                     result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
                             .formatted(trx.getId())
@@ -223,7 +227,7 @@ public class CommonCancelServiceImpl {
                     trx.getId(),
                     trx.getTrxCode(),
                     trx.getUserId(),
-                    "DELETE_LAPSED_TRANSACTION"
+                    DELETE_LAPSED_TRANSACTION
             );
 
         } catch (Exception e) {
@@ -233,8 +237,8 @@ public class CommonCancelServiceImpl {
 
     private void logTransactionStart(TransactionInProgress trx) {
         log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
-                "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                "DELETE_LAPSED_TRANSACTION",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
                 trx.getId(),
                 trx.getStatus(),
                 trx.getTrxDate());
@@ -242,8 +246,8 @@ public class CommonCancelServiceImpl {
 
     private void logAndAuditError(TransactionInProgress trx, Exception e) {
         log.error("[{}] [{}] Error handling transaction {}: {}",
-                "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                "DELETE_LAPSED_TRANSACTION",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
                 trx.getId(),
                 e.getMessage());
 
@@ -252,7 +256,7 @@ public class CommonCancelServiceImpl {
                 trx.getId(),
                 trx.getTrxCode(),
                 trx.getUserId(),
-                "DELETE_LAPSED_TRANSACTION"
+                DELETE_LAPSED_TRANSACTION
         );
     }
     private void deleteProcessedTransactions(List<String> deletableIds) {
@@ -268,12 +272,12 @@ public class CommonCancelServiceImpl {
             } catch (TransactionNotFoundOrExpiredException e) {
                 log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
                         "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
-                        "DELETE_LAPSED_TRANSACTION",
+                        DELETE_LAPSED_TRANSACTION,
                         trx.getId());
             } catch (ServiceException e) {
                 log.warn("[{}] [{}] ServiceException cancelling transaction {}: {}",
-                        "LAPSED_"+RewardConstants.TRX_CHANNEL_QRCODE,
-                        "DELETE_LAPSED_TRANSACTION",
+                        LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                        DELETE_LAPSED_TRANSACTION,
                         trx.getId(),
                         e.getMessage());
                 return false;
