@@ -558,12 +558,12 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         return mongoTemplate.find(query, TransactionInProgress.class);
     }
 
-  public List<TransactionInProgress> findExpiredTransactions(String initiativeId, long expirationMinutes, Integer pageSize) {
+  public List<TransactionInProgress> findLapsedTransaction(String initiativeId, Integer pageSize) {
 
     OffsetDateTime now = OffsetDateTime.now();
 
-    Criteria criteria = Criteria.where(Fields.trxDate)
-            .lt(now.minusMinutes(expirationMinutes))
+    Criteria criteria = Criteria.where(Fields.trxEndDate)
+            .lt(now)
             .and(Fields.status)
             .in(IDENTIFIED, CREATED, REJECTED)
             .and(Fields.extendedAuthorization).ne(true);

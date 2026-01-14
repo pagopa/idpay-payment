@@ -170,11 +170,11 @@ public class CommonCancelServiceImpl {
         } while (!transactions.isEmpty());
     }
 
-    public void cancelAuthorizationExpired(String initiativeId, long expirationMinutes) {
+    public void deleteLapsedTransaction(String initiativeId) {
       while (true) {
 
             List<TransactionInProgress> batch =
-                    fetchExpiredTransactions(initiativeId, expirationMinutes);
+                    fetchLapsedTransaction(initiativeId);
 
             if (batch.isEmpty()) {
                 log.debug("[{}] No more expired transactions found", "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE);
@@ -185,14 +185,12 @@ public class CommonCancelServiceImpl {
             processBatch(batch);
         }
     }
-    private List<TransactionInProgress> fetchExpiredTransactions(
-            String initiativeId,
-            long expirationMinutes) {
+    private List<TransactionInProgress> fetchLapsedTransaction(
+            String initiativeId) {
 
-        return repository.findExpiredTransactions(
+        return repository.findLapsedTransaction(
                 initiativeId,
-                expirationMinutes,
-                100
+               100
         );
     }
     private void lockBatch(List<TransactionInProgress> batch) {

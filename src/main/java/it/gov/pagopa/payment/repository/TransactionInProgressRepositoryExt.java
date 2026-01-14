@@ -40,9 +40,8 @@ public interface TransactionInProgressRepositoryExt {
 
   void lockTransactions(List<TransactionInProgress> expiredTransactions);
 
-  List<TransactionInProgress> findExpiredTransactions(
+  List<TransactionInProgress> findLapsedTransaction(
                   String initiativeId,
-                  long  expirationMinutes,
                   Integer pageSize
           );
 }

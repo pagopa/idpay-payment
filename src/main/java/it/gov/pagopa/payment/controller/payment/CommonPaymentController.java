@@ -36,9 +36,12 @@ public interface CommonPaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     void cancelPendingTransactions();
 
-    @DeleteMapping("/authorizationExpired/{initiativeId}/{expirationMinutes}")
+
+
+
+    @DeleteMapping("/deleteLapsedTransaction/{initiativeId}")
     @ResponseStatus(code = HttpStatus.OK)
-    void cancelAuthorizationExpired(@PathVariable("initiativeId")String initiativeId, @PathVariable("expirationMinutes") long expirationMinutes);
+    void deleteLapsedTransaction(@PathVariable("initiativeId")String initiativeId);
 
 
     @PostMapping("/transactions/{transactionId}/reversal")

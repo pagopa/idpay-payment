@@ -117,11 +117,12 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         commonCancelService.rejectPendingTransactions();
     }
 
+
     @Override
-    @PerformanceLog(value = "CANCEL_AUTHORIZATION_EXPIRED")
-    public void cancelAuthorizationExpired( String initiativeId, long expirationMinutes) {
-        log.info("[CANCEL_AUTHORIZATION_EXPIRED] Request to cancel all transactions with authorization expired");
-        commonCancelService.cancelAuthorizationExpired(initiativeId, expirationMinutes);
+    @PerformanceLog(value = "DELETE_LAPSED_TRANSACTION")
+    public void deleteLapsedTransaction(String initiativeId) {
+        log.info("[DELETE_LAPSED_TRANSACTION] Request to delete lapsed transaction");
+        commonCancelService.deleteLapsedTransaction(initiativeId);
     }
 
     @Override
