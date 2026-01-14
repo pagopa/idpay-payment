@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
@@ -334,13 +335,19 @@ class CommonCancelServiceTest {
     TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(0,
             SyncTrxStatus.IDENTIFIED);
     TransactionInProgress trx2 = TransactionInProgressFaker.mockInstance(1,
-            SyncTrxStatus.CREATED);
-    TransactionInProgress trx3 = TransactionInProgressFaker.mockInstance(1,
+            SyncTrxStatus.IDENTIFIED);
+    TransactionInProgress trx3 = TransactionInProgressFaker.mockInstance(2,
+            SyncTrxStatus.IDENTIFIED);
+    TransactionInProgress trx4 = TransactionInProgressFaker.mockInstance(3,
             SyncTrxStatus.REJECTED);
 
     when(repositoryMock.findLapsedTransaction("INITIATIVE_ID",100))
-            .thenReturn(List.of(trx1, trx2,trx3))
+            .thenReturn(List.of(trx1, trx2,trx3, trx4))
             .thenReturn(List.of());
+
+    when(rewardCalculatorConnectorMock.cancelTransaction(trx2)).thenThrow(new TransactionNotFoundOrExpiredException("message"));
+
+    when(rewardCalculatorConnectorMock.cancelTransaction(trx3)).thenThrow(new ServiceException("code","message"));
 
     service.deleteLapsedTransaction("INITIATIVE_ID");
 
