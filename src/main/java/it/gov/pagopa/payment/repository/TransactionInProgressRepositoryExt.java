@@ -38,13 +38,13 @@ public interface TransactionInProgressRepositoryExt {
 
   void bulkDeleteByIds(List<String> deletableIds);
 
-  List<TransactionInProgress> findInvoicedTransaction(Integer pageSize);
-
-
-  void bulkDeleteByIds(List<String> deletableIds);
-
   List<TransactionInProgress> findLapsedTransaction(
                   String initiativeId,
                   Integer pageSize
           );
+
+  List<TransactionInProgress> findInvoicedTransaction(
+          Integer pageSize
+  );
+
 }

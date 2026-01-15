@@ -1,11 +1,5 @@
 package it.gov.pagopa.payment.repository;
 
-import static it.gov.pagopa.payment.enums.SyncTrxStatus.*;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_GTIN;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_NAME;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS_IT;
-
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
@@ -44,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import static it.gov.pagopa.payment.enums.SyncTrxStatus.*;
 import static it.gov.pagopa.payment.utils.AggregationConstants.*;
 
 @Slf4j
@@ -599,14 +594,6 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             .limit(pageSize);
 
     return mongoTemplate.find(query, TransactionInProgress.class);
-  }
-
-  @Override
-  public void bulkDeleteByIds(List<String> ids) {
-    Query query = Query.query(
-            Criteria.where(Fields.id).in(ids)
-    );
-    mongoTemplate.remove(query, TransactionInProgress.class);
   }
 
 }

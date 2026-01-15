@@ -16,7 +16,9 @@ public class PaymentConstants {
   public static final String REWARD_CALCULATOR_TRX_ALREADY_CANCELLED = "REWARD_CALCULATOR_TRX_ALREADY_CANCELLED";
 
   public static final String DELETE_LAPSED_TRANSACTION = "DELETE_LAPSED_TRANSACTION";
+  public static final String DELETE_INVOICED_TRANSACTION = "DELETE_INVOICED_TRANSACTION";
   public static final String LAPSED = "LAPSED_";
+  public static final String INVOICED = "INVOICED_";
 
   public static final class ExceptionCode {
     public static final String TRX_ADDITIONAL_PROPERTIES_NOT_EXIST = "PAYMENT_ADDITIONAL_PROPERTIES_IS_NULL_OR_EMPTY";
