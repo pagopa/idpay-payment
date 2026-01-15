@@ -38,8 +38,6 @@ public interface TransactionInProgressRepositoryExt {
 
   void bulkDeleteByIds(List<String> deletableIds);
 
-  void lockTransactions(List<TransactionInProgress> expiredTransactions);
-
   List<TransactionInProgress> findInvoicedTransaction(Integer pageSize);
 
 }
