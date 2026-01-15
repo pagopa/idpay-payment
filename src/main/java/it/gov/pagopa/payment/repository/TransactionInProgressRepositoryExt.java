@@ -40,4 +40,11 @@ public interface TransactionInProgressRepositoryExt {
 
   List<TransactionInProgress> findInvoicedTransaction(Integer pageSize);
 
+
+  void bulkDeleteByIds(List<String> deletableIds);
+
+  List<TransactionInProgress> findLapsedTransaction(
+                  String initiativeId,
+                  Integer pageSize
+          );
 }

@@ -1074,5 +1074,57 @@ class TransactionInProgressRepositoryExtImplTest {
       assertNotNull(trx.getAcquirerId());
     });
   }
+  @Test
+  void findLapsedTransactionAndDelete() {
+    OffsetDateTime updateTime = OffsetDateTime.now();
+    updateTime = updateTime.minusMinutes(120);
+    TransactionInProgress transactionInProgress =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+    transactionInProgress.setInitiativeEndDate(updateTime);
+    transactionInProgress.setTrxEndDate(updateTime);
+    transactionInProgress.setUpdateDate(updateTime.toLocalDateTime());
+    transactionInProgress.setInitiativeId(transactionInProgress.getId());
+    transactionInProgress.setExtendedAuthorization(false);
+
+    transactionInProgressRepository.save(transactionInProgress);
+
+    TransactionInProgress resultSave =
+            transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNotNull(resultSave);
+    Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSave.getStatus());
+    List<TransactionInProgress> transactionInProgresses =
+            transactionInProgressRepository.findLapsedTransaction(transactionInProgress.getInitiativeId(),100);
+
+    TransactionInProgress resultAfterUpdate =
+            transactionInProgresses.get(0);
+    Assertions.assertNotNull(resultAfterUpdate);
+    Assertions.assertEquals(SyncTrxStatus.REJECTED, resultAfterUpdate.getStatus());
+  }
+
+  @Test
+  void bulkDeleteByIds() {
+    OffsetDateTime updateTime = OffsetDateTime.now();
+    updateTime = updateTime.minusMinutes(120);
+    TransactionInProgress transactionInProgress =
+            TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+    transactionInProgress.setInitiativeEndDate(updateTime);
+    transactionInProgress.setTrxEndDate(updateTime);
+    transactionInProgress.setUpdateDate(updateTime.toLocalDateTime());
+    transactionInProgress.setInitiativeId(transactionInProgress.getId());
+    transactionInProgress.setExtendedAuthorization(false);
+
+    transactionInProgressRepository.save(transactionInProgress);
+
+    TransactionInProgress resultSave =
+            transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNotNull(resultSave);
+    Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSave.getStatus());
+    transactionInProgressRepository.bulkDeleteByIds(List.of(resultSave.getId()));
+
+    TransactionInProgress resultAfterUpdate =
+            transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
+    Assertions.assertNull(resultAfterUpdate);
+
+  }
 }
 

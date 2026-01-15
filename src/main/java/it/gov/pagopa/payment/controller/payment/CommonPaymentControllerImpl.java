@@ -117,6 +117,14 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         commonCancelService.rejectPendingTransactions();
     }
 
+
+    @Override
+    @PerformanceLog(value = "DELETE_LAPSED_TRANSACTION")
+    public void deleteLapsedTransaction(String initiativeId) {
+        log.info("[DELETE_LAPSED_TRANSACTION] Request to delete lapsed transaction");
+        commonCancelService.deleteLapsedTransaction(initiativeId);
+    }
+
     @Override
     @PerformanceLog("GET_STATUS_TRANSACTION")
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
