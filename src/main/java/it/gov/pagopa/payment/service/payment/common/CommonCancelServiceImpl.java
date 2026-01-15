@@ -176,7 +176,7 @@ public class CommonCancelServiceImpl {
                     fetchInvoicedTransaction();
 
             if (batch.isEmpty()) {
-                log.debug("[{}] No more expired transactions found", "EXPIRED_"+RewardConstants.TRX_CHANNEL_QRCODE);
+                log.debug("[{}] No more invoiced transactions found", "INVOICED_"+RewardConstants.TRX_CHANNEL_QRCODE);
                 break;
             }
 
