@@ -328,6 +328,7 @@ class CommonCancelServiceTest {
   void testDeleteInvoicedTransaction_empty(){
     when(repositoryMock.findInvoicedTransaction(any())).thenReturn(List.of());
     ReflectionTestUtils.invokeMethod(service, "deleteInvoicedTransaction");
+    verify(repositoryMock, times(1)).findInvoicedTransaction(100);
   }
 
 
