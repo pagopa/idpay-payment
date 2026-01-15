@@ -194,7 +194,7 @@ public class CommonCancelServiceImpl {
                     fetchInvoicedTransaction();
 
             if (batch.isEmpty()) {
-                log.debug("[{}] No more invoiced transactions found", "INVOICED_"+RewardConstants.TRX_CHANNEL_QRCODE);
+                log.debug("[{}] No more invoiced transactions found", INVOICED+RewardConstants.TRX_CHANNEL_QRCODE);
                 break;
             }
 
@@ -261,7 +261,7 @@ public class CommonCancelServiceImpl {
                     trx.getTrxDate());
         } else if(type.equals(DELETE_INVOICED_TRANSACTION)) {
             log.info("[{}] Managing invoiced transaction trxId={}, status={}, trxDate={}",
-                    "INVOICED_" + RewardConstants.TRX_CHANNEL_QRCODE,
+                    INVOICED + RewardConstants.TRX_CHANNEL_QRCODE,
                     trx.getId(),
                     trx.getStatus(),
                     trx.getTrxDate());
@@ -289,7 +289,7 @@ public class CommonCancelServiceImpl {
             );
         } else if(type.equals(DELETE_INVOICED_TRANSACTION)){
             log.error("[{}] Error handling invoiced transaction {}: {}",
-                    "INVOICED_" + RewardConstants.TRX_CHANNEL_QRCODE,
+                    INVOICED + RewardConstants.TRX_CHANNEL_QRCODE,
                     trx.getId(),
                     e.getMessage());
         }
