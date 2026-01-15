@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.repository;
 
+import static it.gov.pagopa.payment.enums.SyncTrxStatus.*;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_GTIN;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_NAME;
 import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS;
@@ -171,7 +172,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     mongoTemplate.updateFirst(
         Query.query(Criteria.where(Fields.id).is(id)),
         new Update()
-            .set(Fields.status, SyncTrxStatus.REJECTED)
+            .set(Fields.status, REJECTED)
             .set(Fields.userId, userId)
             .set(Fields.rewardCents, 0L)
             .set(Fields.rewards, Collections.emptyMap())
@@ -188,7 +189,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         Query.query(Criteria.where(Fields.id).is(id)),
         new Update()
             .set(Fields.userId, userId)
-            .set(Fields.status, SyncTrxStatus.IDENTIFIED)
+            .set(Fields.status, IDENTIFIED)
             .set(Fields.channel, channel)
             .currentDate(Fields.updateDate),
         TransactionInProgress.class);
@@ -278,7 +279,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   public void updateTrxRejected(TransactionInProgress trx, List<String> rejectionReasons,
       Map<String, List<String>> initiativeRejectionReason) {
     Update update = new Update()
-        .set(Fields.status, SyncTrxStatus.REJECTED)
+        .set(Fields.status, REJECTED)
         .set(Fields.rewardCents, 0L)
         .set(Fields.rewards, Collections.emptyMap())
         .set(Fields.rejectionReasons, rejectionReasons)
@@ -429,7 +430,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   public TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId,
       long authorizationExpirationMinutes) {
     return findExpiredTransaction(initiativeId, authorizationExpirationMinutes,
-        List.of(SyncTrxStatus.IDENTIFIED, SyncTrxStatus.CREATED, SyncTrxStatus.REJECTED));
+        List.of(IDENTIFIED, CREATED, REJECTED));
   }
 
   @Override
@@ -447,7 +448,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     Query query = new Query(Criteria.where(Fields.id).is(trxId).and(Fields.status)
         .is(SyncTrxStatus.AUTHORIZATION_REQUESTED));
     Update update = new Update()
-        .set(Fields.status, SyncTrxStatus.REJECTED)
+        .set(Fields.status, REJECTED)
         .set(Fields.rejectionReasons, List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
     return mongoTemplate.updateFirst(query, update, TransactionInProgress.class);
   }
@@ -510,7 +511,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         while (true) {
 
             Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
-                    .andOperator(Criteria.where(Fields.status).is(SyncTrxStatus.CREATED),
+                    .andOperator(Criteria.where(Fields.status).is(CREATED),
                             Criteria.where(Fields.trxEndDate).ne(null),
                             Criteria.where(Fields.extendedAuthorization).is(true),
                             new Criteria().orOperator(Criteria.where(Fields.trxEndDate).lt(now),
@@ -556,5 +557,35 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         query.with(Sort.by(Fields.id));
         return mongoTemplate.find(query, TransactionInProgress.class);
     }
+
+  public List<TransactionInProgress> findLapsedTransaction(String initiativeId, Integer pageSize) {
+
+    OffsetDateTime now = OffsetDateTime.now();
+
+    Criteria criteria = Criteria.where(Fields.trxEndDate)
+            .lt(now)
+            .and(Fields.status)
+            .in(IDENTIFIED, CREATED, REJECTED)
+            .and(Fields.extendedAuthorization).ne(true);
+
+    if (initiativeId != null) {
+      criteria.and(Fields.initiativeId).is(initiativeId);
+    }
+
+    Query query = Query.query(criteria)
+            .with(Sort.by(Fields.trxDate).ascending())
+            .limit(pageSize);
+
+    return mongoTemplate.find(query, TransactionInProgress.class);
+  }
+
+
+  @Override
+  public void bulkDeleteByIds(List<String> ids) {
+    Query query = Query.query(
+            Criteria.where(Fields.id).in(ids)
+    );
+    mongoTemplate.remove(query, TransactionInProgress.class);
+  }
 
 }

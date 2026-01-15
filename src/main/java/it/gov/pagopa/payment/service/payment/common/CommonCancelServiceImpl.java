@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.performancelogger.PerformanceLogger;
+import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
@@ -16,18 +18,24 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.LocalDateTime;
-import java.util.List;
-
+import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import static it.gov.pagopa.payment.constants.PaymentConstants.DELETE_LAPSED_TRANSACTION;
+import static it.gov.pagopa.payment.constants.PaymentConstants.LAPSED;
 
 @Slf4j
 @Service("commonCancel")
 public class CommonCancelServiceImpl {
 
-  private final BarCodeCreationServiceImpl barCodeCreationService;
+
+    private final BarCodeCreationServiceImpl barCodeCreationService;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -165,4 +173,118 @@ public class CommonCancelServiceImpl {
                             transaction.getPointOfSaleId()));
         } while (!transactions.isEmpty());
     }
+
+    public void deleteLapsedTransaction(String initiativeId) {
+      while (true) {
+
+            List<TransactionInProgress> batch =
+                    fetchLapsedTransaction(initiativeId);
+
+            if (batch.isEmpty()) {
+                log.debug("[{}] No more expired transactions found", LAPSED+RewardConstants.TRX_CHANNEL_QRCODE);
+                break;
+            }
+
+            processBatch(batch);
+        }
+    }
+    private List<TransactionInProgress> fetchLapsedTransaction(
+            String initiativeId) {
+
+        return repository.findLapsedTransaction(
+                initiativeId,
+               100
+        );
+    }
+
+    private void processBatch(List<TransactionInProgress> batch) {
+
+        List<String> deletableIds = new ArrayList<>();
+
+        for (TransactionInProgress trx : batch) {
+            processSingleTransaction(trx, deletableIds);
+        }
+
+        deleteProcessedTransactions(deletableIds);
+    }
+    private void processSingleTransaction(TransactionInProgress trx, List<String> deletableIds) {
+        logTransactionStart(trx);
+
+        try {
+            boolean canDelete = PerformanceLogger.execute(
+                    LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
+                    () -> handleExpiredTransactionBulk(trx),
+                    result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
+                            .formatted(trx.getId())
+            );
+
+            if (canDelete) {
+                deletableIds.add(trx.getId());
+            }
+
+            auditUtilities.logExpiredTransaction(
+                    trx.getInitiativeId(),
+                    trx.getId(),
+                    trx.getTrxCode(),
+                    trx.getUserId(),
+                    DELETE_LAPSED_TRANSACTION
+            );
+
+        } catch (Exception e) {
+            logAndAuditError(trx, e);
+        }
+    }
+
+    private void logTransactionStart(TransactionInProgress trx) {
+        log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
+                trx.getId(),
+                trx.getStatus(),
+                trx.getTrxDate());
+    }
+
+    private void logAndAuditError(TransactionInProgress trx, Exception e) {
+        log.error("[{}] [{}] Error handling transaction {}: {}",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
+                trx.getId(),
+                e.getMessage());
+
+        auditUtilities.logErrorExpiredTransaction(
+                trx.getInitiativeId(),
+                trx.getId(),
+                trx.getTrxCode(),
+                trx.getUserId(),
+                DELETE_LAPSED_TRANSACTION
+        );
+    }
+    private void deleteProcessedTransactions(List<String> deletableIds) {
+        if (!deletableIds.isEmpty()) {
+            repository.bulkDeleteByIds(deletableIds);
+        }
+    }
+
+    protected boolean handleExpiredTransactionBulk(TransactionInProgress trx) {
+        if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
+            try {
+                rewardCalculatorConnector.cancelTransaction(trx);
+            } catch (TransactionNotFoundOrExpiredException e) {
+                log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
+                        "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
+                        DELETE_LAPSED_TRANSACTION,
+                        trx.getId());
+            } catch (ServiceException e) {
+                log.warn("[{}] [{}] ServiceException cancelling transaction {}: {}",
+                        LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                        DELETE_LAPSED_TRANSACTION,
+                        trx.getId(),
+                        e.getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
+
 }
