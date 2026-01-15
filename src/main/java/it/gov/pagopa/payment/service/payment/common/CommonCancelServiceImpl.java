@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.*;
 
@@ -172,21 +171,6 @@ public class CommonCancelServiceImpl {
         } while (!transactions.isEmpty());
     }
 
-    public void deleteLapsedTransaction(String initiativeId) {
-        while (true) {
-
-            List<TransactionInProgress> batch =
-                    fetchLapsedTransaction(initiativeId);
-
-            if (batch.isEmpty()) {
-                log.debug("[{}] No more expired transactions found", LAPSED+RewardConstants.TRX_CHANNEL_QRCODE);
-                break;
-            }
-
-            processBatch(batch, DELETE_LAPSED_TRANSACTION);
-        }
-    }
-
     public void deleteInvoicedTransaction() {
         while (true) {
 
@@ -198,15 +182,8 @@ public class CommonCancelServiceImpl {
                 break;
             }
 
-            processBatch(batch, DELETE_INVOICED_TRANSACTION);
+            processBatchInvoiced(batch);
         }
-    }
-    
-    private List<TransactionInProgress> fetchLapsedTransaction(String initiativeId) {
-        return repository.findLapsedTransaction(
-                initiativeId,
-                100
-        );
     }
 
     private List<TransactionInProgress> fetchInvoicedTransaction() {
@@ -215,92 +192,115 @@ public class CommonCancelServiceImpl {
         );
     }
 
-    private void processBatch(List<TransactionInProgress> batch, String type) {
-
+    private void processBatchInvoiced(List<TransactionInProgress> batch) {
         List<String> deletableIds = new ArrayList<>();
 
         for (TransactionInProgress trx : batch) {
-            processSingleTransaction(trx, deletableIds, type);
+            log.info("[{}] Managing expired transaction trxId={}, status={}, trxDate={}",
+                    "DELETE_INVOICED_TRANSACTION",
+                    trx.getId(),
+                    trx.getStatus(),
+                    trx.getTrxDate());
+            deletableIds.add(trx.getId());
         }
 
         deleteProcessedTransactions(deletableIds);
     }
 
-    private void processSingleTransaction(TransactionInProgress trx, List<String> deletableIds, String type) {
-        logTransactionStart(trx, type);
+
+    public void deleteLapsedTransaction(String initiativeId) {
+        while (true) {
+
+            List<TransactionInProgress> batch =
+                    fetchLapsedTransaction(initiativeId);
+
+            if (batch.isEmpty()) {
+                log.debug("[{}] No more expired transactions found", LAPSED+RewardConstants.TRX_CHANNEL_QRCODE);
+                break;
+            }
+
+            processBatchLapsed(batch);
+        }
+    }
+
+    private void processBatchLapsed(List<TransactionInProgress> batch) {
+
+        List<String> deletableIds = new ArrayList<>();
+
+        for (TransactionInProgress trx : batch) {
+            processSingleTransaction(trx, deletableIds);
+        }
+
+        deleteProcessedTransactions(deletableIds);
+    }
+
+    private List<TransactionInProgress> fetchLapsedTransaction(String initiativeId) {
+        return repository.findLapsedTransaction(
+                initiativeId,
+                100
+        );
+    }
+
+
+    private void processSingleTransaction(TransactionInProgress trx, List<String> deletableIds) {
+        logTransactionStart(trx);
 
         try {
-            boolean canDelete = true;
-
-            if (Objects.equals(type, DELETE_LAPSED_TRANSACTION)) {
-                canDelete = PerformanceLogger.execute(
-                        LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
-                        () -> handleExpiredTransactionBulk(trx),
-                        result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
-                                .formatted(trx.getId())
-                );
-            }
+            boolean canDelete = PerformanceLogger.execute(
+                    LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
+                    () -> handleExpiredTransactionBulk(trx),
+                    result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
+                            .formatted(trx.getId())
+            );
 
             if (canDelete) {
                 deletableIds.add(trx.getId());
             }
 
-            auditSuccess(trx, type);
-        } catch (Exception e) {
-            logAndAuditError(trx, e, type);
-        }
-    }
-
-    private void logTransactionStart(TransactionInProgress trx, String type) {
-        if (type.equals(DELETE_LAPSED_TRANSACTION)) {
-            log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
-                    LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
-                    DELETE_LAPSED_TRANSACTION,
-                    trx.getId(),
-                    trx.getStatus(),
-                    trx.getTrxDate());
-        } else if(type.equals(DELETE_INVOICED_TRANSACTION)) {
-            log.info("[{}] Managing invoiced transaction trxId={}, status={}, trxDate={}",
-                    INVOICED + RewardConstants.TRX_CHANNEL_QRCODE,
-                    trx.getId(),
-                    trx.getStatus(),
-                    trx.getTrxDate());
-        }
-    }
-
-    private void logAndAuditError(
-            TransactionInProgress trx,
-            Exception e,
-            String type) {
-
-        if (type.equals(DELETE_LAPSED_TRANSACTION)) {
-            log.error("[{}] [{}] Error handling transaction {}: {}",
-                    LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
-                    DELETE_LAPSED_TRANSACTION,
-                    trx.getId(),
-                    e.getMessage());
-
-            auditUtilities.logErrorExpiredTransaction(
+            auditUtilities.logExpiredTransaction(
                     trx.getInitiativeId(),
                     trx.getId(),
                     trx.getTrxCode(),
                     trx.getUserId(),
                     DELETE_LAPSED_TRANSACTION
             );
-        } else if(type.equals(DELETE_INVOICED_TRANSACTION)){
-            log.error("[{}] Error handling invoiced transaction {}: {}",
-                    INVOICED + RewardConstants.TRX_CHANNEL_QRCODE,
-                    trx.getId(),
-                    e.getMessage());
+
+        } catch (Exception e) {
+            logAndAuditError(trx, e);
         }
     }
 
+    private void logTransactionStart(TransactionInProgress trx) {
+        log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
+                trx.getId(),
+                trx.getStatus(),
+                trx.getTrxDate());
+    }
+
+    private void logAndAuditError(TransactionInProgress trx, Exception e) {
+        log.error("[{}] [{}] Error handling transaction {}: {}",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
+                trx.getId(),
+                e.getMessage());
+
+        auditUtilities.logErrorExpiredTransaction(
+                trx.getInitiativeId(),
+                trx.getId(),
+                trx.getTrxCode(),
+                trx.getUserId(),
+                DELETE_LAPSED_TRANSACTION
+        );
+    }
 
     private void deleteProcessedTransactions(List<String> deletableIds) {
         if (!deletableIds.isEmpty()) {
             repository.bulkDeleteByIds(deletableIds);
         }
     }
+
 
     protected boolean handleExpiredTransactionBulk(TransactionInProgress trx) {
         if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
@@ -321,21 +321,6 @@ public class CommonCancelServiceImpl {
             }
         }
         return true;
-    }
-
-    private void auditSuccess(
-            TransactionInProgress trx,
-            String type) {
-
-        if (type.equals(DELETE_LAPSED_TRANSACTION)) {
-            auditUtilities.logExpiredTransaction(
-                    trx.getInitiativeId(),
-                    trx.getId(),
-                    trx.getTrxCode(),
-                    trx.getUserId(),
-                    DELETE_LAPSED_TRANSACTION
-            );
-        }
     }
 
 }
