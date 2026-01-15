@@ -180,7 +180,6 @@ public class CommonCancelServiceImpl {
                 break;
             }
 
-            lockBatch(batch);
             processBatch(batch);
         }
     }
@@ -189,9 +188,6 @@ public class CommonCancelServiceImpl {
         return repository.findInvoicedTransaction(
                 100
         );
-    }
-    private void lockBatch(List<TransactionInProgress> batch) {
-        repository.lockTransactions(batch);
     }
 
     private void processBatch(List<TransactionInProgress> batch) {
