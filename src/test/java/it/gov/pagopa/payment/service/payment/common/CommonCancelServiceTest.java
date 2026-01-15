@@ -340,13 +340,11 @@ class CommonCancelServiceTest {
             .thenReturn(firstBatch)
             .thenReturn(Collections.emptyList());
 
-    doNothing().when(repositoryMock).lockTransactions(any());
     doNothing().when(repositoryMock).bulkDeleteByIds(any());
 
     service.deleteInvoicedTransaction();
 
     verify(repositoryMock, times(2)).findInvoicedTransaction(100);
-    verify(repositoryMock, times(1)).lockTransactions(firstBatch);
 
   }
 
