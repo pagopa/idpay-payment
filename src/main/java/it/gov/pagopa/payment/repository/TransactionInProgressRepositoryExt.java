@@ -42,4 +42,9 @@ public interface TransactionInProgressRepositoryExt {
                   String initiativeId,
                   Integer pageSize
           );
+
+  List<TransactionInProgress> findInvoicedTransaction(
+          Integer pageSize
+  );
+
 }

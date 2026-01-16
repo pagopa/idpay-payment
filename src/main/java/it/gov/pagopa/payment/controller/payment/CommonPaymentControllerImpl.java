@@ -148,4 +148,10 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         return qrCodeExpirationService.forceAuthorizationTrxExpiration(initiativeId);
     }
 
+    @Override
+    @PerformanceLog(value = "DELETE_INVOICED_TRANSACTION")
+    public void deleteInvoicedTransaction() {
+        log.info("[DELETE_INVOICED_TRANSACTION] Request to delete invoiced transaction");
+        commonCancelService.deleteInvoicedTransaction();
+    }
 }

@@ -8,8 +8,8 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -17,7 +17,6 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,17 +28,12 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCancelServiceTest {
@@ -329,6 +323,33 @@ class CommonCancelServiceTest {
         .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
             Mockito.anyString());
   }
+
+  @Test
+  void testDeleteInvoicedTransaction_empty(){
+    when(repositoryMock.findInvoicedTransaction(any())).thenReturn(List.of());
+    ReflectionTestUtils.invokeMethod(service, "deleteInvoicedTransaction");
+    verify(repositoryMock, times(1)).findInvoicedTransaction(100);
+  }
+
+
+  @Test
+  void testDeleteInvoicedTransaction_notEmpty(){
+    TransactionInProgress trx =
+            TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.INVOICED);
+    List<TransactionInProgress> firstBatch = List.of(trx);
+
+    when(repositoryMock.findInvoicedTransaction(100))
+            .thenReturn(firstBatch)
+            .thenReturn(Collections.emptyList());
+
+    doNothing().when(repositoryMock).bulkDeleteByIds(any());
+
+    service.deleteInvoicedTransaction();
+
+    verify(repositoryMock, times(2)).findInvoicedTransaction(100);
+
+  }
+
 
   @Test
   void testDeleteLapseTransactions_ok() {

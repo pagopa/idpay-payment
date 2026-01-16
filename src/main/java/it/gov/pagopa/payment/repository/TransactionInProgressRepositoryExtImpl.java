@@ -1,11 +1,5 @@
 package it.gov.pagopa.payment.repository;
 
-import static it.gov.pagopa.payment.enums.SyncTrxStatus.*;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_GTIN;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_PRODUCT_NAME;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS;
-import static it.gov.pagopa.payment.utils.AggregationConstants.FIELD_STATUS_IT;
-
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.mongo.utils.MongoConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
@@ -17,10 +11,6 @@ import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.TransactionInProgress.Fields;
 import it.gov.pagopa.payment.utils.RewardConstants;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -40,10 +30,16 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.support.PageableExecutionUtils;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.regex.Pattern;
+
+import static it.gov.pagopa.payment.enums.SyncTrxStatus.*;
+import static it.gov.pagopa.payment.utils.AggregationConstants.*;
 
 @Slf4j
 public class TransactionInProgressRepositoryExtImpl implements TransactionInProgressRepositoryExt {
@@ -586,6 +582,18 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             Criteria.where(Fields.id).in(ids)
     );
     mongoTemplate.remove(query, TransactionInProgress.class);
+  }
+
+  public List<TransactionInProgress> findInvoicedTransaction(Integer pageSize) {
+
+    Criteria criteria = Criteria.where(Fields.status)
+            .in(SyncTrxStatus.INVOICED);
+
+    Query query = Query.query(criteria)
+            .with(Sort.by(Fields.trxDate).ascending())
+            .limit(pageSize);
+
+    return mongoTemplate.find(query, TransactionInProgress.class);
   }
 
 }
