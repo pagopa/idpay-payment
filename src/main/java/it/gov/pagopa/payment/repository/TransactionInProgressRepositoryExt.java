@@ -35,4 +35,16 @@ public interface TransactionInProgressRepositoryExt {
   Long updateStatusForExpiredVoucherTransactions(String initiativeId);
 
   List<TransactionInProgress> findUnprocessedExpiredVoucherTransactions(String initiativeId, Integer listSize, Integer page);
+
+  void bulkDeleteByIds(List<String> deletableIds);
+
+  List<TransactionInProgress> findLapsedTransaction(
+                  String initiativeId,
+                  Integer pageSize
+          );
+
+  List<TransactionInProgress> findInvoicedTransaction(
+          Integer pageSize
+  );
+
 }

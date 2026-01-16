@@ -7,21 +7,24 @@ import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.Utilities;
-import java.io.IOException;
-import java.time.LocalDateTime;
-
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service("commonInvoice")
@@ -94,7 +97,7 @@ public class CommonInvoiceServiceImpl {
             }
 
             // sending the transaction invoice notification (to store it in transaction db collection)
-            sendInvoiceTransactionNotification(trx);
+            //sendInvoiceTransactionNotification(trx);
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
@@ -111,7 +114,7 @@ public class CommonInvoiceServiceImpl {
             auditUtilities.logInvoiceTransaction(auditDTO);
 
             // removing the transaction from transaction_in_progress collection
-            repository.deleteById(transactionId);
+            repository.save(trx);
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);
