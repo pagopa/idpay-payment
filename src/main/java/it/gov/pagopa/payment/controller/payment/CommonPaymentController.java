@@ -36,13 +36,9 @@ public interface CommonPaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     void cancelPendingTransactions();
 
-
-
-
     @DeleteMapping("/deleteLapsedTransaction/{initiativeId}")
     @ResponseStatus(code = HttpStatus.OK)
     void deleteLapsedTransaction(@PathVariable("initiativeId")String initiativeId);
-
 
     @PostMapping("/transactions/{transactionId}/reversal")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
