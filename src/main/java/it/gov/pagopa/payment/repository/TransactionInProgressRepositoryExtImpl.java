@@ -32,10 +32,7 @@ import org.springframework.data.support.PageableExecutionUtils;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static it.gov.pagopa.payment.enums.SyncTrxStatus.*;
@@ -504,19 +501,44 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 .set(Fields.status, SyncTrxStatus.EXPIRED)
                 .set(Fields.updateDate, now);
 
+        // Retrieve authorized users to avoid expiring vouchers for users that have an AUTHORIZED transaction
+        // on the same day of voucher expiration.
+
+        Query authQuery = Query.query(
+                Criteria.where(Fields.initiativeId).is(initiativeId)
+                        .and(Fields.status).is(AUTHORIZED)
+        );
+
+        Set<String> authorizedUserIdSet = new HashSet<>(
+                mongoTemplate.findDistinct(
+                        authQuery,
+                        Fields.userId,
+                        TransactionInProgress.class,
+                        String.class
+                )
+        );
+
+        // Seek pagination cursor to avoid re-reading the same first page forever
+        String lastId = null;
+
         while (true) {
 
-            Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
+            Criteria baseCriteria = Criteria.where(Fields.initiativeId).is(initiativeId)
                     .andOperator(Criteria.where(Fields.status).is(CREATED),
                             Criteria.where(Fields.trxEndDate).ne(null),
                             Criteria.where(Fields.extendedAuthorization).is(true),
                             new Criteria().orOperator(Criteria.where(Fields.trxEndDate).lt(now),
                                     Criteria.where(Fields.initiativeEndDate).lt(now))
                     );
+
+            Criteria criteria = (lastId == null)
+                    ? baseCriteria
+                    : new Criteria().andOperator(baseCriteria, Criteria.where("_id").gt(lastId));
+
             Query query = Query.query(criteria);
-            query.fields().include(Fields.id);
+            query.fields().include(Fields.id).include(Fields.userId);
+            query.with(Sort.by(Sort.Direction.ASC, Fields.id));
             query.with(Pageable.ofSize(extendedTransactions.getUpdateBatchSize()));
-            query.with(Sort.by(Fields.id));
 
             List<TransactionInProgress> expiredTransactions =
                     mongoTemplate.find(query, TransactionInProgress.class);
@@ -525,16 +547,31 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                 log.info("[BATCH_EXPIRED_VOUCHER] Updated expired vouchers: {}", updatedRecords);
                 return updatedRecords;
             }
-            updatedRecords = updatedRecords + expiredTransactions.size();
+
+            // Advance cursor ALWAYS, even if we skip all records in this batch
+            lastId = expiredTransactions.getLast().getId();
+
+            List<TransactionInProgress> toExpire = expiredTransactions.stream()
+                    .filter(t -> t.getUserId() == null || !authorizedUserIdSet.contains(t.getUserId()))
+                    .toList();
+
+            // Assumiamo che il set delle transazioni da aggiornare sia piccolo rispetto a quello totale
+            if (toExpire.isEmpty()) {
+                // All skipped due to authorized users -> move to next batch (cursor already advanced)
+                continue;
+            }
 
             BulkOperations bulk = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED,
                     TransactionInProgress.class);
-            expiredTransactions.parallelStream().forEach(expiredTransaction -> {
-                Query fq = Query.query(Criteria.where("_id").is(expiredTransaction.getId()));
+
+            for (TransactionInProgress trx : toExpire) {
+                Query fq = Query.query(Criteria.where("_id").is(trx.getId()));
                 bulk.updateOne(fq, update);
-            });
+            }
+
             bulk.execute();
 
+            updatedRecords = updatedRecords + toExpire.size();
         }
 
     }
