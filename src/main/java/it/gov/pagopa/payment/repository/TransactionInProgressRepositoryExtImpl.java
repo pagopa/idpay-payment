@@ -555,7 +555,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                     .filter(t -> t.getUserId() == null || !authorizedUserIdSet.contains(t.getUserId()))
                     .toList();
 
-            // Assumiamo che il set delle transazioni da aggiornare sia piccolo rispetto a quello totale
+            // Assume that the set of transactions to be updated is small compared to the total set
             if (toExpire.isEmpty()) {
                 // All skipped due to authorized users -> move to next batch (cursor already advanced)
                 continue;
@@ -570,10 +570,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             }
 
             bulk.execute();
-
             updatedRecords = updatedRecords + toExpire.size();
         }
-
     }
 
     @Override
