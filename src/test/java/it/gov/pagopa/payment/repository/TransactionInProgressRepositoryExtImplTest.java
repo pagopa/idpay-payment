@@ -936,30 +936,27 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @Test
     void updateTrxExpiredIfInitiativeEnded() {
-        OffsetDateTime initEndDate = OffsetDateTime.now();
-        initEndDate.minusDays(1);
-        OffsetDateTime trxEndDate = OffsetDateTime.now();
-        trxEndDate.plusDays(1);
-        TransactionInProgress transactionInProgress =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        transactionInProgress.setInitiativeEndDate(initEndDate);
-        transactionInProgress.setTrxEndDate(trxEndDate);
-        transactionInProgress.setInitiativeId(transactionInProgress.getId());
-        transactionInProgress.setExtendedAuthorization(true);
-        transactionInProgressRepository.save(transactionInProgress);
+      OffsetDateTime initEndDate = OffsetDateTime.now().minusDays(1);
+      OffsetDateTime trxEndDate  = OffsetDateTime.now().plusDays(1);
 
-        TransactionInProgress resultSave =
-                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
-        Assertions.assertNotNull(resultSave);
-        Assertions.assertEquals(SyncTrxStatus.CREATED, resultSave.getStatus());
-        transactionInProgressRepository.updateStatusForExpiredVoucherTransactions(
-                transactionInProgress.getInitiativeId());
+      TransactionInProgress trx =
+              TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+      trx.setInitiativeEndDate(initEndDate);
+      trx.setTrxEndDate(trxEndDate);
+      trx.setInitiativeId("INIT_1");
+      trx.setExtendedAuthorization(true);
+      trx.setUserId("USER_1");
+      transactionInProgressRepository.save(trx);
 
-        TransactionInProgress resultAfterUpdate =
-                transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElse(null);
-        Assertions.assertNotNull(resultAfterUpdate);
-        Assertions.assertEquals(SyncTrxStatus.EXPIRED, resultAfterUpdate.getStatus());
+      TransactionInProgress before =
+              transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElseThrow();
+      Assertions.assertEquals(SyncTrxStatus.CREATED, before.getStatus());
 
+      transactionInProgressRepository.updateStatusForExpiredVoucherTransactions("INIT_1");
+
+      TransactionInProgress after =
+              transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_1").orElseThrow();
+      Assertions.assertEquals(SyncTrxStatus.EXPIRED, after.getStatus());
     }
 
     @Test
@@ -1126,5 +1123,102 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNull(resultAfterUpdate);
 
   }
+
+  @Test
+  void updateTrxExpiredIfTrxEndDatePassed() {
+      OffsetDateTime initEndDate = OffsetDateTime.now().plusDays(10);
+      OffsetDateTime trxEndDate  = OffsetDateTime.now().minusMinutes(1);
+      TransactionInProgress trx = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
+      trx.setInitiativeEndDate(initEndDate);
+      trx.setTrxEndDate(trxEndDate);
+      trx.setInitiativeId("INIT_2");
+      trx.setExtendedAuthorization(true);
+      trx.setUserId("USER_2");
+      transactionInProgressRepository.save(trx);
+      transactionInProgressRepository.updateStatusForExpiredVoucherTransactions("INIT_2");
+      TransactionInProgress after =
+              transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_2").orElseThrow();
+      Assertions.assertEquals(SyncTrxStatus.EXPIRED, after.getStatus());
+  }
+
+  @Test
+  void doNotExpireIfExtendedAuthorizationIsFalse() {
+      OffsetDateTime initEndDate = OffsetDateTime.now().minusDays(1);
+      OffsetDateTime trxEndDate  = OffsetDateTime.now().minusMinutes(1);
+      TransactionInProgress trx = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.CREATED);
+      trx.setInitiativeEndDate(initEndDate);
+      trx.setTrxEndDate(trxEndDate);
+      trx.setInitiativeId("INIT_3");
+      trx.setExtendedAuthorization(false);
+      trx.setUserId("USER_3");
+      transactionInProgressRepository.save(trx);
+      transactionInProgressRepository.updateStatusForExpiredVoucherTransactions("INIT_3");
+      TransactionInProgress after = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_3").orElseThrow();
+      Assertions.assertEquals(SyncTrxStatus.CREATED, after.getStatus());
+    }
+
+  @Test
+  void doNotExpireIfUserHasAuthorizedTransaction() {
+      String initiativeId = "INIT_4";
+      String userId = "USER_4";
+
+      // Candidate expired (CREATED) -> should be SKIPPED
+      TransactionInProgress created = TransactionInProgressFaker.mockInstance(4, SyncTrxStatus.CREATED);
+      created.setInitiativeId(initiativeId);
+      created.setUserId(userId);
+      created.setExtendedAuthorization(true);
+      created.setTrxEndDate(OffsetDateTime.now().minusMinutes(1));
+      created.setInitiativeEndDate(OffsetDateTime.now().plusDays(1));
+      transactionInProgressRepository.save(created);
+
+      // AUTHORIZED for same user -> lock l’expire
+      TransactionInProgress authorized =
+              TransactionInProgressFaker.mockInstance(5, SyncTrxStatus.AUTHORIZED);
+      authorized.setInitiativeId(initiativeId);
+      authorized.setUserId(userId);
+      transactionInProgressRepository.save(authorized);
+
+      transactionInProgressRepository.updateStatusForExpiredVoucherTransactions(initiativeId);
+
+      TransactionInProgress after = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_4").orElseThrow();
+      Assertions.assertEquals(SyncTrxStatus.CREATED, after.getStatus());
+  }
+
+  @Test
+  void shouldAdvanceCursorWhenFirstBatchIsAllSkippedDueToAuthorizedUsers() {
+      String initiativeId = "INIT_5";
+      // User A: have all AUTHORIZED trx -> all his CREATED trx should be skipped
+      String userA = "USER_A";
+      TransactionInProgress authA = TransactionInProgressFaker.mockInstance(10, SyncTrxStatus.AUTHORIZED);
+      authA.setInitiativeId(initiativeId);
+      authA.setUserId(userA);
+      transactionInProgressRepository.save(authA);
+
+      // Create more CREATED
+      for (int i = 11; i <= 20; i++) {
+          TransactionInProgress t = TransactionInProgressFaker.mockInstance(i, SyncTrxStatus.CREATED);
+          t.setInitiativeId(initiativeId);
+          t.setUserId(userA);
+          t.setExtendedAuthorization(true);
+          t.setTrxEndDate(OffsetDateTime.now().minusMinutes(1));
+          t.setInitiativeEndDate(OffsetDateTime.now().plusDays(1));
+          transactionInProgressRepository.save(t);
+      }
+
+      // User B: Not AUTHORIZED -> his CREATED should be EXPIRED
+      String userB = "USER_B";
+      TransactionInProgress tB = TransactionInProgressFaker.mockInstance(21, SyncTrxStatus.CREATED);
+      tB.setInitiativeId(initiativeId);
+      tB.setUserId(userB);
+      tB.setExtendedAuthorization(true);
+      tB.setTrxEndDate(OffsetDateTime.now().minusMinutes(1));
+      tB.setInitiativeEndDate(OffsetDateTime.now().plusDays(1));
+      transactionInProgressRepository.save(tB);
+
+      transactionInProgressRepository.updateStatusForExpiredVoucherTransactions(initiativeId);
+
+      TransactionInProgress afterB = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_21").orElseThrow();
+      Assertions.assertEquals(SyncTrxStatus.EXPIRED, afterB.getStatus());
+    }
 }
 
