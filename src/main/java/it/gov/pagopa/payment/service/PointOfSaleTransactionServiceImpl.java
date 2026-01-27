@@ -22,8 +22,15 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
     }
 
     @Override
-    public Page<TransactionInProgress> getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
+    public Page<TransactionInProgress> getPointOfSaleTransactions(String merchantId,
+                                                                  String initiativeId,
+                                                                  String pointOfSaleId,
+                                                                  String fiscalCode,
+                                                                  String status,
+                                                                  String productGtin,
+                                                                  String trxCode,
+                                                                  Pageable pageable) {
         String userId = StringUtils.isNotBlank(fiscalCode) ? pdvService.encryptCF(fiscalCode) : null;
-        return transactionInProgressRepository.findPageByFilter(merchantId, pointOfSaleId, initiativeId, userId, status, productGtin, pageable);
+        return transactionInProgressRepository.findPageByFilter(merchantId, pointOfSaleId, initiativeId, userId, status, productGtin, trxCode, pageable);
     }
 }

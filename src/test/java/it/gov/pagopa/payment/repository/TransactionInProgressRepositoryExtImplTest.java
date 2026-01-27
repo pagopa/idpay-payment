@@ -523,7 +523,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
     Criteria criteria = transactionInProgressRepository.getCriteria(
         MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID,
-        USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null);
+        USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null, null);
     Pageable paging = PageRequest.of(0, 10);
 
     List<TransactionInProgress> transactionInProgressList =
@@ -561,7 +561,7 @@ class TransactionInProgressRepositoryExtImplTest {
     transactionInProgressRepository.save(transactionInProgress2);
     transactionInProgressRepository.save(transactionInProgress3);
     Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID,
-        INITIATIVE_ID, null, null, null);
+        INITIATIVE_ID, null, null, null, null);
     long count = transactionInProgressRepository.getCount(criteria);
     assertEquals(3, count);
   }
@@ -590,6 +590,7 @@ class TransactionInProgressRepositoryExtImplTest {
         USER_ID,
         SyncTrxStatus.AUTHORIZED.toString(),
         PRODUCT_GTIN,
+        null,
         pageable
     );
 
@@ -616,6 +617,7 @@ class TransactionInProgressRepositoryExtImplTest {
         INITIATIVE_ID,
         USER_ID,
         SyncTrxStatus.AUTHORIZED.toString(),
+        null,
         null,
         pageableStatus
     );
@@ -644,6 +646,7 @@ class TransactionInProgressRepositoryExtImplTest {
         USER_ID,
         SyncTrxStatus.AUTHORIZED.toString(),
         null,
+        null,
         pageable
     );
 
@@ -671,6 +674,7 @@ class TransactionInProgressRepositoryExtImplTest {
         USER_ID,
         SyncTrxStatus.AUTHORIZED.toString(),
         null,
+        null,
         pageable
     );
 
@@ -682,14 +686,14 @@ class TransactionInProgressRepositoryExtImplTest {
   @Test
   void getCriteria() {
     Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, null,
-        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null);
+        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null, null);
     assertEquals(4, criteria.getCriteriaObject().size());
   }
 
   @Test
   void getCriteria1() {
     Criteria criteria1 = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID,
-        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null);
+        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null, null);
     assertEquals(5, criteria1.getCriteriaObject().size());
   }
 

@@ -5,5 +5,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface PointOfSaleTransactionService {
-    Page<TransactionInProgress> getPointOfSaleTransactions(String merchantId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable);
+    Page<TransactionInProgress> getPointOfSaleTransactions(String merchantId,
+                                                           String initiativeId,
+                                                           String pointOfSaleId,
+                                                           String fiscalCode,
+                                                           String status,
+                                                           String productGtin,
+                                                           String trxCode,
+                                                           Pageable pageable);
 }

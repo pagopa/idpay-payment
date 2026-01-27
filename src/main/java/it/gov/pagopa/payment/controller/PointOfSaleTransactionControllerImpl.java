@@ -27,7 +27,15 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String tokenPointOfSaleId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId,
+                                                                     String tokenPointOfSaleId,
+                                                                     String initiativeId,
+                                                                     String pointOfSaleId,
+                                                                     String fiscalCode,
+                                                                     String status,
+                                                                     String productGtin,
+                                                                     String trxCode,
+                                                                     Pageable pageable) {
         log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", ""));
 
       if (tokenPointOfSaleId != null && (!Utilities.sanitizeString(tokenPointOfSaleId)
@@ -39,7 +47,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
          }
 
       Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
-                merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, pageable);
+                merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, trxCode, pageable);
 
         List<PointOfSaleTransactionDTO> dtos = page.getContent().stream()
                 .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, fiscalCode))
