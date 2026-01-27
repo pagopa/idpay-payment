@@ -42,6 +42,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -1224,5 +1225,33 @@ class TransactionInProgressRepositoryExtImplTest {
       TransactionInProgress afterB = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_21").orElseThrow();
       Assertions.assertEquals(SyncTrxStatus.EXPIRED, afterB.getStatus());
     }
+
+  @Test
+  void getCriteria_withTrxCode_shouldAddRegexCriteria() {
+
+    String trxCode = "TRX123ABC";
+
+    Criteria criteria = transactionInProgressRepository.getCriteria(
+            MERCHANT_ID,
+            POINT_OF_SALE_ID,
+            INITIATIVE_ID,
+            USER_ID,
+            SyncTrxStatus.AUTHORIZED.toString(),
+            null,
+            trxCode
+    );
+
+    assertNotNull(criteria);
+
+    var criteriaObject = criteria.getCriteriaObject();
+
+    assertTrue(criteriaObject.containsKey("trxCode"));
+
+    Object trxCodeValue = criteriaObject.get("trxCode");
+
+    assertInstanceOf(Pattern.class, trxCodeValue);
+  }
+
+
 }
 
