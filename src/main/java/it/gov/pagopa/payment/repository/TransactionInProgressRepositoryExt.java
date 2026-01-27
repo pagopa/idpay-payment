@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.data.domain.Page;
@@ -29,7 +30,12 @@ public interface TransactionInProgressRepositoryExt {
   TransactionInProgress findAuthorizationExpiredTransaction(String initiativeId, long authorizationExpirationMinutes);
   List<TransactionInProgress> deletePaged(String initiativeId, int pageSize);
   UpdateResult updateTrxPostTimeout(String trxId);
-  Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId, String initiativeId, String userId, String status, String productGtin, String trxCode, Pageable pageable);
+  Page<TransactionInProgress> findPageByFilter(String merchantId,
+                                               String pointOfSaleId,
+                                               String initiativeId,
+                                               String userId,
+                                               TrxFiltersDTO filters,
+                                               Pageable pageable);
   List<TransactionInProgress> findPendingTransactions(int pageSize);
 
   Long updateStatusForExpiredVoucherTransactions(String initiativeId);

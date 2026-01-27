@@ -61,7 +61,7 @@ class PointOfSaleTransactionControllerTest {
         );
 
         Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
-                        anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+                        anyString(), anyString(), anyString(), anyString(), any(), any()))
                 .thenReturn(trxPage);
 
         PointOfSaleTransactionDTO pointOfSaleTransactionDTO = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -96,7 +96,7 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(FISCAL_CODE, actual.getContent().get(0).getFiscalCode());
 
         Mockito.verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(
-                anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any());
+                anyString(), anyString(), anyString(), anyString(), any(), any());
         Mockito.verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
     }
 
@@ -127,7 +127,7 @@ class PointOfSaleTransactionControllerTest {
     Page<TransactionInProgress> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
     Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
-            anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), any()))
+            anyString(), anyString(), anyString(), anyString(), any(), any()))
         .thenReturn(trxPage);
 
     PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);

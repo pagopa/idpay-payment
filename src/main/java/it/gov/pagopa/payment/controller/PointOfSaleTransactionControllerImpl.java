@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
 import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -46,8 +47,10 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
                   .formatted(tokenPointOfSaleId, pointOfSaleId));
          }
 
+        TrxFiltersDTO filters = new TrxFiltersDTO(status, productGtin, trxCode);
+
       Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
-                merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, trxCode, pageable);
+                merchantId, initiativeId, pointOfSaleId, fiscalCode, filters, pageable);
 
         List<PointOfSaleTransactionDTO> dtos = page.getContent().stream()
                 .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, fiscalCode))

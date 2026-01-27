@@ -6,6 +6,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -342,12 +343,10 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
                                                       String pointOfSaleId,
                                                       String initiativeId,
                                                       String userId,
-                                                      String status,
-                                                      String productGtin,
-                                                      String trxCode,
+                                                      TrxFiltersDTO filters,
                                                       Pageable pageable) {
-    Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status,
-        productGtin, trxCode);
+    Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, filters.getStatus(),
+            filters.getProductGtin(), filters.getTrxCode());
     Aggregation aggregation = buildAggregation(criteria, pageable);
 
     List<TransactionInProgress> transactions;

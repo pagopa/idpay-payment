@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,8 +10,6 @@ public interface PointOfSaleTransactionService {
                                                            String initiativeId,
                                                            String pointOfSaleId,
                                                            String fiscalCode,
-                                                           String status,
-                                                           String productGtin,
-                                                           String trxCode,
+                                                           TrxFiltersDTO filters,
                                                            Pageable pageable);
 }

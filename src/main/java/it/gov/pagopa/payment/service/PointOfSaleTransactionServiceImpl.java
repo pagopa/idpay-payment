@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -26,11 +27,9 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
                                                                   String initiativeId,
                                                                   String pointOfSaleId,
                                                                   String fiscalCode,
-                                                                  String status,
-                                                                  String productGtin,
-                                                                  String trxCode,
+                                                                  TrxFiltersDTO filters,
                                                                   Pageable pageable) {
         String userId = StringUtils.isNotBlank(fiscalCode) ? pdvService.encryptCF(fiscalCode) : null;
-        return transactionInProgressRepository.findPageByFilter(merchantId, pointOfSaleId, initiativeId, userId, status, productGtin, trxCode, pageable);
+        return transactionInProgressRepository.findPageByFilter(merchantId, pointOfSaleId, initiativeId, userId, filters, pageable);
     }
 }
