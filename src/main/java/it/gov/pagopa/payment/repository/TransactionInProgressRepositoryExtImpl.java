@@ -6,6 +6,7 @@ import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -300,7 +301,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
   @Override
   public Criteria getCriteria(String merchantId, String pointOfSaleId, String initiativeId,
-      String userId, String status, String productGtin) {
+      String userId, String status, String productGtin, String trxCode) {
     Criteria criteria = Criteria.where(Fields.merchantId).is(merchantId).and(Fields.initiativeId)
         .is(initiativeId);
     if (userId != null) {
@@ -313,6 +314,11 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
       criteria.and(FIELD_PRODUCT_GTIN).is(productGtin)
           .regex(".*" + Pattern.quote(productGtin) + ".*", "i");
     }
+    if (trxCode != null) {
+        criteria.and(Fields.trxCode).is(trxCode)
+                .regex(".*" + Pattern.quote(trxCode) + ".*", "i");
+    }
+
     if (StringUtils.isNotBlank(status)) {
       criteria.and(Fields.status).is(status);
     } else {
@@ -333,10 +339,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   }
 
   @Override
-  public Page<TransactionInProgress> findPageByFilter(String merchantId, String pointOfSaleId,
-      String initiativeId, String userId, String status, String productGtin, Pageable pageable) {
-    Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, status,
-        productGtin);
+  public Page<TransactionInProgress> findPageByFilter(String merchantId,
+                                                      String pointOfSaleId,
+                                                      String initiativeId,
+                                                      String userId,
+                                                      TrxFiltersDTO filters,
+                                                      Pageable pageable) {
+    Criteria criteria = getCriteria(merchantId, pointOfSaleId, initiativeId, userId, filters.getStatus(),
+            filters.getProductGtin(), filters.getTrxCode());
     Aggregation aggregation = buildAggregation(criteria, pageable);
 
     List<TransactionInProgress> transactions;
