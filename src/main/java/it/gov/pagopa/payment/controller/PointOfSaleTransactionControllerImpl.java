@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
 import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -27,7 +28,15 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId, String tokenPointOfSaleId, String initiativeId, String pointOfSaleId, String fiscalCode, String status, String productGtin, Pageable pageable) {
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId,
+                                                                     String tokenPointOfSaleId,
+                                                                     String initiativeId,
+                                                                     String pointOfSaleId,
+                                                                     String fiscalCode,
+                                                                     String status,
+                                                                     String productGtin,
+                                                                     String trxCode,
+                                                                     Pageable pageable) {
         log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", ""));
 
       if (tokenPointOfSaleId != null && (!Utilities.sanitizeString(tokenPointOfSaleId)
@@ -38,8 +47,10 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
                   .formatted(tokenPointOfSaleId, pointOfSaleId));
          }
 
+        TrxFiltersDTO filters = new TrxFiltersDTO(status, productGtin, trxCode);
+
       Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
-                merchantId, initiativeId, pointOfSaleId, fiscalCode, status, productGtin, pageable);
+                merchantId, initiativeId, pointOfSaleId, fiscalCode, filters, pageable);
 
         List<PointOfSaleTransactionDTO> dtos = page.getContent().stream()
                 .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, fiscalCode))
