@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.mongo.singleinstance;
 
+import com.mongodb.MongoClientSettings;
 import de.flapdoodle.embed.mongo.commands.MongodArguments;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.IFeatureAwareVersion;
@@ -106,7 +107,7 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
 
         SyncClientServerWrapperConfig() {
             try {
-                unprotectedSyncClientServerFactoryConstructor = SyncClientServerFactory.class.getDeclaredConstructor(MongoProperties.class);
+                unprotectedSyncClientServerFactoryConstructor = SyncClientServerFactory.class.getDeclaredConstructor(MongoProperties.class, MongoClientSettings.class);
                 unprotectedSyncClientServerFactoryConstructor.setAccessible(true);
             } catch (NoSuchMethodException e) {
                 throw new IllegalStateException("Cannot unprotect AbstractServerFactory constructor", e);
@@ -133,7 +134,9 @@ public class SingleEmbeddedMongodbAutoConfiguration extends EmbeddedMongoAutoCon
 
     private static MongodWrapper createMongodWrapper(Constructor<? extends AbstractServerFactory<?>> unprotectedSyncClientServerFactoryConstructor, IFeatureAwareVersion version, MongoProperties properties, Mongod mongod, MongodArguments mongodArguments) {
         try {
-            return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(unprotectedSyncClientServerFactoryConstructor.newInstance(properties).createWrapper(version, mongod, mongodArguments));
+            return singleMongodWrapperInstance = new SingleInstanceMongodWrapper(
+                    unprotectedSyncClientServerFactoryConstructor.newInstance(properties, MongoClientSettings.builder().build())
+                            .createWrapper(version, mongod, mongodArguments, java.util.Collections.emptyList()));
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
             throw new IllegalStateException("Cannot call protected constructor", e);
         }
