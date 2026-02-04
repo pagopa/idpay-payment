@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -42,6 +43,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -523,7 +525,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
     Criteria criteria = transactionInProgressRepository.getCriteria(
         MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVE_ID,
-        USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null);
+        USER_ID, SyncTrxStatus.IDENTIFIED.toString(), null, null);
     Pageable paging = PageRequest.of(0, 10);
 
     List<TransactionInProgress> transactionInProgressList =
@@ -561,7 +563,7 @@ class TransactionInProgressRepositoryExtImplTest {
     transactionInProgressRepository.save(transactionInProgress2);
     transactionInProgressRepository.save(transactionInProgress3);
     Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID,
-        INITIATIVE_ID, null, null, null);
+        INITIATIVE_ID, null, null, null, null);
     long count = transactionInProgressRepository.getCount(criteria);
     assertEquals(3, count);
   }
@@ -583,13 +585,14 @@ class TransactionInProgressRepositoryExtImplTest {
 
     Pageable pageable = PageRequest.of(0, 10);
 
+    TrxFiltersDTO filters = new TrxFiltersDTO(SyncTrxStatus.AUTHORIZED.toString(), PRODUCT_GTIN, null);
+
     Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,
         POINT_OF_SALE_ID,
         INITIATIVE_ID,
         USER_ID,
-        SyncTrxStatus.AUTHORIZED.toString(),
-        PRODUCT_GTIN,
+        filters,
         pageable
     );
 
@@ -610,13 +613,14 @@ class TransactionInProgressRepositoryExtImplTest {
     transactionInProgressRepository.save(trx);
 
     Pageable pageableStatus = PageRequest.of(0, 10, Sort.by("status"));
+
+    TrxFiltersDTO filters = new TrxFiltersDTO(SyncTrxStatus.AUTHORIZED.toString(), null, null);
     Page<TransactionInProgress> resultStatus = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,
         POINT_OF_SALE_ID,
         INITIATIVE_ID,
         USER_ID,
-        SyncTrxStatus.AUTHORIZED.toString(),
-        null,
+        filters,
         pageableStatus
     );
     assertNotNull(resultStatus);
@@ -637,13 +641,14 @@ class TransactionInProgressRepositoryExtImplTest {
 
     Pageable pageable = PageRequest.of(0, 10, Sort.by("productName"));
 
+    TrxFiltersDTO filters = new TrxFiltersDTO(SyncTrxStatus.AUTHORIZED.toString(), null, null);
+
     Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,
         POINT_OF_SALE_ID,
         INITIATIVE_ID,
         USER_ID,
-        SyncTrxStatus.AUTHORIZED.toString(),
-        null,
+        filters,
         pageable
     );
 
@@ -664,13 +669,14 @@ class TransactionInProgressRepositoryExtImplTest {
 
     Pageable pageable = PageRequest.of(0, 10, Sort.by("trxDate"));
 
+    TrxFiltersDTO filters = new TrxFiltersDTO(SyncTrxStatus.AUTHORIZED.toString(), null, null);
+
     Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,
         POINT_OF_SALE_ID,
         INITIATIVE_ID,
         USER_ID,
-        SyncTrxStatus.AUTHORIZED.toString(),
-        null,
+        filters,
         pageable
     );
 
@@ -682,14 +688,14 @@ class TransactionInProgressRepositoryExtImplTest {
   @Test
   void getCriteria() {
     Criteria criteria = transactionInProgressRepository.getCriteria(MERCHANT_ID, null,
-        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null);
+        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null, null);
     assertEquals(4, criteria.getCriteriaObject().size());
   }
 
   @Test
   void getCriteria1() {
     Criteria criteria1 = transactionInProgressRepository.getCriteria(MERCHANT_ID, POINT_OF_SALE_ID,
-        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null);
+        INITIATIVE_ID, USER_ID, SyncTrxStatus.AUTHORIZED.toString(), null, null);
     assertEquals(5, criteria1.getCriteriaObject().size());
   }
 
@@ -1220,5 +1226,33 @@ class TransactionInProgressRepositoryExtImplTest {
       TransactionInProgress afterB = transactionInProgressRepository.findById("MOCKEDTRANSACTION_qr-code_21").orElseThrow();
       Assertions.assertEquals(SyncTrxStatus.EXPIRED, afterB.getStatus());
     }
+
+  @Test
+  void getCriteria_withTrxCode_shouldAddRegexCriteria() {
+
+    String trxCode = "TRX123ABC";
+
+    Criteria criteria = transactionInProgressRepository.getCriteria(
+            MERCHANT_ID,
+            POINT_OF_SALE_ID,
+            INITIATIVE_ID,
+            USER_ID,
+            SyncTrxStatus.AUTHORIZED.toString(),
+            null,
+            trxCode
+    );
+
+    assertNotNull(criteria);
+
+    var criteriaObject = criteria.getCriteriaObject();
+
+    assertTrue(criteriaObject.containsKey("trxCode"));
+
+    Object trxCodeValue = criteriaObject.get("trxCode");
+
+    assertInstanceOf(Pattern.class, trxCodeValue);
+  }
+
+
 }
 
