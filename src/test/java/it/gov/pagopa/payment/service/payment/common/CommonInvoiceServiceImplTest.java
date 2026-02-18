@@ -93,6 +93,8 @@ class CommonInvoiceServiceImplTest {
         PointOfSaleDTO pos = PointOfSaleDTO.builder()
             .franchiseName("Test")
             .type(PointOfSaleTypeEnum.PHYSICAL)
+            .businessName("BUSINESS_NAME")
+            .fiscalCode("FISCAL_CODE")
             .build();
         Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID))
             .thenReturn(pos);
