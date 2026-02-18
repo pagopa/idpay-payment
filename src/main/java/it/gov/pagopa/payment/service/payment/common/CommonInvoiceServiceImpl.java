@@ -94,6 +94,8 @@ public class CommonInvoiceServiceImpl {
 
                 trx.setFranchiseName(pointOfSaleDTO.getFranchiseName());
                 trx.setPointOfSaleType(pointOfSaleDTO.getType().name());
+                trx.setBusinessName(pointOfSaleDTO.getBusinessName());
+                trx.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
             }
 
             // sending the transaction invoice notification (to store it in transaction db collection)
