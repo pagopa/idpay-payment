@@ -452,7 +452,8 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         .is(SyncTrxStatus.AUTHORIZATION_REQUESTED));
     Update update = new Update()
         .set(Fields.status, REJECTED)
-        .set(Fields.rejectionReasons, List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
+        .set(Fields.rejectionReasons, List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT))
+        .currentDate(Fields.updateDate);
     return mongoTemplate.updateFirst(query, update, TransactionInProgress.class);
   }
 
