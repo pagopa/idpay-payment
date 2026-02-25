@@ -509,7 +509,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         long updatedRecords = 0L;
         Update update = new Update()
                 .set(Fields.status, SyncTrxStatus.EXPIRED)
-                .set(Fields.updateDate, now);
+                .currentDate(Fields.updateDate);
 
         // Retrieve authorized users to avoid expiring vouchers for users that have an AUTHORIZED transaction
         // on the same day of voucher expiration.
