@@ -73,4 +73,5 @@ public interface BarCodePaymentController {
     ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
         @PathVariable("transactionId") String transactionId
     );
+
 }
