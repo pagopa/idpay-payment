@@ -169,4 +169,3 @@ class PointOfSaleTransactionControllerTest {
     Assertions.assertNull(ex.getCause());
   }
 }
-
