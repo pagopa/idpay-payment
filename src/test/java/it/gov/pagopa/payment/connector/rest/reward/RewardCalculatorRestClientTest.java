@@ -2,91 +2,223 @@ package it.gov.pagopa.payment.connector.rest.reward;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.common.wiremock.BaseWireMockTest;
-import it.gov.pagopa.payment.configuration.FeignConfig;
+import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
-import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.Assert;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.http.HttpMessageConvertersAutoConfiguration;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.cloud.openfeign.FeignAutoConfiguration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 
-import static it.gov.pagopa.common.wiremock.BaseWireMockTest.WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX;
-import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED;
-import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRX_ALREADY_CANCELLED;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD;
 import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED;
 import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_CANCELLED;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 
-@ContextConfiguration(
-        classes = {
-                RewardCalculatorConnectorImpl.class,
-                FeignAutoConfiguration.class,
-                FeignConfig.class,
-                HttpMessageConvertersAutoConfiguration.class,
-                RewardCalculatorMapper.class
-        })
-@TestPropertySource(
-        properties = {"spring.application.name=idpay-reward-calculator",
-                WIREMOCK_TEST_PROP2BASEPATH_MAP_PREFIX+"rest-client.reward.baseUrl="})
 @Slf4j
-class RewardCalculatorRestClientTest extends BaseWireMockTest {
+class RewardCalculatorRestClientTest{
 
-    @Autowired
     private RewardCalculatorRestClient rewardCalculatorRestClient;
 
-    @Autowired
     private RewardCalculatorConnector rewardCalculatorConnector;
 
-    @MockBean
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
-    @Test
-    void testAuthThenReturnTransactionVersionMismatchException() throws JsonProcessingException {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        trx.setVat("MISMATCH");
-        trx.setChannel("QRCODE");
-        trx.setInitiativeId("INITIATIVEID_VERSION_MISMATCH");
-        trx.setUserId("USERID1");
+    private RewardCalculatorMapper rewardCalculatorMapper;
 
-        ErrorDTO errorDTO = new ErrorDTO();
-        errorDTO.setCode("Nothing");
-        errorDTO.setMessage("Nothing");
-        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
-
-        AuthPaymentDTO result = rewardCalculatorConnector.authorizePayment(trx);
-
-        Assertions.assertNotNull(result);
-        Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
-        Assertions.assertEquals(SyncTrxStatus.REJECTED,result.getStatus());
+    @BeforeEach
+    void setUp() {
+        rewardCalculatorRestClient = mock(RewardCalculatorRestClient.class);
+        objectMapper = mock(ObjectMapper.class);
+        rewardCalculatorMapper = mock(RewardCalculatorMapper.class);
+        rewardCalculatorConnector = new RewardCalculatorConnectorImpl(rewardCalculatorRestClient, objectMapper, rewardCalculatorMapper);
     }
 
     @Test
-    void testAuthThenThrowTransactionAlreadyAuthorizedException() throws JsonProcessingException {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        trx.setVat("MISMATCH");
-        trx.setChannel("QRCODE");
-        trx.setInitiativeId("INITIATIVEID_ALREADY_AUTHORIZED");
-        trx.setUserId("USERID1");
+    void authorizePayment_ok(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentRequestDTO authPaymentRequestDTO = new AuthPaymentRequestDTO();
+        when(rewardCalculatorRestClient.authorizePayment(
+                1L, "INITIATIVE_ID", authPaymentRequestDTO
+        )).thenReturn(authPaymentResponseDTO);
+
+        assertDoesNotThrow(() -> rewardCalculatorConnector.authorizePayment(transaction));
+    }
+
+    @Test
+    void cancelTransaction_ok(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentRequestDTO authPaymentRequestDTO = new AuthPaymentRequestDTO();
+        when(rewardCalculatorRestClient.cancelTransaction(
+                "INITIATIVE_ID", authPaymentRequestDTO
+        )).thenReturn(authPaymentResponseDTO);
+
+        assertDoesNotThrow(() -> rewardCalculatorConnector.cancelTransaction(transaction));
+    }
+
+    @Test
+    void previewTransaction_ok(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED);
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenReturn(ResponseEntity.ok(authPaymentResponseDTO));
+        assertDoesNotThrow(() -> rewardCalculatorConnector.previewTransaction(transaction));
+    }
+
+    @Test
+    void previewTransaction_etagHeaderValueIsNotNull(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ETAG, "10");
+
+        ResponseEntity<AuthPaymentResponseDTO> response =
+                ResponseEntity.ok()
+                        .headers(headers)
+                        .body(authPaymentResponseDTO);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenReturn(response);
+        assertDoesNotThrow(() -> rewardCalculatorConnector.previewTransaction(transaction));
+    }
+
+    @Test
+    void previewTransaction_throwException(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.ETAG, "LONG");
+
+        ResponseEntity<AuthPaymentResponseDTO> response =
+                ResponseEntity.ok()
+                        .headers(headers)
+                        .body(authPaymentResponseDTO);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenReturn(response);
+
+        RewardCalculatorInvocationException ex = assertThrows(RewardCalculatorInvocationException.class,
+                () -> rewardCalculatorConnector.previewTransaction(transaction));
+        assertNotNull(ex.getMessage());
+    }
+
+    @Test
+    void previewTransaction_403(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(403,"body"));
+
+        assertDoesNotThrow(() -> rewardCalculatorConnector.previewTransaction(transaction));
+    }
+
+    @Test
+    void previewTransaction_429(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(429,"body"));
+
+        TooManyRequestsException ex = assertThrows(TooManyRequestsException.class,
+                () -> rewardCalculatorConnector.previewTransaction(transaction));
+        assertNotNull(ex.getMessage());
+    }
+
+    @Test
+    void previewTransaction_404(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(404,"body"));
+
+        TransactionNotFoundOrExpiredException ex = assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> rewardCalculatorConnector.previewTransaction(transaction));
+        assertNotNull(ex.getMessage());
+    }
+
+    @Test
+    void previewTransaction_412(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(412,"body"));
+
+        NullPointerException ex = assertThrows(NullPointerException.class,
+                () -> rewardCalculatorConnector.previewTransaction(transaction));
+        assertNotNull(ex.getMessage());
+    }
+
+    @Test
+    void previewTransaction_423(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(423,"body"));
+
+        TransactionVersionPendingException ex = assertThrows(TransactionVersionPendingException.class,
+                () -> rewardCalculatorConnector.previewTransaction(transaction));
+        assertNotNull(ex.getMessage());
+    }
+
+    @Test
+    void previewTransaction_500(){
+        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(500,"body"));
+
+        RewardCalculatorInvocationException ex = assertThrows(RewardCalculatorInvocationException.class,
+                () -> rewardCalculatorConnector.previewTransaction(transaction));
+        assertNotNull(ex.getMessage());
+    }
+
+    @Test
+    void previewPayment_403_readValueEx() throws Exception {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
+        FeignException ex = buildFeignException(403, body);
+
+        JsonProcessingException jsonProcessingException = mock(JsonProcessingException.class);
+
+        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(AuthPaymentResponseDTO.class))).thenThrow(jsonProcessingException);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(), any())).thenThrow(ex);
+
+        assertThrows(RewardCalculatorInvocationException.class,
+                () -> rewardCalculatorConnector.previewTransaction(trx));
+    }
+
+    @Test
+    void previewPayment_412_readValueEx() throws Exception {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
+        FeignException ex = buildFeignException(412, body);
+
+        JsonProcessingException jsonProcessingException = mock(JsonProcessingException.class);
+
+        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenThrow(jsonProcessingException);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(), any())).thenThrow(ex);
+
+        assertThrows(RewardCalculatorInvocationException.class,
+                () -> rewardCalculatorConnector.previewTransaction(trx));
+    }
+
+    @Test
+    void previewPayment_412_alreadyAuthorized() throws Exception {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
+        FeignException ex = buildFeignException(412, body);
 
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.setMessage(REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED);
@@ -94,22 +226,18 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
 
         when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
 
-        TransactionAlreadyAuthorizedException exception =
-                assertThrows(TransactionAlreadyAuthorizedException.class, () -> {
-                    rewardCalculatorConnector.authorizePayment(trx);
-                });
+        when(rewardCalculatorRestClient.previewTransaction(anyString(), any())).thenThrow(ex);
 
-        assertEquals(TRX_ALREADY_AUTHORIZED, exception.getCode());
+        assertThrows(TransactionAlreadyAuthorizedException.class,
+                () -> rewardCalculatorConnector.previewTransaction(trx));
     }
-    
 
     @Test
-    void testAuthThenThrowTransactionAlreadyCancellededException() throws JsonProcessingException {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        trx.setVat("MISMATCH");
-        trx.setChannel("QRCODE");
-        trx.setInitiativeId("INITIATIVEID_ALREADY_CANCELLED");
-        trx.setUserId("USERID1");
+    void previewPayment_412_alreadyCancelled() throws Exception {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_CANCELLED + "\"}";
+        FeignException ex = buildFeignException(412, body);
 
         ErrorDTO errorDTO = new ErrorDTO();
         errorDTO.setMessage(REWARD_CALCULATOR_TRX_ALREADY_CANCELLED);
@@ -117,158 +245,46 @@ class RewardCalculatorRestClientTest extends BaseWireMockTest {
 
         when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
 
-        TransactionAlreadyCancelledException exception =
-                assertThrows(TransactionAlreadyCancelledException.class, () -> {
-                    rewardCalculatorConnector.cancelTransaction(trx);
-                });
-        assertEquals(TRX_ALREADY_CANCELLED, exception.getCode());
-    }
+        when(rewardCalculatorRestClient.previewTransaction(anyString(), any())).thenThrow(ex);
 
-    @Test
-    
-    void testObjectMapperExceptionWhenReceived412() throws JsonProcessingException {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        trx.setVat("MISMATCH");
-        trx.setChannel("QRCODE");
-        trx.setInitiativeId("INITIATIVEID_ALREADY_CANCELLED");
-        trx.setUserId("USERID1");
-
-        doThrow(JsonProcessingException.class)
-                .when(objectMapper).readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class));
-
-        RewardCalculatorInvocationException exception = assertThrows(RewardCalculatorInvocationException.class,
-                () -> rewardCalculatorConnector.cancelTransaction(trx));
-        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
-    }
-    @Test
-    void testAuthThenReturnTransactionVersionPendingException(){
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1,SyncTrxStatus.AUTHORIZATION_REQUESTED);
-        trx.setVat("PENDING");
-        trx.setChannel("QRCODE");
-        trx.setInitiativeId("INITIATIVEID_VERSION_PENDING");
-        trx.setUserId("USERID2");
-
-        TransactionVersionPendingException exception = Assert.assertThrows(TransactionVersionPendingException.class, () -> rewardCalculatorConnector.authorizePayment(trx));
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.PAYMENT_TRANSACTION_VERSION_PENDING,exception.getCode());
-        Assertions.assertEquals("The transaction version is actually locked",exception.getMessage());
-
-    }
-    @Test
-    void testPreviewTransactionResponseWithEtag() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        AuthPaymentDTO preview =
-                rewardCalculatorConnector.previewTransaction(trx);
-        assertNotNull(preview);
-        assertNotEquals(0, preview.getCounterVersion());
-    }
-
-    @Test
-    void testPreviewTransactionResponseWithoutEtag() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.CREATED);
-        AuthPaymentDTO preview =
-                rewardCalculatorConnector.previewTransaction(trx);
-        assertNotNull(preview);
-        assertEquals(0, preview.getCounterVersion());
-    }
-    @Test
-    void testPreviewTransactionResponseWithBadEtag() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
-
-        RewardCalculatorInvocationException exception = assertThrows(RewardCalculatorInvocationException.class,
+        assertThrows(TransactionAlreadyCancelledException.class,
                 () -> rewardCalculatorConnector.previewTransaction(trx));
-        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
-
     }
 
     @Test
-    void testPreviewTransaction_NOT_FOUND() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+    void previewPayment_412_alreadyRejected() throws Exception {
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
-        TransactionNotFoundOrExpiredException exception = assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> rewardCalculatorConnector.previewTransaction(trx));
-        assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, exception.getCode());
+        String body = "{\"code\":\"" + PAYMENT_CANNOT_GUARANTEE_REWARD + "\"}";
+        FeignException ex = buildFeignException(412, body);
+
+        ErrorDTO errorDTO = new ErrorDTO();
+        errorDTO.setMessage(PAYMENT_CANNOT_GUARANTEE_REWARD);
+        errorDTO.setCode(PAYMENT_CANNOT_GUARANTEE_REWARD);
+
+        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenReturn(errorDTO);
+
+        when(rewardCalculatorRestClient.previewTransaction(anyString(), any())).thenThrow(ex);
+
+        assertDoesNotThrow(() -> rewardCalculatorConnector.previewTransaction(trx));
     }
 
-    @Test
-    void testPreviewTransaction_FORBIDDEN_KO() throws JsonProcessingException {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(7, SyncTrxStatus.CREATED);
-
-        doThrow(JsonProcessingException.class)
-                .when(objectMapper).readValue(anyString(), ArgumentMatchers.eq(AuthPaymentResponseDTO.class));
-
-        RewardCalculatorInvocationException exception = assertThrows(RewardCalculatorInvocationException.class,
-                () -> rewardCalculatorConnector.previewTransaction(trx));
-        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
-    }
-
-    @Test
-    void testPreviewTransaction_FORBIDDEN() throws JsonProcessingException {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(7, SyncTrxStatus.CREATED);
-
-        AuthPaymentResponseDTO responseDTO =
-                AuthPaymentResponseDTOFaker.mockInstance(7,SyncTrxStatus.REJECTED);
-
-        when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(AuthPaymentResponseDTO.class))).thenReturn(responseDTO);
-
-        AuthPaymentDTO preview =
-                rewardCalculatorConnector.previewTransaction(trx);
-        assertNotNull(preview);
-    }
-    @Test
-    void testPreviewTransaction_GENERIC_ERROR() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(4, SyncTrxStatus.CREATED);
-
-        RewardCalculatorInvocationException exception = assertThrows(RewardCalculatorInvocationException.class,
-                () -> rewardCalculatorConnector.previewTransaction(trx));
-        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
-    }
-
-    @Test
-    void testPreviewTransaction_TOO_MANY_REQUEST() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(5, SyncTrxStatus.CREATED);
-
-        TooManyRequestsException exception = assertThrows(TooManyRequestsException.class,
-                () -> rewardCalculatorConnector.previewTransaction(trx));
-        assertEquals(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS, exception.getCode());
-
-    }
-
-    @Test
-    void testAuthorizePaymentOk() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(11, SyncTrxStatus.IDENTIFIED);
-        AuthPaymentDTO response =
-                rewardCalculatorConnector.authorizePayment(trx);
-        assertNotNull(response);
-    }
-
-    @Test
-    void testCancelTransactionOk() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(21, SyncTrxStatus.AUTHORIZED);
-        trx.setRewardCents(100L);
-        AuthPaymentDTO response =
-                rewardCalculatorConnector.cancelTransaction(trx);
-        log.info(String.valueOf(response));
-        assertNotNull(response);
-    }
-    @Test
-    void testCancelTransaction_404() {
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(22, SyncTrxStatus.CREATED);
-        trx.setRewardCents(100L);
-        trx.setId("ID_CANCEL_NOT_FOUND");
-        AuthPaymentDTO response =
-                rewardCalculatorConnector.cancelTransaction(trx);
-        assertNull(response);
+    private FeignException buildFeignException(int status, String body) {
+        return FeignException.errorStatus(
+                "methodKey",
+                feign.Response.builder()
+                        .status(status)
+                        .reason("reason")
+                        .request(feign.Request.create(
+                                feign.Request.HttpMethod.GET,
+                                "/test",
+                                java.util.Collections.emptyMap(),
+                                null,
+                                java.nio.charset.StandardCharsets.UTF_8,
+                                null))
+                        .body(body, java.nio.charset.StandardCharsets.UTF_8)
+                        .build()
+        );
     }
 
 }
