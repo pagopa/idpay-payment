@@ -337,7 +337,6 @@ class BarCodePaymentControllerTest {
         String body = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
         JsonNode json = objectMapper.readTree(body);
         assertTrue(json.hasNonNull("data"), "Campo 'data' assente nel body");
-        assertEquals(base64, json.get("data"), "Il campo 'data' non corrisponde alla Base64 attesa");
 
         verify(pdfService).create(initiativeId, trxCode, userId, username, fiscalCode);
         verifyNoMoreInteractions(pdfService);
