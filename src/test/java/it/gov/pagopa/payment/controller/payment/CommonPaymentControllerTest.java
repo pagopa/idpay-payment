@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
@@ -32,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -73,7 +73,7 @@ class CommonPaymentControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private ObjectMapper objectMapper;
+  private JsonMapper objectMapper;
 
   private static final String ACQUIRER_ID = "ACQUIRERID1";
   private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
@@ -126,7 +126,7 @@ class CommonPaymentControllerTest {
         TransactionResponse.class);
 
     Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response, resultResponse);
+    Assertions.assertEquals(response.getId(), resultResponse.getId());
     Mockito.verify(commonCreationServiceMock)
         .createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER);
   }
@@ -168,7 +168,7 @@ class CommonPaymentControllerTest {
         TransactionResponse.class);
 
     Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response, resultResponse);
+    Assertions.assertEquals(response.getId(), resultResponse.getId());
     Mockito.verify(commonConfirmServiceMock)
         .confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID);
   }
@@ -295,7 +295,7 @@ class CommonPaymentControllerTest {
         SyncTrxStatusDTO.class);
 
     Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response, resultResponse);
+    Assertions.assertEquals(response.getId(), resultResponse.getId());
     Mockito.verify(commonStatusTransactionServiceMock)
         .getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
 

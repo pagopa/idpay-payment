@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.connector.rest.reward;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
@@ -18,6 +17,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.json.JsonMapper;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD;
 import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED;
@@ -36,14 +37,14 @@ class RewardCalculatorRestClientTest{
 
     private RewardCalculatorConnector rewardCalculatorConnector;
 
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     private RewardCalculatorMapper rewardCalculatorMapper;
 
     @BeforeEach
     void setUp() {
         rewardCalculatorRestClient = mock(RewardCalculatorRestClient.class);
-        objectMapper = mock(ObjectMapper.class);
+        objectMapper = mock(JsonMapper.class);
         rewardCalculatorMapper = mock(RewardCalculatorMapper.class);
         rewardCalculatorConnector = new RewardCalculatorConnectorImpl(rewardCalculatorRestClient, objectMapper, rewardCalculatorMapper);
     }
@@ -186,7 +187,7 @@ class RewardCalculatorRestClientTest{
         String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
         FeignException ex = buildFeignException(403, body);
 
-        JsonProcessingException jsonProcessingException = mock(JsonProcessingException.class);
+        JacksonException jsonProcessingException = mock(JacksonException.class);
 
         when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(AuthPaymentResponseDTO.class))).thenThrow(jsonProcessingException);
 
@@ -203,7 +204,7 @@ class RewardCalculatorRestClientTest{
         String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
         FeignException ex = buildFeignException(412, body);
 
-        JsonProcessingException jsonProcessingException = mock(JsonProcessingException.class);
+        JacksonException jsonProcessingException = mock(JacksonException.class);
 
         when(objectMapper.readValue(anyString(), ArgumentMatchers.eq(ErrorDTO.class))).thenThrow(jsonProcessingException);
 

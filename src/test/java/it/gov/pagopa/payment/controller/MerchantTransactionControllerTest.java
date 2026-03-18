@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
@@ -18,7 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 
@@ -34,7 +33,7 @@ class MerchantTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
     @MockitoBean
     private MerchantTransactionService merchantTransactionServiceMock;
     private static final String INITIATIVE_ID = "INITIATIVE_ID";

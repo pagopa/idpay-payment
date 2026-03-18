@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.configuration.ServiceExceptionConfig;
@@ -28,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -44,7 +44,7 @@ class PointOfSaleTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
     @MockitoBean
     private PointOfSaleTransactionService pointOfSaleTransactionServiceMock;
     @MockitoBean

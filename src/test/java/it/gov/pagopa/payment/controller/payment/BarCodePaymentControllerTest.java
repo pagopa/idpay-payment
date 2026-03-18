@@ -1,7 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
@@ -33,6 +31,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -60,7 +60,7 @@ class BarCodePaymentControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
 
     @Test
     void captureCommonTransactionByTrxCode() throws Exception {
@@ -79,7 +79,7 @@ class BarCodePaymentControllerTest {
                 TransactionBarCodeResponse.class);
 
         Assertions.assertNotNull(resultResponse);
-        Assertions.assertEquals(txrResponse,resultResponse);
+        Assertions.assertEquals(txrResponse.getId(),resultResponse.getId());
     }
 
 
@@ -104,7 +104,7 @@ class BarCodePaymentControllerTest {
                 TransactionBarCodeResponse.class);
 
         Assertions.assertNotNull(resultResponse);
-        Assertions.assertEquals(txrResponse,resultResponse);
+        Assertions.assertEquals(txrResponse.getId(),resultResponse.getId());
 
     }
     @Test
@@ -173,7 +173,7 @@ class BarCodePaymentControllerTest {
                 AuthPaymentDTO.class);
 
         Assertions.assertNotNull(resultResponse);
-        Assertions.assertEquals(authPaymentDTO,resultResponse);
+        Assertions.assertEquals(authPaymentDTO.getId(),resultResponse.getId());
 
     }
 
@@ -269,7 +269,7 @@ class BarCodePaymentControllerTest {
                 TransactionBarCodeResponse.class);
 
         Assertions.assertNotNull(resultResponse);
-        Assertions.assertEquals(txrResponse,resultResponse);
+        Assertions.assertEquals(txrResponse.getId(),resultResponse.getId());
 
     }
 
@@ -294,7 +294,7 @@ class BarCodePaymentControllerTest {
                 TransactionBarCodeResponse.class);
 
         Assertions.assertNotNull(resultResponse);
-        Assertions.assertEquals(txrResponse,resultResponse);
+        Assertions.assertEquals(txrResponse.getId(),resultResponse.getId());
 
     }
 

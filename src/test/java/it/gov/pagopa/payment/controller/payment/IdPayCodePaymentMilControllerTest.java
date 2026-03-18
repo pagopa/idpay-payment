@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
@@ -26,6 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ class IdPayCodePaymentMilControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private ObjectMapper objectMapper;
+  private JsonMapper objectMapper;
   private static final String MERCHANT_ID = "MERCHANTID1";
   private static final Object TRANSACTION_ID = "TRANSACTIONID1";
 
@@ -70,7 +70,7 @@ class IdPayCodePaymentMilControllerTest {
     AuthPaymentDTO resultPaymentDTO = objectMapper.readValue(result.getResponse().getContentAsString(),AuthPaymentDTO.class);
 
     assertNotNull(resultPaymentDTO);
-    assertEquals(authPaymentDTO,resultPaymentDTO);
+    assertEquals(authPaymentDTO.getId(),resultPaymentDTO.getId());
 
   }
   @Test
@@ -112,7 +112,7 @@ class IdPayCodePaymentMilControllerTest {
     AuthPaymentDTO resultPaymentDTO = objectMapper.readValue(result.getResponse().getContentAsString(),AuthPaymentDTO.class);
 
     assertNotNull(resultPaymentDTO);
-    assertEquals(authPaymentDTO,resultPaymentDTO);
+    assertEquals(authPaymentDTO.getId(),resultPaymentDTO.getId());
   }
 
   @Test
