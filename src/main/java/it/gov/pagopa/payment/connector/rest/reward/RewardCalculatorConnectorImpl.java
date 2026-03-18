@@ -73,7 +73,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         AuthPaymentDTO result;
         try {
             result = performCancel(trx, restClient::cancelTransaction);
-        } catch (TransactionNotFoundOrExpiredException transactionNotFoundOrExpiredException) {
+        } catch (TransactionNotFoundOrExpiredException _) {
             result = null;
         }
         return result;
