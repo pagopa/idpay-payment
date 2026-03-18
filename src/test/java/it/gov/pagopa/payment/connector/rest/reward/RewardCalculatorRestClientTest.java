@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.connector.rest.reward;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import feign.FeignException;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
