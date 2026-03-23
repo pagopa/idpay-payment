@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
@@ -38,6 +39,13 @@ public interface BarCodePaymentController {
     PreviewPaymentDTO previewPayment(
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid PreviewPaymentRequestDTO previewPaymentRequestDTO
+    );
+
+    @PutMapping(value = "/bar-code/{trxCode}/preview", headers = "X-API-Version=2")
+    @ResponseStatus(code = HttpStatus.OK)
+    PreviewPaymentDTO previewPaymentV2(
+            @PathVariable("trxCode") String trxCode,
+            @RequestBody @Valid PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO
     );
 
     @GetMapping("/initiatives/{initiativeId}/bar-code")

@@ -5,31 +5,40 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
+import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.*;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.nio.charset.StandardCharsets;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
 @Slf4j
 @RestController
 public class BarCodePaymentControllerImpl implements BarCodePaymentController {
+
+    private static final String PRODUCT_NAME_KEY = "productName";
+    private static final String PRODUCT_GTIN_KEY = "productGtin";
 
     private final BarCodePaymentService barCodePaymentService;
     private final PdfService pdfService;
@@ -66,18 +75,23 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
         final String sanitizedTrxCode = sanitizeString(trxCode);
         final String sanitizedProductName = sanitizeString(previewPaymentRequestDTO.getProductName());
         final String sanitizedProductGtin = sanitizeString(previewPaymentRequestDTO.getProductGtin());
-        final long amountCents = previewPaymentRequestDTO.getAmountCents().longValue();
-        if (amountCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative amountCents: {}", amountCents);
-            throw new TransactionInvalidException(PaymentConstants.ExceptionCode.REWARD_NOT_VALID,
-                    "Cannot preview transaction with negative amountCents [%s]".formatted(amountCents));
-        }
+        final long amountCents = validatePreviewAmount(previewPaymentRequestDTO.getAmountCents());
 
         final PreviewPaymentDTO previewPaymentDTO = barCodePaymentService
-                .previewPayment(sanitizedProductGtin, sanitizedTrxCode, amountCents);
+                .previewPayment(sanitizedTrxCode, buildLegacyPreviewAdditionalProperties(sanitizedProductName, sanitizedProductGtin), amountCents);
 
         return previewPaymentDTO.withProductName(sanitizedProductName)
                 .withProductGtin(sanitizedProductGtin);
+    }
+
+    @Override
+    @PerformanceLog(
+            value = "BAR_CODE_PREVIEW_PAYMENT",
+            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
+    public PreviewPaymentDTO previewPaymentV2(String trxCode, PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO) {
+        final String sanitizedTrxCode = sanitizeString(trxCode);
+        final long amountCents = validatePreviewAmount(previewPaymentRequestV2DTO.getAmountCents());
+        return barCodePaymentService.previewPayment(sanitizedTrxCode, previewPaymentRequestV2DTO.getAdditionalProperties(), amountCents);
     }
 
     @Override
@@ -147,5 +161,26 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             .contentType(MediaType.APPLICATION_JSON)
             .cacheControl(CacheControl.noStore())
             .body(reportDTO);
+    }
+
+    private long validatePreviewAmount(BigDecimal amountCents) {
+        final long previewAmountCents = amountCents.longValue();
+        if (previewAmountCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative amountCents: {}", previewAmountCents);
+            throw new TransactionInvalidException(PaymentConstants.ExceptionCode.REWARD_NOT_VALID,
+                    "Cannot preview transaction with negative amountCents [%s]".formatted(previewAmountCents));
+        }
+        return previewAmountCents;
+    }
+
+    private Map<String, String> buildLegacyPreviewAdditionalProperties(String productName, String productGtin) {
+        Map<String, String> additionalProperties = new HashMap<>();
+        if (productName != null) {
+            additionalProperties.put(PRODUCT_NAME_KEY, productName);
+        }
+        if (productGtin != null) {
+            additionalProperties.put(PRODUCT_GTIN_KEY, productGtin);
+        }
+        return additionalProperties;
     }
 }
