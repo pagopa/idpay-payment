@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.configuration.ServiceExceptionConfig;
@@ -17,7 +16,10 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -25,6 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 
@@ -33,14 +36,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PointOfSaleTransactionControllerImpl.class)
+@WebMvcTest(value={PointOfSaleTransactionControllerImpl.class}, excludeAutoConfiguration =  { UserDetailsServiceAutoConfiguration.class , SecurityAutoConfiguration.class})
+@AutoConfigureMockMvc(addFilters = false)
 @Import({JsonConfig.class, PaymentErrorManagerConfig.class, ServiceExceptionConfig.class})
 class PointOfSaleTransactionControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
+    private JsonMapper objectMapper;
     @MockitoBean
     private PointOfSaleTransactionService pointOfSaleTransactionServiceMock;
     @MockitoBean

@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
@@ -10,12 +9,15 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Collections;
 
@@ -24,14 +26,15 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(MerchantTransactionControllerImpl.class)
+@WebMvcTest(value={MerchantTransactionControllerImpl.class}, excludeAutoConfiguration =  { UserDetailsServiceAutoConfiguration.class , SecurityAutoConfiguration.class})
+@AutoConfigureMockMvc(addFilters = false)
 @Import({JsonConfig.class, PaymentErrorManagerConfig.class})
 class MerchantTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
-    @MockBean
+    private JsonMapper objectMapper;
+    @MockitoBean
     private MerchantTransactionService merchantTransactionServiceMock;
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
     private static final String FISCAL_CODE = "FISCAL_CODE";

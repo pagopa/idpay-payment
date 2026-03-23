@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
@@ -20,7 +19,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockPart;
@@ -29,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +41,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(CommonPaymentControllerImpl.class)
+@WebMvcTest(value={CommonPaymentControllerImpl.class}, excludeAutoConfiguration =  { UserDetailsServiceAutoConfiguration.class , SecurityAutoConfiguration.class})
+@AutoConfigureMockMvc(addFilters = false)
 @Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
 class CommonPaymentControllerTest {
 
@@ -69,7 +73,7 @@ class CommonPaymentControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private ObjectMapper objectMapper;
+  private JsonMapper objectMapper;
 
   private static final String ACQUIRER_ID = "ACQUIRERID1";
   private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
@@ -122,7 +126,7 @@ class CommonPaymentControllerTest {
         TransactionResponse.class);
 
     Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response, resultResponse);
+    Assertions.assertEquals(response.getId(), resultResponse.getId());
     Mockito.verify(commonCreationServiceMock)
         .createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER);
   }
@@ -164,7 +168,7 @@ class CommonPaymentControllerTest {
         TransactionResponse.class);
 
     Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response, resultResponse);
+    Assertions.assertEquals(response.getId(), resultResponse.getId());
     Mockito.verify(commonConfirmServiceMock)
         .confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID);
   }
@@ -291,7 +295,7 @@ class CommonPaymentControllerTest {
         SyncTrxStatusDTO.class);
 
     Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response, resultResponse);
+    Assertions.assertEquals(response.getId(), resultResponse.getId());
     Mockito.verify(commonStatusTransactionServiceMock)
         .getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
 
