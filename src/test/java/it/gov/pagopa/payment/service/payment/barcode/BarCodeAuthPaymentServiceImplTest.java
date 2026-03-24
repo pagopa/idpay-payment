@@ -390,7 +390,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         Map<String, String> additionalProperties = Map.of("customField", "customValue");
         assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L));
-        assertEquals(additionalProperties, transactionInProgress.getAdditionalProperties());
+        assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
         verify(paymentCheckService, never()).validateProduct(any());
     }
 
@@ -428,7 +428,7 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
         assertNotNull(result);
-        assertEquals(additionalProperties, transactionInProgress.getAdditionalProperties());
+        assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
         verify(paymentCheckService, never()).validateProduct(any());
     }
 }
