@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -12,11 +12,11 @@ import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.PreviewPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,13 +102,23 @@ class BarCodePaymentServiceImplTest {
 
     @Test
     void previewPayment_ok() {
-        PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
+        PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
+                .trxCode("trxCode")
+                .trxDate(OffsetDateTime.now())
+                .status(SyncTrxStatus.AUTHORIZED)
+                .originalAmountCents(500L)
+                .rewardCents(100L)
+                .residualAmountCents(400L)
+                .userId("userId")
+                .additionalProperties(Map.of("productGtin", "gtin"))
+                .extendedAuthorization(false)
+                .build();
         Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
 
         Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
-                .thenReturn(previewPaymentDTO);
+                .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentDTO result = barCodePaymentService.previewPayment("trxCode", additionalProperties, 500L);
+        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("trxCode", additionalProperties, 500L);
 
         Assertions.assertNotNull(result);
         Mockito.verify(barCodeAuthPaymentService).previewPayment("trxCode", additionalProperties, 500L);

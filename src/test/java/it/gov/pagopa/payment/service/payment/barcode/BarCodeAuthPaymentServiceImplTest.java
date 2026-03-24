@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
@@ -231,7 +232,9 @@ class BarCodeAuthPaymentServiceImplTest {
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
         when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
 
-        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 90000L));
+        PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 90000L);
+        assertNotNull(result);
+        assertEquals(transactionInProgress.getAdditionalProperties(), result.getAdditionalProperties());
         verify(paymentCheckService).validateProduct("gtin");
     }
 
@@ -389,8 +392,10 @@ class BarCodeAuthPaymentServiceImplTest {
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
 
         Map<String, String> additionalProperties = Map.of("customField", "customValue");
-        assertNotNull(barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L));
+        PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L);
+        assertNotNull(result);
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
+        assertEquals(Map.of(), result.getAdditionalProperties());
         verify(paymentCheckService, never()).validateProduct(any());
     }
 

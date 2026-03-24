@@ -7,7 +7,7 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -30,9 +30,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
-
-    private static final String PRODUCT_NAME_KEY = "productName";
-    private static final String PRODUCT_GTIN_KEY = "productGtin";
 
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
@@ -59,7 +56,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -88,7 +85,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
 
-        return PreviewPaymentDTO.builder()
+        return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
                 .status(preview.getStatus())
@@ -96,8 +93,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .rewardCents(preview.getRewardCents())
                 .residualAmountCents(residualAmountCents)
                 .userId(userCf)
-                .productName(getAdditionalProperty(transactionInProgress, PRODUCT_NAME_KEY))
-                .productGtin(getAdditionalProperty(transactionInProgress, PRODUCT_GTIN_KEY))
+                .additionalProperties(transactionInProgress.getAdditionalProperties())
                 .extendedAuthorization(transactionInProgress.getExtendedAuthorization())
                 .build();
     }
@@ -154,12 +150,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             return Collections.emptyMap();
         }
         return validatedAdditionalProperties;
-    }
-
-    private static String getAdditionalProperty(TransactionInProgress transactionInProgress, String propertyName) {
-        return transactionInProgress.getAdditionalProperties() != null
-                ? transactionInProgress.getAdditionalProperties().get(propertyName)
-                : null;
     }
 
     private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {

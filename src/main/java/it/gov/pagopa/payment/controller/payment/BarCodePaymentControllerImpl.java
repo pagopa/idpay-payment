@@ -6,6 +6,8 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
@@ -16,8 +18,8 @@ import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
+import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
-import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -77,21 +79,21 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
         final String sanitizedProductGtin = sanitizeString(previewPaymentRequestDTO.getProductGtin());
         final long amountCents = validatePreviewAmount(previewPaymentRequestDTO.getAmountCents());
 
-        final PreviewPaymentDTO previewPaymentDTO = barCodePaymentService
+        final PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService
                 .previewPayment(sanitizedTrxCode, buildLegacyPreviewAdditionalProperties(sanitizedProductName, sanitizedProductGtin), amountCents);
 
-        return previewPaymentDTO.withProductName(sanitizedProductName)
-                .withProductGtin(sanitizedProductGtin);
+        return mapPreviewPaymentV1(previewPaymentResult, sanitizedProductName, sanitizedProductGtin);
     }
 
     @Override
     @PerformanceLog(
             value = "BAR_CODE_PREVIEW_PAYMENT",
-            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
-    public PreviewPaymentDTO previewPaymentV2(String trxCode, PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO) {
+            payloadBuilderBeanClass = PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder.class)
+    public PreviewPaymentResponseV2DTO previewPaymentV2(String trxCode, PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO) {
         final String sanitizedTrxCode = sanitizeString(trxCode);
         final long amountCents = validatePreviewAmount(previewPaymentRequestV2DTO.getAmountCents());
-        return barCodePaymentService.previewPayment(sanitizedTrxCode, previewPaymentRequestV2DTO.getAdditionalProperties(), amountCents);
+        PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService.previewPayment(sanitizedTrxCode, previewPaymentRequestV2DTO.getAdditionalProperties(), amountCents);
+        return mapPreviewPaymentV2(previewPaymentResult);
     }
 
     @Override
@@ -144,23 +146,23 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     }
 
     @PerformanceLog(
-        value = "BAR_CODE_PREVIEW_PDF")
+            value = "BAR_CODE_PREVIEW_PDF")
     @Override
     public ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
-        String transactionId) {
+            String transactionId) {
 
         ReportDTOWithTrxCode reportDTO = pdfService.createPreauthPdf(transactionId);
 
         ContentDisposition cd = ContentDisposition
-            .inline()
-            .filename(reportDTO.getTrxCode() + "_preautorizzazione.pdf", StandardCharsets.UTF_8)
-            .build();
+                .inline()
+                .filename(reportDTO.getTrxCode() + "_preautorizzazione.pdf", StandardCharsets.UTF_8)
+                .build();
 
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
-            .contentType(MediaType.APPLICATION_JSON)
-            .cacheControl(CacheControl.noStore())
-            .body(reportDTO);
+                .header(HttpHeaders.CONTENT_DISPOSITION, cd.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+                .cacheControl(CacheControl.noStore())
+                .body(reportDTO);
     }
 
     private long validatePreviewAmount(BigDecimal amountCents) {
@@ -182,5 +184,34 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             additionalProperties.put(PRODUCT_GTIN_KEY, productGtin);
         }
         return additionalProperties;
+    }
+
+    private PreviewPaymentDTO mapPreviewPaymentV1(PreviewPaymentResultDTO previewPaymentResult, String productName, String productGtin) {
+        return PreviewPaymentDTO.builder()
+                .trxCode(previewPaymentResult.getTrxCode())
+                .trxDate(previewPaymentResult.getTrxDate())
+                .status(previewPaymentResult.getStatus())
+                .originalAmountCents(previewPaymentResult.getOriginalAmountCents())
+                .rewardCents(previewPaymentResult.getRewardCents())
+                .residualAmountCents(previewPaymentResult.getResidualAmountCents())
+                .userId(previewPaymentResult.getUserId())
+                .productName(productName)
+                .productGtin(productGtin)
+                .extendedAuthorization(previewPaymentResult.isExtendedAuthorization())
+                .build();
+    }
+
+    private PreviewPaymentResponseV2DTO mapPreviewPaymentV2(PreviewPaymentResultDTO previewPaymentResult) {
+        return PreviewPaymentResponseV2DTO.builder()
+                .trxCode(previewPaymentResult.getTrxCode())
+                .trxDate(previewPaymentResult.getTrxDate())
+                .status(previewPaymentResult.getStatus())
+                .originalAmountCents(previewPaymentResult.getOriginalAmountCents())
+                .rewardCents(previewPaymentResult.getRewardCents())
+                .residualAmountCents(previewPaymentResult.getResidualAmountCents())
+                .userId(previewPaymentResult.getUserId())
+                .additionalProperties(previewPaymentResult.getAdditionalProperties())
+                .extendedAuthorization(previewPaymentResult.isExtendedAuthorization())
+                .build();
     }
 }
