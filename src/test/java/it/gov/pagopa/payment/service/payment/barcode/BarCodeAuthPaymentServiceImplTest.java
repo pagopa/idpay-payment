@@ -239,7 +239,6 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
-    @Test
     void previewPayment_coreCheckRunsBeforeAdditionalPropertiesValidation() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
