@@ -182,7 +182,7 @@ class BarCodeAuthPaymentServiceImplTest {
     void barCodeAuthPayment_trxNotFound() {
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(null);
         doThrow(new TransactionNotFoundOrExpiredException("DUMMY_EXCEPTION"))
-                .when(commonAuthServiceMock).checkAuth(eq(TRX_CODE1), eq(null));
+                .when(commonAuthServiceMock).checkAuth(TRX_CODE1, null);
 
         TransactionNotFoundOrExpiredException result = assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
@@ -248,8 +248,9 @@ class BarCodeAuthPaymentServiceImplTest {
         authPaymentDTO.setRewardCents(-100L);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
-        assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 90000L));
+      Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
+      assertThrows(TransactionInvalidException.class, () ->
+                barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L));
     }
 
     @Test
@@ -262,16 +263,18 @@ class BarCodeAuthPaymentServiceImplTest {
         authPaymentDTO.setRewardCents(100L);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
-        assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 90L));
+      Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
+      assertThrows(TransactionInvalidException.class, () ->
+                barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90L));
     }
 
     @Test
     void previewPayment_TransactionIsNull() {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.empty());
 
-        TransactionNotFoundOrExpiredException exceptionResult = assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 95000L));
+      Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
+      TransactionNotFoundOrExpiredException exceptionResult = assertThrows(TransactionNotFoundOrExpiredException.class, () ->
+                barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 95000L));
 
         assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exceptionResult.getCode());
     }
