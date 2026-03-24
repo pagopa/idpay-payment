@@ -258,7 +258,6 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_negativeReward() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setRewardCents(-100L);
@@ -267,13 +266,13 @@ class BarCodeAuthPaymentServiceImplTest {
       Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
       assertThrows(TransactionInvalidException.class, () ->
                 barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L));
+        verify(paymentCheckService, never()).validateProduct(any());
     }
 
     @Test
     void previewPayment_negativeResidualAmount() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setRewardCents(100L);
@@ -282,6 +281,7 @@ class BarCodeAuthPaymentServiceImplTest {
       Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
       assertThrows(TransactionInvalidException.class, () ->
                 barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90L));
+        verify(paymentCheckService, never()).validateProduct(any());
     }
 
     @Test

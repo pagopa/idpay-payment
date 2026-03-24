@@ -80,11 +80,7 @@ class TransactionInProgressRepositoryExtImplTest {
 
   @AfterEach
   void clearTestData() {
-    mongoTemplate.findAllAndRemove(
-        new Query(
-            Criteria.where(TransactionInProgress.Fields.id)
-                .regex("^MOCKEDTRANSACTION_qr-code_[0-9]+$")),
-        TransactionInProgress.class);
+    mongoTemplate.remove(new Query(), TransactionInProgress.class);
   }
 
   @Test
@@ -328,7 +324,7 @@ class TransactionInProgressRepositoryExtImplTest {
         "familyId");
 
     transactionInProgress.setTrxDate(
-        OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE));
+        OffsetDateTime.now().minusMinutes(EXPIRATION_MINUTES_IDPAY_CODE).minusSeconds(1));
     transactionInProgressRepository.save(transactionInProgress);
 
     TransactionInProgress resultSecondSave =
@@ -740,14 +736,16 @@ class TransactionInProgressRepositoryExtImplTest {
     trxExpiredExtendedAuth.setExtendedAuthorization(true);
     trxExpiredExtendedAuth.setTrxDate(OffsetDateTime.now()
         .truncatedTo(ChronoUnit.MILLIS)
-        .minusMinutes(EXPIRATION_MINUTES));
+        .minusMinutes(EXPIRATION_MINUTES)
+        .minusSeconds(1));
     transactionInProgressRepository.save(trxExpiredExtendedAuth);
 
     TransactionInProgress trxExpired = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
     trxExpired.setExtendedAuthorization(false);
     trxExpired.setTrxDate(OffsetDateTime.now()
         .truncatedTo(ChronoUnit.MILLIS)
-        .minusMinutes(EXPIRATION_MINUTES));
+        .minusMinutes(EXPIRATION_MINUTES)
+        .minusSeconds(1));
     transactionInProgressRepository.save(trxExpired);
 
     TransactionInProgress expiredTrxResult = transactionInProgressRepository.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES);
@@ -1255,4 +1253,3 @@ class TransactionInProgressRepositoryExtImplTest {
 
 
 }
-
