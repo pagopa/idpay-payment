@@ -63,10 +63,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                                 "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
         transactionInProgress.setAmountCents(amountCents);
-        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
-                transactionInProgress,
-                additionalProperties,
-                BarCodeAdditionalPropertiesOperation.PREVIEW));
 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transactionInProgress, transactionInProgress.getUserId());
@@ -84,6 +80,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
+                transactionInProgress,
+                additionalProperties,
+                BarCodeAdditionalPropertiesOperation.PREVIEW));
 
         return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
@@ -107,15 +107,12 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
-            if (trx == null) {
-                commonAuthService.checkAuth(trxCode, null);
-            }
+            commonAuthService.checkAuth(trxCode, trx);
 
             trx.setAdditionalProperties(validateAdditionalProperties(
                     trx,
                     authBarCodePaymentDTO.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
-            commonAuthService.checkAuth(trxCode, trx);
 
             PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
 
