@@ -200,6 +200,9 @@ app:
     additional-properties-validation:
       default-type: PRODUCT_GTIN
       initiatives: {}
+      # Example:
+      # initiatives:
+      #   "<initiativeId>": PRODUCT_GTIN
   delete:
       paginationSize: ${DELETE_PAGINATION_SIZE:100}
       delayTime: ${DELETE_DELAY_TIME:1000}
