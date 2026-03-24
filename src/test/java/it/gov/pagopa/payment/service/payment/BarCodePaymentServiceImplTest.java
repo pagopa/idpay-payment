@@ -83,7 +83,6 @@ class BarCodePaymentServiceImplTest {
         AuthPaymentDTO result = barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
 
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
-        Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
         Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
         Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
