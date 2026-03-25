@@ -24,6 +24,7 @@ import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationResolver;
+import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationStrategy;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationType;
 import it.gov.pagopa.payment.service.payment.barcode.validation.NoOpBarCodeAdditionalPropertiesValidationStrategy;
 import it.gov.pagopa.payment.service.payment.barcode.validation.ProductGtinBarCodeAdditionalPropertiesValidationStrategy;
@@ -88,6 +89,10 @@ class BarCodeAuthPaymentServiceImplTest {
     private DecryptRestConnector decryptRestConnector;
     @Mock
     private TransactionInProgressRepository transaction;
+    @Mock
+    private BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolverMock;
+    @Mock
+    private BarCodeAdditionalPropertiesValidationStrategy additionalPropertiesValidationStrategyMock;
 
     private BarCodeAdditionalPropertiesValidationProperties validationProperties;
     private BarCodeAuthPaymentServiceImpl barCodeAuthPaymentService;
@@ -285,6 +290,23 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
+    void previewPayment_invalidAdditionalProperties_emptyProductGtin() {
+        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+        when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
+
+        TransactionInvalidException result = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", " "), 95000L));
+
+        assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
+        verify(paymentCheckService, never()).validateProduct(any());
+        verify(decryptRestConnector).getPiiByToken(any());
+    }
+
+    @Test
     void previewPayment_TransactionIsNull() {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.empty());
 
@@ -460,5 +482,35 @@ class BarCodeAuthPaymentServiceImplTest {
         assertNotNull(result);
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
         verify(paymentCheckService, never()).validateProduct(any());
+    }
+
+    @Test
+    void previewPayment_validationStrategyReturnsNull_returnsEmptyAdditionalProperties() {
+        BarCodeAuthPaymentServiceImpl service = new BarCodeAuthPaymentServiceImpl(
+                barCodeAuthorizationExpiredServiceMock,
+                merchantConnector,
+                transaction,
+                commonAuthServiceMock,
+                decryptRestConnector,
+                additionalPropertiesValidationResolverMock,
+                auditUtilitiesMock);
+
+        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
+
+        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+        when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
+        when(additionalPropertiesValidationResolverMock.resolve(transactionInProgress.getInitiativeId()))
+                .thenReturn(additionalPropertiesValidationStrategyMock);
+        when(additionalPropertiesValidationStrategyMock.validateAndEnrich(any())).thenReturn(null);
+
+        PreviewPaymentResultDTO result = service.previewPayment("trxCode", Map.of("customField", "customValue"), 90000L);
+
+        assertNotNull(result);
+        assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
+        assertEquals(Map.of(), result.getAdditionalProperties());
+        verify(additionalPropertiesValidationResolverMock).resolve(transactionInProgress.getInitiativeId());
+        verify(additionalPropertiesValidationStrategyMock).validateAndEnrich(any());
     }
 }

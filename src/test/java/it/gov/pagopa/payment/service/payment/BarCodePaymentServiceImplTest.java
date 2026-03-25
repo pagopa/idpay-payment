@@ -100,6 +100,20 @@ class BarCodePaymentServiceImplTest {
     }
 
     @Test
+    void retriveVoucher_ok() {
+        TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
+
+        Mockito.when(barCodeCaptureService.retriveVoucher("initiativeId", "trxCode", "userId"))
+                .thenReturn(response);
+
+        TransactionBarCodeResponse result = barCodePaymentService.retriveVoucher("initiativeId", "trxCode", "userId");
+
+        Assertions.assertEquals(response, result);
+        Mockito.verify(barCodeCaptureService).retriveVoucher("initiativeId", "trxCode", "userId");
+        Mockito.verifyNoMoreInteractions(barCodeCaptureService);
+    }
+
+    @Test
     void previewPayment_ok() {
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
