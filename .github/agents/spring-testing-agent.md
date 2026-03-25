@@ -63,6 +63,7 @@ For controller tests, follow nearby examples:
 - Match the style of the surrounding package. This repository often uses JUnit assertions, `MockMvc` status assertions, and Mockito `verify`.
 - Keep test names descriptive and consistent with nearby tests.
 - Prefer clarity over clever abstractions.
+- In `assertThrows(...)` and similar exception assertions, keep the lambda body to a single invocation that can throw. Build request DTOs, maps, records, or other inputs before the assertion so Sonar does not flag the test for multiple potentially throwing calls inside the lambda.
 
 ## How to Choose the Right Test Type
 
