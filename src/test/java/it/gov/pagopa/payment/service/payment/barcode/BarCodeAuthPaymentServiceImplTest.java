@@ -297,9 +297,10 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
+        Map<String, String> additionalProperties = Map.of("productGtin", " ");
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class,
-                () -> barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", " "), 95000L));
+                () -> barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 95000L));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
         verify(paymentCheckService, never()).validateProduct(any());
@@ -503,7 +504,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
         when(additionalPropertiesValidationResolverMock.resolve(transactionInProgress.getInitiativeId()))
                 .thenReturn(additionalPropertiesValidationStrategyMock);
-        when(additionalPropertiesValidationStrategyMock.validateAndEnrich(any())).thenReturn(null);
+        when(additionalPropertiesValidationStrategyMock.validateAndEnrich(any(), any())).thenReturn(null);
 
         PreviewPaymentResultDTO result = service.previewPayment("trxCode", Map.of("customField", "customValue"), 90000L);
 
@@ -511,6 +512,6 @@ class BarCodeAuthPaymentServiceImplTest {
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
         assertEquals(Map.of(), result.getAdditionalProperties());
         verify(additionalPropertiesValidationResolverMock).resolve(transactionInProgress.getInitiativeId());
-        verify(additionalPropertiesValidationStrategyMock).validateAndEnrich(any());
+        verify(additionalPropertiesValidationStrategyMock).validateAndEnrich(any(), any());
     }
 }

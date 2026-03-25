@@ -6,5 +6,5 @@ public interface BarCodeAdditionalPropertiesValidationStrategy {
 
     BarCodeAdditionalPropertiesValidationType getValidationType();
 
-    Map<String, String> validateAndEnrich(BarCodeAdditionalPropertiesValidationInput input);
+    Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation);
 }

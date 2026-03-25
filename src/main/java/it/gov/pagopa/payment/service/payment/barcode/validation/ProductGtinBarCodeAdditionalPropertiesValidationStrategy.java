@@ -29,17 +29,17 @@ public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements
     }
 
     @Override
-    public Map<String, String> validateAndEnrich(BarCodeAdditionalPropertiesValidationInput input) {
-        String productGtin = sanitizeString(input.additionalProperties() != null ? input.additionalProperties().get(PRODUCT_GTIN_KEY) : null);
+    public Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation) {
+        String productGtin = sanitizeString(additionalProperties != null ? additionalProperties.get(PRODUCT_GTIN_KEY) : null);
         if (StringUtils.isBlank(productGtin)) {
-            throw invalidAdditionalProperties(input.operation());
+            throw invalidAdditionalProperties(operation);
         }
 
         ProductDTO productDTO = paymentCheckService.validateProduct(productGtin);
-        Map<String, String> additionalProperties = new HashMap<>();
-        additionalProperties.put(PRODUCT_NAME_KEY, productDTO.getProductName());
-        additionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
-        return additionalProperties;
+        Map<String, String> enrichedAdditionalProperties = new HashMap<>();
+        enrichedAdditionalProperties.put(PRODUCT_NAME_KEY, productDTO.getProductName());
+        enrichedAdditionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
+        return enrichedAdditionalProperties;
     }
 
     private static TransactionInvalidException invalidAdditionalProperties(BarCodeAdditionalPropertiesOperation operation) {

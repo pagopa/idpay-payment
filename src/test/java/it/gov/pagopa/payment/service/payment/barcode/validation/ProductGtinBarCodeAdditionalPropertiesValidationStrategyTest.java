@@ -37,10 +37,7 @@ class ProductGtinBarCodeAdditionalPropertiesValidationStrategyTest {
     @Test
     void validateAndEnrich_shouldThrowForMissingProductGtinDuringPreview() {
         TransactionInvalidException result = Assertions.assertThrows(TransactionInvalidException.class,
-                () -> strategy.validateAndEnrich(new BarCodeAdditionalPropertiesValidationInput(
-                        null,
-                        null,
-                        BarCodeAdditionalPropertiesOperation.PREVIEW)));
+                () -> strategy.validateAndEnrich(null, BarCodeAdditionalPropertiesOperation.PREVIEW));
 
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
         Assertions.assertTrue(result.getMessage().contains("preview"));
@@ -51,10 +48,9 @@ class ProductGtinBarCodeAdditionalPropertiesValidationStrategyTest {
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
         when(paymentCheckService.validateProduct("123123")).thenReturn(productDTO);
 
-        Map<String, String> result = strategy.validateAndEnrich(new BarCodeAdditionalPropertiesValidationInput(
-                null,
+        Map<String, String> result = strategy.validateAndEnrich(
                 Map.of("productGtin", "123123"),
-                BarCodeAdditionalPropertiesOperation.AUTHORIZE));
+                BarCodeAdditionalPropertiesOperation.AUTHORIZE);
 
         Assertions.assertEquals(productDTO.getProductName(), result.get("productName"));
         Assertions.assertEquals(productDTO.getGtinCode(), result.get("productGtin"));

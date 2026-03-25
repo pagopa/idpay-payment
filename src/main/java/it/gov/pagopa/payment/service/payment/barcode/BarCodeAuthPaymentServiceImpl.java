@@ -15,7 +15,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesOperation;
-import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationInput;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationResolver;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -142,7 +141,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                              BarCodeAdditionalPropertiesOperation operation) {
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(trx.getInitiativeId())
-                .validateAndEnrich(new BarCodeAdditionalPropertiesValidationInput(trx, additionalProperties, operation));
+                .validateAndEnrich(additionalProperties, operation);
         if (validatedAdditionalProperties == null) {
             return Collections.emptyMap();
         }
