@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Data
 public class BarCodeAdditionalPropertiesValidationProperties {
 
-    private BarCodeAdditionalPropertiesValidationType defaultType = BarCodeAdditionalPropertiesValidationType.PRODUCT_GTIN;
+    private BarCodeAdditionalPropertiesValidationType defaultType = BarCodeAdditionalPropertiesValidationType.NONE;
     private Map<String, BarCodeAdditionalPropertiesValidationType> initiatives = new HashMap<>();
 
     public BarCodeAdditionalPropertiesValidationType resolveValidationType(String initiativeId) {

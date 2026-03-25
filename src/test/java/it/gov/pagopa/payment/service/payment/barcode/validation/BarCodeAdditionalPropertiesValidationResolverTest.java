@@ -33,7 +33,19 @@ class BarCodeAdditionalPropertiesValidationResolverTest {
     void resolve_shouldReturnInitiativeSpecificStrategy() {
         when(noOpStrategy.getValidationType()).thenReturn(BarCodeAdditionalPropertiesValidationType.NONE);
         when(productGtinStrategy.getValidationType()).thenReturn(BarCodeAdditionalPropertiesValidationType.PRODUCT_GTIN);
-        properties.setInitiatives(Map.of("INITIATIVE_ID", BarCodeAdditionalPropertiesValidationType.NONE));
+        properties.setInitiatives(Map.of("INITIATIVE_ID", BarCodeAdditionalPropertiesValidationType.PRODUCT_GTIN));
+
+        BarCodeAdditionalPropertiesValidationResolver resolver = new BarCodeAdditionalPropertiesValidationResolver(
+                List.of(noOpStrategy, productGtinStrategy),
+                properties);
+
+        Assertions.assertSame(productGtinStrategy, resolver.resolve("INITIATIVE_ID"));
+    }
+
+    @Test
+    void resolve_shouldReturnDefaultNoneStrategyWhenInitiativeIsNotConfigured() {
+        when(noOpStrategy.getValidationType()).thenReturn(BarCodeAdditionalPropertiesValidationType.NONE);
+        when(productGtinStrategy.getValidationType()).thenReturn(BarCodeAdditionalPropertiesValidationType.PRODUCT_GTIN);
 
         BarCodeAdditionalPropertiesValidationResolver resolver = new BarCodeAdditionalPropertiesValidationResolver(
                 List.of(noOpStrategy, productGtinStrategy),

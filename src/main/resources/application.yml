@@ -198,8 +198,9 @@ app:
       authorizationMinutes: ${BAR_CODE_PAYMENT_AUTH_EXPIRE_MINUTES:${PAYMENT_AUTH_EXPIRE_MINUTES:5}}
       extendedAuthorizationMinutes: ${BAR_CODE_PAYMENT_EXTENDED_AUTH_EXPIRE_MINUTES:${PAYMENT_EXTENDED_AUTH_EXPIRE_MINUTES:21600}}
     additional-properties-validation:
-      default-type: PRODUCT_GTIN
+      default-type: NONE
       initiatives: {}
+      # Initiative IDs not listed here use the NONE strategy.
       # Example:
       # initiatives:
       #   "<initiativeId>": PRODUCT_GTIN
