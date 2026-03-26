@@ -7,7 +7,7 @@ import org.awaitility.core.ConditionTimeoutException;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -36,7 +36,7 @@ public final class TestUtils {
     /**
      * applications's objectMapper
      */
-    public static JsonMapper objectMapper = new JsonMapper();
+    public static ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * It will assert not null on all o's fields

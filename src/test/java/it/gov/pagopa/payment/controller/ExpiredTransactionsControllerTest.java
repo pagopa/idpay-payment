@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,7 +32,7 @@ public class ExpiredTransactionsControllerTest {
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
 
     @Autowired
-    private JsonMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     @Autowired
     private MockMvc mockMvc;
