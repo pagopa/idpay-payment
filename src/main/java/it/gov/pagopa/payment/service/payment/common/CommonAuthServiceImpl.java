@@ -135,7 +135,7 @@ public class CommonAuthServiceImpl {
             authPaymentDTO.setRewards(Collections.emptyMap());
             authPaymentDTO.setRewardCents(null);
             authPaymentDTO.setCounters(null);
-            authPaymentDTO.setCounterVersion(0);
+            authPaymentDTO.setCounterVersion(0L);
         } else {
             authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
             authPaymentDTO.setCounterVersion(authPaymentDTO.getCounters().getVersion());
