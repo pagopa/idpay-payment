@@ -59,7 +59,7 @@ public class TransactionInProgress {
   private String initiativeName;
   private String businessName;
   private Long rewardCents;
-  private long counterVersion;
+  private Long counterVersion;
   @Builder.Default
   private List<String> rejectionReasons = new ArrayList<>();
   private String userId;
