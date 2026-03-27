@@ -60,7 +60,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 @WebMvcTest(value = {BarCodePaymentControllerImpl.class}, excludeAutoConfiguration = {UserDetailsServiceAutoConfiguration.class, SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
@@ -77,7 +77,7 @@ class BarCodePaymentControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private JsonMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     @Test
     void captureCommonTransactionByTrxCode() throws Exception {

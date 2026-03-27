@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+
 import java.util.List;
 
 public class AuthPaymentResponseDTOFaker {
@@ -13,13 +14,14 @@ public class AuthPaymentResponseDTOFaker {
   public static AuthPaymentResponseDTO.AuthPaymentResponseDTOBuilder mockInstanceBuilder(Integer bias, SyncTrxStatus status) {
     Reward reward = RewardFaker.mockInstance(bias);
     return AuthPaymentResponseDTO.builder()
-        .transactionId("TRANSACTION%d_qr-code".formatted(bias))
-        .initiativeId("INITIATIVEID%d".formatted(bias))
-        .userId("USERID%d".formatted(bias))
-        .effectiveAmountCents(1000L)
-        .reward(reward)
-        .rejectionReasons(List.of())
-        .amountCents(1000L)
-        .status(status);
+            .transactionId("TRANSACTION%d_qr-code".formatted(bias))
+            .initiativeId("INITIATIVEID%d".formatted(bias))
+            .userId("USERID%d".formatted(bias))
+            .effectiveAmountCents(1000L)
+            .reward(reward)
+            .rejectionReasons(List.of())
+            .amountCents(1000L)
+            .counterVersion(0L)
+            .status(status);
   }
 }

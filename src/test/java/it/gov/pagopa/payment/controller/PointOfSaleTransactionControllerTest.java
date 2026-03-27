@@ -27,7 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -44,7 +44,7 @@ class PointOfSaleTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private JsonMapper objectMapper;
+    private ObjectMapper objectMapper;
     @MockitoBean
     private PointOfSaleTransactionService pointOfSaleTransactionServiceMock;
     @MockitoBean

@@ -23,7 +23,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -42,7 +42,7 @@ class IdPayCodePaymentControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private JsonMapper objectMapper;
+  private ObjectMapper objectMapper;
   @Test
   void relateUser_testMandatoryHeaders() throws Exception {
 

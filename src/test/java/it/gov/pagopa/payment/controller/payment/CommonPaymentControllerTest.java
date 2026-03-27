@@ -31,7 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -73,7 +73,7 @@ class CommonPaymentControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private JsonMapper objectMapper;
+  private ObjectMapper objectMapper;
 
   private static final String ACQUIRER_ID = "ACQUIRERID1";
   private static final String ID_TRX_ISSUER = "IDTRXISSUER1";

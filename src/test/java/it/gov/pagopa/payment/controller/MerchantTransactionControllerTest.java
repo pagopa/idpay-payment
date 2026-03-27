@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
 
@@ -33,7 +33,7 @@ class MerchantTransactionControllerTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
-    private JsonMapper objectMapper;
+    private ObjectMapper objectMapper;
     @MockitoBean
     private MerchantTransactionService merchantTransactionServiceMock;
     private static final String INITIATIVE_ID = "INITIATIVE_ID";
