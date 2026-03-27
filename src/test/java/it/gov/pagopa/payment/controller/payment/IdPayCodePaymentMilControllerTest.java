@@ -25,7 +25,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -45,7 +45,7 @@ class IdPayCodePaymentMilControllerTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private JsonMapper objectMapper;
+  private ObjectMapper objectMapper;
   private static final String MERCHANT_ID = "MERCHANTID1";
   private static final Object TRANSACTION_ID = "TRANSACTIONID1";
 

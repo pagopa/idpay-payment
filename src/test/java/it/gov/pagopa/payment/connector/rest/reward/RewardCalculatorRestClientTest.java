@@ -17,7 +17,7 @@ import org.mockito.ArgumentMatchers;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD;
 import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED;
@@ -36,14 +36,14 @@ class RewardCalculatorRestClientTest{
 
     private RewardCalculatorConnector rewardCalculatorConnector;
 
-    private JsonMapper objectMapper;
+    private ObjectMapper objectMapper;
 
     private RewardCalculatorMapper rewardCalculatorMapper;
 
     @BeforeEach
     void setUp() {
         rewardCalculatorRestClient = mock(RewardCalculatorRestClient.class);
-        objectMapper = mock(JsonMapper.class);
+        objectMapper = mock(ObjectMapper.class);
         rewardCalculatorMapper = mock(RewardCalculatorMapper.class);
         rewardCalculatorConnector = new RewardCalculatorConnectorImpl(rewardCalculatorRestClient, objectMapper, rewardCalculatorMapper);
     }

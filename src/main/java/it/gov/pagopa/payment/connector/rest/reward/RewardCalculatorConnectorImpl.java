@@ -17,7 +17,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import tools.jackson.core.JacksonException;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -30,11 +30,11 @@ import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR
 public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector {
 
     private final RewardCalculatorRestClient restClient;
-    private final JsonMapper objectMapper;
+    private final ObjectMapper objectMapper;
     private final RewardCalculatorMapper requestMapper;
 
     public RewardCalculatorConnectorImpl(RewardCalculatorRestClient restClient,
-                                         JsonMapper objectMapper, RewardCalculatorMapper requestMapper) {
+                                         ObjectMapper objectMapper, RewardCalculatorMapper requestMapper) {
         this.restClient = restClient;
         this.objectMapper = objectMapper;
         this.requestMapper = requestMapper;
