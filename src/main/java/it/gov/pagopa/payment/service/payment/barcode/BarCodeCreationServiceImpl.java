@@ -53,8 +53,8 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                          TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper,
                                          WalletConnector walletConnector,
                                          TransactionInProgressService transactionInProgressService,
-                                         @Value("${app.barCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
-                                         @Value("${app.barCode.expirations.extendedAuthorizationMinutes}") int extendedAuthorizationExpirationMinutes
+                                         @Value("${app.bar-code.expirations.authorization-minutes}") int authorizationExpirationMinutes,
+                                         @Value("${app.bar-code.expirations.extended-authorization-minutes}") int extendedAuthorizationExpirationMinutes
                                          ) {
 
         this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;

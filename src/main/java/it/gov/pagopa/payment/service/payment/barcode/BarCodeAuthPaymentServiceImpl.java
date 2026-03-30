@@ -1,68 +1,61 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
-import io.micrometer.common.util.StringUtils;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
-import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
+import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesOperation;
+import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationResolver;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
 @Slf4j
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
-    private final PaymentCheckService paymentCheckService;
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonAuthServiceImpl commonAuthService;
     private final DecryptRestConnector decryptRestConnector;
+    private final BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver;
     protected final AuditUtilities auditUtilities;
 
-    private static final String PRODUCT_GTIN_KEY = "productGtin";
-
-    public BarCodeAuthPaymentServiceImpl(PaymentCheckService paymentCheckService,
-                                         BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
+    public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
                                          TransactionInProgressRepository transactionInProgressRepository,
                                          CommonAuthServiceImpl commonAuthService,
                                          DecryptRestConnector decryptRestConnector,
+                                         BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver,
                                          AuditUtilities auditUtilities) {
-        this.paymentCheckService = paymentCheckService;
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonAuthService = commonAuthService;
         this.decryptRestConnector = decryptRestConnector;
+        this.additionalPropertiesValidationResolver = additionalPropertiesValidationResolver;
         this.auditUtilities = auditUtilities;
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents) {
+    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -86,12 +79,12 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
+                transactionInProgress,
+                additionalProperties,
+                BarCodeAdditionalPropertiesOperation.PREVIEW));
 
-        ProductDTO productDTO = paymentCheckService.validateProduct(productGtin);
-
-        transactionInProgress.setAdditionalProperties(buildAdditionalProperties(productDTO));
-
-        return PreviewPaymentDTO.builder()
+        return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
                 .trxDate(preview.getTrxDate())
                 .status(preview.getStatus())
@@ -99,6 +92,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .rewardCents(preview.getRewardCents())
                 .residualAmountCents(residualAmountCents)
                 .userId(userCf)
+                .additionalProperties(transactionInProgress.getAdditionalProperties())
                 .extendedAuthorization(transactionInProgress.getExtendedAuthorization())
                 .build();
     }
@@ -111,18 +105,13 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
             }
 
-            if(authBarCodePaymentDTO.getAdditionalProperties() == null || StringUtils.isEmpty(authBarCodePaymentDTO.getAdditionalProperties().get(PRODUCT_GTIN_KEY))){
-                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid AdditionalProperties");
-                throw new TransactionInvalidException(ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, "Cannot authorize transaction with invalid AdditionalProperties");
-            }
-
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
             commonAuthService.checkAuth(trxCode, trx);
 
-            String sanitizedProductGtin = sanitizeString(authBarCodePaymentDTO.getAdditionalProperties().get(PRODUCT_GTIN_KEY));
-            ProductDTO productDTO = paymentCheckService.validateProduct(sanitizedProductGtin);
-
-            trx.setAdditionalProperties(buildAdditionalProperties(productDTO));
+            trx.setAdditionalProperties(validateAdditionalProperties(
+                    trx,
+                    authBarCodePaymentDTO.getAdditionalProperties(),
+                    BarCodeAdditionalPropertiesOperation.AUTHORIZE));
 
             PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
 
@@ -147,11 +136,16 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
     }
 
-    private Map<String, String> buildAdditionalProperties(ProductDTO productDTO){
-        Map<String, String> additionalProperties = new HashMap<>();
-        additionalProperties.put("productName", productDTO.getProductName());
-        additionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
-        return additionalProperties;
+    private Map<String, String> validateAdditionalProperties(TransactionInProgress trx,
+                                                             Map<String, String> additionalProperties,
+                                                             BarCodeAdditionalPropertiesOperation operation) {
+        Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
+                .resolve(trx.getInitiativeId())
+                .validateAndEnrich(additionalProperties, operation);
+        if (validatedAdditionalProperties == null) {
+            return Collections.emptyMap();
+        }
+        return validatedAdditionalProperties;
     }
 
     private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {
