@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "app.barCode.additional-properties-validation")
+@ConfigurationProperties(prefix = "app.bar-code.additional-properties-validation")
 @Data
 public class BarCodeAdditionalPropertiesValidationProperties {
 

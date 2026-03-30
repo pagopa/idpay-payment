@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 public class BarCodeAuthorizationExpiredServiceImpl extends CommonAuthorizationExpiredServiceImpl implements BarCodeAuthorizationExpiredService {
 
     public BarCodeAuthorizationExpiredServiceImpl(
-            @Value("${app.barCode.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
+            @Value("${app.bar-code.expirations.authorization-minutes}") long authorizationExpirationMinutes,
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities) {
