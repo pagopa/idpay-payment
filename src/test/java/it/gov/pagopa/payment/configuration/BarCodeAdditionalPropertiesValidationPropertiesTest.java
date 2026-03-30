@@ -11,8 +11,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @TestPropertySource(properties = {
-        "app.barCode.additional-properties-validation.default-type=PRODUCT_GTIN",
-        "app.barCode.additional-properties-validation.initiatives.INITIATIVE_A=NONE"
+        "app.bar-code.additional-properties-validation.default-type=PRODUCT_GTIN",
+        "app.bar-code.additional-properties-validation.initiatives.INITIATIVE_A=NONE"
 })
 @ExtendWith(SpringExtension.class)
 @EnableConfigurationProperties(BarCodeAdditionalPropertiesValidationProperties.class)
