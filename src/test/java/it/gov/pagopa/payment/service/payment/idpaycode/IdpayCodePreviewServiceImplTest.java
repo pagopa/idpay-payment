@@ -27,7 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -62,7 +62,7 @@ class IdpayCodePreviewServiceImplTest {
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
         trx.setMerchantId(MERCHANTID);
-        trx.setTrxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        trx.setTrxChargeDate(Instant.now().truncatedTo(ChronoUnit.MILLIS));
         Map<String, String> additionalProperties = new HashMap<>();
         additionalProperties.put("description", "abc 1234");
         trx.setAdditionalProperties(additionalProperties);

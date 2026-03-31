@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 class TransactionBarCodeInProgress2TransactionResponseMapperTest {
     private TransactionBarCodeInProgress2TransactionResponseMapper mapper;
@@ -49,7 +49,7 @@ class TransactionBarCodeInProgress2TransactionResponseMapperTest {
         TransactionBarCodeResponse result = mapper.apply(trx);
 
         assertionCommons(trx, result);
-        OffsetDateTime endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 14400);
+        Instant endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 14400);
         Assertions.assertEquals(CommonUtilities.secondsBetween(trx.getTrxDate(), endDate), result.getTrxExpirationSeconds());
 
         TestUtils.checkNotNullFields(result, "voucherAmountCents");

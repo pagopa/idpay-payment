@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Data
@@ -18,7 +18,7 @@ public class ProductDTO {
 
     private String gtinCode;
     private String organizationId;
-    private LocalDateTime registrationDate;
+    private Instant registrationDate;
     private String status;
     private String model;
     private String productGroup;

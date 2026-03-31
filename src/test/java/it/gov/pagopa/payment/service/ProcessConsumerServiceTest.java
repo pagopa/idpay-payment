@@ -13,7 +13,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -33,7 +34,7 @@ class ProcessConsumerServiceTest {
     private static final int PAGE_SIZE = 100;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         processConsumerService = new ProcessConsumerServiceImpl(transactionInProgressRepository,auditUtilities,PAGE_SIZE, 1000);
     }
 
@@ -44,7 +45,7 @@ class ProcessConsumerServiceTest {
         final QueueCommandOperationDTO queueCommandOperationDTO = QueueCommandOperationDTO.builder()
                 .entityId(INITIATIVE_ID)
                 .operationType(operationType)
-                .operationTime(LocalDateTime.now().minusMinutes(5))
+                .operationTime(Instant.now().minus(5, ChronoUnit.MINUTES))
                 .build();
         TransactionInProgress trxInProgress = TransactionInProgress.builder()
                 .id(TRX_ID)
@@ -81,10 +82,10 @@ class ProcessConsumerServiceTest {
         );
     }
 
-    private List<TransactionInProgress> createTransactionInProgressPage(int PAGE_SIZE){
+    private List<TransactionInProgress> createTransactionInProgressPage(int pageSize){
         List<TransactionInProgress> trxPage = new ArrayList<>();
 
-        for(int i=0;i<PAGE_SIZE; i++){
+        for(int i=0;i<pageSize; i++){
             trxPage.add(TransactionInProgress.builder()
                     .id(TRX_ID)
                     .initiativeId(INITIATIVE_ID)

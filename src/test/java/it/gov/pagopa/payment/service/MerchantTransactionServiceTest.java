@@ -1,10 +1,6 @@
 package it.gov.pagopa.payment.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
-
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.connector.encrypt.EncryptRestConnector;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
@@ -13,13 +9,11 @@ import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.MerchantTransactionDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import java.util.Collections;
-import java.util.List;
-
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,11 +21,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class MerchantTransactionServiceTest {
 
-    private final String QRCODE_IMGURL ="QRCODE_IMGURL";
-    private final String QRCODE_TXTURL ="QRCODE_TXTURL";
+    private final String qrcodeImgurl ="QRCODE_IMGURL";
+    private final String qrcodeTxturl ="QRCODE_TXTURL";
     @Mock private EncryptRestConnector encryptRestConnector;
     @Mock private DecryptRestConnector decryptRestConnector;
     @Mock private TransactionInProgressRepository repositoryMock;
@@ -54,18 +54,18 @@ class MerchantTransactionServiceTest {
 
         MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
-        merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction1.setTrxDate(transaction1.getTrxDate());
         merchantTransaction1.setSplitPayment(true);
         merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getRewardCents());
 
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
-        merchantTransaction2.setTrxDate(transaction2.getTrxDate().toLocalDateTime());
+        merchantTransaction2.setTrxDate(transaction2.getTrxDate());
         merchantTransaction2.setFiscalCode(null);
 
 
-        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+        MerchantTransactionsListDTO merchantTransactionsListDTOExpected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction1, merchantTransaction2))
                 .pageSize(10).totalElements(2).totalPages(1).build();
 
@@ -78,7 +78,7 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
 
         assertEquals(2, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
+        assertEquals(merchantTransactionsListDTOExpected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -92,27 +92,27 @@ class MerchantTransactionServiceTest {
 
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1, transaction2));
 
-        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
-        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(QRCODE_TXTURL);
+        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(qrcodeImgurl);
+        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(qrcodeTxturl);
 
         MerchantTransactionDTO merchantTransaction1 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         merchantTransaction1.setUpdateDate(transaction1.getUpdateDate());
-        merchantTransaction1.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction1.setTrxDate(transaction1.getTrxDate());
         merchantTransaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
-        merchantTransaction1.setQrcodePngUrl(QRCODE_IMGURL);
-        merchantTransaction1.setQrcodeTxtUrl(QRCODE_TXTURL);
+        merchantTransaction1.setQrcodePngUrl(qrcodeImgurl);
+        merchantTransaction1.setQrcodeTxtUrl(qrcodeTxturl);
         merchantTransaction1.setSplitPayment(true);
         merchantTransaction1.setResidualAmountCents(transaction1.getAmountCents()-transaction1.getRewardCents());
 
         MerchantTransactionDTO merchantTransaction2 = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction2.setUpdateDate(transaction2.getUpdateDate());
-        merchantTransaction2.setTrxDate(transaction2.getTrxDate().toLocalDateTime());
+        merchantTransaction2.setTrxDate(transaction2.getTrxDate());
         merchantTransaction2.setFiscalCode(null);
         merchantTransaction2.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
-        merchantTransaction2.setQrcodePngUrl(QRCODE_IMGURL);
-        merchantTransaction2.setQrcodeTxtUrl(QRCODE_TXTURL);
+        merchantTransaction2.setQrcodePngUrl(qrcodeImgurl);
+        merchantTransaction2.setQrcodeTxtUrl(qrcodeTxturl);
 
-        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+        MerchantTransactionsListDTO merchantTransactionsListDTOExpected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction1, merchantTransaction2))
                 .pageSize(10).totalElements(2).totalPages(1).build();
 
@@ -125,7 +125,7 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
 
         assertEquals(2, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
+        assertEquals(merchantTransactionsListDTOExpected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -164,25 +164,25 @@ class MerchantTransactionServiceTest {
         transaction1.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(List.of(transaction1));
 
-        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(QRCODE_IMGURL);
-        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(QRCODE_TXTURL);
+        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeImgUrl(Mockito.anyString())).thenReturn(qrcodeImgurl);
+        when(transactionInProgress2TransactionResponseMapperMock.generateTrxCodeTxtUrl(Mockito.anyString())).thenReturn(qrcodeTxturl);
 
         MerchantTransactionDTO merchantTransaction = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
-        merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction.setTrxDate(transaction1.getTrxDate());
         merchantTransaction.setFiscalCode(null);
         merchantTransaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
-        merchantTransaction.setQrcodePngUrl(QRCODE_IMGURL);
-        merchantTransaction.setQrcodeTxtUrl(QRCODE_TXTURL);
+        merchantTransaction.setQrcodePngUrl(qrcodeImgurl);
+        merchantTransaction.setQrcodeTxtUrl(qrcodeTxturl);
 
-        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+        MerchantTransactionsListDTO merchantTransactionsListDTOExpected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction))
                 .pageSize(10).totalElements(1).totalPages(1).build();
 
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", null, null, null);
 
         assertEquals(1, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
+        assertEquals(merchantTransactionsListDTOExpected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -195,18 +195,18 @@ class MerchantTransactionServiceTest {
 
         MerchantTransactionDTO merchantTransaction = MerchantTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         merchantTransaction.setUpdateDate(transaction1.getUpdateDate());
-        merchantTransaction.setTrxDate(transaction1.getTrxDate().toLocalDateTime());
+        merchantTransaction.setTrxDate(transaction1.getTrxDate());
         merchantTransaction.setFiscalCode(null);
 
 
-        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+        MerchantTransactionsListDTO merchantTransactionsListDTOExpected = MerchantTransactionsListDTO.builder()
                 .content(List.of(merchantTransaction))
                 .pageSize(10).totalElements(1).totalPages(1).build();
 
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", null, null, null);
 
         assertEquals(1, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
+        assertEquals(merchantTransactionsListDTOExpected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -215,7 +215,7 @@ class MerchantTransactionServiceTest {
 
         when(repositoryMock.findByFilter(Mockito.any(), Mockito.any())).thenReturn(Collections.emptyList());
 
-        MerchantTransactionsListDTO merchantTransactionsListDTO_expected = MerchantTransactionsListDTO.builder()
+        MerchantTransactionsListDTO merchantTransactionsListDTOExpected = MerchantTransactionsListDTO.builder()
                 .content(Collections.emptyList())
                 .pageSize(10).totalElements(0).totalPages(0).build();
 
@@ -226,7 +226,7 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
 
         assertEquals(0, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
+        assertEquals(merchantTransactionsListDTOExpected, result);
         TestUtils.checkNotNullFields(result);
     }
 

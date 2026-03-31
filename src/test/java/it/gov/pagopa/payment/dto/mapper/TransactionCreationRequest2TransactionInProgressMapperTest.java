@@ -12,8 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 class TransactionCreationRequest2TransactionInProgressMapperTest {
 
@@ -30,7 +29,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
     TransactionCreationRequest transactionCreationRequest =
         TransactionCreationRequestFaker.mockInstance(1);
       MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    OffsetDateTime now = OffsetDateTime.now();
+    Instant now = Instant.now();
     TransactionInProgress result =
         mapper.apply(
             transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", merchantDetailDTO, "IDTRXISSUER");
@@ -38,7 +37,7 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
     assertResponse(transactionCreationRequest, now, merchantDetailDTO, result);
   }
 
-  void assertResponse(TransactionCreationRequest transactionCreationRequest, OffsetDateTime now, MerchantDetailDTO merchantDetailDTO, TransactionInProgress result){
+  void assertResponse(TransactionCreationRequest transactionCreationRequest, Instant now, MerchantDetailDTO merchantDetailDTO, TransactionInProgress result){
       Assertions.assertNotNull(result);
       Assertions.assertNotNull(result.getId());
       Assertions.assertNotNull(result.getCorrelationId());
@@ -56,9 +55,9 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
               merchantDetailDTO.getFiscalCode(), result.getMerchantFiscalCode());
       Assertions.assertEquals(merchantDetailDTO.getVatNumber(), result.getVat());
       Assertions.assertFalse(result.getTrxDate().isBefore(now));
-      Assertions.assertFalse(result.getTrxDate().isAfter(OffsetDateTime.now()));
-      Assertions.assertFalse(result.getUpdateDate().isBefore(now.toLocalDateTime()));
-      Assertions.assertFalse(result.getUpdateDate().isAfter(LocalDateTime.now()));
+      Assertions.assertFalse(result.getTrxDate().isAfter(Instant.now()));
+      Assertions.assertFalse(result.getUpdateDate().isBefore(now));
+      Assertions.assertFalse(result.getUpdateDate().isAfter(Instant.now()));
       Assertions.assertEquals(SyncTrxStatus.CREATED, result.getStatus());
       Assertions.assertEquals(
               PaymentConstants.OPERATION_TYPE_CHARGE, result.getOperationType());

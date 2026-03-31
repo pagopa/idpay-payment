@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 
@@ -45,21 +45,21 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .build();
   }
 
-  public OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress) {
+  public Instant calculateTrxEndDate(TransactionInProgress transactionInProgress) {
     if (Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization())){
       return calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes);
     }
 
-    return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+    return transactionInProgress.getTrxDate().plus(authorizationExpirationMinutes,ChronoUnit.MINUTES);
   }
 
-  public static OffsetDateTime calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
-    OffsetDateTime endDate = transactionInProgress.getInitiativeEndDate() != null ? transactionInProgress.getInitiativeEndDate() : OffsetDateTime.MAX;
-    if(endDate.minusMinutes(authExpirationMinutes).isBefore(transactionInProgress.getTrxDate())){
+  public static Instant calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
+    Instant endDate = transactionInProgress.getInitiativeEndDate() != null ? transactionInProgress.getInitiativeEndDate() : Instant.MAX;
+    if(endDate.minus(authExpirationMinutes,ChronoUnit.MINUTES).isBefore(transactionInProgress.getTrxDate())){
       endDate = transactionInProgress.getInitiativeEndDate();
     } else {
-      endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
+      endDate = transactionInProgress.getTrxDate().plus(authExpirationMinutes,ChronoUnit.MINUTES);
     }
-    return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+    return endDate.truncatedTo(ChronoUnit.DAYS).plus(1,ChronoUnit.DAYS).minusNanos(1);
   }
 }

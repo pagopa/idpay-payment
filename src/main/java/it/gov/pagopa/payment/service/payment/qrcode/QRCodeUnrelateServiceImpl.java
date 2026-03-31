@@ -9,7 +9,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -68,7 +68,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
         trx.setRewards(null);
         trx.setChannel(null);
         trx.setRejectionReasons(Collections.emptyList());
-        trx.setUpdateDate(LocalDateTime.now());
+        trx.setUpdateDate(Instant.now());
         trx.setTrxChargeDate(null);
     }
 

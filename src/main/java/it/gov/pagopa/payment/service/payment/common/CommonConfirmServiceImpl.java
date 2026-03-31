@@ -16,7 +16,8 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 @Slf4j
 @Service("commonConfirm")
@@ -63,7 +64,7 @@ public class CommonConfirmServiceImpl {
 
     public void confirmAuthorizedPayment(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.REWARDED);
-        trx.setElaborationDateTime(LocalDateTime.now());
+        trx.setElaborationDateTime(Instant.now());
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
         sendConfirmPaymentNotification(trx);
 

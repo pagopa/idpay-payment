@@ -13,13 +13,12 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionNotifierServiceTest {
 
-    private final String BINDER ="transaction-outcome";
+    private final String binder ="transaction-outcome";
     @Mock
     private StreamBridge streamBridgeMock;
 
@@ -28,7 +27,7 @@ class TransactionNotifierServiceTest {
     @BeforeEach
     void init() {
 
-        service = new TransactionNotifierServiceImpl(streamBridgeMock,BINDER);
+        service = new TransactionNotifierServiceImpl(streamBridgeMock, binder);
     }
 
     @Test
@@ -38,7 +37,7 @@ class TransactionNotifierServiceTest {
         // When
         boolean result = service.notify(trx,"TEST");
 
-        Mockito.verify(streamBridgeMock).send(Mockito.eq("transactionOutcome-out-0"), Mockito.eq(BINDER), Mockito.<Message<TransactionInProgress>>argThat(m -> m.getPayload().equals(trx)
+        Mockito.verify(streamBridgeMock).send(Mockito.eq("transactionOutcome-out-0"), Mockito.eq(binder), Mockito.<Message<TransactionInProgress>>argThat(m -> m.getPayload().equals(trx)
         ));
 
         // Then

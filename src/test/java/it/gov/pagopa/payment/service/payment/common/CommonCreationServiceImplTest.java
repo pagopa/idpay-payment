@@ -33,7 +33,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -43,7 +44,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CommonCreationServiceImplTest {
 
-  public static final LocalDate TODAY = LocalDate.now();
+  public static final Instant TODAY = Instant.now();
   @Mock
   private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
 
@@ -55,11 +56,11 @@ class CommonCreationServiceImplTest {
   @Mock private MerchantConnector merchantConnectorMock;
   @Mock private TransactionInProgressService transactionInProgressServiceMock;
 
-  CommonCreationServiceImpl CommonCreationService;
+  CommonCreationServiceImpl commonCreationService;
 
   @BeforeEach
   void setUp() {
-    CommonCreationService =
+    commonCreationService =
         new CommonCreationServiceImpl(
                 transactionInProgress2TransactionResponseMapper,
                 transactionCreationRequest2TransactionInProgressMapper,
@@ -91,7 +92,7 @@ class CommonCreationServiceImplTest {
         .thenReturn(trxCreated);
 
     TransactionResponse result =
-        CommonCreationService.createTransaction(
+        commonCreationService.createTransaction(
             trxCreationReq,
             RewardConstants.TRX_CHANNEL_QRCODE,
             "MERCHANTID1",
@@ -107,43 +108,10 @@ class CommonCreationServiceImplTest {
             .initiativeConfig(InitiativeConfig.builder()
                     .initiativeId(initiativeid)
                     .initiativeRewardType(initiativeRewardType)
-                    .startDate(TODAY.minusDays(1))
-                    .endDate(TODAY.plusDays(1))
+                    .startDate(TODAY.minus(1, ChronoUnit.DAYS))
+                    .endDate(TODAY.plus(1,ChronoUnit.DAYS))
                     .build())
             .build();
-  }
-
-  @Test
-  void createTransactionTrxCodeHit() {
-
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
-    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
-    when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
-    when(transactionCreationRequest2TransactionInProgressMapper.apply(
-            any(TransactionCreationRequest.class),
-            eq(RewardConstants.TRX_CHANNEL_QRCODE),
-            anyString(),
-            anyString(),
-            any(MerchantDetailDTO.class),
-            anyString()))
-        .thenReturn(trx);
-    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
-        .thenReturn(trxCreated);
-
-    TransactionResponse result =
-            CommonCreationService.createTransaction(
-            trxCreationReq,
-            RewardConstants.TRX_CHANNEL_QRCODE,
-            "MERCHANTID1",
-            "ACQUIRERID1",
-            "IDTRXISSUER1");
-
-    Assertions.assertNotNull(result);
-    Assertions.assertEquals(trxCreated, result);
   }
 
   @Test
@@ -157,7 +125,7 @@ class CommonCreationServiceImplTest {
         Assertions.assertThrows(
             InitiativeNotfoundException.class,
             () ->
-                    CommonCreationService.createTransaction(
+                    commonCreationService.createTransaction(
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
@@ -178,7 +146,7 @@ class CommonCreationServiceImplTest {
             Assertions.assertThrows(
                 InitiativeNotfoundException.class,
                     () ->
-                            CommonCreationService.createTransaction(
+                            commonCreationService.createTransaction(
                                     trxCreationReq,
                                     RewardConstants.TRX_CHANNEL_QRCODE,
                                     "MERCHANTID1",
@@ -198,7 +166,7 @@ class CommonCreationServiceImplTest {
         Assertions.assertThrows(
             TransactionInvalidException.class,
             () ->
-                    CommonCreationService.createTransaction(
+                    commonCreationService.createTransaction(
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
@@ -210,7 +178,7 @@ class CommonCreationServiceImplTest {
 
   @ParameterizedTest
   @MethodSource("dateArguments")
-  void createTransaction_InvalidDate(LocalDate invalidDate) {
+  void createTransaction_InvalidDate(Instant invalidDate) {
 
     TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
 
@@ -222,7 +190,7 @@ class CommonCreationServiceImplTest {
         Assertions.assertThrows(
             InitiativeInvalidException.class,
             () ->
-                    CommonCreationService.createTransaction(
+                    commonCreationService.createTransaction(
                     trxCreationReq,
                     RewardConstants.TRX_CHANNEL_QRCODE,
                     "MERCHANTID1",
@@ -234,12 +202,12 @@ class CommonCreationServiceImplTest {
 
   private static Stream<Arguments> dateArguments() {
      return Stream.of(
-             Arguments.of(TODAY.plusDays(1)),
-             Arguments.of(TODAY.minusDays(1))
+             Arguments.of(TODAY.plus(1,ChronoUnit.DAYS)),
+             Arguments.of(TODAY.minus(1,ChronoUnit.DAYS))
      );
   }
 
-  private RewardRule buildRuleWithInvalidDate(TransactionCreationRequest trxCreationReq, LocalDate invalidDate) {
+  private RewardRule buildRuleWithInvalidDate(TransactionCreationRequest trxCreationReq, Instant invalidDate) {
     RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
     InitiativeConfig config = rule.getInitiativeConfig();
 

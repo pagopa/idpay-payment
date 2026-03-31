@@ -24,7 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Service("commonInvoice")
@@ -72,7 +73,7 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
+            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plus(minDaysToInvoiceTransaction, ChronoUnit.DAYS).isAfter(Instant.now())) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(trx.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
@@ -83,7 +84,7 @@ public class CommonInvoiceServiceImpl {
 
             // updating the transaction status to invoiced
             trx.setStatus(SyncTrxStatus.INVOICED);
-            trx.setUpdateDate(LocalDateTime.now());
+            trx.setUpdateDate(Instant.now());
             trx.setInvoiceData(InvoiceData.builder()
                 .filename(file.getOriginalFilename())
                 .docNumber(docNumber)
@@ -99,7 +100,7 @@ public class CommonInvoiceServiceImpl {
             }
 
             // sending the transaction invoice notification (to store it in transaction db collection)
-            //sendInvoiceTransactionNotification(trx);
+            // sendInvoiceTransactionNotification(trx);
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(

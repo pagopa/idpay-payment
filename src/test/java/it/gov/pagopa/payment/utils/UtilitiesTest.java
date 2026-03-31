@@ -5,8 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
 import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -38,26 +37,32 @@ class UtilitiesTest {
     @Test
     void getLocalDate_sameDay_inEuropeRome_forMiddayUTC() {
         TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
-        OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC);
+
+        Instant odt = Instant.parse("2025-01-10T12:00:00Z");
 
         LocalDate result = Utilities.getLocalDate(odt);
 
         assertEquals(LocalDate.of(2025, 1, 10), result);
     }
 
+
     @Test
     void getLocalDate_rollsToNextDay_inEuropeRome_forLateEveningUTC() {
         TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
-        OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 23, 30, 0, 0, ZoneOffset.UTC);
+
+        Instant odt = Instant.parse("2025-01-10T23:30:00Z");
 
         LocalDate result = Utilities.getLocalDate(odt);
 
         assertEquals(LocalDate.of(2025, 1, 11), result);
     }
 
+
     @Test
     void getLocalDate_dependsOnSystemTimeZone() {
-        OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 23, 30, 0, 0, ZoneOffset.UTC);
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
+
+        Instant odt = Instant.parse("2025-01-10T23:30:00Z");
 
         TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
         LocalDate ny = Utilities.getLocalDate(odt);

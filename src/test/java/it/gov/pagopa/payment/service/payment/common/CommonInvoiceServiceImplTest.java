@@ -24,7 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -238,7 +239,7 @@ class CommonInvoiceServiceImplTest {
                 merchantConnector
         );
 
-        trx.setElaborationDateTime(LocalDateTime.now().minusDays(1)); // 1 giorno fa rispetto a oggi
+        trx.setElaborationDateTime(Instant.now().minus(1, ChronoUnit.DAYS));
 
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows( OperationNotAllowedException.class, () -> {

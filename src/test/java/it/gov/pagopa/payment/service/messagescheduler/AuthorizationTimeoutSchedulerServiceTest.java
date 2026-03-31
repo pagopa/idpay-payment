@@ -16,7 +16,7 @@ class AuthorizationTimeoutSchedulerServiceTest {
     @Mock
     private MessageSchedulerService messageSchedulerServiceMock;
 
-    private final static int TIMEOUTSECONDS = 30;
+    private static final  int TIMEOUTSECONDS = 30;
 
     @BeforeEach
     void setUp() {

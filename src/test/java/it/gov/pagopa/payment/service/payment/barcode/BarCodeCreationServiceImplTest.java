@@ -34,10 +34,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -47,7 +45,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodeCreationServiceImplTest {
-    public static final LocalDate TODAY = LocalDate.now();
+    public static final Instant TODAY = Instant.now();
     @Mock private RewardRuleRepository rewardRuleRepository;
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock
@@ -121,8 +119,8 @@ class BarCodeCreationServiceImplTest {
                         .initiativeId(initiativeid)
                         .initiativeRewardType(initiativeRewardType)
                         .initiativeName(INITIATIVE_NAME)
-                        .startDate(TODAY.minusDays(1))
-                        .endDate(TODAY.plusDays(1))
+                        .startDate(TODAY.minus(1,ChronoUnit.DAYS))
+                        .endDate(TODAY.plus(1,ChronoUnit.DAYS))
                         .build())
                 .build();
     }
@@ -240,7 +238,7 @@ class BarCodeCreationServiceImplTest {
 
     @ParameterizedTest
     @MethodSource("dateArguments")
-    void createTransaction_InvalidDate(LocalDate invalidDate) {
+    void createTransaction_InvalidDate(Instant invalidDate) {
 
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
@@ -264,12 +262,12 @@ class BarCodeCreationServiceImplTest {
 
     private static Stream<Arguments> dateArguments() {
         return Stream.of(
-                Arguments.of(TODAY.plusDays(1)),
-                Arguments.of(TODAY.minusDays(1))
+                Arguments.of(TODAY.plus(1,ChronoUnit.DAYS)),
+                Arguments.of(TODAY.minus(1,ChronoUnit.DAYS))
         );
     }
 
-    private RewardRule buildRuleWithInvalidDate(TransactionBarCodeCreationRequest trxCreationReq, LocalDate invalidDate) {
+    private RewardRule buildRuleWithInvalidDate(TransactionBarCodeCreationRequest trxCreationReq, Instant invalidDate) {
         RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
         InitiativeConfig config = rule.getInitiativeConfig();
 
@@ -370,7 +368,7 @@ class BarCodeCreationServiceImplTest {
 
     @ParameterizedTest
     @MethodSource("dateArguments")
-    void createExtendedTransaction_InvalidDate(LocalDate invalidDate) {
+    void createExtendedTransaction_InvalidDate(Instant invalidDate) {
 
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
@@ -416,84 +414,98 @@ class BarCodeCreationServiceImplTest {
     @Test
     void shouldReturnTrxDatePlusAuthorizationMinutesWhenNotExtended()  {
         TransactionInProgress  trx =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+        trx.setTrxDate(Instant.now());
         trx.setExtendedAuthorization(false);
 
         InitiativeConfig  initiative  = null;
 
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        Instant  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
 
-        OffsetDateTime  expected = trx.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+        Instant  expected = trx.getTrxDate().plus(authorizationExpirationMinutes,ChronoUnit.MINUTES);
         Assertions.assertEquals(expected, result);
 
     }
 
     @Test
-    void  shouldUseInitiativeEndDateWhenExtendedAndInitiativeEndDateNotNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+
+    void shouldUseInitiativeEndDateWhenExtendedAndInitiativeEndDateNotNull() {
+
+        Instant trxDate = Instant.parse("2026-04-01T13:15:30Z");
+        Instant initiativeEndDate = Instant.parse("2026-04-02T00:00:00Z");
+
+        TransactionInProgress trx = new TransactionInProgress();
+        trx.setTrxDate(trxDate);
         trx.setExtendedAuthorization(true);
 
-        InitiativeConfig  initiative =  new  InitiativeConfig();
-        LocalDate initiativeEndDate = LocalDate.now().plusDays(1);
-        initiative.setEndDate(initiativeEndDate);  //  giorno dopo
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setEndDate(initiativeEndDate);
 
-        OffsetDateTime  offsetEndDate = initiativeEndDate.atStartOfDay().atOffset(ZoneOffset.of("+02:00"));
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        Instant expected = initiativeEndDate
+                .atZone(ZoneId.of("Europe/Rome"))
+                .toLocalDate()
+                .atStartOfDay(ZoneId.of("Europe/Rome"))
+                .toInstant()   // startOfDay(2026-04-02)
+                .plus(1, ChronoUnit.DAYS)
+                .minusNanos(1);  // fine giornata
 
-        OffsetDateTime  expected  = offsetEndDate
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+        Instant result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        Assertions.assertEquals(expected, result);
+    }
+
+
+    @Test
+    void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNotNull()
+    {
+
+        Instant trxDate = Instant.parse("2026-04-01T10:15:00Z");
+        Instant initiativeEndDate = Instant.parse("2026-04-11T00:00:00Z");
+
+        TransactionInProgress trx = new TransactionInProgress();
+        trx.setTrxDate(trxDate);
+        trx.setExtendedAuthorization(true);
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setEndDate(initiativeEndDate);
+
+        Instant result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        Instant expected = trxDate.plusSeconds(extendedAuthorizationExpirationMinutes * 60L);
 
         Assertions.assertEquals(expected, result);
     }
 
     @Test
-    void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNotNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+    void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeNull() {
+
+        Instant trxDate = Instant.parse("2026-04-10T10:00:00Z");
+
+        TransactionInProgress trx = new TransactionInProgress();
+        trx.setTrxDate(trxDate);
         trx.setExtendedAuthorization(true);
 
-        InitiativeConfig  initiative =  new  InitiativeConfig();
-        LocalDate initiativeEndDate = LocalDate.now().plusDays(10);
-        initiative.setEndDate(initiativeEndDate);  //10 giorni dopo
+        InitiativeConfig initiative = null;
 
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        Instant result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime  expected  = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
-
-        Assertions.assertEquals(expected.toLocalDateTime(), result.toLocalDateTime());
-    }
-    @Test
-    void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
-        trx.setExtendedAuthorization(true);
-
-        InitiativeConfig  initiative =  null;
-
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
-
-        OffsetDateTime  expected  = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
+        Instant expected = trxDate.plus(extendedAuthorizationExpirationMinutes, ChronoUnit.MINUTES);
 
         Assertions.assertEquals(expected, result);
     }
 
-    void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+    @Test
+    void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNull() {
+        Instant trxDate = Instant.parse("2026-04-10T13:15:00Z");
+
+        TransactionInProgress trx = new TransactionInProgress();
+        trx.setTrxDate(trxDate);
         trx.setExtendedAuthorization(true);
 
-        InitiativeConfig  initiative =  new  InitiativeConfig();
+        InitiativeConfig initiative = new InitiativeConfig();
 
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        Instant result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime  expected  = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
+        Instant expected = trxDate.plusSeconds(extendedAuthorizationExpirationMinutes * 60L);
 
         Assertions.assertEquals(expected, result);
     }

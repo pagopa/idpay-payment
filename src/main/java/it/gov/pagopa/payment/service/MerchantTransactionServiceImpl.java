@@ -85,7 +85,7 @@ private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgr
                 transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                 transaction.getAmountCents(),
                 transaction.getRewardCents() != null ? transaction.getRewardCents() : Long.valueOf(0),
-                transaction.getTrxDate().toLocalDateTime(),
+                transaction.getTrxDate(),
                 CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),
                 transaction.getStatus(),

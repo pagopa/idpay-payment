@@ -12,8 +12,9 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -110,7 +111,7 @@ public final class TestUtils {
     public static void wait(long timeout, TimeUnit timeoutUnit) {
         try{
             Awaitility.await().timeout(timeout, timeoutUnit).until(()->false);
-        } catch (ConditionTimeoutException _){
+        } catch (ConditionTimeoutException ex){
             // Do Nothing
         }
     }
@@ -137,8 +138,19 @@ public final class TestUtils {
     }
 
     /** It will truncate timestamp value to MINUTES multiple of 10 */
-    public static LocalDateTime truncateTimestamp(LocalDateTime timestamp) {
-        return timestamp.truncatedTo(ChronoUnit.MINUTES).withMinute(timestamp.getMinute() / 10 * 10);
+    public static Instant truncateTimestamp(Instant timestamp) {
+        ZoneId zone = ZoneId.of("Europe/Rome");
+
+        ZonedDateTime zdt = timestamp.atZone(zone);
+
+        int roundedMinute = (zdt.getMinute() / 10) * 10;
+
+        ZonedDateTime truncated = zdt
+                .withMinute(roundedMinute)
+                .withSecond(0)
+                .withNano(0);
+
+        return truncated.toInstant();
     }
 
     /** It will extract the response body and verify the HTTP status code */

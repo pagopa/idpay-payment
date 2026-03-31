@@ -17,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 
 @Slf4j
@@ -58,7 +59,7 @@ public class CommonPreAuthServiceImpl{
 
   public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel, SyncTrxStatus status) {
     try {
-    trx.setTrxChargeDate(OffsetDateTime.now());
+    trx.setTrxChargeDate(Instant.now());
     trx.setChannel(channel);
     AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
 
@@ -105,7 +106,7 @@ public class CommonPreAuthServiceImpl{
       throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
-    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
+    if (trx.getTrxDate().plus(authorizationExpirationMinutes, ChronoUnit.MINUTES).isBefore(Instant.now())) {
       throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trx.getId()));
     }
 

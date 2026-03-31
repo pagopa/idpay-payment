@@ -15,17 +15,17 @@ class TrxCodeGenUtilTest {
     @Mock
     private TrxCodeGenUtil trxCodeGenUtil;
 
-    private final Integer TRXCODELENGTH = 8;
+    private final Integer trxcodelength = 8;
 
     @BeforeEach
-    public void setUp(){
-        trxCodeGenUtil = new TrxCodeGenUtil(TRXCODELENGTH);
+    void setUp(){
+        trxCodeGenUtil = new TrxCodeGenUtil(trxcodelength);
     }
      @Test
     void createRandomTrxCode() {
          String trxCode = trxCodeGenUtil.get();
          assertNotNull(trxCode);
-         assertEquals(TRXCODELENGTH,trxCode.length());
+         assertEquals(trxcodelength,trxCode.length());
     }
 
 }

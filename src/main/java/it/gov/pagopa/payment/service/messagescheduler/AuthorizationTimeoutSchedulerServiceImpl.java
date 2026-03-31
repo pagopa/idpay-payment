@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Service
 @Slf4j
@@ -25,7 +25,7 @@ public class AuthorizationTimeoutSchedulerServiceImpl implements AuthorizationTi
         ServiceBusMessage message = new ServiceBusMessage(body);
         message.getApplicationProperties().put(PaymentConstants.MESSAGE_TOPIC,PaymentConstants.TIMEOUT_PAYMENT);
         log.info("[SCHEDULE_MESSAGE][TIMEOUT_AUTH] Scheduled message with trxId: {}",body);
-        return messageSchedulerService.scheduleMessage(message,OffsetDateTime.now().plusSeconds(timeoutSeconds));
+        return messageSchedulerService.scheduleMessage(message,Instant.now().plusSeconds(timeoutSeconds));
     }
 
     @Override

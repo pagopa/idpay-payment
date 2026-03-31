@@ -16,8 +16,6 @@ import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.OffsetDateTime;
-import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,6 +23,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.Instant;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -117,7 +118,7 @@ class BarCodePaymentServiceImplTest {
     void previewPayment_ok() {
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(Instant.now())
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(500L)
                 .rewardCents(100L)

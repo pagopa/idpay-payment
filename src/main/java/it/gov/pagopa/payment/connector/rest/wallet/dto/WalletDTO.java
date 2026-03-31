@@ -5,8 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 @Data
 @Builder
@@ -19,13 +19,13 @@ public class WalletDTO {
     private String initiativeName;
     private String status;
     private String iban;
-    private LocalDate endDate;
+    private Instant endDate;
     private int nInstr;
     private Long amountCents;
     private Long initialAmountCents; // total budget assigned
     private Long accruedCents;
     private Long refundedCents;
-    private LocalDateTime lastCounterUpdate;
+    private Instant lastCounterUpdate;
     private String initiativeRewardType;
     private String logoURL;
     private String organizationName;

@@ -46,7 +46,7 @@ public class MongoRequestRateTooLargeRetryerTest {
   private MemoryAppender memoryAppender;
 
   @BeforeEach
-  public void setup() {
+  void setup() {
     ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(
         MongoRequestRateTooLargeRetryer.class.getName());
     memoryAppender = new MemoryAppender();
@@ -259,7 +259,7 @@ public class MongoRequestRateTooLargeRetryerTest {
   }
 
   private void assertLogMessage(String expectedMessage, long maxRetryOrMaxMillisElapsed) {
-//    assertEquals(counter, memoryAppender.getLoggedEvents().size());
+
     for (int i = 0; i < memoryAppender.getLoggedEvents().size(); i++) {
 
       String logMessage = memoryAppender.getLoggedEvents().get(i).getFormattedMessage();

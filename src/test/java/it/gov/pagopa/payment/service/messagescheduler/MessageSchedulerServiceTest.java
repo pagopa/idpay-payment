@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 import static org.mockito.Mockito.*;
 
@@ -29,7 +29,7 @@ class MessageSchedulerServiceTest {
     @Test
     void scheduleMessage(){
         when(serviceBusSenderClientMock.scheduleMessage(Mockito.any(), Mockito.any())).thenReturn(1L);
-        messageSchedulerService.scheduleMessage(new ServiceBusMessage("TEST"), OffsetDateTime.now());
+        messageSchedulerService.scheduleMessage(new ServiceBusMessage("TEST"), Instant.now());
 
         verify(serviceBusSenderClientMock, times(1)).scheduleMessage(Mockito.any(), Mockito.any());
     }

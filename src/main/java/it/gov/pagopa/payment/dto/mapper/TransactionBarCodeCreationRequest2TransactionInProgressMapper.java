@@ -8,7 +8,7 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,12 +22,12 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
             String initiativeName,
             Map<String, String> additionalProperties,
             boolean extendedAuthorization,
-            OffsetDateTime trxEndDate
+            Instant trxEndDate
     ) {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
 
-        OffsetDateTime now = OffsetDateTime.now();
+        Instant now = Instant.now();
 
         return TransactionInProgress.builder()
                 .id(id)
@@ -41,7 +41,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .channel(channel)
                 .userId(userId)
-                .updateDate(now.toLocalDateTime())
+                .updateDate(now)
                 .additionalProperties(additionalProperties)
                 .extendedAuthorization(extendedAuthorization)
                 .trxEndDate(trxEndDate)

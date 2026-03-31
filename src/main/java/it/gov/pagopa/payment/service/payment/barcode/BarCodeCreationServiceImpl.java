@@ -16,8 +16,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeType;
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeValidPeriod;
@@ -71,7 +71,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                         String channel,
                                                         String userId) {
 
-        LocalDate today = LocalDate.now();
+        Instant today = Instant.now();
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -95,7 +95,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                                         String channel,
                                                                         String userId) {
 
-        LocalDate today = LocalDate.now();
+        Instant today = Instant.now();
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -112,9 +112,9 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     public TransactionInProgress createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
                                                                 String channel,
                                                                 String userId,
-                                                                OffsetDateTime trxEndDate) {
+                                                                Instant trxEndDate) {
 
-        LocalDate today = LocalDate.now();
+        Instant today = Instant.now();
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -130,7 +130,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
     @NotNull
     private TransactionInProgress generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
-        OffsetDateTime trxEndDate = null;
+        Instant trxEndDate = null;
         TransactionInProgress trx =
                 transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                         trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
@@ -143,26 +143,52 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         return trx;
     }
 
-    public OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress,  InitiativeConfig initiative) {
-        if (Boolean.FALSE.equals(transactionInProgress.getExtendedAuthorization())){
-            return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+    public Instant calculateTrxEndDate(TransactionInProgress tx,
+                                       InitiativeConfig initiative) {
 
+
+        if (Boolean.FALSE.equals(tx.getExtendedAuthorization())) {
+            return tx.getTrxDate().plusSeconds(authorizationExpirationMinutes * 60L);
         }
 
-        LocalDate  localEndDate = LocalDate.MAX;
-        if (initiative != null){
-            localEndDate = initiative.getEndDate() != null ? initiative.getEndDate() : LocalDate.MAX;
+        LocalDate endLocalDate;
+
+        if (initiative != null && initiative.getEndDate() != null) {
+            endLocalDate = initiative.getEndDate()
+                    .atZone(ZoneId.of("Europe/Rome"))
+                    .toLocalDate();
+
+        } else {
+            endLocalDate = LocalDate.MAX;
         }
-        OffsetDateTime  offsetEndDate = localEndDate.atStartOfDay().atOffset(ZoneOffset.of("+02:00"));
-        if(!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transactionInProgress.getTrxDate()))){
-            offsetEndDate = transactionInProgress.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes);
+
+
+        Instant endOfDayInstant;
+
+        if (endLocalDate.equals(LocalDate.MAX)) {
+            endOfDayInstant = Instant.MAX;
+        } else {
+            Instant startOfDay = endLocalDate
+                    .atStartOfDay(ZoneId.of("Europe/Rome"))
+                    .toInstant();
+
+            endOfDayInstant = startOfDay
+                    .plus(1, ChronoUnit.DAYS)
+                    .minusNanos(1);
         }
-        return offsetEndDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+
+        Instant boundary = endOfDayInstant.minusSeconds(extendedAuthorizationExpirationMinutes * 60L);
+
+        if (!boundary.isBefore(tx.getTrxDate())) {
+            return tx.getTrxDate().plusSeconds(extendedAuthorizationExpirationMinutes * 60L);
+        }
+
+        return endOfDayInstant;
     }
 
 
     @Nullable
-    private InitiativeConfig checkInitiative(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, LocalDate today) {
+    private InitiativeConfig checkInitiative(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, Instant today) {
         InitiativeConfig initiative = rewardRuleRepository.findById(trxBarCodeCreationRequest.getInitiativeId())
                 .map(RewardRule::getInitiativeConfig)
                 .orElse(null);

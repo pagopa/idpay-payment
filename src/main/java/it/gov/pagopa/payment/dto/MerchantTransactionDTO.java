@@ -3,14 +3,14 @@ package it.gov.pagopa.payment.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.constraints.NotNull;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor
@@ -25,10 +25,10 @@ public class MerchantTransactionDTO {
     private Long effectiveAmountCents;
     private Long rewardAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime trxDate;
+    private Instant trxDate;
     private Long trxExpirationSeconds;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private LocalDateTime updateDate;
+    private Instant updateDate;
     private SyncTrxStatus status;
     private Boolean splitPayment;
     private Long residualAmountCents;

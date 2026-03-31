@@ -9,11 +9,12 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -44,8 +45,8 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
             deleteUnusedVouchers(trx);
 
             trx.setStatus(SyncTrxStatus.CAPTURED);
-            trx.setElaborationDateTime(LocalDateTime.now());
-            trx.setUpdateDate(LocalDateTime.now());
+            trx.setElaborationDateTime(Instant.now());
+            trx.setUpdateDate(Instant.now());
             repository.save(trx);
 
             auditUtilities.logCapturePayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());

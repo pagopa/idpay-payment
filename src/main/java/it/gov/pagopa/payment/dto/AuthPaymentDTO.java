@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +22,7 @@ public class AuthPaymentDTO {
 
   private String id;
   private String trxCode;
-  private OffsetDateTime trxDate;
+  private Instant trxDate;
   private String initiativeId;
   private String initiativeName;
   private String businessName;

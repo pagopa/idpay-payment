@@ -6,7 +6,8 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 class CommonUtilitiesTest {
@@ -39,12 +40,12 @@ class CommonUtilitiesTest {
 
     @Test
     void testSecondsBetween(){
-        OffsetDateTime now = OffsetDateTime.now();
+        Instant now = Instant.now();
         Assertions.assertNull(CommonUtilities.secondsBetween(null, null));
         Assertions.assertNull(CommonUtilities.secondsBetween(null, now));
         Assertions.assertNull(CommonUtilities.secondsBetween(now, null));
-        Assertions.assertNull(CommonUtilities.secondsBetween(now, now.minusMinutes(2)));
+        Assertions.assertNull(CommonUtilities.secondsBetween(now, now.minus(2, ChronoUnit.MINUTES)));
         Assertions.assertEquals(0, CommonUtilities.secondsBetween(now, now));
-        Assertions.assertEquals(300, CommonUtilities.secondsBetween(now, now.plusMinutes(5)));
+        Assertions.assertEquals(300, CommonUtilities.secondsBetween(now, now.plus(5,ChronoUnit.MINUTES)));
     }
 }

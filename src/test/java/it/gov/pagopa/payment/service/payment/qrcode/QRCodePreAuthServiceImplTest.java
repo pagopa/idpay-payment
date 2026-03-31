@@ -27,7 +27,8 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
@@ -218,7 +219,7 @@ class QRCodePreAuthServiceImplTest {
   @Test
   void relateUserTrxExpired() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
+    trx.setTrxDate(Instant.now().minus(5L, ChronoUnit.DAYS));
     trx.setUserId(USER_ID1);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 

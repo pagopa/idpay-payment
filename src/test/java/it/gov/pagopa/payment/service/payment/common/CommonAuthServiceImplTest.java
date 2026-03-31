@@ -175,12 +175,12 @@ class CommonAuthServiceImplTest {
         Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
     }
 
-    private TransactionInProgress commonAuthPaymentWhenRejectedGiven(String DUMMYREJECTIONREASON) {
+    private TransactionInProgress commonAuthPaymentWhenRejectedGiven(String dummyRejectionReason) {
         TransactionInProgress transaction = getTransactionInProgress();
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-        authPaymentDTO.setRejectionReasons(List.of(DUMMYREJECTIONREASON));
+        authPaymentDTO.setRejectionReasons(List.of(dummyRejectionReason));
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
         when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
