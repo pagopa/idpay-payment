@@ -19,8 +19,8 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
   private final int authorizationExpirationMinutes;
   private final int extendedAuthorizationExpirationMinutes;
 
-  public TransactionBarCodeInProgress2TransactionResponseMapper(@Value("${app.barCode.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
-                                                                @Value("${app.barCode.expirations.extendedAuthorizationMinutes}") int extendedAuthorizationExpirationMinutes) {
+  public TransactionBarCodeInProgress2TransactionResponseMapper(@Value("${app.bar-code.expirations.authorization-minutes}") int authorizationExpirationMinutes,
+                                                                @Value("${app.bar-code.expirations.extended-authorization-minutes}") int extendedAuthorizationExpirationMinutes) {
     this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     this.extendedAuthorizationExpirationMinutes = extendedAuthorizationExpirationMinutes;
   }

@@ -26,5 +26,5 @@ public class AuthPaymentResponseDTO {
   private Long effectiveAmountCents;
   private Long amountCents;
   private OperationType operationType;
-  private long counterVersion;
+  private Long counterVersion;
 }

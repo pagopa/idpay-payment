@@ -1,8 +1,7 @@
 package it.gov.pagopa.payment.service.payment;
 
-
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
@@ -11,6 +10,7 @@ import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
 import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +46,8 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents) {
-        return barCodeAuthPaymentService.previewPayment(productGtin, trxCode, amountCents);
+    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+        return barCodeAuthPaymentService.previewPayment(trxCode, additionalProperties, amountCents);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public TransactionBarCodeResponse capturePayment(String trxCode){
+    public TransactionBarCodeResponse capturePayment(String trxCode) {
         return barCodeCaptureService.capturePayment(trxCode);
     }
 

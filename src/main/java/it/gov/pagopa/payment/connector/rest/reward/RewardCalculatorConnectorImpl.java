@@ -1,7 +1,5 @@
 package it.gov.pagopa.payment.connector.rest.reward;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
@@ -14,16 +12,16 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+import org.apache.commons.lang3.function.TriFunction;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-
-import org.apache.commons.lang3.function.TriFunction;
-
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED;
 import static it.gov.pagopa.payment.constants.PaymentConstants.REWARD_CALCULATOR_TRX_ALREADY_CANCELLED;
@@ -75,7 +73,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
         AuthPaymentDTO result;
         try {
             result = performCancel(trx, restClient::cancelTransaction);
-        } catch (TransactionNotFoundOrExpiredException ex) {
+        } catch (TransactionNotFoundOrExpiredException _) {
             result = null;
         }
         return result;
@@ -99,7 +97,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                 case 403, 409 -> {
                     try {
                         responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
-                    } catch (JsonProcessingException ex) {
+                    } catch (JacksonException ex) {
                         throw new RewardCalculatorInvocationException("Something went wrong", true, ex);
                     }
                 }
@@ -112,7 +110,7 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
                         ErrorDTO errorDTO ;
                         try {
                             errorDTO = objectMapper.readValue(e.contentUTF8(), ErrorDTO.class);
-                        } catch (JsonProcessingException ex) {
+                        } catch (JacksonException ex) {
                             throw new RewardCalculatorInvocationException("Something went wrong", true, ex);
                         }
 
