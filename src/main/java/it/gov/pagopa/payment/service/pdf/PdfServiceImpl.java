@@ -238,7 +238,7 @@ public class PdfServiceImpl implements PdfService {
                     Utilities.sanitizeString(transactionId), e);
               try {
                 throw e;
-              } catch (IOException ex) {
+              } catch (IOException _) {
                   throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
               }
             }
