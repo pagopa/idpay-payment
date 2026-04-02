@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -15,7 +16,7 @@ public class StatusChangeEvent {
     private String username;
     private String role;
     private String motivation;
-    private Instant updateDate;
+    private LocalDateTime updateDate; // received form RDB
     private ProductStatus currentStatus;
     private ProductStatus targetStatus;
 }
