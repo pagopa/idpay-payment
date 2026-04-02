@@ -641,5 +641,4 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     return mongoTemplate.find(query, TransactionInProgress.class);
   }
-
 }
