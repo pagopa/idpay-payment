@@ -111,7 +111,7 @@ public final class TestUtils {
     public static void wait(long timeout, TimeUnit timeoutUnit) {
         try{
             Awaitility.await().timeout(timeout, timeoutUnit).until(()->false);
-        } catch (ConditionTimeoutException _){
+        } catch (ConditionTimeoutException ex){
             // Do Nothing
         }
     }

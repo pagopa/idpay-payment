@@ -12,15 +12,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 
 class TransactionCreationRequest2TransactionInProgressMapperTest {
 
   private TransactionCreationRequest2TransactionInProgressMapper mapper;
-
+    private static final Instant FIXED_NOW = Instant.parse("2026-04-03T10:00:00Z");
   @BeforeEach
   void setUp() {
-    mapper = new TransactionCreationRequest2TransactionInProgressMapper();
+    mapper = new TransactionCreationRequest2TransactionInProgressMapper(
+            Clock.fixed(FIXED_NOW, ZoneOffset.UTC)
+        );
   }
 
   @Test
@@ -29,12 +33,11 @@ class TransactionCreationRequest2TransactionInProgressMapperTest {
     TransactionCreationRequest transactionCreationRequest =
         TransactionCreationRequestFaker.mockInstance(1);
       MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    Instant now = Instant.now();
     TransactionInProgress result =
         mapper.apply(
             transactionCreationRequest, "CHANNEL", "MERCHANTID", "ACQUIRERID", merchantDetailDTO, "IDTRXISSUER");
 
-    assertResponse(transactionCreationRequest, now, merchantDetailDTO, result);
+    assertResponse(transactionCreationRequest, FIXED_NOW, merchantDetailDTO, result);
   }
 
   void assertResponse(TransactionCreationRequest transactionCreationRequest, Instant now, MerchantDetailDTO merchantDetailDTO, TransactionInProgress result){

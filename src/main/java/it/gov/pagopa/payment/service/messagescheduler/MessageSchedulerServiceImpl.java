@@ -20,14 +20,12 @@ public class MessageSchedulerServiceImpl implements MessageSchedulerService {
     @Override
     public long scheduleMessage(ServiceBusMessage message, Instant scheduledEnqueueTime) {
 
-        OffsetDateTime scheduledEnqueueUtc =
-                OffsetDateTime.ofInstant(scheduledEnqueueTime, ZoneOffset.UTC);
+        OffsetDateTime scheduledUtc = scheduledEnqueueTime.atOffset(ZoneOffset.UTC);
 
-        message.setScheduledEnqueueTime(scheduledEnqueueUtc);
+        message.setScheduledEnqueueTime(scheduledUtc);
 
-        return sender.scheduleMessage(message, scheduledEnqueueUtc);
+        return sender.scheduleMessage(message, scheduledUtc);
     }
-
 
     @Override
     public void cancelScheduledMessage(long sequenceNumber) {

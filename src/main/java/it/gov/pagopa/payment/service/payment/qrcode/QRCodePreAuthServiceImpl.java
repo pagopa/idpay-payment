@@ -14,6 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+
 @Service
 @Slf4j
 public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements QRCodePreAuthService {
@@ -21,8 +23,9 @@ public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implement
                                   TransactionInProgressRepository transactionInProgressRepository,
                                   RewardCalculatorConnector rewardCalculatorConnector,
                                   AuditUtilities auditUtilities,
-                                  WalletConnector walletConnector) {
-    super(authorizationExpirationMinutes, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
+                                  WalletConnector walletConnector,
+                                  Clock clock) {
+    super(authorizationExpirationMinutes, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector, clock);
   }
 
   @Override

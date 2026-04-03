@@ -19,6 +19,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -39,7 +43,8 @@ class QRCodeUnrelateServiceImplTest {
                 new QRCodeUnrelateServiceImpl(
                         repositoryMock,
                         qrCodeAuthorizationExpiredServiceMock,
-                        auditUtilitiesMock);
+                        auditUtilitiesMock,
+                        Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC));
     }
 
     @Test

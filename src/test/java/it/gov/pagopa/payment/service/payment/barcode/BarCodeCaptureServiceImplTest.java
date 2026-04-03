@@ -10,6 +10,10 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +44,9 @@ class BarCodeCaptureServiceImplTest {
                 new BarCodeCaptureServiceImpl(
                         repositoryMock,
                         mapper,
-                        auditUtilitiesMock);
+                        auditUtilitiesMock,
+                        Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC)
+                );
     }
 
     @Test

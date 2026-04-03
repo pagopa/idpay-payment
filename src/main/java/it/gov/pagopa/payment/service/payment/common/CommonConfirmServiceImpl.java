@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 
+import java.time.Clock;
 import java.time.Instant;
 
 @Slf4j
@@ -27,15 +28,16 @@ public class CommonConfirmServiceImpl {
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
-
+    private final Clock clock;
     public CommonConfirmServiceImpl(TransactionInProgressRepository repository,
                                     TransactionInProgress2TransactionResponseMapper mapper,
-                                    TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities) {
+                                    TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities, Clock clock) {
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
+        this.clock = clock;
     }
 
     public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
@@ -64,7 +66,7 @@ public class CommonConfirmServiceImpl {
 
     public void confirmAuthorizedPayment(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.REWARDED);
-        trx.setElaborationDateTime(Instant.now());
+        trx.setElaborationDateTime(Instant.now(clock));
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
         sendConfirmPaymentNotification(trx);
 

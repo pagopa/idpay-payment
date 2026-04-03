@@ -27,7 +27,10 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +64,8 @@ class QRCodePreAuthServiceImplTest {
                     transactionInProgressRepositoryMock,
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
-                    walletConnectorMock);
+                    walletConnectorMock,
+                    Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC));
   }
 
   @Test

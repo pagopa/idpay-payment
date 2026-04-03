@@ -7,6 +7,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -21,7 +25,11 @@ class AuthorizationTimeoutSchedulerServiceTest {
     @BeforeEach
     void setUp() {
         authorizationTimeoutSchedulerService =
-                new AuthorizationTimeoutSchedulerServiceImpl(messageSchedulerServiceMock, TIMEOUTSECONDS);
+                new AuthorizationTimeoutSchedulerServiceImpl(
+                        messageSchedulerServiceMock,
+                        Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC),
+                        TIMEOUTSECONDS
+                );
     }
 
     @Test

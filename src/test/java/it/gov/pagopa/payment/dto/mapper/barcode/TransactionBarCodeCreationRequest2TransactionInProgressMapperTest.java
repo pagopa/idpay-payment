@@ -11,16 +11,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
     private TransactionBarCodeCreationRequest2TransactionInProgressMapper mapper;
-
+    private static final Instant FIXED_NOW = Instant.parse("2026-04-03T10:00:00Z");
     @BeforeEach
     void setUp() {
-        mapper = new TransactionBarCodeCreationRequest2TransactionInProgressMapper();
+        mapper = new TransactionBarCodeCreationRequest2TransactionInProgressMapper(
+                Clock.fixed(FIXED_NOW, ZoneOffset.UTC));
     }
 
     @Test
@@ -29,8 +32,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
-        Instant now = Instant.now();
-        Instant trxEndDate = now.plus(10,ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS).plus(1,ChronoUnit.DAYS).minus(1,ChronoUnit.NANOS).truncatedTo(ChronoUnit.MILLIS);
+        Instant trxEndDate = FIXED_NOW.plus(10,ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS).plus(1,ChronoUnit.DAYS).minus(1,ChronoUnit.NANOS).truncatedTo(ChronoUnit.MILLIS);
         TransactionInProgress result =
                 mapper.apply(
                         trxCreationReq, "CHANNEL", "USERID", "INITIATIVENAME", new HashMap<>(), false, trxEndDate);
@@ -40,7 +42,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 "mcc", "acquirerId", "merchantId", "pointOfSaleId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
                 "rewardCents", "rejectionReasons", "rewards", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents",
                 "franchiseName", "pointOfSaleType", "familyId" );
-        assertResponse(trxCreationReq, now, result);
+        assertResponse(trxCreationReq, FIXED_NOW, result);
     }
     void assertResponse(TransactionBarCodeCreationRequest trxCreationReq, Instant now, TransactionInProgress result){
         Assertions.assertNotNull(result);

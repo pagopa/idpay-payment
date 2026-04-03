@@ -5,6 +5,8 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+
+import java.time.Clock;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,11 @@ import java.util.UUID;
 
 @Service
 public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
+    private final Clock clock;
+
+    public TransactionBarCodeCreationRequest2TransactionInProgressMapper(Clock clock) {
+        this.clock = clock;
+    }
 
     public TransactionInProgress apply(
             TransactionBarCodeCreationRequest transactionBarCodeCreationRequest,
@@ -27,7 +34,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
 
-        Instant now = Instant.now();
+        Instant now = Instant.now(clock);
 
         return TransactionInProgress.builder()
                 .id(id)

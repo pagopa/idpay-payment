@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.support.PageableExecutionUtils;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -45,15 +46,16 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   private final MongoTemplate mongoTemplate;
   private final long trxThrottlingSeconds;
   private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
-
+  private final Clock clock;
   public TransactionInProgressRepositoryExtImpl(
-      MongoTemplate mongoTemplate,
-      @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
-            AppConfigurationProperties.ExtendedTransactions extendedTransactions) {
+          MongoTemplate mongoTemplate,
+          @Value("${app.qrCode.throttlingSeconds:1}") long trxThrottlingSeconds,
+          AppConfigurationProperties.ExtendedTransactions extendedTransactions, Clock clock) {
         this.mongoTemplate = mongoTemplate;
         this.trxThrottlingSeconds = trxThrottlingSeconds;
         this.extendedTransactions = extendedTransactions;
-    }
+        this.clock = clock;
+  }
 
   @Override
   public UpdateResult createIfExists(TransactionInProgress trx, String trxCode) {
@@ -101,7 +103,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     return mongoTemplate.findOne(
         Query.query(
             Criteria.where(Fields.trxCode).is(trxCode)
-                .and("trxEndDate").gte(Instant.now())
+                .and("trxEndDate").gte(Instant.now(clock))
         ),
         TransactionInProgress.class);
   }
@@ -112,14 +114,14 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     return mongoTemplate.findOne(
         Query.query(
             criteriaByTrxIdAndDateGreaterThan(trxId,
-                Instant.now().minus(authorizationExpirationMinutes,ChronoUnit.MINUTES))),
+                Instant.now(clock).minus(authorizationExpirationMinutes,ChronoUnit.MINUTES))),
         TransactionInProgress.class);
   }
 
   @Override
   public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode,
       long authorizationExpirationMinutes) {
-    Instant minTrxDate = Instant.now().minus(authorizationExpirationMinutes,ChronoUnit.MINUTES);
+    Instant minTrxDate = Instant.now(clock).minus(authorizationExpirationMinutes,ChronoUnit.MINUTES);
     TransactionInProgress transaction =
         mongoTemplate.findAndModify(
             Query.query(
@@ -459,7 +461,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
   private TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes,
       List<SyncTrxStatus> statusList) {
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
 
     Criteria criteria = Criteria.where(Fields.trxDate).lt(now.minus(expirationMinutes,ChronoUnit.MINUTES))
         .andOperator(
@@ -487,7 +489,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
   }
 
   public List<TransactionInProgress> findPendingTransactions(int pageSize) {
-    Instant threshold = Instant.now().minus(24,ChronoUnit.HOURS);
+    Instant threshold = Instant.now(clock).minus(24,ChronoUnit.HOURS);
     Criteria criteria = Criteria.where(TransactionInProgress.Fields.status)
         .is(SyncTrxStatus.AUTHORIZED)
         .and(TransactionInProgress.Fields.updateDate).lt(threshold);
@@ -505,7 +507,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
     @Override
     public Long updateStatusForExpiredVoucherTransactions(String initiativeId) {
-        Instant now = Instant.now();
+        Instant now = Instant.now(clock);
 
         long updatedRecords = 0L;
         Update update = new Update()
@@ -588,7 +590,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
     @Override
     public List<TransactionInProgress> findUnprocessedExpiredVoucherTransactions(
             String initiativeId, Integer listSize, Integer page) {
-        Instant now = Instant.now();
+        Instant now = Instant.now(clock);
 
         Criteria criteria = Criteria.where(Fields.initiativeId).is(initiativeId)
                 .and(Fields.status).is(SyncTrxStatus.EXPIRED)
@@ -602,7 +604,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
 
   public List<TransactionInProgress> findLapsedTransaction(String initiativeId, Integer pageSize) {
 
-    Instant now = Instant.now();
+    Instant now = Instant.now(clock);
 
     Criteria criteria = Criteria.where(Fields.trxEndDate)
             .lt(now)

@@ -9,6 +9,8 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
@@ -22,14 +24,15 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
     private final TransactionInProgressRepository repository;
     private final QRCodeAuthorizationExpiredService authorizationExpiredService;
     private final AuditUtilities auditUtilities;
-
+    private final Clock clock;
     public QRCodeUnrelateServiceImpl(
             TransactionInProgressRepository repository,
             QRCodeAuthorizationExpiredService authorizationExpiredService,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities, Clock clock) {
         this.repository = repository;
         this.authorizationExpiredService = authorizationExpiredService;
         this.auditUtilities = auditUtilities;
+        this.clock = clock;
     }
 
     @Override
@@ -61,14 +64,14 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
         }
     }
 
-    private static void revertTrxToCreatedStatus(TransactionInProgress trx) {
+    private void revertTrxToCreatedStatus(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.CREATED);
         trx.setUserId(null);
         trx.setRewardCents(null);
         trx.setRewards(null);
         trx.setChannel(null);
         trx.setRejectionReasons(Collections.emptyList());
-        trx.setUpdateDate(Instant.now());
+        trx.setUpdateDate(Instant.now(clock));
         trx.setTrxChargeDate(null);
     }
 

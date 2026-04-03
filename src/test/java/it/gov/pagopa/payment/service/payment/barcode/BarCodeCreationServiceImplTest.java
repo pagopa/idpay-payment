@@ -34,8 +34,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -74,7 +76,9 @@ class BarCodeCreationServiceImplTest {
                         walletConnector,
                         transactionInProgressServiceMock,
                         authorizationExpirationMinutes,
-                        extendedAuthorizationExpirationMinutes);
+                        extendedAuthorizationExpirationMinutes,
+                        Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC)
+                );
     }
 
     //region Create Transaction

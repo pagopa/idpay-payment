@@ -23,6 +23,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +40,7 @@ public class CommonCancelServiceImpl {
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
+    private final Clock clock;
     private static final String RESET_TRANSACTION = "RESET_TRANSACTION";
     private static final String CANCEL_TRANSACTION = "CANCEL_TRANSACTION";
 
@@ -49,13 +51,14 @@ public class CommonCancelServiceImpl {
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
             AuditUtilities auditUtilities,
-            BarCodeCreationServiceImpl barCodeCreationService) {
+            BarCodeCreationServiceImpl barCodeCreationService, Clock clock) {
         this.repository = repository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
         this.barCodeCreationService = barCodeCreationService;
+        this.clock = clock;
     }
 
     public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
@@ -107,7 +110,7 @@ public class CommonCancelServiceImpl {
             trx.setStatus(SyncTrxStatus.CANCELLED);
             trx.setRewardCents(refund.getRewardCents());
             trx.setRewards(refund.getRewards());
-            trx.setElaborationDateTime(Instant.now());
+            trx.setElaborationDateTime(Instant.now(clock));
 
             if (isReset) {
                 TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
@@ -307,7 +310,7 @@ public class CommonCancelServiceImpl {
         if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
-            } catch (TransactionNotFoundOrExpiredException _) {
+            } catch (TransactionNotFoundOrExpiredException ex) {
                 log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
                         "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
                         DELETE_LAPSED_TRANSACTION,

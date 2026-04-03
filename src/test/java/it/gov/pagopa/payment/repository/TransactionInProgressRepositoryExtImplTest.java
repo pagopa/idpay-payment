@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.repository;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.config.TimeConfig;
 import it.gov.pagopa.common.mongo.MongoTest;
 import it.gov.pagopa.common.mongo.MongoTestUtilitiesService;
 import it.gov.pagopa.common.utils.TestUtils;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -51,6 +53,7 @@ import static org.mockito.Mockito.when;
 
 @MongoTest
 @Slf4j
+@Import(TimeConfig.class)
 class TransactionInProgressRepositoryExtImplTest {
 
   private static final String INITIATIVE_ID = "INITIATIVEID1";
@@ -63,8 +66,8 @@ class TransactionInProgressRepositoryExtImplTest {
   private static final String TRX_ID = "TRX_ID";
 
   @MockitoBean
-    private AppConfigurationProperties.ExtendedTransactions extendedTransactions;
-    @Autowired
+  private AppConfigurationProperties.ExtendedTransactions extendedTransactions;
+  @Autowired
   protected TransactionInProgressRepository transactionInProgressRepository;
   @Autowired
   protected MongoTemplate mongoTemplate;

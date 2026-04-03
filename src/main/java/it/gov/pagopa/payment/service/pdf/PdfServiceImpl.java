@@ -35,7 +35,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.Optional;
 
@@ -238,7 +237,7 @@ public class PdfServiceImpl implements PdfService {
                     Utilities.sanitizeString(transactionId), e);
               try {
                 throw e;
-              } catch (IOException _) {
+              } catch (IOException ex) {
                   throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
               }
             }

@@ -24,7 +24,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
@@ -83,7 +85,8 @@ class CommonInvoiceServiceImplTest {
                 paymentErrorNotifierService,
                 fileStorageClient,
                 auditUtilities,
-                merchantConnector
+                merchantConnector,
+                Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC)
         );
     }
 
@@ -236,7 +239,8 @@ class CommonInvoiceServiceImplTest {
                 paymentErrorNotifierService,
                 fileStorageClient,
                 auditUtilities,
-                merchantConnector
+                merchantConnector,
+                Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC)
         );
 
         trx.setElaborationDateTime(Instant.now().minus(1, ChronoUnit.DAYS));

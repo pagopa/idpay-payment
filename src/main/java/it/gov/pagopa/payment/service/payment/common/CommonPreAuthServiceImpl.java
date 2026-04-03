@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -29,18 +30,19 @@ public class CommonPreAuthServiceImpl{
   private final RewardCalculatorConnector rewardCalculatorConnector;
   protected final AuditUtilities auditUtilities;
   private final WalletConnector walletConnector;
-
+  private final Clock clock;
   public CommonPreAuthServiceImpl(
           @Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
           TransactionInProgressRepository transactionInProgressRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuditUtilities auditUtilities,
-          WalletConnector walletConnector) {
+          WalletConnector walletConnector, Clock clock) {
     this.authorizationExpirationMinutes = authorizationExpirationMinutes;
     this.transactionInProgressRepository = transactionInProgressRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.auditUtilities = auditUtilities;
     this.walletConnector = walletConnector;
+    this.clock = clock;
   }
 
   public TransactionInProgress relateUser(TransactionInProgress trx, String userId) {
@@ -59,7 +61,7 @@ public class CommonPreAuthServiceImpl{
 
   public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel, SyncTrxStatus status) {
     try {
-    trx.setTrxChargeDate(Instant.now());
+    trx.setTrxChargeDate(Instant.now(clock));
     trx.setChannel(channel);
     AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
 
@@ -106,7 +108,7 @@ public class CommonPreAuthServiceImpl{
       throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
-    if (trx.getTrxDate().plus(authorizationExpirationMinutes, ChronoUnit.MINUTES).isBefore(Instant.now())) {
+    if (trx.getTrxDate().plus(authorizationExpirationMinutes, ChronoUnit.MINUTES).isBefore(Instant.now(clock))) {
       throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trx.getId()));
     }
 
