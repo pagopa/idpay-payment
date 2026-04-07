@@ -225,6 +225,8 @@ class QRCodePreAuthServiceImplTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     trx.setTrxDate(Instant.now().minus(5L, ChronoUnit.DAYS));
     trx.setUserId(USER_ID1);
+    trx.setTrxDate(Instant.parse("2026-03-29T10:00:00Z"));
+
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
     when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));

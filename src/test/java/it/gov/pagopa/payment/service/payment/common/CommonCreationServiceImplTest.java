@@ -82,7 +82,13 @@ class CommonCreationServiceImplTest {
     TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
-    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
+
+    RewardRule rule = buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT);
+
+    rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+    rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(rule));
     when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
     when(transactionCreationRequest2TransactionInProgressMapper.apply(
             any(TransactionCreationRequest.class),

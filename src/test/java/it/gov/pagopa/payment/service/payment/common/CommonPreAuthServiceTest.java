@@ -179,9 +179,13 @@ class CommonPreAuthServiceTest {
 
   @Test
   void relateUserTrxExpired() {
+
+    Instant now = Instant.parse("2026-04-03T10:00:00Z");
+
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    trx.setTrxDate(Instant.now().minus(5L, ChronoUnit.DAYS));
+    trx.setTrxDate(now.minus(5, ChronoUnit.DAYS));
     trx.setUserId(USER_ID1);
+
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);

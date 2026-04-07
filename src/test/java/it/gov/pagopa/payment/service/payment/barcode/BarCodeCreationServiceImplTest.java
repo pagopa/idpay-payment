@@ -94,8 +94,14 @@ class BarCodeCreationServiceImplTest {
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmountCents(1000L);
 
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
+
+        rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+        rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+        when(rewardRuleRepository.findById("INITIATIVEID"))
+                .thenReturn(Optional.of(rule));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
@@ -185,7 +191,14 @@ class BarCodeCreationServiceImplTest {
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmountCents(budgetAmount);
 
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
+
+        rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+        rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+        when(rewardRuleRepository.findById("INITIATIVEID"))
+                .thenReturn(Optional.of(rule));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         BudgetExhaustedException result =
@@ -210,7 +223,14 @@ class BarCodeCreationServiceImplTest {
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
         walletDTO.setAmountCents(1000L);
 
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
+
+        rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+        rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+        when(rewardRuleRepository.findById("INITIATIVEID"))
+                .thenReturn(Optional.of(rule));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         // When
@@ -229,7 +249,14 @@ class BarCodeCreationServiceImplTest {
                 .build();
 
 
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
+
+        rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+        rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+        when(rewardRuleRepository.findById("INITIATIVEID"))
+                .thenReturn(Optional.of(rule));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenThrow(new UserNotOnboardedException(String.format("The current user is not onboarded on initiative [%s]", "INITIATIVEID"),true,null));
 
         // When
@@ -302,7 +329,15 @@ class BarCodeCreationServiceImplTest {
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmountCents(1000L);
 
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
+
+        rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+        rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+        when(rewardRuleRepository.findById("INITIATIVEID"))
+                .thenReturn(Optional.of(rule));
+
         when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
@@ -402,8 +437,14 @@ class BarCodeCreationServiceImplTest {
                 .initiativeId("INITIATIVEID")
                 .voucherAmountCents(voucherAmountCents)
                 .build();
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
 
-        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
+        rule.getInitiativeConfig().setStartDate(Instant.parse("2026-01-01T00:00:00Z"));
+        rule.getInitiativeConfig().setEndDate(Instant.parse("2026-12-31T23:59:59Z"));
+
+        when(rewardRuleRepository.findById("INITIATIVEID"))
+                .thenReturn(Optional.of(rule));
+
 
         BudgetExhaustedException result =
                 Assertions.assertThrows(
@@ -414,7 +455,8 @@ class BarCodeCreationServiceImplTest {
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage()); }
+        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage());
+    }
     @Test
     void shouldReturnTrxDatePlusAuthorizationMinutesWhenNotExtended()  {
         TransactionInProgress  trx =  new  TransactionInProgress();
