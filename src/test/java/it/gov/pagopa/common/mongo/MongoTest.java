@@ -2,6 +2,7 @@ package it.gov.pagopa.common.mongo;
 
 import io.micrometer.core.instrument.binder.mongodb.MongoMetricsCommandListener;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import it.gov.pagopa.common.config.TimeConfig;
 import it.gov.pagopa.common.mongo.config.MongoConfig;
 import it.gov.pagopa.common.mongo.singleinstance.AutoConfigureSingleInstanceMongodb;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ import java.lang.annotation.*;
                 "spring.mongodb.config.connectionPool.maxConnecting: 2",
         })
 @AutoConfigureSingleInstanceMongodb
-@Import({MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class,MongoTest.MongoTestConfiguration.class})
+@Import({MongoTestUtilitiesService.TestMongoConfiguration.class, SimpleMeterRegistry.class,MongoTest.MongoTestConfiguration.class, TimeConfig.class})
 public @interface MongoTest {
 
     @TestConfiguration
