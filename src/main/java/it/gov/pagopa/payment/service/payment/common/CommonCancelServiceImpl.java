@@ -310,7 +310,7 @@ public class CommonCancelServiceImpl {
         if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
-            } catch (TransactionNotFoundOrExpiredException ex) {
+            } catch (TransactionNotFoundOrExpiredException _) {
                 log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
                         "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
                         DELETE_LAPSED_TRANSACTION,
