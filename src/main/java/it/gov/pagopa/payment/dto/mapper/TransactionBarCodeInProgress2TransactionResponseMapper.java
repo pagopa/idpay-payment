@@ -54,12 +54,22 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
   }
 
   public static Instant calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
-    Instant endDate = transactionInProgress.getInitiativeEndDate() != null ? transactionInProgress.getInitiativeEndDate() : Instant.MAX;
-    if(endDate.minus(authExpirationMinutes,ChronoUnit.MINUTES).isBefore(transactionInProgress.getTrxDate())){
-      endDate = transactionInProgress.getInitiativeEndDate();
-    } else {
-      endDate = transactionInProgress.getTrxDate().plus(authExpirationMinutes,ChronoUnit.MINUTES);
+
+        Instant baseEndDate = transactionInProgress.getInitiativeEndDate() != null
+                ? transactionInProgress.getInitiativeEndDate()
+                : Instant.MAX;
+    
+        Instant computedEndDate =
+                baseEndDate.minus(authExpirationMinutes, ChronoUnit.MINUTES)
+                        .isBefore(transactionInProgress.getTrxDate())
+                        ? baseEndDate
+                        : transactionInProgress.getTrxDate()
+                            .plus(authExpirationMinutes, ChronoUnit.MINUTES);
+        return computedEndDate
+                .atZone(zone)
+                .toLocalDate()
+                .plusDays(1)
+                .atStartOfDay(CommonConstants.ZONEID)
+                .toInstant();
     }
-    return endDate.truncatedTo(ChronoUnit.DAYS).plus(1,ChronoUnit.DAYS).minusNanos(1);
-  }
 }
