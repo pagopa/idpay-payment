@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -53,23 +54,26 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
     return transactionInProgress.getTrxDate().plus(authorizationExpirationMinutes,ChronoUnit.MINUTES);
   }
 
-  public static Instant calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
+  public static Instant calculateExtendedEndDate(TransactionInProgress trx, int authExpirationMinutes) {
 
-        Instant baseEndDate = transactionInProgress.getInitiativeEndDate() != null
-                ? transactionInProgress.getInitiativeEndDate()
-                : Instant.MAX;
-    
-        Instant computedEndDate =
-                baseEndDate.minus(authExpirationMinutes, ChronoUnit.MINUTES)
-                        .isBefore(transactionInProgress.getTrxDate())
-                        ? baseEndDate
-                        : transactionInProgress.getTrxDate()
-                            .plus(authExpirationMinutes, ChronoUnit.MINUTES);
-        return computedEndDate
-                .atZone(zone)
-                .toLocalDate()
-                .plusDays(1)
-                .atStartOfDay(CommonConstants.ZONEID)
-                .toInstant();
-    }
+    Instant trxExpiry =
+            trx.getTrxDate().plus(authExpirationMinutes, ChronoUnit.MINUTES);
+
+    Instant initiativeEnd = trx.getInitiativeEndDate();
+
+    Instant effectiveEnd =
+            initiativeEnd != null &&
+                    initiativeEnd.minus(authExpirationMinutes, ChronoUnit.MINUTES)
+                            .isBefore(trx.getTrxDate())
+                    ? initiativeEnd
+                    : trxExpiry;
+
+    return effectiveEnd
+            .atZone(CommonConstants.ZONEID)
+            .toLocalDate()
+            .plusDays(1)
+            .atStartOfDay(CommonConstants.ZONEID)
+            .toInstant();
+  }
+
 }
