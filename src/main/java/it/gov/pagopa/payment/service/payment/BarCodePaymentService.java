@@ -1,10 +1,11 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import java.util.Map;
 
 public interface BarCodePaymentService {
 
@@ -12,7 +13,7 @@ public interface BarCodePaymentService {
 
     AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePayment, String merchantId, String pointOfSaleId, String acquirerId);
 
-    PreviewPaymentDTO previewPayment(String productGtin, String trxCode, Long amountCents);
+    PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents);
 
     TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId);
 
