@@ -1,5 +1,6 @@
 package it.gov.pagopa.common.mongo.retry;
 
+import it.gov.pagopa.common.config.TimeConfig;
 import it.gov.pagopa.common.mongo.DummySpringRepository;
 import it.gov.pagopa.common.mongo.config.MongoConfig;
 import it.gov.pagopa.common.mongo.retry.exception.MongoRequestRateTooLargeRetryExpiredException;
@@ -49,6 +50,7 @@ import org.springframework.web.bind.annotation.RestController;
         AppConfigurationProperties.ExtendedTransactions.class,
         MongoRequestRateTooLargeRetryIntegrationTest.TestController.class,
         MongoRequestRateTooLargeRetryIntegrationTest.TestRepository.class,
+        TimeConfig.class
 })
 @WebMvcTest(excludeAutoConfiguration =  { UserDetailsServiceAutoConfiguration.class , SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)

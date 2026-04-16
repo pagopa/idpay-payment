@@ -5,7 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+
+import java.time.Instant;
 
 @Data
 @NoArgsConstructor
@@ -24,6 +25,6 @@ public class MerchantDetailDTO {
     private String vatNumber;
     private String status;
     private String iban;
-    private LocalDateTime creationDate;
-    private LocalDateTime updateDate;
+    private Instant creationDate;
+    private Instant updateDate;
 }

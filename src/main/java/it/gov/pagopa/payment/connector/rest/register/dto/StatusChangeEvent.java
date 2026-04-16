@@ -15,7 +15,7 @@ public class StatusChangeEvent {
     private String username;
     private String role;
     private String motivation;
-    private LocalDateTime updateDate;
+    private LocalDateTime updateDate; // received form RDB
     private ProductStatus currentStatus;
     private ProductStatus targetStatus;
 }

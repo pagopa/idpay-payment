@@ -7,7 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @Data
 @AllArgsConstructor
@@ -20,7 +20,7 @@ public class TransactionResponse {
   private String merchantId;
   private String idTrxIssuer;
   private String idTrxAcquirer;
-  private OffsetDateTime trxDate;
+  private Instant trxDate;
   private Long amountCents;
   private String amountCurrency;
   private String mcc;

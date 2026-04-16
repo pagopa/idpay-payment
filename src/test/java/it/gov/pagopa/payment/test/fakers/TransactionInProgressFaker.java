@@ -7,8 +7,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
@@ -41,8 +40,8 @@ public class TransactionInProgressFaker {
 
     Map<String, String> additionalProperties = new HashMap<>();
     additionalProperties.put("description", "test 1234");
-    OffsetDateTime now = OffsetDateTime.now();
-    OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1).truncatedTo(ChronoUnit.MILLIS);
+    Instant now = Instant.now();
+    Instant trxEndDate = now.plus(10,ChronoUnit.DAYS).truncatedTo(ChronoUnit.DAYS).plus(1,ChronoUnit.DAYS).minus(1,ChronoUnit.NANOS).truncatedTo(ChronoUnit.MILLIS);
 
     return TransactionInProgress.builder()
         .id(id)
@@ -55,8 +54,8 @@ public class TransactionInProgressFaker {
         .pointOfSaleId("POINTOFSALEID%d".formatted(bias))
         .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
         .vat("VAT%d".formatted(bias))
-        .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-        .trxChargeDate(trxStatus ? OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS) : null)
+        .trxDate(Instant.now().truncatedTo(ChronoUnit.MILLIS))
+        .trxChargeDate(trxStatus ? Instant.now().truncatedTo(ChronoUnit.MILLIS) : null)
         .amountCents(1000L)
         .effectiveAmountCents(1000L)
         .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
@@ -75,6 +74,6 @@ public class TransactionInProgressFaker {
         .additionalProperties(additionalProperties)
         .extendedAuthorization(false)
         .trxEndDate(trxEndDate).voucherAmountCents(100L)
-        .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+        .updateDate(Instant.now().truncatedTo(ChronoUnit.MILLIS));
   }
 }

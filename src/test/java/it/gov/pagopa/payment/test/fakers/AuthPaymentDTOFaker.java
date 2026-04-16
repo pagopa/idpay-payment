@@ -6,7 +6,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -39,7 +39,7 @@ public class AuthPaymentDTOFaker {
         .amountCents(10_00L)
         .rewardCents(10_00L)
         .trxCode("trxcode%d".formatted(bias))
-        .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+        .trxDate(Instant.now().truncatedTo(ChronoUnit.MILLIS))
         .rewards(Map.of(transaction.getInitiativeId(), reward))
         .counters(reward.getCounters())
         .residualBudgetCents(residualBudget)

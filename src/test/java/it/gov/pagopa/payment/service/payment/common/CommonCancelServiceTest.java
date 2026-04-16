@@ -28,6 +28,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -61,7 +64,10 @@ class CommonCancelServiceTest {
             rewardCalculatorConnectorMock,
             notifierServiceMock,
             paymentErrorNotifierServiceMock,
-            auditUtilitiesMock, barCodeCreationService);
+            auditUtilitiesMock,
+            barCodeCreationService,
+            Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC)
+        );
   }
 
   @Test

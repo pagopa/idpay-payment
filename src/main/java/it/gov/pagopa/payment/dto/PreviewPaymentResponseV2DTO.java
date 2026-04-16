@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,7 +19,7 @@ import lombok.With;
 public class PreviewPaymentResponseV2DTO {
 
     private String trxCode;
-    private OffsetDateTime trxDate;
+    private Instant trxDate;
     private SyncTrxStatus status;
     private Long originalAmountCents;
     private Long rewardCents;

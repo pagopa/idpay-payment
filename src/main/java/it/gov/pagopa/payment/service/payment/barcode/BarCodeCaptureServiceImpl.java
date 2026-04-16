@@ -9,11 +9,13 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -22,13 +24,14 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
     private final TransactionInProgressRepository repository;
     private final TransactionBarCodeInProgress2TransactionResponseMapper mapper;
     private final AuditUtilities auditUtilities;
-
+    private final Clock clock;
     public BarCodeCaptureServiceImpl(TransactionInProgressRepository repository,
                                      TransactionBarCodeInProgress2TransactionResponseMapper mapper,
-                                    AuditUtilities auditUtilities) {
+                                     AuditUtilities auditUtilities, Clock clock) {
         this.repository = repository;
         this.mapper = mapper;
         this.auditUtilities = auditUtilities;
+        this.clock = clock;
     }
 
     public TransactionBarCodeResponse capturePayment(String trxCode) {
@@ -44,8 +47,8 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
             deleteUnusedVouchers(trx);
 
             trx.setStatus(SyncTrxStatus.CAPTURED);
-            trx.setElaborationDateTime(LocalDateTime.now());
-            trx.setUpdateDate(LocalDateTime.now());
+            trx.setElaborationDateTime(Instant.now(clock));
+            trx.setUpdateDate(Instant.now(clock));
             repository.save(trx);
 
             auditUtilities.logCapturePayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());

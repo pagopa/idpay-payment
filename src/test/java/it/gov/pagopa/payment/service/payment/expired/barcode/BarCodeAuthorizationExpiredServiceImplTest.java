@@ -20,7 +20,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BarCodeAuthorizationExpiredServiceImplTest {
 
-    private final static long EXPIRATION_MINUTES=15;
+    private static final  long EXPIRATION_MINUTES=15;
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;

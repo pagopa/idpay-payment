@@ -20,6 +20,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
@@ -45,7 +48,9 @@ class CommonConfirmServiceImplTest {
                         mapper,
                         notifierServiceMock,
                         paymentErrorNotifierServiceMock,
-                        auditUtilitiesMock);
+                        auditUtilitiesMock,
+                        Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC)
+                );
     }
 
     @Test

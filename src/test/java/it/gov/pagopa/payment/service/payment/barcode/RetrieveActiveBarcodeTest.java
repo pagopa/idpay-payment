@@ -14,7 +14,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.List;
 
@@ -66,11 +67,11 @@ class RetrieveActiveBarcodeTest {
     @Test
     void findOldestNoAuthorized_FindWithFewTransaction(){
         // Given
-        OffsetDateTime now = OffsetDateTime.now();
+        Instant now = Instant.now();
         TransactionInProgress trx1 = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        trx1.setTrxDate(now.minusMinutes(5L));
+        trx1.setTrxDate(now.minus(5L,ChronoUnit.MINUTES));
         TransactionInProgress trx2 = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.CREATED);
-        trx2.setTrxDate(now.minusDays(5L));
+        trx2.setTrxDate(now.minus(5L, ChronoUnit.DAYS));
         TransactionInProgress trx3 = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.CREATED);
         trx3.setTrxDate(now);
 

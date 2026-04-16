@@ -20,7 +20,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -35,25 +36,26 @@ public class CommonAuthServiceImpl {
     private final CommonPreAuthServiceImpl commonPreAuthService;
 
     private final AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService;
-
+    private final Clock clock;
     protected CommonAuthServiceImpl(
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities,
             WalletConnector walletConnector,
             @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
-            AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService) {
+            AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService, Clock clock) {
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.auditUtilities = auditUtilities;
         this.walletConnector = walletConnector;
         this.commonPreAuthService = commonPreAuthService;
         this.timeoutSchedulerService = timeoutSchedulerService;
+        this.clock = clock;
     }
 
     public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId) {
         checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
-        trx.setTrxChargeDate(OffsetDateTime.now());
+        trx.setTrxChargeDate(Instant.now(clock));
 
         return rewardCalculatorConnector.previewTransaction(trx);
     }

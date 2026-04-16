@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 @SuperBuilder
 @Getter
@@ -19,8 +19,8 @@ public class PaymentRequestDTO {
   private String merchantFiscalCode;
   private String vat;
   private String idTrxIssuer;
-  private OffsetDateTime trxDate;
-  private OffsetDateTime trxChargeDate;
+  private Instant trxDate;
+  private Instant trxChargeDate;
   private Long amountCents;
   private String amountCurrency;
   private String mcc;

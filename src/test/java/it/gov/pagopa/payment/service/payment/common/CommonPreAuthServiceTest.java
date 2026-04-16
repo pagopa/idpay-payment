@@ -28,7 +28,11 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.OffsetDateTime;
+
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +63,8 @@ class CommonPreAuthServiceTest {
                     transactionInProgressRepositoryMock,
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
-                    walletConnectorMock);
+                    walletConnectorMock,
+                    Clock.fixed(Instant.parse("2026-04-03T10:00:00Z"), ZoneOffset.UTC));
   }
 
   @Test
@@ -174,9 +179,13 @@ class CommonPreAuthServiceTest {
 
   @Test
   void relateUserTrxExpired() {
+
+    Instant now = Instant.parse("2026-04-03T10:00:00Z");
+
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
+    trx.setTrxDate(now.minus(5, ChronoUnit.DAYS));
     trx.setUserId(USER_ID1);
+
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
 
     when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
@@ -278,7 +287,7 @@ class CommonPreAuthServiceTest {
   void preview_GenericRejected() {
 
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
+    trx.setTrxDate(Instant.now().minus(5L,ChronoUnit.DAYS));
 
     AuthPaymentDTO responseRE = AuthPaymentDTOFaker.mockInstance(1, trx);
     responseRE.setStatus(SyncTrxStatus.REJECTED);

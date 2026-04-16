@@ -7,7 +7,7 @@ import org.springframework.data.domain.Sort;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 
 public class CommonUtilities {
   private CommonUtilities() {}
@@ -34,7 +34,7 @@ public class CommonUtilities {
     return minutes == null ? null : (long)minutes*60;
   }
 
-  public static Long secondsBetween(OffsetDateTime initialDate, OffsetDateTime endedDate) {
+  public static Long secondsBetween(Instant initialDate, Instant endedDate) {
     if (initialDate == null || endedDate == null || endedDate.isBefore(initialDate)) {
       return null;
     }

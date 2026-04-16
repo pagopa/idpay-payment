@@ -5,15 +5,22 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
+
+import java.time.Clock;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
+    private final Clock clock;
+
+    public TransactionBarCodeCreationRequest2TransactionInProgressMapper(Clock clock) {
+        this.clock = clock;
+    }
 
     public TransactionInProgress apply(
             TransactionBarCodeCreationRequest transactionBarCodeCreationRequest,
@@ -22,12 +29,12 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
             String initiativeName,
             Map<String, String> additionalProperties,
             boolean extendedAuthorization,
-            OffsetDateTime trxEndDate
+            Instant trxEndDate
     ) {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
 
-        OffsetDateTime now = OffsetDateTime.now();
+        Instant now = Instant.now(clock);
 
         return TransactionInProgress.builder()
                 .id(id)
@@ -41,7 +48,7 @@ public class TransactionBarCodeCreationRequest2TransactionInProgressMapper {
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .channel(channel)
                 .userId(userId)
-                .updateDate(now.toLocalDateTime())
+                .updateDate(now)
                 .additionalProperties(additionalProperties)
                 .extendedAuthorization(extendedAuthorization)
                 .trxEndDate(trxEndDate)

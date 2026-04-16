@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.dto.mapper;
 
+import it.gov.pagopa.common.utils.CommonConstants;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -7,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.function.Function;
 
@@ -45,21 +46,34 @@ public class TransactionBarCodeInProgress2TransactionResponseMapper
             .build();
   }
 
-  public OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress) {
+  public Instant calculateTrxEndDate(TransactionInProgress transactionInProgress) {
     if (Boolean.TRUE.equals(transactionInProgress.getExtendedAuthorization())){
       return calculateExtendedEndDate(transactionInProgress, extendedAuthorizationExpirationMinutes);
     }
 
-    return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+    return transactionInProgress.getTrxDate().plus(authorizationExpirationMinutes,ChronoUnit.MINUTES);
   }
 
-  public static OffsetDateTime calculateExtendedEndDate(TransactionInProgress transactionInProgress, int authExpirationMinutes) {
-    OffsetDateTime endDate = transactionInProgress.getInitiativeEndDate() != null ? transactionInProgress.getInitiativeEndDate() : OffsetDateTime.MAX;
-    if(endDate.minusMinutes(authExpirationMinutes).isBefore(transactionInProgress.getTrxDate())){
-      endDate = transactionInProgress.getInitiativeEndDate();
-    } else {
-      endDate = transactionInProgress.getTrxDate().plusMinutes(authExpirationMinutes);
-    }
-    return endDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+  public static Instant calculateExtendedEndDate(TransactionInProgress trx, int authExpirationMinutes) {
+
+    Instant trxExpiry =
+            trx.getTrxDate().plus(authExpirationMinutes, ChronoUnit.MINUTES);
+
+    Instant initiativeEnd = trx.getInitiativeEndDate();
+
+    Instant effectiveEnd =
+            initiativeEnd != null &&
+                    initiativeEnd.minus(authExpirationMinutes, ChronoUnit.MINUTES)
+                            .isBefore(trx.getTrxDate())
+                    ? initiativeEnd
+                    : trxExpiry;
+
+    return effectiveEnd
+            .atZone(CommonConstants.ZONEID)
+            .toLocalDate()
+            .plusDays(1)
+            .atStartOfDay(CommonConstants.ZONEID)
+            .toInstant();
   }
+
 }

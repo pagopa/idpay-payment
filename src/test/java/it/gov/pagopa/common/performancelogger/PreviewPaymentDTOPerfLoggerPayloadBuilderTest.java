@@ -16,12 +16,12 @@ class PreviewPaymentDTOPerfLoggerPayloadBuilderTest {
         PreviewPaymentDTOPerfLoggerPayloadBuilder builder = new PreviewPaymentDTOPerfLoggerPayloadBuilder();
 
         PreviewPaymentDTO previewPaymentDTO = PreviewPaymentDTOFaker.mockInstance();
-        String APPLY_STRING = "TrxCode %s status %s"
+        String applyString = "TrxCode %s status %s"
                 .formatted(previewPaymentDTO.getTrxCode(), previewPaymentDTO.getStatus());
 
         String result = builder.apply(previewPaymentDTO);
 
-        Assertions.assertEquals(APPLY_STRING, result);
+        Assertions.assertEquals(applyString, result);
 
     }
 }

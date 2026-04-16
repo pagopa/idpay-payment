@@ -5,7 +5,7 @@ import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.TimeZone;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,8 +21,8 @@ public final class Utilities {
                 .replaceAll("[^\\w\\s-]", ""); // allow only alphanumeric, whitespace, dash
     }
 
-    public static LocalDate getLocalDate(OffsetDateTime date) {
-        return date.toInstant()
+    public static LocalDate getLocalDate(Instant date) {
+        return date
                 .atZone(TimeZone.getDefault().toZoneId())
                 .toLocalDate();
     }

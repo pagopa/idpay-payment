@@ -22,10 +22,10 @@ class RelateUserResponsePerfLoggerPayloadBuilderTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
         RelateUserResponse resultMapper = mapper.transactionMapper(trx);
-        String EXPECTED_STRING ="TrxId "+ trx.getId()+" status "+trx.getStatus();
+        String expectedString ="TrxId "+ trx.getId()+" status "+trx.getStatus();
         String result = builder.apply(resultMapper);
 
-        Assertions.assertEquals(EXPECTED_STRING, result);
+        Assertions.assertEquals(expectedString, result);
 
     }
 }

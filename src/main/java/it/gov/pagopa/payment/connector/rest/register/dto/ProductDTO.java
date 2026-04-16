@@ -18,7 +18,7 @@ public class ProductDTO {
 
     private String gtinCode;
     private String organizationId;
-    private LocalDateTime registrationDate;
+    private LocalDateTime registrationDate; // received form RDB
     private String status;
     private String model;
     private String productGroup;

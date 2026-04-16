@@ -25,7 +25,7 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
 import java.util.Optional;
@@ -86,8 +86,8 @@ class PdfServiceTest {
 
     @Test
     void create_shouldReturnValidPdfBase64_andCallBarcodeService() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
         when(barCodePaymentService.retriveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
@@ -119,8 +119,8 @@ class PdfServiceTest {
 
     @Test
     void create_shouldContainExpectedTexts() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(25_00L); // €25.00
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -176,8 +176,8 @@ class PdfServiceTest {
 
     @Test
     void create_withMissingFont_shouldFallbackAndGeneratePdf() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("87654321");
         when(trxResp.getVoucherAmountCents()).thenReturn(45_50L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -201,8 +201,8 @@ class PdfServiceTest {
 
     @Test
     void create_shouldRenderDatesAndAmountReasonably() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-01-02T08:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-31T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-01-02T08:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-31T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("ABCDEF12");
         when(trxResp.getVoucherAmountCents()).thenReturn(123_45L); // 123,45 €
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -257,8 +257,8 @@ class PdfServiceTest {
      */
     @Test
     void create_whenPariPngProvided_shouldUseImageAndNotShowFallbackText() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("11223344");
         when(trxResp.getVoucherAmountCents()).thenReturn(1500L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -316,8 +316,8 @@ class PdfServiceTest {
      */
     @Test
     void create_whenPariLogoMissing_shouldShowFallbackTextLabel() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("55667788");
         when(trxResp.getVoucherAmountCents()).thenReturn(2500L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -347,8 +347,8 @@ class PdfServiceTest {
 
     @Test
     void create_whenMimitLogoPngProvided_shouldGeneratePdfNormally() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(Instant.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(Instant.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("99887766");
         when(trxResp.getVoucherAmountCents()).thenReturn(3500L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -497,7 +497,7 @@ class PdfServiceTest {
         trx.setId(transactionId);
         trx.setTrxCode(trxCode);
         trx.setUserId(userId);
-        trx.setTrxDate(OffsetDateTime.parse("2024-07-15T10:30:00Z"));
+        trx.setTrxDate(Instant.parse("2024-07-15T10:30:00Z"));
         trx.setRewardCents(rewardCents);
         trx.setEffectiveAmountCents(effectiveAmountCents);
         trx.setAdditionalProperties(Map.of("productName", productName));

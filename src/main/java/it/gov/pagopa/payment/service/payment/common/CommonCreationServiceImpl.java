@@ -22,7 +22,8 @@ import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.Clock;
+import java.time.Instant;
 
 @Slf4j
 @Service("commonCreate")
@@ -33,23 +34,25 @@ public class CommonCreationServiceImpl {
   protected final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
   protected final TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
   protected final RewardRuleRepository rewardRuleRepository;
+
   protected final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
   private final TransactionInProgressService transactionInProgressService;
-
+  private final Clock clock;
   public CommonCreationServiceImpl(
           TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
           TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           AuditUtilities auditUtilities,
           MerchantConnector merchantConnector,
-          TransactionInProgressService transactionInProgressService) {
+          TransactionInProgressService transactionInProgressService, Clock clock) {
     this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper = transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
     this.auditUtilities = auditUtilities;
     this.merchantConnector = merchantConnector;
     this.transactionInProgressService = transactionInProgressService;
+    this.clock = clock;
   }
 
   public TransactionResponse createTransaction(
@@ -59,7 +62,7 @@ public class CommonCreationServiceImpl {
           String acquirerId,
           String idTrxIssuer) {
 
-    LocalDate today = LocalDate.now();
+    Instant today = Instant.now(clock);
     try {
       if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[{}] Cannot create transaction with invalid amount: [{}]", getFlow(), trxCreationRequest.getAmountCents());
@@ -110,7 +113,7 @@ public class CommonCreationServiceImpl {
     }
   }
 
-  public static void checkInitiativeValidPeriod(LocalDate today, InitiativeConfig initiative, String flowName) {
+  public static void checkInitiativeValidPeriod(Instant today, InitiativeConfig initiative, String flowName) {
     if (initiative != null && (today.isBefore(initiative.getStartDate()) || today.isAfter(initiative.getEndDate()))) {
       log.info("[{}] Cannot create transaction out of valid period. Initiative startDate: [{}] endDate: [{}]",
               flowName,

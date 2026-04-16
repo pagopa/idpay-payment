@@ -4,7 +4,9 @@ import com.azure.messaging.servicebus.ServiceBusMessage;
 import com.azure.messaging.servicebus.ServiceBusSenderClient;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Service
 public class MessageSchedulerServiceImpl implements MessageSchedulerService {
@@ -14,10 +16,15 @@ public class MessageSchedulerServiceImpl implements MessageSchedulerService {
         this.sender = sender;
     }
 
+
     @Override
-    public long scheduleMessage(ServiceBusMessage message, OffsetDateTime scheduledEnqueueTime) {
-        message.setScheduledEnqueueTime(scheduledEnqueueTime);
-        return sender.scheduleMessage(message, scheduledEnqueueTime);
+    public long scheduleMessage(ServiceBusMessage message, Instant scheduledEnqueueTime) {
+
+        OffsetDateTime scheduledUtc = scheduledEnqueueTime.atOffset(ZoneOffset.UTC);
+
+        message.setScheduledEnqueueTime(scheduledUtc);
+
+        return sender.scheduleMessage(message, scheduledUtc);
     }
 
     @Override

@@ -8,12 +8,18 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class TransactionCreationRequest2TransactionInProgressMapper {
+  private final Clock clock;
+
+  public TransactionCreationRequest2TransactionInProgressMapper(Clock clock) {
+    this.clock = clock;
+  }
 
   public TransactionInProgress apply(
           TransactionCreationRequest transactionCreationRequest,
@@ -25,7 +31,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
     String id =
         "%s_%d".formatted(UUID.randomUUID().toString(), System.currentTimeMillis());
 
-    OffsetDateTime now = OffsetDateTime.now();
+    Instant now = Instant.now(clock);
 
     return TransactionInProgress.builder()
             .id(id)
@@ -49,7 +55,7 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
             .merchantId(merchantId)
             .acquirerId(acquirerId)
             .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
-            .updateDate(now.toLocalDateTime())
+            .updateDate(now)
             .counterVersion(0L)
             .additionalProperties(transactionCreationRequest.getAdditionalProperties())
             .build();

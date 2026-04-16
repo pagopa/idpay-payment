@@ -41,7 +41,7 @@ import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -466,7 +466,7 @@ class BarCodePaymentControllerTest {
     private static PreviewPaymentResultDTO buildPreviewPaymentResult(Map<String, String> additionalProperties) {
         return PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(Instant.now())
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)

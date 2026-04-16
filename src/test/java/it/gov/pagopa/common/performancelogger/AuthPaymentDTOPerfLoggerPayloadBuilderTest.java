@@ -18,12 +18,12 @@ class AuthPaymentDTOPerfLoggerPayloadBuilderTest {
     void testApply(){
         AuthPaymentDTOPerfLoggerPayloadBuilder builder = new AuthPaymentDTOPerfLoggerPayloadBuilder();
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        String APPLY_STRING  = "TrxId " +trx.getId() +" status "+trx.getStatus();
+        String applyString  = "TrxId " +trx.getId() +" status "+trx.getStatus();
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,trx);
         String result = builder.apply(authPaymentDTO);
 
-        Assertions.assertEquals(APPLY_STRING, result);
+        Assertions.assertEquals(applyString, result);
 
     }
 }
