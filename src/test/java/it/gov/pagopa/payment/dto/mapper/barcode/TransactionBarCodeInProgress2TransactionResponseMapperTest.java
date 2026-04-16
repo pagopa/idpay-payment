@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 
 class TransactionBarCodeInProgress2TransactionResponseMapperTest {
     private TransactionBarCodeInProgress2TransactionResponseMapper mapper;
@@ -46,12 +45,19 @@ class TransactionBarCodeInProgress2TransactionResponseMapperTest {
     void applyTest_extendedTransaction() {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         trx.setExtendedAuthorization(true);
+
         TransactionBarCodeResponse result = mapper.apply(trx);
 
         assertionCommons(trx, result);
-        Instant endDate = TransactionBarCodeInProgress2TransactionResponseMapper.calculateExtendedEndDate(trx, 14400);
-        Assertions.assertEquals(CommonUtilities.secondsBetween(trx.getTrxDate(), endDate), result.getTrxExpirationSeconds());
+
+        long expectedExpiration = CommonUtilities.secondsBetween(
+                trx.getTrxDate(),
+                trx.getTrxEndDate()
+        );
+
+        Assertions.assertEquals(expectedExpiration, result.getTrxExpirationSeconds());
 
         TestUtils.checkNotNullFields(result, "voucherAmountCents");
     }
+
 }
