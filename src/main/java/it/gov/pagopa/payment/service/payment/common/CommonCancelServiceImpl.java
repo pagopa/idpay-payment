@@ -93,7 +93,9 @@ public class CommonCancelServiceImpl {
     }
 
     private boolean isDeletableImmediately(TransactionInProgress trx) {
-        return SyncTrxStatus.CREATED.equals(trx.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(trx.getStatus());
+        return SyncTrxStatus.CREATED.equals(trx.getStatus()) ||
+                SyncTrxStatus.IDENTIFIED.equals(trx.getStatus()) ||
+                SyncTrxStatus.INVOICED.equals(trx.getStatus());
     }
 
     private void handleAuthorizedTransaction(TransactionInProgress trx) {
