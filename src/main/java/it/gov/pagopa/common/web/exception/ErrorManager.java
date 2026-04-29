@@ -1,6 +1,7 @@
 package it.gov.pagopa.common.web.exception;
 
 import it.gov.pagopa.common.web.dto.ErrorDTO;
+import it.gov.pagopa.payment.utils.Utilities;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -71,16 +72,9 @@ public class ErrorManager {
 
   public static String getRequestDetails(HttpServletRequest request) {
     return "%s %s".formatted(
-            sanitizeForLog(request.getMethod()),
-            sanitizeForLog(request.getRequestURI())
+            Utilities.sanitizeForLog(request.getMethod()),
+            Utilities.sanitizeForLog(request.getRequestURI())
     );
-  }
-
-  private static String sanitizeForLog(String value) {
-    if (value == null) {
-      return "null";
-    }
-    return value.replace('\r', '_').replace('\n', '_');
   }
 
 }

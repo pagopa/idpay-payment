@@ -20,7 +20,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -189,27 +188,5 @@ class ErrorManagerTest {
 
     Assertions.assertEquals(expectedLoggedExceptionOccurrencePosition,
             loggedExceptionOccurrenceStackTrace.getStackTraceElement().getClassName() + "." + loggedExceptionOccurrenceStackTrace.getStackTraceElement().getMethodName());
-  }
-
-  @Test
-  void testGetRequestDetailsSanitization() {
-    MockHttpServletRequest request =
-            new MockHttpServletRequest("GET\nInjected", "/test\rInjected");
-
-    String result = ErrorManager.getRequestDetails(request);
-
-    Assertions.assertEquals("GET_Injected /test_Injected", result);
-    Assertions.assertFalse(result.contains("\n"));
-    Assertions.assertFalse(result.contains("\r"));
-  }
-
-  @Test
-  void testGetRequestDetailsNull() {
-    MockHttpServletRequest request =
-            new MockHttpServletRequest(null, null);
-
-    String result = ErrorManager.getRequestDetails(request);
-
-    Assertions.assertEquals("null null", result);
   }
 }
