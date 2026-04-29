@@ -36,6 +36,14 @@ class UtilitiesTest {
     }
 
     @Test
+    void testSanitizeForLog() {
+        assertEquals("null", Utilities.sanitizeForLog(null));
+        assertEquals("GET_Injected", Utilities.sanitizeForLog("GET\nInjected"));
+        assertEquals("/test_Injected", Utilities.sanitizeForLog("/test\rInjected"));
+        assertEquals("test_string", Utilities.sanitizeForLog("test_string"));
+    }
+
+    @Test
     void getLocalDate_sameDay_inEuropeRome_forMiddayUTC() {
         TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
         OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC);
