@@ -21,10 +21,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
 
 @ExtendWith({SpringExtension.class, MockitoExtension.class})
@@ -52,6 +50,9 @@ class ValidationExceptionHandlerTest {
         String testEndpoint(@RequestBody @Valid ValidationDTO body, @RequestHeader("data") String data) {
             return "OK";
         }
+
+        @PostMapping(value = "/test-multipart")
+        String testMultipartEndpoint(@RequestPart("file") MultipartFile file) { return "OK"; }
     }
 
     @Data
@@ -88,5 +89,26 @@ class ValidationExceptionHandlerTest {
                 .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("INVALID_REQUEST"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Required request header 'data' for method parameter type String is not present"));
 
+    }
+
+    @Test
+    void handleMultipartException() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.post("/test-multipart")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Current request is not a multipart request"));
+    }
+
+    @Test
+    void handleMissingServletRequestPartException() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/test-multipart")
+                        .file("wrong-file", "content".getBytes())
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Required part 'file' is not present."));
     }
 }

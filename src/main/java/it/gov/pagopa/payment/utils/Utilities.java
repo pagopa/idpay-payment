@@ -21,6 +21,13 @@ public final class Utilities {
                 .replaceAll("[^\\w\\s-]", ""); // allow only alphanumeric, whitespace, dash
     }
 
+    public static String sanitizeForLog(String value) {
+        if (value == null) {
+            return "null";
+        }
+        return value.replace('\r', '_').replace('\n', '_');
+    }
+
     public static LocalDate getLocalDate(OffsetDateTime date) {
         return date.toInstant()
                 .atZone(TimeZone.getDefault().toZoneId())
