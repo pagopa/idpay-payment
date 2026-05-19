@@ -16,7 +16,7 @@ import static it.gov.pagopa.payment.connector.rest.register.dto.ValidationPatter
         url = "${rest-client.register.baseUrl}")
 public interface RegisterRestClient {
     @GetMapping(
-            value = "/idpay/register/iniziative/68dd003ccce8c534d1da22bc/products",
+            value = "/idpay/register/initiative/68dd003ccce8c534d1da22bc/products",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     ProductListDTO getProductList(
