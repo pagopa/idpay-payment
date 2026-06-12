@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -77,6 +78,102 @@ public class RewardCalculatorConnectorImpl implements RewardCalculatorConnector 
             result = null;
         }
         return result;
+    }
+
+    @Override
+    @PerformanceLog("PREVIEW_TRANSACTION_REWARD_CALCULATOR")
+    public AuthPaymentDTO previewTransaction(Transaction trx) {
+        return performRequest(trx, (initiativeId, body) -> {
+
+            ResponseEntity<AuthPaymentResponseDTO> response = restClient.previewTransaction(initiativeId, body);
+            AuthPaymentResponseDTO authPaymentResponseDTO = response.getBody();
+
+            try {
+                String etagHeaderValue = response.getHeaders().getFirst(HttpHeaders.ETAG);
+                if (etagHeaderValue != null) {
+                    //noinspection DataFlowIssue
+                    authPaymentResponseDTO.setCounterVersion(Long.parseLong(etagHeaderValue));
+                }
+            } catch (NumberFormatException e) {
+                throw new RewardCalculatorInvocationException("Error parsing ETAG from headers", true, e);
+            }
+            return authPaymentResponseDTO;
+        });
+    }
+
+    @Override
+    @PerformanceLog("AUTHORIZE_TRANSACTION_REWARD_CALCULATOR")
+    public AuthPaymentDTO authorizePayment(Transaction trx) {
+        return performRequest(trx, restClient::authorizePayment);
+    }
+
+    @Override
+    @PerformanceLog("CANCEL_TRANSACTION_REWARD_CALCULATOR")
+    public AuthPaymentDTO cancelTransaction(Transaction trx) {
+        AuthPaymentDTO result;
+        try {
+            result = performCancel(trx, restClient::cancelTransaction);
+        } catch (TransactionNotFoundOrExpiredException _) {
+            result = null;
+        }
+        return result;
+    }
+
+    private AuthPaymentDTO performRequest(Transaction trx, BiFunction<String, PaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.preAuthRequestMap(trx)));
+    }
+    private AuthPaymentDTO performCancel(Transaction trx, BiFunction<String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getInitiativeId(), requestMapper.authRequestMap(trx)));
+    }
+    private AuthPaymentDTO performRequest(Transaction trx, TriFunction<Long,String, AuthPaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){
+        return performRequest(trx, ()-> requestExecutor.apply(trx.getCounterVersion(),trx.getInitiativeId(), requestMapper.authRequestMap(trx)));
+    }
+    private AuthPaymentDTO performRequest(Transaction trx, Supplier<AuthPaymentResponseDTO> requestExecutor) {
+        AuthPaymentResponseDTO responseDTO;
+        try {
+            responseDTO = requestExecutor.get();
+        } catch (FeignException e) {
+            switch (e.status()) {
+                case 403, 409 -> {
+                    try {
+                        responseDTO = objectMapper.readValue(e.contentUTF8(), AuthPaymentResponseDTO.class);
+                    } catch (JacksonException ex) {
+                        throw new RewardCalculatorInvocationException("Something went wrong", true, ex);
+                    }
+                }
+                case 429 -> throw new TooManyRequestsException(
+                        "Too many request on the ms reward",true,e);
+                case 404 -> throw new TransactionNotFoundOrExpiredException(
+                        "Resource not found on reward-calculator", true, e);
+                case 412 ->{
+
+                    ErrorDTO errorDTO ;
+                    try {
+                        errorDTO = objectMapper.readValue(e.contentUTF8(), ErrorDTO.class);
+                    } catch (JacksonException ex) {
+                        throw new RewardCalculatorInvocationException("Something went wrong", true, ex);
+                    }
+
+                    if(errorDTO.getCode().equals(REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED)){
+                        throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
+                    }
+                    else if (errorDTO.getCode().equals(REWARD_CALCULATOR_TRX_ALREADY_CANCELLED)){
+                        throw new TransactionAlreadyCancelledException("Transaction with transactionId [%s] is already cancelled".formatted(trx.getId()));
+                    }
+                    else{
+                        responseDTO = new AuthPaymentResponseDTO();
+                        responseDTO.setStatus(SyncTrxStatus.REJECTED);
+                        responseDTO.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
+                        responseDTO.setInitiativeId(trx.getInitiativeId());
+                    }
+                }
+                case 423 -> throw new TransactionVersionPendingException(
+                        "The transaction version is actually locked", true,e);
+                default -> throw new RewardCalculatorInvocationException(
+                        "An error occurred in the microservice reward-calculator", true, e);
+            }
+        }
+        return requestMapper.rewardResponseMap(responseDTO, trx);
     }
 
     private AuthPaymentDTO performRequest(TransactionInProgress trx, BiFunction<String, PaymentRequestDTO, AuthPaymentResponseDTO> requestExecutor){

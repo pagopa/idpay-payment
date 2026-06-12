@@ -21,6 +21,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationResolver;
@@ -91,6 +92,8 @@ class BarCodeAuthPaymentServiceImplTest {
     @Mock
     private TransactionInProgressRepository transaction;
     @Mock
+    private TransactionRepository transactionRepository;
+    @Mock
     private BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolverMock;
     @Mock
     private BarCodeAdditionalPropertiesValidationStrategy additionalPropertiesValidationStrategyMock;
@@ -107,6 +110,7 @@ class BarCodeAuthPaymentServiceImplTest {
                         new NoOpBarCodeAdditionalPropertiesValidationStrategy()),
                 validationProperties);
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
+                transactionRepository,
                 barCodeAuthorizationExpiredServiceMock,
                 merchantConnector,
                 transaction,

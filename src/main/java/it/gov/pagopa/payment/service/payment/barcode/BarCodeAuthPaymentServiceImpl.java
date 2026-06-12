@@ -9,27 +9,34 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesOperation;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationResolver;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
+    private final TransactionRepository transactionRepository;
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
@@ -38,13 +45,16 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private final BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver;
     protected final AuditUtilities auditUtilities;
 
-    public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
-                                         MerchantConnector merchantConnector,
-                                         TransactionInProgressRepository transactionInProgressRepository,
-                                         CommonAuthServiceImpl commonAuthService,
-                                         DecryptRestConnector decryptRestConnector,
-                                         BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver,
-                                         AuditUtilities auditUtilities) {
+    public BarCodeAuthPaymentServiceImpl(
+            TransactionRepository transactionRepository,
+            BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
+            MerchantConnector merchantConnector,
+            TransactionInProgressRepository transactionInProgressRepository,
+            CommonAuthServiceImpl commonAuthService,
+            DecryptRestConnector decryptRestConnector,
+            BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver,
+            AuditUtilities auditUtilities) {
+        this.transactionRepository = transactionRepository;
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
         this.transactionInProgressRepository = transactionInProgressRepository;
@@ -63,8 +73,20 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                 "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
         transactionInProgress.setAmountCents(amountCents);
 
+        final Optional<Transaction> transactionOptional =
+                transactionRepository.findByTrxCode(trxCode.toLowerCase());
+        if(transactionOptional.isEmpty()){
+            new TransactionNotFoundOrExpiredException(
+                    "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase()));
+        }
+        final Transaction transaction = transactionOptional.get();
+        transaction.setAmountCents(amountCents);
+
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transactionInProgress, transactionInProgress.getUserId());
+
+        final AuthPaymentDTO previewTransaction = commonAuthService
+                .previewPayment(transaction, transaction.getUserId());
 
         if (preview.getRewardCents() < 0L) {
             log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
@@ -78,9 +100,15 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
         }
 
-        final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+        //final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
+        final String userCf = "userCF";
         transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
                 transactionInProgress,
+                additionalProperties,
+                BarCodeAdditionalPropertiesOperation.PREVIEW));
+
+        transaction.setAdditionalProperties(validateAdditionalProperties(
+                transaction,
                 additionalProperties,
                 BarCodeAdditionalPropertiesOperation.PREVIEW));
 
@@ -106,10 +134,23 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+
+            Optional<Transaction> transactionOptional = transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode.toLowerCase(), OffsetDateTime.now());
+            if(transactionOptional.isEmpty()){
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
+            }
+            Transaction transaction = transactionOptional.get();
+
+            commonAuthService.checkAuth(trxCode, transaction);
             commonAuthService.checkAuth(trxCode, trx);
 
             trx.setAdditionalProperties(validateAdditionalProperties(
                     trx,
+                    authBarCodePaymentDTO.getAdditionalProperties(),
+                    BarCodeAdditionalPropertiesOperation.AUTHORIZE));
+
+            transaction.setAdditionalProperties(validateAdditionalProperties(
+                    transaction,
                     authBarCodePaymentDTO.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
 
@@ -118,10 +159,12 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(trx.getInitiativeId(), trx.getUserId());
 
             setTrxFields(merchantId, authBarCodePaymentDTO, trx, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
+            setTrxFields(merchantId, authBarCodePaymentDTO, transaction, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
 
             commonAuthService.checkTrxStatusToInvokePreAuth(trx);
+            commonAuthService.checkTrxStatusToInvokePreAuth(transaction);
 
-            AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(trx);
+            AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(transaction, trx);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
@@ -141,6 +184,18 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                              BarCodeAdditionalPropertiesOperation operation) {
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(trx.getInitiativeId())
+                .validateAndEnrich(additionalProperties, operation);
+        if (validatedAdditionalProperties == null) {
+            return Collections.emptyMap();
+        }
+        return validatedAdditionalProperties;
+    }
+
+    private Map<String, String> validateAdditionalProperties(Transaction transaction,
+                                                             Map<String, String> additionalProperties,
+                                                             BarCodeAdditionalPropertiesOperation operation) {
+        Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
+                .resolve(transaction.getInitiativeId())
                 .validateAndEnrich(additionalProperties, operation);
         if (validatedAdditionalProperties == null) {
             return Collections.emptyMap();
@@ -172,5 +227,28 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
         trx.setPointOfSaleId(pointOfSaleId);
         trx.setFamilyId(familyId);
+    }
+
+    private static void setTrxFields(String merchantId,
+                                     AuthBarCodePaymentDTO authBarCodePaymentDTO,
+                                     Transaction trx,
+                                     PointOfSaleDTO pointOfSaleDTO,
+                                     String acquirerId,
+                                     String pointOfSaleId,
+                                     String familyId) {
+        trx.setAmountCents(authBarCodePaymentDTO.getAmountCents());
+        trx.setEffectiveAmountCents(authBarCodePaymentDTO.getAmountCents());
+        trx.setIdTrxAcquirer(authBarCodePaymentDTO.getIdTrxAcquirer());
+        trx.setMerchantId(merchantId);
+        trx.setBusinessName(pointOfSaleDTO.getBusinessName());
+        trx.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
+        trx.setVat(pointOfSaleDTO.getVatNumber());
+        trx.setFranchiseName(pointOfSaleDTO.getFranchiseName());
+        trx.setPointOfSaleType(pointOfSaleDTO.getType().name());
+        trx.setAcquirerId(acquirerId);
+        trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
+        trx.setPointOfSaleId(pointOfSaleId);
+        trx.setFamilyId(familyId);
+        trx.setUpdateDate(LocalDateTime.now());
     }
 }
