@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionIn
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
@@ -16,6 +17,7 @@ import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.Utilities;
@@ -36,6 +38,7 @@ public class CommonCreationServiceImpl {
   protected final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
   private final TransactionInProgressService transactionInProgressService;
+  private final TransactionRepository transactionRepository;
 
   public CommonCreationServiceImpl(
           TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
@@ -43,13 +46,15 @@ public class CommonCreationServiceImpl {
           RewardRuleRepository rewardRuleRepository,
           AuditUtilities auditUtilities,
           MerchantConnector merchantConnector,
-          TransactionInProgressService transactionInProgressService) {
+          TransactionInProgressService transactionInProgressService,
+          TransactionRepository transactionRepository) {
     this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
     this.transactionCreationRequest2TransactionInProgressMapper = transactionCreationRequest2TransactionInProgressMapper;
     this.rewardRuleRepository = rewardRuleRepository;
     this.auditUtilities = auditUtilities;
     this.merchantConnector = merchantConnector;
     this.transactionInProgressService = transactionInProgressService;
+    this.transactionRepository = transactionRepository;
   }
 
   public TransactionResponse createTransaction(
@@ -80,6 +85,11 @@ public class CommonCreationServiceImpl {
               transactionCreationRequest2TransactionInProgressMapper.apply(
                       trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer);
       transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
+
+      Transaction transaction = transactionCreationRequest2TransactionInProgressMapper.apply(
+              trx.getId(), trx.getTrxCode(),
+              trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer);
+      transactionRepository.save(transaction);
 
       logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
 

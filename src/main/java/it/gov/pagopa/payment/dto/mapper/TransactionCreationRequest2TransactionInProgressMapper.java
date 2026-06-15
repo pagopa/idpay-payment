@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.dto.mapper;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -29,6 +30,49 @@ public class TransactionCreationRequest2TransactionInProgressMapper {
 
     return TransactionInProgress.builder()
             .id(id)
+            .correlationId(id)
+            .amountCents(transactionCreationRequest.getAmountCents())
+            .effectiveAmountCents(transactionCreationRequest.getAmountCents())
+            .amountCurrency(PaymentConstants.CURRENCY_EUR)
+            .merchantFiscalCode(merchantDetail.getFiscalCode())
+            .idTrxIssuer(idTrxIssuer)
+            .initiativeId(transactionCreationRequest.getInitiativeId())
+            .initiatives(List.of(transactionCreationRequest.getInitiativeId()))
+            .initiativeName(merchantDetail.getInitiativeName())
+            .businessName(merchantDetail.getBusinessName())
+            .mcc(transactionCreationRequest.getMcc())
+            .vat(merchantDetail.getVatNumber())
+            .trxDate(now)
+            .status(SyncTrxStatus.CREATED)
+            .operationType(PaymentConstants.OPERATION_TYPE_CHARGE)
+            .operationTypeTranscoded(OperationType.CHARGE)
+            .channel(channel)
+            .merchantId(merchantId)
+            .acquirerId(acquirerId)
+            .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
+            .updateDate(now.toLocalDateTime())
+            .counterVersion(0L)
+            .additionalProperties(transactionCreationRequest.getAdditionalProperties())
+            .build();
+  }
+
+  public Transaction apply(
+          String id,
+          String trxCode,
+          TransactionCreationRequest transactionCreationRequest,
+          String channel,
+          String merchantId,
+          String acquirerId,
+          MerchantDetailDTO merchantDetail,
+          String idTrxIssuer) {
+    //String id =
+    //        "%s_%d".formatted(UUID.randomUUID().toString(), System.currentTimeMillis());
+
+    OffsetDateTime now = OffsetDateTime.now();
+
+    return Transaction.builder()
+            .id(id)
+            .trxCode(trxCode)
             .correlationId(id)
             .amountCents(transactionCreationRequest.getAmountCents())
             .effectiveAmountCents(transactionCreationRequest.getAmountCents())

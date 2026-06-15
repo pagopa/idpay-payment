@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,16 +15,19 @@ import java.util.List;
 @Service
 @Slf4j
 public class TransactionInProgressServiceImpl implements TransactionInProgressService {
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TrxCodeGenUtil trxCodeGenUtil;
     private final TransactionNotifierService transactionNotifierService;
     private final AppConfigurationProperties.ExtendedTransactions appConfigurationProperties;
 
     public TransactionInProgressServiceImpl(
+            TransactionRepository transactionRepository,
             TransactionInProgressRepository transactionInProgressRepository,
             TrxCodeGenUtil trxCodeGenUtil,
             TransactionNotifierService transactionNotifierService,
             AppConfigurationProperties.ExtendedTransactions appConfigurationProperties) {
+        this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.trxCodeGenUtil = trxCodeGenUtil;
         this.transactionNotifierService = transactionNotifierService;

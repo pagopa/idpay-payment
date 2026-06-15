@@ -30,146 +30,165 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
     private final TransactionRepository transactionRepository;
+    private final TransactionInProgressRepository transactionInProgressRepository;
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
-    private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonAuthServiceImpl commonAuthService;
     private final DecryptRestConnector decryptRestConnector;
-    private final BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver;
-    protected final AuditUtilities auditUtilities;
+    private final BarCodeAdditionalPropertiesValidationResolver additionalPropertiesResolver;
+    private final AuditUtilities auditUtilities;
 
     public BarCodeAuthPaymentServiceImpl(
             TransactionRepository transactionRepository,
+            TransactionInProgressRepository transactionInProgressRepository,
             BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
             MerchantConnector merchantConnector,
-            TransactionInProgressRepository transactionInProgressRepository,
             CommonAuthServiceImpl commonAuthService,
             DecryptRestConnector decryptRestConnector,
-            BarCodeAdditionalPropertiesValidationResolver additionalPropertiesValidationResolver,
+            BarCodeAdditionalPropertiesValidationResolver additionalPropertiesResolver,
             AuditUtilities auditUtilities) {
+
         this.transactionRepository = transactionRepository;
+        this.transactionInProgressRepository = transactionInProgressRepository;
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
-        this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonAuthService = commonAuthService;
         this.decryptRestConnector = decryptRestConnector;
-        this.additionalPropertiesValidationResolver = additionalPropertiesValidationResolver;
+        this.additionalPropertiesResolver = additionalPropertiesResolver;
         this.auditUtilities = auditUtilities;
     }
 
     @Override
-    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+    public PreviewPaymentResultDTO previewPayment(
+            String trxCode,
+            Map<String, String> additionalProperties,
+            Long amountCents) {
 
-        final TransactionInProgress transactionInProgress =
-                transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
-                        .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                                "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
-        transactionInProgress.setAmountCents(amountCents);
+        TransactionInProgress mongo = loadMongo(trxCode);
+        Transaction postgres = loadPostgres(trxCode);
 
-        final Optional<Transaction> transactionOptional =
-                transactionRepository.findByTrxCode(trxCode.toLowerCase());
-        if(transactionOptional.isEmpty()){
-            new TransactionNotFoundOrExpiredException(
-                    "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase()));
-        }
-        final Transaction transaction = transactionOptional.get();
-        transaction.setAmountCents(amountCents);
+        applyAmount(mongo, amountCents);
+        applyAmount(postgres, amountCents);
 
-        final AuthPaymentDTO preview = commonAuthService
-                .previewPayment(transactionInProgress, transactionInProgress.getUserId());
+        AuthPaymentDTO previewMongo = commonAuthService.previewPayment(mongo, mongo.getUserId());
+        AuthPaymentDTO previewPostgres = commonAuthService.previewPayment(postgres, postgres.getUserId());
 
-        final AuthPaymentDTO previewTransaction = commonAuthService
-                .previewPayment(transaction, transaction.getUserId());
-
-        if (preview.getRewardCents() < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
-        }
-
-        final long residualAmountCents = amountCents - preview.getRewardCents();
-
-        if (residualAmountCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
-        }
+        long residual = validatePreview(previewMongo, amountCents);
 
         //final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
         final String userCf = "userCF";
-        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
-                transactionInProgress,
-                additionalProperties,
-                BarCodeAdditionalPropertiesOperation.PREVIEW));
 
-        transaction.setAdditionalProperties(validateAdditionalProperties(
-                transaction,
-                additionalProperties,
-                BarCodeAdditionalPropertiesOperation.PREVIEW));
+        Map<String, String> validatedPropsMongo = validateAdditionalProperties(mongo, additionalProperties, BarCodeAdditionalPropertiesOperation.PREVIEW);
+        Map<String, String> validatedPropsPostgres = validateAdditionalProperties(postgres, additionalProperties, BarCodeAdditionalPropertiesOperation.PREVIEW);
+
+        mongo.setAdditionalProperties(validatedPropsMongo);
+        postgres.setAdditionalProperties(validatedPropsPostgres);
 
         return PreviewPaymentResultDTO.builder()
-                .trxCode(preview.getTrxCode())
-                .trxDate(preview.getTrxDate())
-                .status(preview.getStatus())
+                .trxCode(previewMongo.getTrxCode())
+                .trxDate(previewMongo.getTrxDate())
+                .status(previewMongo.getStatus())
                 .originalAmountCents(amountCents)
-                .rewardCents(preview.getRewardCents())
-                .residualAmountCents(residualAmountCents)
+                .rewardCents(previewMongo.getRewardCents())
+                .residualAmountCents(residual)
                 .userId(userCf)
-                .additionalProperties(transactionInProgress.getAdditionalProperties())
-                .extendedAuthorization(transactionInProgress.getExtendedAuthorization())
+                .additionalProperties(mongo.getAdditionalProperties())
+                .extendedAuthorization(mongo.getExtendedAuthorization())
                 .build();
     }
 
+    private TransactionInProgress loadMongo(String trxCode) {
+        return transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
+                .orElseThrow(() -> notFound(trxCode));
+    }
+
+    private Transaction loadPostgres(String trxCode) {
+        return transactionRepository.findByTrxCode(trxCode.toLowerCase())
+                .orElseThrow(() -> notFound(trxCode));
+    }
+
+    private TransactionNotFoundOrExpiredException notFound(String trxCode) {
+        return new TransactionNotFoundOrExpiredException(
+                "Cannot find transaction with trxCode [%s]".formatted(trxCode));
+    }
+
+    private void applyAmount(TransactionInProgress trx, Long amount) {
+        trx.setAmountCents(amount);
+    }
+
+    private void applyAmount(Transaction trx, Long amount) {
+        trx.setAmountCents(amount);
+    }
+
+    private long validatePreview(AuthPaymentDTO preview, Long amountCents) {
+        if (preview.getRewardCents() < 0) {
+            throw new TransactionInvalidException(
+                    PaymentConstants.ExceptionCode.REWARD_NOT_VALID,
+                    "Negative reward [%s]".formatted(preview.getRewardCents()));
+        }
+
+        long residual = amountCents - preview.getRewardCents();
+
+        if (residual < 0) {
+            throw new TransactionInvalidException(
+                    PaymentConstants.ExceptionCode.REWARD_NOT_VALID,
+                    "Negative residual amount");
+        }
+
+        return residual;
+    }
+
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
+    public AuthPaymentDTO authPayment(
+            String trxCode,
+            AuthBarCodePaymentDTO request,
+            String merchantId,
+            String pointOfSaleId,
+            String acquirerId) {
         try {
-            if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
-                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
-                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
+            if (request.getAmountCents() <= 0L) {
+                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", request.getAmountCents());
+                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(request.getAmountCents()));
             }
 
-            TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+            TransactionInProgress mongo = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+            Transaction postgres = transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode.toLowerCase(), OffsetDateTime.now())
+                    .orElseThrow(() -> notFound(trxCode));
 
-            Optional<Transaction> transactionOptional = transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode.toLowerCase(), OffsetDateTime.now());
-            if(transactionOptional.isEmpty()){
-                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
-            }
-            Transaction transaction = transactionOptional.get();
+            commonAuthService.checkAuth(trxCode, mongo);
+            commonAuthService.checkAuth(trxCode, postgres);
 
-            commonAuthService.checkAuth(trxCode, transaction);
-            commonAuthService.checkAuth(trxCode, trx);
-
-            trx.setAdditionalProperties(validateAdditionalProperties(
-                    trx,
-                    authBarCodePaymentDTO.getAdditionalProperties(),
+            mongo.setAdditionalProperties(validateAdditionalProperties(
+                    mongo,
+                    request.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
 
-            transaction.setAdditionalProperties(validateAdditionalProperties(
-                    transaction,
-                    authBarCodePaymentDTO.getAdditionalProperties(),
+            postgres.setAdditionalProperties(validateAdditionalProperties(
+                    postgres,
+                    request.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
 
             PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
+            WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(mongo.getInitiativeId(), mongo.getUserId());
 
-            WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(trx.getInitiativeId(), trx.getUserId());
+            setTrxFields(merchantId, request, mongo, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
+            setTrxFields(merchantId, request, postgres, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
 
-            setTrxFields(merchantId, authBarCodePaymentDTO, trx, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
-            setTrxFields(merchantId, authBarCodePaymentDTO, transaction, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
+            commonAuthService.checkTrxStatusToInvokePreAuth(mongo);
+            commonAuthService.checkTrxStatusToInvokePreAuth(postgres);
 
-            commonAuthService.checkTrxStatusToInvokePreAuth(trx);
-            commonAuthService.checkTrxStatusToInvokePreAuth(transaction);
-
-            AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(transaction, trx);
+            AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(postgres, mongo);
 
             logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
             authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
             authPaymentDTO.setRejectionReasons(Collections.emptyList());
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
+            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(request.getAmountCents(), authPaymentDTO.getRewardCents());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
             return authPaymentDTO;
@@ -182,7 +201,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private Map<String, String> validateAdditionalProperties(TransactionInProgress trx,
                                                              Map<String, String> additionalProperties,
                                                              BarCodeAdditionalPropertiesOperation operation) {
-        Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
+        Map<String, String> validatedAdditionalProperties = additionalPropertiesResolver
                 .resolve(trx.getInitiativeId())
                 .validateAndEnrich(additionalProperties, operation);
         if (validatedAdditionalProperties == null) {
@@ -194,7 +213,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private Map<String, String> validateAdditionalProperties(Transaction transaction,
                                                              Map<String, String> additionalProperties,
                                                              BarCodeAdditionalPropertiesOperation operation) {
-        Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
+        Map<String, String> validatedAdditionalProperties = additionalPropertiesResolver
                 .resolve(transaction.getInitiativeId())
                 .validateAndEnrich(additionalProperties, operation);
         if (validatedAdditionalProperties == null) {

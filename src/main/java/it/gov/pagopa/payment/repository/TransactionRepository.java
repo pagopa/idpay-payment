@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.repository;
 
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -21,6 +22,56 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     Optional<Transaction> findByTrxCode(String trxCode);
 
     Optional<Transaction> findByTrxCodeAndTrxEndDateGreaterThanEqual(String trxCode, OffsetDateTime trxEndDate);
+
+    Optional<Transaction> findByInitiativeIdAndTrxCodeAndUserId(String initiativeId, String trxCode, String userId);
+        
+    List<Transaction> findByUserIdAndInitiativeIdAndChannel(
+            String userId,
+            String initiativeId,
+            String channel
+    );
+
+    List<Transaction> findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+            String userId,
+            String initiativeId,
+            SyncTrxStatus status,
+            Boolean extendedAuthorization
+    );
+
+    List<Transaction> findByStatusAndUpdateDateBefore(
+            SyncTrxStatus status,
+            LocalDateTime updateDate,
+            Pageable pageable
+    );
+
+    @Query("""
+    select t
+    from Transaction t
+    where t.trxEndDate < :now
+      and t.status in :statuses
+      and (t.extendedAuthorization is null or t.extendedAuthorization = false)
+      and (:initiativeId is null or t.initiativeId = :initiativeId)
+    order by t.trxDate asc
+""")
+    List<Transaction> findLapsedTransactions(
+            @Param("initiativeId") String initiativeId,
+            @Param("now") OffsetDateTime now,
+            @Param("statuses") List<SyncTrxStatus> statuses,
+            Pageable pageable
+    );
+
+    List<Transaction> findByStatusOrderByTrxDateAsc(
+            SyncTrxStatus status,
+            Pageable pageable
+    );
+
+    @Modifying
+    @Transactional
+    @Query("""
+    delete from Transaction t
+    where t.id in :ids
+""")
+    int bulkDeleteByIds(@Param("ids") List<String> ids);
 
     @Modifying
     @Transactional

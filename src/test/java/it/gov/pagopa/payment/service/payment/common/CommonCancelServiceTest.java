@@ -202,7 +202,7 @@ class CommonCancelServiceTest {
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
-    when(barCodeCreationService.createExtendedTransactionPostDelete(
+    when(barCodeCreationService.createExtendedTransactionInProgressPostDelete(
         new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),
         trx.getChannel(), trx.getUserId(), trx.getTrxEndDate())).thenReturn(trxNew);
 

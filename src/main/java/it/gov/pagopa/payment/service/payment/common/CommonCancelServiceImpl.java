@@ -7,6 +7,8 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
+import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
@@ -14,15 +16,18 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,7 +37,9 @@ import static it.gov.pagopa.payment.constants.PaymentConstants.*;
 @Service("commonCancel")
 public class CommonCancelServiceImpl {
 
+    private final TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
     private final BarCodeCreationServiceImpl barCodeCreationService;
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository repository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final TransactionNotifierService notifierService;
@@ -43,13 +50,17 @@ public class CommonCancelServiceImpl {
 
 
     public CommonCancelServiceImpl(
+            TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
             TransactionInProgressRepository repository,
+            TransactionRepository transactionRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
             AuditUtilities auditUtilities,
             BarCodeCreationServiceImpl barCodeCreationService) {
+        this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
         this.repository = repository;
+        this.transactionRepository = transactionRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
@@ -59,19 +70,21 @@ public class CommonCancelServiceImpl {
 
     public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         try {
-            TransactionInProgress trx = findAndValidateTransaction(trxId, merchantId, acquirerId);
+            TransactionInProgress mongo = findAndValidateTransactionInProgress(trxId, merchantId, acquirerId);
+            Transaction postgres = findAndValidateTransaction(trxId, merchantId, acquirerId);
 
-            if (isDeletableImmediately(trx)) {
+            if (isDeletableImmediately(mongo)) {
                 repository.deleteById(trxId);
-            } else if (SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())) {
-                handleAuthorizedTransaction(trx);
+                transactionRepository.deleteById(trxId);
+            } else if (SyncTrxStatus.AUTHORIZED.equals(mongo.getStatus())) {
+                handleAuthorizedTransaction(mongo, postgres);
             } else {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED,
                         "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
             }
 
-            log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
-            logCancelTransactionAudit(trx, merchantId, pointOfSaleId);
+            log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", mongo.getId(), mongo.getTrxCode());
+            logCancelTransactionAudit(mongo, merchantId, pointOfSaleId);
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorCancelTransaction(trxId, merchantId);
@@ -79,7 +92,7 @@ public class CommonCancelServiceImpl {
         }
     }
 
-    private TransactionInProgress findAndValidateTransaction(String trxId, String merchantId, String acquirerId) {
+    private TransactionInProgress findAndValidateTransactionInProgress(String trxId, String merchantId, String acquirerId) {
         TransactionInProgress trx = repository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with transactionId [%s]".formatted(trxId)));
@@ -92,34 +105,52 @@ public class CommonCancelServiceImpl {
         return trx;
     }
 
+    private Transaction findAndValidateTransaction(String trxId, String merchantId, String acquirerId) {
+        Transaction transaction = transactionRepository.findById(trxId)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with transactionId [%s]".formatted(trxId)));
+
+        if (!merchantId.equals(transaction.getMerchantId()) || !acquirerId.equals(transaction.getAcquirerId())) {
+            throw new MerchantOrAcquirerNotAllowedException(
+                    "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]"
+                            .formatted(transaction.getMerchantId(), merchantId));
+        }
+        return transaction;
+    }
+
     private boolean isDeletableImmediately(TransactionInProgress trx) {
         return SyncTrxStatus.CREATED.equals(trx.getStatus()) ||
                 SyncTrxStatus.IDENTIFIED.equals(trx.getStatus()) ||
                 SyncTrxStatus.INVOICED.equals(trx.getStatus());
     }
 
-    private void handleAuthorizedTransaction(TransactionInProgress trx) {
+    private void handleAuthorizedTransaction(TransactionInProgress mongo, Transaction postgres) {
 
-        boolean isReset = trx.getExtendedAuthorization();
-        AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
+        boolean isReset = mongo.getExtendedAuthorization();
+        AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(mongo);
 
-        repository.deleteById(trx.getId());
+        repository.deleteById(mongo.getId());
+        transactionRepository.deleteById(postgres.getId());
         if (refund != null) {
-            trx.setStatus(SyncTrxStatus.CANCELLED);
-            trx.setRewardCents(refund.getRewardCents());
-            trx.setRewards(refund.getRewards());
-            trx.setElaborationDateTime(LocalDateTime.now());
+            mongo.setStatus(SyncTrxStatus.CANCELLED);
+            mongo.setRewardCents(refund.getRewardCents());
+            mongo.setRewards(refund.getRewards());
+            mongo.setElaborationDateTime(LocalDateTime.now());
+
+            postgres.setStatus(SyncTrxStatus.CANCELLED);
+            postgres.setRewardCents(refund.getRewardCents());
+            postgres.setRewards(refund.getRewards());
+            postgres.setElaborationDate(LocalDateTime.now());
 
             if (isReset) {
-                TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
-                newTransaction.setTrxCode(trx.getTrxCode());
-                newTransaction.setTrxDate(trx.getTrxDate());
+                TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(mongo.getInitiativeId(), mongo.getVoucherAmountCents()),mongo.getChannel(),mongo.getUserId(),mongo.getTrxEndDate());
+                newTransaction.setTrxCode(mongo.getTrxCode());
+                newTransaction.setTrxDate(mongo.getTrxDate());
                 repository.save(newTransaction);
+                transactionRepository.save(transactionBarCodeCreationRequest2TransactionInProgressMapper.toPostgres(newTransaction, newTransaction.getTrxCode()));
             }
-            sendCancelledTransactionNotification(trx, isReset);
+            sendCancelledTransactionNotification(mongo, isReset);
         }
-
-
     }
 
     private void logCancelTransactionAudit(TransactionInProgress trx, String merchantId, String pointOfSaleId) {
@@ -135,7 +166,6 @@ public class CommonCancelServiceImpl {
         );
         auditUtilities.logCancelTransaction(dto);
     }
-
 
     private void sendCancelledTransactionNotification(TransactionInProgress trx, boolean isReset) {
         try {
@@ -171,6 +201,22 @@ public class CommonCancelServiceImpl {
                             transaction.getAcquirerId(),
                             transaction.getPointOfSaleId()));
         } while (!transactions.isEmpty());
+
+        List<Transaction> trxs;
+        do {
+            trxs = transactionRepository.findByStatusAndUpdateDateBefore(
+                    SyncTrxStatus.AUTHORIZED,
+                    LocalDateTime.now().minusHours(24),
+                    PageRequest.of(0, pageSize)
+            );
+            log.info("[CANCEL_AUTHORIZED_TRANSACTIONS] Transactions to cancel: {} / {}", trxs.size(), pageSize);
+            trxs.forEach(transaction ->
+                    this.cancelTransaction(
+                            transaction.getId(),
+                            transaction.getMerchantId(),
+                            transaction.getAcquirerId(),
+                            transaction.getPointOfSaleId()));
+        } while (!trxs.isEmpty());
     }
 
     public void deleteInvoicedTransaction() {
@@ -188,6 +234,23 @@ public class CommonCancelServiceImpl {
         }
     }
 
+    public void deleteInvoicedTransaction2() {
+        while (true) {
+
+            List<Transaction> batch = transactionRepository.findByStatusOrderByTrxDateAsc(
+                    SyncTrxStatus.INVOICED,
+                    PageRequest.of(0, 100)
+            );
+
+            if (batch.isEmpty()) {
+                log.debug("[{}] No more invoiced transactions found", INVOICED+RewardConstants.TRX_CHANNEL_QRCODE);
+                break;
+            }
+
+            processBatchInvoicedTransaction(batch);
+        }
+    }
+
     private List<TransactionInProgress> fetchInvoicedTransaction() {
         return repository.findInvoicedTransaction(
                 100
@@ -198,6 +261,21 @@ public class CommonCancelServiceImpl {
         List<String> deletableIds = new ArrayList<>();
 
         for (TransactionInProgress trx : batch) {
+            log.info("[{}] Managing expired transaction trxId={}, status={}, trxDate={}",
+                    "DELETE_INVOICED_TRANSACTION",
+                    trx.getId(),
+                    trx.getStatus(),
+                    trx.getTrxDate());
+            deletableIds.add(trx.getId());
+        }
+
+        deleteProcessedTransactions(deletableIds);
+    }
+
+    private void processBatchInvoicedTransaction(List<Transaction> batch) {
+        List<String> deletableIds = new ArrayList<>();
+
+        for (Transaction trx : batch) {
             log.info("[{}] Managing expired transaction trxId={}, status={}, trxDate={}",
                     "DELETE_INVOICED_TRANSACTION",
                     trx.getId(),
@@ -223,6 +301,27 @@ public class CommonCancelServiceImpl {
 
             processBatchLapsed(batch);
         }
+
+
+        while (true) {
+            List<Transaction> batch = transactionRepository.findLapsedTransactions(
+                    initiativeId,
+                    OffsetDateTime.now(),
+                    List.of(
+                            SyncTrxStatus.IDENTIFIED,
+                            SyncTrxStatus.CREATED,
+                            SyncTrxStatus.REJECTED
+                    ),
+                    PageRequest.of(0, 100)
+            );
+
+            if (batch.isEmpty()) {
+                log.debug("[{}] No more expired transactions found", LAPSED+RewardConstants.TRX_CHANNEL_QRCODE);
+                break;
+            }
+
+            processTransactionBatchLapsed(batch);
+        }
     }
 
     private void processBatchLapsed(List<TransactionInProgress> batch) {
@@ -234,6 +333,19 @@ public class CommonCancelServiceImpl {
         }
 
         deleteProcessedTransactions(deletableIds);
+    }
+
+    private void processTransactionBatchLapsed(List<Transaction> batch) {
+
+        List<String> deletableIds = new ArrayList<>();
+
+        for (Transaction trx : batch) {
+            processSingleTransaction(trx, deletableIds);
+        }
+
+        if (!deletableIds.isEmpty()) {
+            transactionRepository.bulkDeleteByIds(deletableIds);
+        }
     }
 
     private List<TransactionInProgress> fetchLapsedTransaction(String initiativeId) {
@@ -272,7 +384,44 @@ public class CommonCancelServiceImpl {
         }
     }
 
+    private void processSingleTransaction(Transaction trx, List<String> deletableIds) {
+        logTransactionStart(trx);
+
+        try {
+            boolean canDelete = PerformanceLogger.execute(
+                    LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
+                    () -> handleExpiredTransactionBulk(trx),
+                    result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
+                            .formatted(trx.getId())
+            );
+
+            if (canDelete) {
+                deletableIds.add(trx.getId());
+            }
+
+            auditUtilities.logExpiredTransaction(
+                    trx.getInitiativeId(),
+                    trx.getId(),
+                    trx.getTrxCode(),
+                    trx.getUserId(),
+                    DELETE_LAPSED_TRANSACTION
+            );
+
+        } catch (Exception e) {
+            logAndAuditError(trx, e);
+        }
+    }
+
     private void logTransactionStart(TransactionInProgress trx) {
+        log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
+                trx.getId(),
+                trx.getStatus(),
+                trx.getTrxDate());
+    }
+
+    private void logTransactionStart(Transaction trx) {
         log.info("[{}] [{}] Managing lapsed transaction trxId={}, status={}, trxDate={}",
                 LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
                 DELETE_LAPSED_TRANSACTION,
@@ -297,6 +446,22 @@ public class CommonCancelServiceImpl {
         );
     }
 
+    private void logAndAuditError(Transaction trx, Exception e) {
+        log.error("[{}] [{}] Error handling transaction {}: {}",
+                LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                DELETE_LAPSED_TRANSACTION,
+                trx.getId(),
+                e.getMessage());
+
+        auditUtilities.logErrorExpiredTransaction(
+                trx.getInitiativeId(),
+                trx.getId(),
+                trx.getTrxCode(),
+                trx.getUserId(),
+                DELETE_LAPSED_TRANSACTION
+        );
+    }
+
     private void deleteProcessedTransactions(List<String> deletableIds) {
         if (!deletableIds.isEmpty()) {
             repository.bulkDeleteByIds(deletableIds);
@@ -305,6 +470,27 @@ public class CommonCancelServiceImpl {
 
 
     protected boolean handleExpiredTransactionBulk(TransactionInProgress trx) {
+        if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
+            try {
+                rewardCalculatorConnector.cancelTransaction(trx);
+            } catch (TransactionNotFoundOrExpiredException e) {
+                log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
+                        "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
+                        DELETE_LAPSED_TRANSACTION,
+                        trx.getId());
+            } catch (ServiceException e) {
+                log.warn("[{}] [{}] ServiceException cancelling transaction {}: {}",
+                        LAPSED+RewardConstants.TRX_CHANNEL_QRCODE,
+                        DELETE_LAPSED_TRANSACTION,
+                        trx.getId(),
+                        e.getMessage());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    protected boolean handleExpiredTransactionBulk(Transaction trx) {
         if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
