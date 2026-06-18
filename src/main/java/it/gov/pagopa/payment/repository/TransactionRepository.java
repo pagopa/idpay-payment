@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -66,7 +65,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     );
 
     @Modifying
-    @Transactional
     @Query("""
     delete from Transaction t
     where t.id in :ids
@@ -74,7 +72,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     int bulkDeleteByIds(@Param("ids") List<String> ids);
 
     @Modifying
-    @Transactional
     @Query("""
     update Transaction t
     set
@@ -106,7 +103,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     );
 
     @Modifying
-    @Transactional
     @Query("""
     update Transaction t
     set
