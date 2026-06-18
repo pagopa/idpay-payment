@@ -41,4 +41,5 @@ public class AuthPaymentDTO {
   private Map<String, Reward> rewards;
 
   private Map<String, String> additionalProperties;
+  private Integer trxNumber;
 }
