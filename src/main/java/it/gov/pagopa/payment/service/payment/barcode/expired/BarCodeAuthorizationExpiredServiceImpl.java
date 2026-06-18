@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment.barcode.expired;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.expired.common.CommonAuthorizationExpiredServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -14,11 +15,13 @@ import org.springframework.stereotype.Service;
 public class BarCodeAuthorizationExpiredServiceImpl extends CommonAuthorizationExpiredServiceImpl implements BarCodeAuthorizationExpiredService {
 
     public BarCodeAuthorizationExpiredServiceImpl(
+            TransactionRepository transactionRepository,
             @Value("${app.bar-code.expirations.authorization-minutes}") long authorizationExpirationMinutes,
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities) {
-        super(authorizationExpirationMinutes,
+        super(transactionRepository,
+                authorizationExpirationMinutes,
                 transactionInProgressRepository,
                 rewardCalculatorConnector,
                 auditUtilities,

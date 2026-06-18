@@ -1,17 +1,24 @@
 package it.gov.pagopa.payment.service.payment.expired.common;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
-import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -19,10 +26,12 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
 
     private final long authorizationExpirationMinutes;
 
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
 
     protected CommonAuthorizationExpiredServiceImpl(
+            TransactionRepository transactionRepository,
             long authorizationExpirationMinutes,
 
             TransactionInProgressRepository transactionInProgressRepository,
@@ -30,6 +39,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
             AuditUtilities auditUtilities,
             String channel) {
         super(auditUtilities, channel);
+        this.transactionRepository = transactionRepository;
 
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
@@ -38,10 +48,23 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
+        Transaction transaction = transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now())
+                .orElse(null);
         return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode);
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
+        OffsetDateTime minTrxDate = OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes);
+
+        Optional<Transaction> transactionOpt = transactionRepository.findAndModifyThrottled(trxCode, minTrxDate);
+
+        if (transactionOpt.isPresent()) {
+            Transaction transaction = transactionOpt.get();
+        }
+        if (transactionRepository.existsByTrxCodeAndDateGreaterThan(trxCode, minTrxDate)) {
+            throw new TooManyRequestsException("Too many requests on trx having trCode: " + trxCode);
+        }
+
         return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode, authorizationExpirationMinutes);
     }
 
@@ -52,6 +75,12 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
 
     @Override
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
+        Transaction transaction = transactionRepository.findAuthorizationExpiredTransaction(
+                initiativeId,
+                OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes),
+                List.of("IDENTIFIED", "CREATED", "REJECTED"),
+                1000
+        );
         return transactionInProgressRepository.findAuthorizationExpiredTransaction(initiativeId, expirationMinutes);
     }
 
@@ -66,6 +95,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
                 }
             }
         }
+        transactionRepository.deleteById(trx.getId());
         transactionInProgressRepository.deleteById(trx.getId());
         return trx;
     }

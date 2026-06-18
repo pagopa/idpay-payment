@@ -6,7 +6,10 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -20,7 +23,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.Optional;
 
 @Slf4j
 @Service("commonReversal")
@@ -56,11 +58,8 @@ public class CommonReversalServiceImpl {
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
-            Optional<Transaction> optional = transactionRepository.findById(transactionId);
-            if(optional.isEmpty()){
-               throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
-            }
-            Transaction transaction = optional.get();
+            Transaction transaction = transactionRepository.findById(transactionId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
             if (!trx.getMerchantId().equals(merchantId)) {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
@@ -72,17 +71,6 @@ public class CommonReversalServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
 
-
-            if (!transaction.getMerchantId().equals(merchantId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(), merchantId));
-            }
-            if (!transaction.getPointOfSaleId().equals(pointOfSaleId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]".formatted(transaction.getPointOfSaleId(), pointOfSaleId));
-            }
-            if (!SyncTrxStatus.CAPTURED.equals(transaction.getStatus())) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
-            }
-
             // Uploading invoice to storage
             String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
                     merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
@@ -91,18 +79,12 @@ public class CommonReversalServiceImpl {
             // updating the transaction
             trx.setStatus(SyncTrxStatus.REFUNDED);
             trx.setCreditNoteData(InvoiceData.builder()
-                .filename(file.getOriginalFilename())
-                .docNumber(docNumber)
-                .build());
-
-            // updating the transaction
-            transaction.setStatus(SyncTrxStatus.REFUNDED);
-            transaction.setCreditNoteDocNumber(docNumber);
-            transaction.setCreditNoteFilename(file.getOriginalFilename());
+                    .filename(file.getOriginalFilename())
+                    .docNumber(docNumber)
+                    .build());
 
             // sending the transaction reversal notification
             sendReversedTransactionNotification(trx);
-            sendReversedTransactionNotification(transaction);
 
             // logging operation
             RevertTransactionAuditDTO auditDTO = new RevertTransactionAuditDTO(
@@ -133,24 +115,6 @@ public class CommonReversalServiceImpl {
     }
 
     private void sendReversedTransactionNotification(TransactionInProgress trx) {
-        try {
-            log.info("[REVERSE_TRANSACTION][SEND_NOTIFICATION] Sending Reverse Authorized Payment event to Notification: trxId {} - merchantId {}", trx.getId(), trx.getMerchantId());
-            if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while reversing Authorized Payment notify");
-            }
-        } catch (Exception e) {
-            if (!paymentErrorNotifierService.notifyReversalPayment(
-                    notifierService.buildMessage(trx, trx.getUserId()),
-                    "[REVERSE_TRANSACTION] An error occurred while publishing the reversal authorized result: trxId %s - merchantId %s".formatted(trx.getId(), trx.getMerchantId()),
-                    true,
-                    e)
-            ) {
-                log.error("[REVERSE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {}", trx.getId(), trx.getUserId(), e);
-            }
-        }
-    }
-
-    private void sendReversedTransactionNotification(Transaction trx) {
         try {
             log.info("[REVERSE_TRANSACTION][SEND_NOTIFICATION] Sending Reverse Authorized Payment event to Notification: trxId {} - merchantId {}", trx.getId(), trx.getMerchantId());
             if (!notifierService.notify(trx, trx.getUserId())) {

@@ -21,10 +21,7 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
 
-    public RetrieveActiveBarcodeImpl(
-            TransactionRepository transactionRepository,
-            TransactionInProgressRepository transactionInProgressRepository,
-            TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
+    public RetrieveActiveBarcodeImpl(TransactionRepository transactionRepository, TransactionInProgressRepository transactionInProgressRepository, TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
         this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
@@ -32,49 +29,32 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
 
     @Override
     public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
-        List<TransactionInProgress> mongo = transactionInProgressRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
-        if (mongo.isEmpty()) {
+        List<TransactionInProgress> transactions = transactionInProgressRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
+        List<Transaction> trxs = transactionRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
+
+        if (transactions.isEmpty()) {
+            return null;
+        }
+        if (trxs.isEmpty()) {
             return null;
         }
 
-        TransactionInProgress latestMongo = null;
+        TransactionInProgress latest = null;
 
-        for (TransactionInProgress trx : mongo) {
+        for (TransactionInProgress trx : transactions) {
             if (trx.getStatus() == SyncTrxStatus.AUTHORIZED) {
                 return null;
             }
 
-            if (latestMongo == null || trx.getTrxDate().isBefore(latestMongo.getTrxDate())) {
-                latestMongo = trx;
+            if (latest == null || trx.getTrxDate().isBefore(latest.getTrxDate())) {
+                latest = trx;
             }
         }
 
-        if(null != latestMongo) {
-            latestMongo.setAmountCents(latestMongo.getVoucherAmountCents());
+        if(null != latest) {
+            latest.setAmountCents(latest.getVoucherAmountCents());
         }
 
-
-        List<Transaction> postgres = transactionRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
-        if (postgres.isEmpty()) {
-            return null;
-        }
-
-        Transaction latestPostgres = null;
-
-        for (Transaction trx : postgres) {
-            if (trx.getStatus() == SyncTrxStatus.AUTHORIZED) {
-                return null;
-            }
-
-            if (latestPostgres == null || trx.getTrxDate().isBefore(latestPostgres.getTrxDate())) {
-                latestPostgres = trx;
-            }
-        }
-
-        if(null != latestPostgres) {
-            latestPostgres.setAmountCents(latestPostgres.getVoucherAmountCents());
-        }
-
-        return transactionBarCodeInProgress2TransactionResponseMapper.apply(latestMongo);
+        return transactionBarCodeInProgress2TransactionResponseMapper.apply(latest);
     }
 }

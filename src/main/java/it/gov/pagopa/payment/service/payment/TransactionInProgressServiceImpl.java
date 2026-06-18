@@ -1,7 +1,9 @@
 package it.gov.pagopa.payment.service.payment;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -10,6 +12,7 @@ import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Service
@@ -20,35 +23,53 @@ public class TransactionInProgressServiceImpl implements TransactionInProgressSe
     private final TrxCodeGenUtil trxCodeGenUtil;
     private final TransactionNotifierService transactionNotifierService;
     private final AppConfigurationProperties.ExtendedTransactions appConfigurationProperties;
+    private final TransactionSynchronizer transactionSynchronizer;
 
     public TransactionInProgressServiceImpl(
             TransactionRepository transactionRepository,
             TransactionInProgressRepository transactionInProgressRepository,
             TrxCodeGenUtil trxCodeGenUtil,
             TransactionNotifierService transactionNotifierService,
-            AppConfigurationProperties.ExtendedTransactions appConfigurationProperties) {
+            AppConfigurationProperties.ExtendedTransactions appConfigurationProperties,
+            TransactionSynchronizer transactionSynchronizer) {
         this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.trxCodeGenUtil = trxCodeGenUtil;
         this.transactionNotifierService = transactionNotifierService;
         this.appConfigurationProperties = appConfigurationProperties;
+        this.transactionSynchronizer = transactionSynchronizer;
     }
 
     @Override
     public void generateTrxCodeAndSave(TransactionInProgress trx, String flowName) {
         long retry = 1;
-        while (transactionInProgressRepository.createIfExists(trx, trxCodeGenUtil.get()).getUpsertedId()
-                == null) {
+        String trxCode;
+        while(true){
+            trxCode = trxCodeGenUtil.get();
+            if(transactionInProgressRepository.createIfExists(trx, trxCode).getUpsertedId()
+                != null){
+                break;
+            }
             log.info(
                     "[{}] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
                     flowName,
                     retry);
         }
+        trx.setTrxCode(trxCode);
+
+        Transaction transaction = new Transaction();
+        transactionSynchronizer.sync(trx, transaction);
+        transactionRepository.save(transaction);
     }
 
     @Override
     public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
         try {
+            OffsetDateTime now = OffsetDateTime.now();
+            log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", initiativeId);
+            int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
+
+            log.info("[BATCH_EXPIRED_VOUCHER] Updated expired vouchers directly in DB: {}", updatedRows);
             return transactionInProgressRepository.updateStatusForExpiredVoucherTransactions(initiativeId);
         } catch (Exception e) {
             log.error("[UPDATE_EXPIRED_TRANSACTIONS_STATUS] Encountered an error during the update of the existing " +

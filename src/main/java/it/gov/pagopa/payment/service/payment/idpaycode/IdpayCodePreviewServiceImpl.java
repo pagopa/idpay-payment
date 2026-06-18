@@ -20,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Slf4j
 @Service
 public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
@@ -52,34 +50,23 @@ public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
     public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
-        Optional<Transaction> optional = transactionRepository.findById(trxId);
-        if(optional.isEmpty()){
-            new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
-        }
+        Transaction transaction = transactionRepository.findById(trxId)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
+
         if(!trx.getMerchantId().equals(merchantId)){
             throw new MerchantOrAcquirerNotAllowedException(
                     PaymentConstants.ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED,
                     "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
-        Transaction transaction = optional.get();
-        if(!transaction.getMerchantId().equals(merchantId)){
-            throw new MerchantOrAcquirerNotAllowedException(
-                    PaymentConstants.ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED,
-                    "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(),merchantId));
-        }
 
         if(trx.getUserId() == null){
-            //TO - DO Transaction
             return authPaymentMapper.transactionMapper(trx);
         }
 
         SecondFactorDTO secondFactorDetails = paymentInstrumentConnector.getSecondFactor(trx.getUserId());
 
         commonPreAuthService.checkPreAuth(trx.getUserId(), trx);
-        commonPreAuthService.checkPreAuth(transaction.getUserId(), transaction);
-
         AuthPaymentDTO authPaymentDTO = commonPreAuthService.previewPayment(trx, RewardConstants.TRX_CHANNEL_IDPAYCODE, SyncTrxStatus.IDENTIFIED);
-        AuthPaymentDTO authPaymentDTO2 = commonPreAuthService.previewPayment(transaction, RewardConstants.TRX_CHANNEL_IDPAYCODE, SyncTrxStatus.IDENTIFIED);
 
         auditUtilities.logPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), RewardConstants.TRX_CHANNEL_IDPAYCODE);
         return authPaymentIdpayCodeMapper.authPaymentMapper(authPaymentDTO, secondFactorDetails.getSecondFactor());

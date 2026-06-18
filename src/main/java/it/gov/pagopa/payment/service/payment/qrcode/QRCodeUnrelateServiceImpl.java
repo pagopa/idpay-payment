@@ -1,41 +1,54 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.LocalDateTime;
-import java.util.Collections;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.Collections;
 
 @Service
 @Slf4j
 public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
 
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository repository;
     private final QRCodeAuthorizationExpiredService authorizationExpiredService;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
 
     public QRCodeUnrelateServiceImpl(
+            TransactionRepository transactionRepository,
             TransactionInProgressRepository repository,
             QRCodeAuthorizationExpiredService authorizationExpiredService,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer) {
+        this.transactionRepository = transactionRepository;
         this.repository = repository;
         this.authorizationExpiredService = authorizationExpiredService;
         this.auditUtilities = auditUtilities;
+        this.transactionSynchronizer = transactionSynchronizer;
     }
 
     @Override
     public void unrelateTransaction(String trxCode, String userId) {
         try {
             TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+            Transaction transaction = transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now())
+                    .orElseThrow(() ->  new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
             if (trx == null) {
                 throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
@@ -46,9 +59,11 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
                     throw new UserNotAllowedException(ExceptionCode.TRX_ALREADY_ASSIGNED, "Transaction with trxCode [%s] is already assigned to another user".formatted(trxCode));
                 }
 
-
                 revertTrxToCreatedStatus(trx);
                 repository.save(trx);
+
+                transactionSynchronizer.sync(trx, transaction);
+                transactionRepository.save(transaction);
 
                 log.info("[TRX_STATUS][UNRELATED] The transaction with trxId {} trxCode {}, has been cancelled", trx.getId(), trx.getTrxCode());
                 auditUtilities.logUnrelateTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), ObjectUtils.firstNonNull(trx.getRewardCents(), 0L), trx.getRejectionReasons());

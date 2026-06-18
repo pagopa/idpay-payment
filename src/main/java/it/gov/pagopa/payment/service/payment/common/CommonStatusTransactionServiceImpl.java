@@ -28,22 +28,10 @@ public class CommonStatusTransactionServiceImpl {
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
         TransactionInProgress transactionInProgress= transactionInProgressRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
-
         Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() ->
-                        new TransactionNotFoundOrExpiredException(
-                                "Cannot find transaction with transactionId [%s]"
-                                        .formatted(transactionId)
-                        )
-                );
-
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
         if(!transactionInProgress.getMerchantId().equals(merchantId)){
-            log.info("Merchant " + merchantId + " not authorized to retrieve transaction " + transactionId);
-            throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
-        }
-
-        if(!transaction.getMerchantId().equals(merchantId)){
             log.info("Merchant " + merchantId + " not authorized to retrieve transaction " + transactionId);
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
         }

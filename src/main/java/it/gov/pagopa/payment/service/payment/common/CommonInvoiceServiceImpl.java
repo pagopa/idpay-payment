@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
@@ -39,6 +40,7 @@ public class CommonInvoiceServiceImpl {
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
     private final MerchantConnector merchantConnector;
 
     public CommonInvoiceServiceImpl(
@@ -48,7 +50,9 @@ public class CommonInvoiceServiceImpl {
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
             FileStorageClient fileStorageClient,
-            AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
+            AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer,
+            MerchantConnector merchantConnector) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
         this.transactionRepository = transactionRepository;
         this.repository = repository;
@@ -56,7 +60,8 @@ public class CommonInvoiceServiceImpl {
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
-      this.merchantConnector = merchantConnector;
+        this.transactionSynchronizer = transactionSynchronizer;
+        this.merchantConnector = merchantConnector;
     }
 
     public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
@@ -65,55 +70,45 @@ public class CommonInvoiceServiceImpl {
             Utilities.checkFileExtensionOrThrow(file);
 
             // getting the transaction from transaction_in_progress and checking if it is valid for the invoiced status
-            TransactionInProgress mongo = repository.findById(transactionId)
+            TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
-            Transaction postgres =  transactionRepository.findById(transactionId)
+            Transaction transaction = transactionRepository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
-            if (!mongo.getMerchantId().equals(merchantId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(mongo.getMerchantId(), merchantId));
+            if (!trx.getMerchantId().equals(merchantId)) {
+                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
-            if (!mongo.getPointOfSaleId().equals(pointOfSaleId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]".formatted(mongo.getPointOfSaleId(), pointOfSaleId));
+            if (!trx.getPointOfSaleId().equals(pointOfSaleId)) {
+                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]".formatted(trx.getPointOfSaleId(), pointOfSaleId));
             }
-            if (!SyncTrxStatus.CAPTURED.equals(mongo.getStatus())) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(mongo.getStatus()));
+            if (!SyncTrxStatus.CAPTURED.equals(trx.getStatus())) {
+                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && mongo.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(mongo.getElaborationDateTime(), minDaysToInvoiceTransaction));
+            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
+                throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(trx.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
             // Uploading invoice to storage
             String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                    merchantId, pointOfSaleId, mongo.getId(), file.getOriginalFilename());
+                    merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
             // updating the transaction status to invoiced
-            mongo.setStatus(SyncTrxStatus.INVOICED);
-            mongo.setUpdateDate(LocalDateTime.now());
-            mongo.setInvoiceData(InvoiceData.builder()
-                .filename(file.getOriginalFilename())
-                .docNumber(docNumber)
-                .build());
+            trx.setStatus(SyncTrxStatus.INVOICED);
+            trx.setUpdateDate(LocalDateTime.now());
+            trx.setInvoiceData(InvoiceData.builder()
+                    .filename(file.getOriginalFilename())
+                    .docNumber(docNumber)
+                    .build());
 
-            postgres.setStatus(SyncTrxStatus.INVOICED);
-            postgres.setUpdateDate(LocalDateTime.now());
-            postgres.setInvoiceFilename(file.getOriginalFilename());
-            postgres.setInvoiceDocNumber(docNumber);
-
-            if (mongo.getFranchiseName() == null || mongo.getPointOfSaleType() == null) {
+            if (trx.getFranchiseName() == null || trx.getPointOfSaleType() == null) {
                 PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
 
-                mongo.setFranchiseName(pointOfSaleDTO.getFranchiseName());
-                mongo.setPointOfSaleType(pointOfSaleDTO.getType().name());
-                mongo.setBusinessName(pointOfSaleDTO.getBusinessName());
-                mongo.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
-
-                postgres.setFranchiseName(pointOfSaleDTO.getFranchiseName());
-                postgres.setPointOfSaleType(pointOfSaleDTO.getType().name());
-                postgres.setBusinessName(pointOfSaleDTO.getBusinessName());
-                postgres.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
+                trx.setFranchiseName(pointOfSaleDTO.getFranchiseName());
+                trx.setPointOfSaleType(pointOfSaleDTO.getType().name());
+                trx.setBusinessName(pointOfSaleDTO.getBusinessName());
+                trx.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
             }
 
             // sending the transaction invoice notification (to store it in transaction db collection)
@@ -121,11 +116,11 @@ public class CommonInvoiceServiceImpl {
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
-                    mongo.getInitiativeId(),
-                    mongo.getId(),
-                    mongo.getTrxCode(),
-                    mongo.getUserId(),
-                    ObjectUtils.firstNonNull(mongo.getRewardCents(), 0L),
+                    trx.getInitiativeId(),
+                    trx.getId(),
+                    trx.getTrxCode(),
+                    trx.getUserId(),
+                    ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
                     path,
                     docNumber,
                     merchantId,
@@ -134,8 +129,10 @@ public class CommonInvoiceServiceImpl {
             auditUtilities.logInvoiceTransaction(auditDTO);
 
             // removing the transaction from transaction_in_progress collection
-            repository.save(mongo);
-            transactionRepository.save(postgres);
+            repository.save(trx);
+
+            transactionSynchronizer.sync(trx, transaction);
+            transactionRepository.save(transaction);
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);

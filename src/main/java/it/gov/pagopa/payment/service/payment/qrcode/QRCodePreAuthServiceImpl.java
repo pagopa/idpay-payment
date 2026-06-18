@@ -1,8 +1,10 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -19,17 +21,20 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements QRCodePreAuthService {
   public QRCodePreAuthServiceImpl(@Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
-                                  TransactionRepository transactionRepository,
                                   TransactionInProgressRepository transactionInProgressRepository,
+                                  TransactionRepository transactionRepository,
                                   RewardCalculatorConnector rewardCalculatorConnector,
                                   AuditUtilities auditUtilities,
-                                  WalletConnector walletConnector) {
-    super(authorizationExpirationMinutes, transactionRepository, transactionInProgressRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
+                                  WalletConnector walletConnector,
+                                  TransactionSynchronizer transactionSynchronizer) {
+    super(authorizationExpirationMinutes, transactionInProgressRepository, transactionRepository, rewardCalculatorConnector, auditUtilities, transactionSynchronizer, walletConnector);
   }
 
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
     TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
+            .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
+    Transaction transaction = transactionRepository.findByTrxCode(trxCode.toLowerCase())
             .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
     relateUser(trx, userId);

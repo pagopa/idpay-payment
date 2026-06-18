@@ -23,7 +23,6 @@ import java.time.LocalDateTime;
 @Slf4j
 @Service("commonConfirm")
 public class CommonConfirmServiceImpl {
-
     private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository repository;
     private final TransactionInProgress2TransactionResponseMapper mapper;
@@ -43,35 +42,27 @@ public class CommonConfirmServiceImpl {
         this.auditUtilities = auditUtilities;
     }
 
-    public TransactionResponse confirmPayment(
-            String trxId,
-            String merchantId,
-            String acquirerId) {
+    public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
         try {
-            TransactionInProgress mongo = repository.findById(trxId)
+            TransactionInProgress trx = repository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            Transaction postgres = transactionRepository.findById(trxId)
+            Transaction transaction = transactionRepository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            if(!SyncTrxStatus.AUTHORIZED.equals(mongo.getStatus())){
+            if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
                 throw new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                        "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trxId,mongo.getStatus()));
+                        "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trxId,trx.getStatus()));
             }
-            if(!SyncTrxStatus.AUTHORIZED.equals(postgres.getStatus())){
-                throw new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                        "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trxId,postgres.getStatus()));
-            }
-            if(!mongo.getMerchantId().equals(merchantId) || !mongo.getAcquirerId().equals(acquirerId)){
-                throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(mongo.getMerchantId(), merchantId));
+            if(!trx.getMerchantId().equals(merchantId) || !trx.getAcquirerId().equals(acquirerId)){
+                throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
 
-            confirmAuthorizedPayment(mongo);
-            confirmAuthorizedPayment(postgres);
+            confirmAuthorizedPayment(trx);
 
-            auditUtilities.logConfirmedPayment(mongo.getInitiativeId(), mongo.getId(), mongo.getTrxCode(), mongo.getUserId(), mongo.getRewardCents(), mongo.getRejectionReasons(), mongo.getMerchantId());
+            auditUtilities.logConfirmedPayment(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons(), trx.getMerchantId());
 
-            return mapper.apply(mongo);
+            return mapper.apply(trx);
         } catch (RuntimeException e) {
             auditUtilities.logErrorConfirmedPayment(trxId, merchantId);
             throw e;
@@ -85,36 +76,10 @@ public class CommonConfirmServiceImpl {
         sendConfirmPaymentNotification(trx);
 
         repository.deleteById(trx.getId());
-    }
-
-    public void confirmAuthorizedPayment(Transaction transaction) {
-        transaction.setStatus(SyncTrxStatus.REWARDED);
-        transaction.setElaborationDate(LocalDateTime.now());
-        log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", transaction.getId(), transaction.getTrxCode());
-        sendConfirmPaymentNotification(transaction);
-
-        transactionRepository.deleteById(transaction.getId());
+        transactionRepository.deleteById(trx.getId());
     }
 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {
-        try {
-            log.info("[CONFIRM_PAYMENT][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
-            if (!notifierService.notify(trx, trx.getMerchantId())) {
-                throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR,  "Something gone wrong while Confirm Payment notify");
-            }
-        } catch (Exception e) {
-            if(!paymentErrorNotifierService.notifyConfirmPayment(
-                    notifierService.buildMessage(trx, trx.getMerchantId()),
-                    "[CONFIRM_PAYMENT] An error occurred while publishing the confirmation Payment result: trxId %s - merchantId %s - acquirerId %s".formatted(trx.getId(), trx.getMerchantId(), trx.getAcquirerId()),
-                    true,
-                    e)
-            ) {
-                log.error("[CONFIRM_PAYMENT][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getUserId(), trx.getAcquirerId(), e);
-            }
-        }
-    }
-
-    private void sendConfirmPaymentNotification(Transaction trx) {
         try {
             log.info("[CONFIRM_PAYMENT][SEND_NOTIFICATION] Sending Confirmation Payment event to Notification: trxId {} - merchantId {} - acquirerId {}", trx.getId(), trx.getMerchantId(), trx.getAcquirerId());
             if (!notifierService.notify(trx, trx.getMerchantId())) {
