@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import static it.gov.pagopa.payment.utils.Utilities.sanitizeForLog;
+
 @Service
 @Slf4j
 public class TransactionInProgressServiceImpl implements TransactionInProgressService {
@@ -66,7 +68,7 @@ public class TransactionInProgressServiceImpl implements TransactionInProgressSe
     public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
         try {
             OffsetDateTime now = OffsetDateTime.now();
-            log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", initiativeId);
+            log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", sanitizeForLog(initiativeId));
             int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
 
             log.info("[BATCH_EXPIRED_VOUCHER] Updated expired vouchers directly in DB: {}", updatedRows);
