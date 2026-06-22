@@ -2,22 +2,22 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import com.mongodb.client.result.UpdateResult;
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.RewardFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
+import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,13 +50,18 @@ class CommonAuthServiceImplTest {
     @Mock private WalletConnector walletConnectorMock;
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
     @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
+    @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     private CommonAuthServiceImpl commonAuthService;
     @BeforeEach
     void setUp() {
-        commonAuthService = new CommonAuthServiceImpl(transactionInProgressRepositoryMock,
+        commonAuthService = new CommonAuthServiceImpl(
+                transactionRepository,
+                transactionInProgressRepositoryMock,
                 rewardCalculatorConnectorMock,
                 auditUtilitiesMock,
+                transactionSynchronizer,
                 walletConnectorMock,
                 commonPreAuthServiceMock,
                 timeoutSchedulerServiceMock);
@@ -64,7 +70,8 @@ class CommonAuthServiceImplTest {
     @Test
     void authPayment() {
         TransactionInProgress transaction = getTransactionInProgress();
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
         authPaymentDTO.setRejectionReasons(Collections.emptyList());
@@ -101,7 +108,8 @@ class CommonAuthServiceImplTest {
     @Test
     void authPaymentButUpdateTrxFailed() {
         TransactionInProgress transaction = getTransactionInProgress();
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
         authPaymentDTO.setRejectionReasons(Collections.emptyList());
@@ -138,7 +146,8 @@ class CommonAuthServiceImplTest {
     @Test
     void authPaymentWhenRejected() {
         TransactionInProgress transaction = commonAuthPaymentWhenRejectedGiven("DUMMYREJECTIONREASON");
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         TransactionRejectedException result =
                 assertThrows(TransactionRejectedException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
 
@@ -155,7 +164,8 @@ class CommonAuthServiceImplTest {
     @Test
     void authPaymentWhenRejectedNoBudget() {
         TransactionInProgress transaction = commonAuthPaymentWhenRejectedGiven(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED);
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         BudgetExhaustedException result =
                 assertThrows(BudgetExhaustedException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
 
@@ -166,6 +176,8 @@ class CommonAuthServiceImplTest {
     @Test
     void authPaymentWhenMismatchVersionCounter() {
         TransactionInProgress transaction = commonAuthPaymentWhenRejectedGiven(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.REJECTED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
 
         AuthPaymentDTO result = commonAuthService.authPayment(transaction, USERID, TRX_CODE);
 
@@ -209,7 +221,8 @@ class CommonAuthServiceImplTest {
     @Test
     void authPaymentWhenRewardCalculatorReturn404() {
         TransactionInProgress transaction = getTransactionInProgress();
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
         when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
@@ -229,6 +242,8 @@ class CommonAuthServiceImplTest {
     void authPaymentAuthorized() {
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         transaction.setUserId("USERID%d".formatted(1));
         transaction.setRewardCents(10L);
         transaction.setRejectionReasons(Collections.emptyList());
@@ -288,6 +303,8 @@ class CommonAuthServiceImplTest {
     void authPaymentStatusKo() {
         TransactionInProgress transaction =
                 TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         transaction.setUserId(USERID);
         transaction.setTrxCode(TRX_CODE);
 

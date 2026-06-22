@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.exception.custom.RewardCalculatorInvocationExceptio
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredServiceImpl;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
@@ -28,6 +29,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
+    @Mock private TransactionRepository transactionRepository;
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
 
@@ -35,7 +37,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
+        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionRepository, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
     }
 
     @Test

@@ -2,9 +2,12 @@ package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +22,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static it.gov.pagopa.payment.utils.RewardConstants.TRX_CHANNEL_BARCODE;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class RetrieveActiveBarcodeTest {
@@ -27,12 +32,13 @@ class RetrieveActiveBarcodeTest {
     @Mock
     private TransactionInProgressRepository transactionInProgressRepositoryMock;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapperMock = new TransactionBarCodeInProgress2TransactionResponseMapper(5, 10);
+    @Mock private TransactionRepository transactionRepository;
 
     private RetrieveActiveBarcode retrieveActiveBarcode;
 
     @BeforeEach
     void setUp() {
-        retrieveActiveBarcode = new RetrieveActiveBarcodeImpl(transactionInProgressRepositoryMock, transactionBarCodeInProgress2TransactionResponseMapperMock);
+        retrieveActiveBarcode = new RetrieveActiveBarcodeImpl(transactionRepository,transactionInProgressRepositoryMock, transactionBarCodeInProgress2TransactionResponseMapperMock);
     }
 
     @Test
@@ -73,7 +79,8 @@ class RetrieveActiveBarcodeTest {
         trx2.setTrxDate(now.minusDays(5L));
         TransactionInProgress trx3 = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.CREATED);
         trx3.setTrxDate(now);
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(anyString(),anyString(), anyString())).thenReturn(List.of(trx));
         Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(List.of(trx1, trx2, trx3));
 

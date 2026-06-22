@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
 import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
@@ -22,7 +24,9 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -45,6 +49,8 @@ class QRCodePreAuthServiceImplTest {
   @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
+  @Mock private TransactionRepository transactionRepository;
+  @Mock private TransactionSynchronizer transactionSynchronizer;
 
   private QRCodePreAuthService qrCodePreAuthService;
 
@@ -58,13 +64,19 @@ class QRCodePreAuthServiceImplTest {
             new QRCodePreAuthServiceImpl(
                     authorizationExpirationMinutes,
                     transactionInProgressRepositoryMock,
+                    transactionRepository,
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
-                    walletConnectorMock);
+                    walletConnectorMock,
+                    transactionSynchronizer);
   }
 
   @Test
   void relateUser() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
+
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
@@ -86,6 +98,10 @@ class QRCodePreAuthServiceImplTest {
 
   @Test
   void relateUserIdentified() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
+
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     trx.setUserId(USER_ID1);
 
@@ -110,6 +126,10 @@ class QRCodePreAuthServiceImplTest {
 
   @Test
   void relateUserIdentifiedRejected() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
+
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     trx.setUserId(USER_ID1);
 
@@ -135,6 +155,9 @@ class QRCodePreAuthServiceImplTest {
 
   @Test
   void relateUserIdentifiedRejectedNoBudget() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     trx.setUserId(USER_ID1);
 
@@ -161,6 +184,10 @@ class QRCodePreAuthServiceImplTest {
 
   @Test
   void relateUserNotOnboarded() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
+
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
@@ -184,6 +211,8 @@ class QRCodePreAuthServiceImplTest {
 
   @Test
   void relateUserNotAuthorized() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     trx.setUserId(USER_ID1);
     WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
@@ -217,6 +246,8 @@ class QRCodePreAuthServiceImplTest {
 
   @Test
   void relateUserTrxExpired() {
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
     trx.setUserId(USER_ID1);
@@ -254,6 +285,8 @@ class QRCodePreAuthServiceImplTest {
   @Test
   void relateUser_statusSuspendedException() {
     // Given
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, "SUSPENDED");
     String trxCode = trx.getTrxCode();
@@ -278,6 +311,8 @@ class QRCodePreAuthServiceImplTest {
   @Test
   void relateUser_trxAlreadyAuthorizedException() {
     // Given
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
     WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
     String trxCode = trx.getTrxCode();
@@ -302,6 +337,8 @@ class QRCodePreAuthServiceImplTest {
   @Test
   void relateUser_trxStatusNotValidException() {
     // Given
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CANCELLED);
+    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CANCELLED);
     WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
     String trxCode = trx.getTrxCode();

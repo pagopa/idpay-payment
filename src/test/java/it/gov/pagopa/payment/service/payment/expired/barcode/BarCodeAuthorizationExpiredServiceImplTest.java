@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
@@ -24,6 +25,7 @@ class BarCodeAuthorizationExpiredServiceImplTest {
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
+    @Mock private TransactionRepository transactionRepository;
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
 
@@ -31,7 +33,7 @@ class BarCodeAuthorizationExpiredServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        barCodeAuthorizationExpiredService = new BarCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
+        barCodeAuthorizationExpiredService = new BarCodeAuthorizationExpiredServiceImpl(transactionRepository,EXPIRATION_MINUTES, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
     }
 
     @Test

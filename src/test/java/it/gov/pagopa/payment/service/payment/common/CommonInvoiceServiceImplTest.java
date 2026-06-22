@@ -1,9 +1,11 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
@@ -12,7 +14,9 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +34,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 class CommonInvoiceServiceImplTest {
     @Mock
@@ -46,6 +51,8 @@ class CommonInvoiceServiceImplTest {
     private MultipartFile file;
     @Mock
     private MerchantConnector merchantConnector;
+    @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     private CommonInvoiceServiceImpl service;
 
@@ -77,11 +84,13 @@ class CommonInvoiceServiceImplTest {
 
         service = new CommonInvoiceServiceImpl(
                 0,
+                transactionRepository,
                 repository,
                 notifierService,
                 paymentErrorNotifierService,
                 fileStorageClient,
                 auditUtilities,
+                transactionSynchronizer,
                 merchantConnector
         );
     }
@@ -96,6 +105,8 @@ class CommonInvoiceServiceImplTest {
             .businessName("BUSINESS_NAME")
             .fiscalCode("FISCAL_CODE")
             .build();
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID))
             .thenReturn(pos);
 
@@ -119,6 +130,8 @@ class CommonInvoiceServiceImplTest {
 
     @Test
     void invoiceTransaction_merchantMismatch() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         trx.setMerchantId("otherMerchant");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
@@ -128,6 +141,8 @@ class CommonInvoiceServiceImplTest {
 
     @Test
     void invoiceTransaction_posMismatch() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         trx.setPointOfSaleId("otherPos");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
@@ -137,6 +152,8 @@ class CommonInvoiceServiceImplTest {
 
     @Test
     void invoiceTransaction_statusNotCaptured() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         trx.setStatus(SyncTrxStatus.CREATED);
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(OperationNotAllowedException.class,
@@ -194,6 +211,8 @@ class CommonInvoiceServiceImplTest {
 
     @Test
     void invoiceTransaction_ioException_shouldLogAndThrow() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -211,6 +230,8 @@ class CommonInvoiceServiceImplTest {
 
     @Test
     void invoiceTransaction_shouldSetCorrectInvoicePath() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
 
         PointOfSaleDTO pos = PointOfSaleDTO.builder()
@@ -230,14 +251,17 @@ class CommonInvoiceServiceImplTest {
     void shouldThrowOperationNotAllowedException_whenTrxIsTooRecent() {
         service = new CommonInvoiceServiceImpl(
                 30,
+                transactionRepository,
                 repository,
                 notifierService,
                 paymentErrorNotifierService,
                 fileStorageClient,
                 auditUtilities,
+                transactionSynchronizer,
                 merchantConnector
         );
-
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         trx.setElaborationDateTime(LocalDateTime.now().minusDays(1)); // 1 giorno fa rispetto a oggi
 
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
@@ -255,7 +279,8 @@ class CommonInvoiceServiceImplTest {
                 .fiscalCode("FISCAL123")
                 .vatNumber("VAT123")
                 .build();
-
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID)).thenReturn(pointOfSaleDTO);
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);

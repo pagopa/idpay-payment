@@ -4,13 +4,16 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Assertions;
@@ -22,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,6 +35,7 @@ class CommonConfirmServiceImplTest {
     @Mock private TransactionNotifierService notifierServiceMock;
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
+    @Mock private TransactionRepository transactionRepository;
 
 
     private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
@@ -41,6 +46,7 @@ class CommonConfirmServiceImplTest {
     void init() {
         service =
                 new CommonConfirmServiceImpl(
+                        transactionRepository,
                         repositoryMock,
                         mapper,
                         notifierServiceMock,
@@ -61,6 +67,8 @@ class CommonConfirmServiceImplTest {
 
     @Test
     void testMerchantIdNotValid() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         when(repositoryMock.findById("TRXID"))
                 .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
 
@@ -75,6 +83,8 @@ class CommonConfirmServiceImplTest {
 
     @Test
     void testAcquirerIdNotValid() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");
@@ -91,6 +101,8 @@ class CommonConfirmServiceImplTest {
 
     @Test
     void testStatusNotValid() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
@@ -116,6 +128,8 @@ class CommonConfirmServiceImplTest {
     }
 
     private void testSuccessful(boolean transactionOutcome) {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx =
                 TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
         trx.setMerchantId("MERCHID");

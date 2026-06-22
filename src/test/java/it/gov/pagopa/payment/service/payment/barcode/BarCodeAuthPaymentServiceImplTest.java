@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.dto.DecryptCfDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
@@ -30,11 +31,7 @@ import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditiona
 import it.gov.pagopa.payment.service.payment.barcode.validation.NoOpBarCodeAdditionalPropertiesValidationStrategy;
 import it.gov.pagopa.payment.service.payment.barcode.validation.ProductGtinBarCodeAdditionalPropertiesValidationStrategy;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.ProductDTOFaker;
-import it.gov.pagopa.payment.test.fakers.RewardFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
+import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +48,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -110,9 +106,9 @@ class BarCodeAuthPaymentServiceImplTest {
                         new NoOpBarCodeAdditionalPropertiesValidationStrategy()),
                 validationProperties);
         barCodeAuthPaymentService = new BarCodeAuthPaymentServiceImpl(
-                transactionRepository,
                 barCodeAuthorizationExpiredServiceMock,
                 merchantConnector,
+                transactionRepository,
                 transaction,
                 commonAuthServiceMock,
                 decryptRestConnector,
@@ -256,6 +252,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void previewPayment_ok() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         configureProductGtinValidation(transactionInProgress);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
@@ -275,6 +273,8 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_coreCheckRunsBeforeAdditionalPropertiesValidation() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
 
         doThrow(new TransactionInvalidException(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, "Invalid status"))
                 .when(commonAuthServiceMock).previewPayment(any(), any());
@@ -291,7 +291,8 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_negativeReward() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         authPaymentDTO.setRewardCents(-100L);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
@@ -304,6 +305,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void previewPayment_negativeResidualAmount() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 
@@ -319,6 +322,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void previewPayment_invalidAdditionalProperties_emptyProductGtin() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         configureProductGtinValidation(transactionInProgress);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
@@ -462,6 +467,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void previewPayment_noOpStrategy_skipsProductValidation() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
         validationProperties.setInitiatives(Map.of(NO_OP_INITIATIVE_ID, BarCodeAdditionalPropertiesValidationType.NONE));
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         transactionInProgress.setInitiativeId(NO_OP_INITIATIVE_ID);
@@ -522,12 +529,14 @@ class BarCodeAuthPaymentServiceImplTest {
         BarCodeAuthPaymentServiceImpl service = new BarCodeAuthPaymentServiceImpl(
                 barCodeAuthorizationExpiredServiceMock,
                 merchantConnector,
+                transactionRepository,
                 transaction,
                 commonAuthServiceMock,
                 decryptRestConnector,
                 additionalPropertiesValidationResolverMock,
                 auditUtilitiesMock);
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 

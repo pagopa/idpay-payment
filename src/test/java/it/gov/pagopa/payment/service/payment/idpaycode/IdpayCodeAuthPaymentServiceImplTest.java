@@ -28,19 +28,15 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthPaymentServiceImplTest {
-    @Mock private TransactionRepository transactionRepository;
     @Mock private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredServiceMock;
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
     @Mock private CommonAuthServiceImpl commonAuthServiceMock;
-    private final static long EXPIRATION_MINUTES=15;
 
     private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
 
         @BeforeEach
     void setUp() {
             idpayCodeAuthPaymentService = new IdpayCodeAuthPaymentServiceImpl(
-                    EXPIRATION_MINUTES,
-                    transactionRepository,
                     idpayCodeAuthorizationExpiredServiceMock,
                     paymentInstrumentConnectorMock,
                     commonAuthServiceMock);

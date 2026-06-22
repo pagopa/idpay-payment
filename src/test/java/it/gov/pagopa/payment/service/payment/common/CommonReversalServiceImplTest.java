@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
@@ -9,7 +10,9 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,8 +29,11 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
 
 class CommonReversalServiceImplTest {
+    @Mock
+    private TransactionRepository transactionRepository;
     @Mock
     private TransactionInProgressRepository repository;
     @Mock
@@ -75,6 +81,8 @@ class CommonReversalServiceImplTest {
     void reversalTransaction_success() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
         service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);
 
@@ -95,6 +103,8 @@ class CommonReversalServiceImplTest {
 
     @Test
     void reversalTransaction_merchantMismatch() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         trx.setMerchantId("otherMerchant");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(TransactionInvalidException.class,
@@ -106,6 +116,8 @@ class CommonReversalServiceImplTest {
     void reversalTransaction_posMismatch() {
         trx.setPointOfSaleId("otherPos");
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         assertThrows(TransactionInvalidException.class,
                 () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
         Mockito.verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
@@ -113,6 +125,8 @@ class CommonReversalServiceImplTest {
 
     @Test
     void reversalTransaction_statusNotCaptured() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         trx.setStatus(SyncTrxStatus.CREATED);
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         assertThrows(OperationNotAllowedException.class,
@@ -131,6 +145,8 @@ class CommonReversalServiceImplTest {
 
     @Test
     void reversalTransaction_ioException_shouldLogAndThrow() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
         RuntimeException ex = assertThrows(RuntimeException.class,
@@ -148,6 +164,8 @@ class CommonReversalServiceImplTest {
 
     @Test
     void reversalTransaction_shouldSetCorrectInvoicePath() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
         service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);

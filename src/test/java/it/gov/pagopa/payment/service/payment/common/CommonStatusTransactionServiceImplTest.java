@@ -1,21 +1,18 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
-
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
+import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,22 +20,36 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
+
 @ExtendWith(MockitoExtension.class)
 class CommonStatusTransactionServiceImplTest {
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+    @Mock private TransactionRepository transactionRepository;
 
     private CommonStatusTransactionServiceImpl commonStatusTransactionService;
 
     @BeforeEach
     void setUp(){
-        commonStatusTransactionService = new CommonStatusTransactionServiceImpl(transactionInProgressRepositoryMock,
+        commonStatusTransactionService = new CommonStatusTransactionServiceImpl(
+                transactionRepository,
+                transactionInProgressRepositoryMock,
                 new TransactionInProgress2SyncTrxStatusMapper(transactionInProgress2TransactionResponseMapperMock));
     }
 
     @Test
     void getStatusTransaction() {
         //given
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
                 .rewardCents(0L)
                 .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
@@ -54,6 +65,8 @@ class CommonStatusTransactionServiceImplTest {
 
     @Test
     void getStatusTransactionQRCode() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
         //given
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
                 .rewardCents(0L)

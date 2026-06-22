@@ -1,11 +1,14 @@
 package it.gov.pagopa.payment.service.payment.expired.idpaycode;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredServiceImpl;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +18,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,6 +31,7 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
 
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
+    @Mock private TransactionRepository transactionRepository;
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
 
@@ -32,12 +40,13 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        idpayCodeAuthorizationExpiredService = new IdpayCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionInProgressRepositoryMock, auditUtilities,rewardCalculatorConnectorMock);
+        idpayCodeAuthorizationExpiredService = new IdpayCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES,transactionRepository, transactionInProgressRepositoryMock, auditUtilities,rewardCalculatorConnectorMock);
     }
 
     @Test
     void findByTrxCodeAndAuthorizationNotExpired(){
-
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findByTrxIdAndAuthorizationNotExpired(anyString(), any())).thenReturn(Optional.of(trx));
         TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         transaction.setUserId("USERID1");
 

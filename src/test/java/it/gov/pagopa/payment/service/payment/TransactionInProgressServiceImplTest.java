@@ -1,12 +1,14 @@
 package it.gov.pagopa.payment.service.payment;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import org.bson.BsonString;
@@ -32,16 +34,20 @@ class TransactionInProgressServiceImplTest {
     @Mock private TrxCodeGenUtil trxCodeGenUtilMock;
     @Mock private TransactionNotifierService transactionNotifierServiceMock;
     @Mock private AppConfigurationProperties.ExtendedTransactions extendedTransactionsMock;
+    @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     private TransactionInProgressService transactionInProgressService;
 
     @BeforeEach
     void setUp() {
         transactionInProgressService = new TransactionInProgressServiceImpl(
+                transactionRepository,
                 transactionInProgressRepositoryMock,
                 trxCodeGenUtilMock,
                 transactionNotifierServiceMock,
-                extendedTransactionsMock);
+                extendedTransactionsMock,
+                transactionSynchronizer);
     }
 
     @Test
