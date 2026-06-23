@@ -1,6 +1,6 @@
 
 
-CREATE TABLE transaction (
+CREATE TABLE IF NOT EXISTS transaction (
     id VARCHAR(64) PRIMARY KEY,
 
     trx_code VARCHAR(64) NOT NULL,
@@ -71,15 +71,18 @@ CREATE TABLE transaction (
     extended_authorization BOOLEAN
 );
 
-
-CREATE TABLE transaction_outbox (
+CREATE TABLE IF NOT EXISTS transaction_outbox (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     transaction_id VARCHAR(64) NOT NULL,
-    operation_type VARCHAR(10) NOT NULL,
-    status VARCHAR(32),
+    event_type VARCHAR(64) NOT NULL,
+    payload JSONB NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+
+ALTER TABLE transaction_outbox
+ADD CONSTRAINT uk_transaction_outbox
+UNIQUE (transaction_id, event_type);
 
 
 CREATE OR REPLACE FUNCTION fn_transaction_outbox()
@@ -88,66 +91,29 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
 
-    IF TG_OP = 'INSERT' THEN
+    INSERT INTO transaction_outbox (
+        transaction_id,
+        event_type,
+        payload
+    )
+    VALUES (
+        NEW.id,
+        'TRANSACTION_' || NEW.status,
+        to_jsonb(NEW)
+    )
+    ON CONFLICT (transaction_id, event_type)
+    DO NOTHING;
 
-        INSERT INTO transaction_outbox (
-            transaction_id,
-            operation_type,
-            status
-        )
-        VALUES (
-            NEW.id,
-            'INSERT',
-            NEW.status
-        );
-
-        RETURN NEW;
-
-    ELSIF TG_OP = 'UPDATE' THEN
-
-        IF OLD.status IS DISTINCT FROM NEW.status THEN
-
-            INSERT INTO transaction_outbox (
-                transaction_id,
-                operation_type,
-                status
-            )
-            VALUES (
-                NEW.id,
-                'UPDATE',
-                NEW.status
-            );
-
-        END IF;
-
-        RETURN NEW;
-
-    ELSIF TG_OP = 'DELETE' THEN
-
-        INSERT INTO transaction_outbox (
-            transaction_id,
-            operation_type,
-            status
-        )
-        VALUES (
-            OLD.id,
-            'DELETE',
-            OLD.status
-        );
-
-        RETURN OLD;
-
-    END IF;
-
-    RETURN NULL;
+    RETURN NEW;
 
 END;
 $$;
 
 
+DROP TRIGGER IF EXISTS trg_transaction_outbox ON transaction;
+
 CREATE TRIGGER trg_transaction_outbox
-AFTER INSERT OR DELETE OR UPDATE OF status
+AFTER INSERT OR UPDATE OF status
 ON transaction
 FOR EACH ROW
 EXECUTE FUNCTION fn_transaction_outbox();
-
