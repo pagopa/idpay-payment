@@ -20,6 +20,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -97,4 +102,47 @@ class QRCodeAuthorizationExpiredServiceImplTest {
         qrCodeAuthorizationExpiredService.execute();
         Mockito.verify(transactionInProgressRepositoryMock, Mockito.never()).deleteById(Mockito.any());
     }
+
+
+    @Test
+    void shouldFindByTrxCodeAndAuthorizationNotExpired() {
+
+        String trxCode = "TRX123";
+
+        TransactionInProgress expected = new TransactionInProgress();
+
+        when(transactionInProgressRepositoryMock
+                .findByTrxCodeAndAuthorizationNotExpired(trxCode))
+                .thenReturn(expected);
+
+        TransactionInProgress result =
+                qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode);
+
+        assertEquals(expected, result);
+    }
+
+    @Test
+    void shouldFindByTrxCodeAndAuthorizationNotExpiredThrottled() {
+
+        String trxCode = "TRX123";
+
+        TransactionInProgress expected = new TransactionInProgress();
+
+        when(transactionRepository.existsByTrxCodeAndDateGreaterThan(
+                eq(trxCode),
+                any(OffsetDateTime.class)))
+                .thenReturn(false);
+
+        when(transactionInProgressRepositoryMock
+                .findByTrxCodeAndAuthorizationNotExpiredThrottled(
+                        trxCode,
+                        15L))
+                .thenReturn(expected);
+
+        TransactionInProgress result =
+                qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode);
+
+        assertEquals(expected, result);
+    }
+    
 }
