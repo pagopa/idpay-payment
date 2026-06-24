@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -40,7 +39,7 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
 
     @Override
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
-        Transaction transaction = transactionRepository.findAuthorizationExpiredTransaction(
+        transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
                 OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),

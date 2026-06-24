@@ -4,7 +4,6 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 

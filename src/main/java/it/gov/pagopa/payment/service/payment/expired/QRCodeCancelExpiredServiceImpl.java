@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.expired;
 
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -48,12 +47,12 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
         OffsetDateTime maxTrxDate = OffsetDateTime.now().minusMinutes(cancelExpirationMinutes);
         List<String> statusList = List.of(SyncTrxStatus.AUTHORIZED.name());
-        Transaction transaction =  transactionRepository.findAndModifyExpiredTransaction(
+        transactionRepository.findAndModifyExpiredTransaction(
                 maxTrxDate,
                 statusList,
                 initiativeId,
                 1000
-        ).orElse(null);
+        );
         return transactionInProgressRepository.findCancelExpiredTransaction(initiativeId, expirationMinutes);
     }
 

@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -28,7 +27,7 @@ public class CommonStatusTransactionServiceImpl {
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
         TransactionInProgress transactionInProgress= transactionInProgressRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
-        Transaction transaction = transactionRepository.findById(transactionId)
+        transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
         if(!transactionInProgress.getMerchantId().equals(merchantId)){

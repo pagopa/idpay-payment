@@ -183,13 +183,11 @@ public class PdfServiceImpl implements PdfService {
             TransactionInProgress transactionInProgress;
 
             Optional<Transaction> optionalTransaction = transactionRepository.findById(transactionId);
-            Transaction transaction;
             // Controllo presenza transazione
             if (optionalTransaction.isEmpty()) {
 
                 throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
             }
-            transaction = optionalTransaction.get();
 
             // Controllo presenza transazione
             if (optionalTransactionInProgress.isEmpty()) {

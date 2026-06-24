@@ -6,7 +6,6 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.AuthPaymentIdpayCodeMapper;
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -50,7 +49,7 @@ public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
     public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
-        Transaction transaction = transactionRepository.findById(trxId)
+        transactionRepository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
         if(!trx.getMerchantId().equals(merchantId)){

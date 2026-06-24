@@ -9,7 +9,6 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -67,10 +66,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
                         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                                 "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
-        final Transaction transaction =
-                transactionRepository.findByTrxCode(trxCode.toLowerCase())
-                        .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                                "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+        transactionRepository.findByTrxCode(trxCode.toLowerCase())
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
 
         transactionInProgress.setAmountCents(amountCents);
 

@@ -3,7 +3,6 @@ package it.gov.pagopa.payment.service.payment.expired.common;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
@@ -18,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -48,19 +46,15 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        Transaction transaction = transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now())
-                .orElse(null);
+        transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now());
         return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode);
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
         OffsetDateTime minTrxDate = OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes);
 
-        Optional<Transaction> transactionOpt = transactionRepository.findAndModifyThrottled(trxCode, minTrxDate);
+        transactionRepository.findAndModifyThrottled(trxCode, minTrxDate);
 
-        if (transactionOpt.isPresent()) {
-            Transaction transaction = transactionOpt.get();
-        }
         if (transactionRepository.existsByTrxCodeAndDateGreaterThan(trxCode, minTrxDate)) {
             throw new TooManyRequestsException("Too many requests on trx having trCode: " + trxCode);
         }
@@ -75,7 +69,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
 
     @Override
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
-        Transaction transaction = transactionRepository.findAuthorizationExpiredTransaction(
+        transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
                 OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),

@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode.expired;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -35,7 +34,7 @@ public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpi
     @Override
     public TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId) {
         OffsetDateTime minTrxDate = OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes);
-        Transaction transaction = transactionRepository.findByTrxIdAndAuthorizationNotExpired(trxId,minTrxDate)
+        transactionRepository.findByTrxIdAndAuthorizationNotExpired(trxId,minTrxDate)
                             .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find voucher with trxId [%s]".formatted(trxId)));
         return transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(trxId,authorizationExpirationMinutes);
     }

@@ -149,7 +149,7 @@ public class CommonAuthServiceImpl {
         Transaction transaction = transactionRepository.findById(trx.getId())
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxId [%s]".formatted(trx.getId().toLowerCase())));
-        int resultTrx = transactionRepository.updateTrxAuthorized(
+        transactionRepository.updateTrxAuthorized(
                 transaction,
                 authPaymentDTO,
                 initiativeRejectionReasons,

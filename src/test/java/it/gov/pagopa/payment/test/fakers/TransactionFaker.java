@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.time.LocalDateTime;

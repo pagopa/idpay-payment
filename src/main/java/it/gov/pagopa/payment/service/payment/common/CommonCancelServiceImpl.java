@@ -94,7 +94,7 @@ public class CommonCancelServiceImpl {
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-        Transaction transaction = transactionRepository.findById(trxId)
+        transactionRepository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with transactionId [%s]".formatted(trxId)));
 

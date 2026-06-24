@@ -79,7 +79,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
             TransactionInProgress trx = repository.findByInitiativeIdAndTrxCodeAndUserId(intiativeId, trxCode, userId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find voucher with transactionCode [%s]".formatted(trxCode)));
 
-            Transaction transaction = transactionRepository.findByInitiativeIdAndTrxCodeAndUserId(intiativeId, trxCode, userId)
+            transactionRepository.findByInitiativeIdAndTrxCodeAndUserId(intiativeId, trxCode, userId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find voucher with transactionCode [%s]".formatted(trxCode)));
 
             auditUtilities.logRetriveVoucher(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), trx.getRewardCents(), trx.getRejectionReasons());
