@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Service
@@ -45,7 +46,7 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
 
     @Override
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
-        OffsetDateTime maxTrxDate = OffsetDateTime.now().minusMinutes(cancelExpirationMinutes);
+        OffsetDateTime maxTrxDate = OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(cancelExpirationMinutes);
         List<String> statusList = List.of(SyncTrxStatus.AUTHORIZED.name());
         transactionRepository.findAndModifyExpiredTransaction(
                 maxTrxDate,

@@ -16,6 +16,9 @@ public class CommonStatusTransactionServiceImpl {
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper;
 
+    private static final String TRANSACTION_NOT_FOUND_MESSAGE =
+            "Cannot find transaction with transactionId [%s]";
+
     public CommonStatusTransactionServiceImpl(TransactionRepository transactionRepository,
                                               TransactionInProgressRepository transactionInProgressRepository,
                                               TransactionInProgress2SyncTrxStatusMapper transaction2statusMapper) {
@@ -26,13 +29,13 @@ public class CommonStatusTransactionServiceImpl {
 
     public SyncTrxStatusDTO getStatusTransaction(String transactionId, String merchantId) {
         TransactionInProgress transactionInProgress= transactionInProgressRepository.findById(transactionId)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(TRANSACTION_NOT_FOUND_MESSAGE.formatted(transactionId)));
         transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(TRANSACTION_NOT_FOUND_MESSAGE.formatted(transactionId)));
 
         if(!transactionInProgress.getMerchantId().equals(merchantId)){
             log.info("Merchant " + merchantId + " not authorized to retrieve transaction " + transactionId);
-            throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
+            throw new TransactionNotFoundOrExpiredException(TRANSACTION_NOT_FOUND_MESSAGE.formatted(transactionId));
         }
 
         return transaction2statusMapper.transactionInProgressMapper(transactionInProgress);

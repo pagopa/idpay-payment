@@ -12,6 +12,7 @@ import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
@@ -41,7 +42,7 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
         transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes),
+                OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );

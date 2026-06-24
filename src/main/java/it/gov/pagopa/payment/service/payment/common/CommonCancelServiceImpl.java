@@ -46,6 +46,8 @@ public class CommonCancelServiceImpl {
     private static final String RESET_TRANSACTION = "RESET_TRANSACTION";
     private static final String CANCEL_TRANSACTION = "CANCEL_TRANSACTION";
 
+    private static final String TRANSACTION_NOT_FOUND_MESSAGE =
+            "Cannot find transaction with transactionId [%s]";
 
     public CommonCancelServiceImpl(
             TransactionRepository transactionRepository,
@@ -92,11 +94,11 @@ public class CommonCancelServiceImpl {
     private TransactionInProgress findAndValidateTransaction(String trxId, String merchantId, String acquirerId) {
         TransactionInProgress trx = repository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with transactionId [%s]".formatted(trxId)));
+                        TRANSACTION_NOT_FOUND_MESSAGE.formatted(trxId)));
 
         transactionRepository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with transactionId [%s]".formatted(trxId)));
+                        TRANSACTION_NOT_FOUND_MESSAGE.formatted(trxId)));
 
         if (!merchantId.equals(trx.getMerchantId()) || !acquirerId.equals(trx.getAcquirerId())) {
             throw new MerchantOrAcquirerNotAllowedException(
@@ -133,7 +135,7 @@ public class CommonCancelServiceImpl {
 
                 Transaction transaction = transactionRepository.findById(trx.getId())
                         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                                "Cannot find transaction with transactionId [%s]".formatted(trx.getId())));
+                                TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId())));
 
                 transactionSynchronizer.sync(newTransaction, transaction);
                 transactionRepository.save(transaction);

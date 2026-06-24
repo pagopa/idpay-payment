@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Service
 public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpiration implements IdpayCodeAuthorizationExpiredService {
@@ -33,7 +34,7 @@ public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpi
 
     @Override
     public TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String trxId) {
-        OffsetDateTime minTrxDate = OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes);
+        OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(authorizationExpirationMinutes);
         transactionRepository.findByTrxIdAndAuthorizationNotExpired(trxId,minTrxDate)
                             .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find voucher with trxId [%s]".formatted(trxId)));
         return transactionInProgressRepository.findByTrxIdAndAuthorizationNotExpired(trxId,authorizationExpirationMinutes);

@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 
 @Slf4j
@@ -84,7 +85,7 @@ public class CommonPreAuthServiceImpl{
                 preview.getRejectionReasons(),
                 CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
-                LocalDateTime.now()
+                LocalDateTime.now(ZoneOffset.UTC)
         );
 
         transactionInProgressRepository.updateTrxRejected(
@@ -107,7 +108,7 @@ public class CommonPreAuthServiceImpl{
                 CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
                 status,
-                LocalDateTime.now());
+                LocalDateTime.now(ZoneOffset.UTC));
 
         transactionInProgressRepository.updateTrxWithStatusForPreview(trx,
                 preview,

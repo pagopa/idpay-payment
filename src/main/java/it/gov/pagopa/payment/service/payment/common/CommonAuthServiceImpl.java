@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,9 @@ public class CommonAuthServiceImpl {
     private final CommonPreAuthServiceImpl commonPreAuthService;
 
     private final AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService;
+
+    private static final String TRANSACTION_NOT_FOUND_MESSAGE =
+            "Cannot find transaction with trxId [%s]";
 
     protected CommonAuthServiceImpl(
             TransactionRepository transactionRepository,
@@ -63,7 +67,7 @@ public class CommonAuthServiceImpl {
 
     public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId) {
         checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
-        trx.setTrxChargeDate(OffsetDateTime.now());
+        trx.setTrxChargeDate(OffsetDateTime.now(ZoneOffset.UTC));
 
         return rewardCalculatorConnector.previewTransaction(trx);
     }
@@ -112,8 +116,8 @@ public class CommonAuthServiceImpl {
 
                 Transaction transaction = transactionRepository.findById(trx.getId())
                         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                                "Cannot find transaction with trxId [%s]".formatted(trx.getId().toLowerCase())));
-                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(), "EUR");
+                                TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId().toLowerCase())));
+                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(ZoneOffset.UTC), "EUR");
 
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
@@ -148,14 +152,14 @@ public class CommonAuthServiceImpl {
 
         Transaction transaction = transactionRepository.findById(trx.getId())
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with trxId [%s]".formatted(trx.getId().toLowerCase())));
+                        TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId().toLowerCase())));
         transactionRepository.updateTrxAuthorized(
                 transaction,
                 authPaymentDTO,
                 initiativeRejectionReasons,
                 SyncTrxStatus.AUTHORIZATION_REQUESTED,
                 SyncTrxStatus.AUTHORIZED,
-                LocalDateTime.now(),
+                LocalDateTime.now(ZoneOffset.UTC),
                 "EUR"
         );
 
@@ -223,9 +227,9 @@ public class CommonAuthServiceImpl {
 
         Transaction transaction = transactionRepository.findById(trx.getId())
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with trxId [%s]".formatted(trx.getId().toLowerCase())));
+                        TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId().toLowerCase())));
         transactionSynchronizer.sync(trx, transaction);
-        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now());
+        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now(ZoneOffset.UTC));
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {

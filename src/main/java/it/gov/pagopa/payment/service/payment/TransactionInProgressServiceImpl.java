@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeForLog;
@@ -67,7 +68,7 @@ public class TransactionInProgressServiceImpl implements TransactionInProgressSe
     @Override
     public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
         try {
-            OffsetDateTime now = OffsetDateTime.now();
+            OffsetDateTime now = OffsetDateTime.now(ZoneOffset.UTC);
             log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", sanitizeForLog(initiativeId));
             int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
 

@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 
 @Service
@@ -47,7 +48,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
     public void unrelateTransaction(String trxCode, String userId) {
         try {
             TransactionInProgress trx = authorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
-            Transaction transaction = transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now())
+            Transaction transaction = transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now(ZoneOffset.UTC))
                     .orElseThrow(() ->  new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
             if (trx == null) {

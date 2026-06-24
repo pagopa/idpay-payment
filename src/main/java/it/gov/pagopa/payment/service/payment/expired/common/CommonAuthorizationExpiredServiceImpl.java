@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Slf4j
@@ -46,12 +47,12 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now());
+        transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now(ZoneOffset.UTC));
         return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode);
     }
 
     public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
-        OffsetDateTime minTrxDate = OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes);
+        OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(authorizationExpirationMinutes);
 
         transactionRepository.findAndModifyThrottled(trxCode, minTrxDate);
 
@@ -71,7 +72,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
         transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                OffsetDateTime.now().minusMinutes(authorizationExpirationMinutes),
+                OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );
