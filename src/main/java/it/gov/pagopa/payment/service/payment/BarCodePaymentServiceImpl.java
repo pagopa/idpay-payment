@@ -52,6 +52,7 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
 
     @Override
     public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
+        log.info("Searching for the oldest not authorized transaction for userId: {} and initiativeId: {}", userId, initiativeId);
         return retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId);
     }
 
