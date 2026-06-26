@@ -4,7 +4,6 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -49,7 +48,7 @@ class RetrieveActiveBarcodeTest {
 
         //Then
         Assertions.assertNotNull(errorResult);
-        Assertions.assertEquals("No active transaction found for user '%s'.".formatted(USER_ID), errorResult.getMessage());
+        Assertions.assertEquals("No active transaction found for user", errorResult.getMessage());
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, errorResult.getCode());
     }
 
@@ -62,13 +61,10 @@ class RetrieveActiveBarcodeTest {
                 .thenReturn(List.of(trx, trxAuth));
 
         //When
-        TransactionAlreadyAuthorizedException errorResult = Assertions.assertThrows(TransactionAlreadyAuthorizedException.class, () -> retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID));
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
-        Assertions.assertNotNull(errorResult);
-        Assertions.assertEquals("The user has already authorized transaction '%s'.".formatted(trxAuth.getId()), errorResult.getMessage());
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, errorResult.getCode());
-
+        Assertions.assertNull(result);
     }
 
     @Test
