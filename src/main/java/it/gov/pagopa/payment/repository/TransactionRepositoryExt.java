@@ -19,7 +19,7 @@ public interface TransactionRepositoryExt {
   @Query(value = """
     WITH selected AS (
         SELECT id
-        FROM transaction_in_progress
+        FROM Transaction
         WHERE
             trx_date < :expirationDate
             AND status = ANY(:statusList)
@@ -33,7 +33,7 @@ public interface TransactionRepositoryExt {
         LIMIT 1
         FOR UPDATE SKIP LOCKED
     )
-    UPDATE transaction_in_progress t
+    UPDATE Transaction t
     SET elaboration_date_time = NOW()
     FROM selected
     WHERE t.id = selected.id
