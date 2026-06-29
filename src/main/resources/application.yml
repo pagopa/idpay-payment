@@ -122,8 +122,9 @@ spring:
     password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
   jpa:
-    hibernate:
-      ddl-auto: none
+    properties:
+      hibernate:
+        default_schema: idpay
   mongodb:
     database: ${MONGODB_DBNAME:idpay-beneficiari}
     uri: ${MONGODB_URI:mongodb://localhost:27017}
