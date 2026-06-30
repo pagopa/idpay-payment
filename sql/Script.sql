@@ -83,6 +83,7 @@ CREATE TABLE IF NOT EXISTS idpay.transaction_outbox (
     transaction_id VARCHAR(64) NOT NULL,
     event_type VARCHAR(64) NOT NULL,
     payload JSONB NOT NULL,
+    published BOOLEAN,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -107,12 +108,14 @@ BEGIN
     INSERT INTO idpay.transaction_outbox (
         transaction_id,
         event_type,
-        payload
+        payload,
+		published
     )
     VALUES (
         NEW.id,
         'TRANSACTION_' || NEW.status,
-        to_jsonb(NEW)
+        to_jsonb(NEW),
+		false
     )
     ON CONFLICT (transaction_id, event_type)
     DO NOTHING;

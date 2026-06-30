@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.connector.event.trx;
 
+import it.gov.pagopa.payment.entity.TransactionOutbox;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
@@ -40,6 +41,18 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
 
     @Override
     public Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
+        return MessageBuilder.withPayload(trx)
+                .setHeader(KafkaHeaders.KEY, key)
+                .build();
+    }
+
+    @Override
+    public boolean notify(TransactionOutbox trx, String key) {
+        return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, key));
+    }
+
+    @Override
+    public Message<TransactionOutbox> buildMessage(TransactionOutbox trx, String key) {
         return MessageBuilder.withPayload(trx)
                 .setHeader(KafkaHeaders.KEY, key)
                 .build();
