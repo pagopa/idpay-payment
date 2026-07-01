@@ -1,3 +1,5 @@
+BEGIN;
+
 CREATE SCHEMA IF NOT EXISTS idpay;
 
 CREATE TABLE IF NOT EXISTS idpay.reward_batch (
@@ -83,22 +85,9 @@ CREATE TABLE IF NOT EXISTS idpay.transaction_outbox (
     transaction_id VARCHAR(64) NOT NULL,
     event_type VARCHAR(64) NOT NULL,
     payload JSONB NOT NULL,
-    published BOOLEAN,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT uk_transaction_outbox UNIQUE (transaction_id, event_type)
 );
-
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_constraint
-        WHERE conname = 'uk_transaction_outbox'
-    ) THEN
-        ALTER TABLE idpay.transaction_outbox
-            ADD CONSTRAINT uk_transaction_outbox
-            UNIQUE (transaction_id, event_type);
-    END IF;
-END $$;
 
 CREATE OR REPLACE FUNCTION idpay.fn_transaction_outbox()
 RETURNS TRIGGER
@@ -108,14 +97,12 @@ BEGIN
     INSERT INTO idpay.transaction_outbox (
         transaction_id,
         event_type,
-        payload,
-		published
+        payload
     )
     VALUES (
         NEW.id,
         'TRANSACTION_' || NEW.status,
-        to_jsonb(NEW),
-		false
+        to_jsonb(NEW)
     )
     ON CONFLICT (transaction_id, event_type)
     DO NOTHING;
@@ -132,3 +119,5 @@ AFTER INSERT OR UPDATE OF status
 ON idpay.transaction
 FOR EACH ROW
 EXECUTE FUNCTION idpay.fn_transaction_outbox();
+
+COMMIT;
