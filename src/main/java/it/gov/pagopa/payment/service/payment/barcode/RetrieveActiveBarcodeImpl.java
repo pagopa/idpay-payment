@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -17,6 +18,7 @@ import static it.gov.pagopa.payment.utils.RewardConstants.TRX_CHANNEL_BARCODE;
 @Slf4j
 @Service
 public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
+    public static final String NO_ACTIVE_TRANSACTION_FOUND_FOR_USER = "No active transaction found for user";
     private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
@@ -33,7 +35,7 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
         List<Transaction> trxs = transactionRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
 
         if (transactions.isEmpty()) {
-            return null;
+            throw new TransactionNotFoundOrExpiredException(NO_ACTIVE_TRANSACTION_FOUND_FOR_USER);
         }
         if (trxs.isEmpty()) {
             return null;
