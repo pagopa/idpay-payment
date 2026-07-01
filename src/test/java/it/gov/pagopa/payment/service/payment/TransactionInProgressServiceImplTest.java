@@ -101,7 +101,7 @@ class TransactionInProgressServiceImplTest {
         when(transactionInProgressRepositoryMock.findUnprocessedExpiredVoucherTransactions(
                 eq("INIT1"), eq(1), eq(0)))
                 .thenReturn(Collections.singletonList(trx));
-        when(transactionNotifierServiceMock.notify(any(),any())).thenReturn(true);
+        when(transactionNotifierServiceMock.notify(any(TransactionInProgress.class),any())).thenReturn(true);
         long expiredTransactionsProcessed =
                 Assertions.assertDoesNotThrow(() ->
                         transactionInProgressService.sendEventForStaleExpiredTransactions("INIT1"));
@@ -122,7 +122,7 @@ class TransactionInProgressServiceImplTest {
         when(transactionInProgressRepositoryMock.findUnprocessedExpiredVoucherTransactions(
                 eq("INIT1"), eq(1), eq(1)))
                 .thenReturn(Collections.singletonList(trx));
-        when(transactionNotifierServiceMock.notify(any(),any())).thenReturn(true);
+        when(transactionNotifierServiceMock.notify(any(TransactionInProgress.class),any())).thenReturn(true);
         long expiredTransactionsProcessed =
                 Assertions.assertDoesNotThrow(() ->
                         transactionInProgressService.sendEventForStaleExpiredTransactions("INIT1"));

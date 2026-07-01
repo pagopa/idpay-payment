@@ -80,7 +80,7 @@ class CommonReversalServiceImplTest {
     @Test
     void reversalTransaction_success() {
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
@@ -157,7 +157,7 @@ class CommonReversalServiceImplTest {
 
     @Test
     void sendReversedTransactionNotification_notifyReturnsFalse_shouldThrowTransactionNotFoundOrExpiredException() {
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(false);
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
     }
@@ -167,7 +167,7 @@ class CommonReversalServiceImplTest {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
         service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);
         String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
                 MERCHANT_ID, POS_ID, trx.getId(), FILENAME);

@@ -110,7 +110,7 @@ class CommonInvoiceServiceImplTest {
         Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID))
             .thenReturn(pos);
 
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
         service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
         Mockito.verify(fileStorageClient).upload(any(), anyString(), anyString());
         Mockito.verify(repository).save(trx);
@@ -223,7 +223,7 @@ class CommonInvoiceServiceImplTest {
 
     @Test
     void sendInvoiceTransactionNotification_notifyReturnsFalse_shouldThrowInternalServerErrorException() {
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(false);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(false);
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER));
     }
@@ -240,7 +240,7 @@ class CommonInvoiceServiceImplTest {
             .build();
 
         Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID)).thenReturn(pos);
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
         service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
         String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                 MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
@@ -283,7 +283,7 @@ class CommonInvoiceServiceImplTest {
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         Mockito.when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
         Mockito.when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID)).thenReturn(pointOfSaleDTO);
-        Mockito.when(notifierService.notify(any(), anyString())).thenReturn(true);
+        Mockito.when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
 
         service.invoiceTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, DOCUMENT_NUMBER);
 
