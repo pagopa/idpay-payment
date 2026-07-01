@@ -61,10 +61,14 @@ class RetrieveActiveBarcodeTest {
     @Test
     void findOldestNoAuthorized_FindWithAuthorizationTransaction(){
         // Given
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction transactionAuth = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         TransactionInProgress trxAuth = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
         Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(List.of(trx, trxAuth));
+        Mockito.when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+                .thenReturn(List.of(transaction, transactionAuth));
 
         //When
         TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
