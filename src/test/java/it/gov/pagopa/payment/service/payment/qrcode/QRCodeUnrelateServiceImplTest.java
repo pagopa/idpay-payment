@@ -58,50 +58,51 @@ class QRCodeUnrelateServiceImplTest {
     void testTrxNotFound() {
         when(repositoryMockFindInvocation()).thenReturn(null);
 
-        try {
-            invokeService();
-            Assertions.fail("Expected exception");
-        } catch (TransactionNotFoundOrExpiredException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, e.getCode());
-            Assertions.assertEquals("Cannot find transaction with trxCode [TRXCODE]", e.getMessage());
+        TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                this::invokeService
+        );
 
-        }
+        Assertions.assertEquals(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, exception.getCode());
+        Assertions.assertEquals("Cannot find transaction with trxCode [TRXCODE]", exception.getMessage());
     }
 
     @Test
     void testUserIdForbidden() {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+
         when(transactionRepository.findByTrxCodeAndAuthorizationNotExpired(anyString(), any())).thenReturn(Optional.of(transaction));
         when(repositoryMockFindInvocation())
                 .thenReturn(TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
-                        .userId(USERID+"1")
+                        .userId(USERID + "1")
                         .build()
                 );
 
-        try {
-            invokeService();
-            Assertions.fail("Expected exception");
-        } catch (UserNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, e.getCode());
-            Assertions.assertEquals("Transaction with trxCode [TRXCODE] is already assigned to another user", e.getMessage());
-        }
+        UserNotAllowedException exception = Assertions.assertThrows(
+                UserNotAllowedException.class,
+                this::invokeService
+        );
+
+        Assertions.assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, exception.getCode());
+        Assertions.assertEquals("Transaction with trxCode [TRXCODE] is already assigned to another user", exception.getMessage());
     }
 
     @Test
     void testExpiredTransaction() {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
         when(transactionRepository.findByTrxCodeAndAuthorizationNotExpired(anyString(), any())).thenReturn(Optional.of(transaction));
         when(repositoryMockFindInvocation()).thenReturn(
                 TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.AUTHORIZED)
                         .userId(USERID).build());
 
-        try {
-            invokeService();
-            Assertions.fail("Expected exception");
-        } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("Cannot unrelate transaction with transactionId [MOCKEDTRANSACTION_qr-code_0] not in status identified", e.getMessage());
-        }
+        OperationNotAllowedException exception = Assertions.assertThrows(
+                OperationNotAllowedException.class,
+                this::invokeService
+        );
+
+        Assertions.assertEquals(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, exception.getCode());
+        Assertions.assertEquals("Cannot unrelate transaction with transactionId [MOCKEDTRANSACTION_qr-code_0] not in status identified", exception.getMessage());
     }
 
     @Test

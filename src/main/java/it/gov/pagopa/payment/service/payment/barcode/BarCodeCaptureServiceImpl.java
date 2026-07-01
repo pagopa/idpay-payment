@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 @Slf4j
@@ -57,8 +58,8 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
             deleteUnusedVouchers(transaction);
 
             trx.setStatus(SyncTrxStatus.CAPTURED);
-            trx.setElaborationDateTime(LocalDateTime.now());
-            trx.setUpdateDate(LocalDateTime.now());
+            trx.setElaborationDateTime(LocalDateTime.now(ZoneOffset.UTC));
+            trx.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
             repository.save(trx);
 
             transactionSynchronizer.sync(trx, transaction);

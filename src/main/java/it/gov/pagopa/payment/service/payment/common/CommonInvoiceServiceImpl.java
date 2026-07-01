@@ -28,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Service("commonInvoice")
@@ -85,7 +86,7 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
+            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(trx.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
@@ -96,7 +97,7 @@ public class CommonInvoiceServiceImpl {
 
             // updating the transaction status to invoiced
             trx.setStatus(SyncTrxStatus.INVOICED);
-            trx.setUpdateDate(LocalDateTime.now());
+            trx.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
             trx.setInvoiceData(InvoiceData.builder()
                     .filename(file.getOriginalFilename())
                     .docNumber(docNumber)

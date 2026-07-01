@@ -26,6 +26,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -125,7 +126,7 @@ public class CommonCancelServiceImpl {
             trx.setStatus(SyncTrxStatus.CANCELLED);
             trx.setRewardCents(refund.getRewardCents());
             trx.setRewards(refund.getRewards());
-            trx.setElaborationDateTime(LocalDateTime.now());
+            trx.setElaborationDateTime(LocalDateTime.now(ZoneOffset.UTC));
 
             if (isReset) {
                 TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());

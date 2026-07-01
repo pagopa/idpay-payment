@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Service("commonConfirm")
@@ -70,7 +71,7 @@ public class CommonConfirmServiceImpl {
 
     public void confirmAuthorizedPayment(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.REWARDED);
-        trx.setElaborationDateTime(LocalDateTime.now());
+        trx.setElaborationDateTime(LocalDateTime.now(ZoneOffset.UTC));
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
         sendConfirmPaymentNotification(trx);
 

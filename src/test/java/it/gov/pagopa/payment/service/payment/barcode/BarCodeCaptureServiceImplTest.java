@@ -53,31 +53,35 @@ class BarCodeCaptureServiceImplTest {
 
     @Test
     void testCapturePaymentTrxNotFound() {
-        try {
-            service.capturePayment("trxCode");
-            Assertions.fail("Expected exception");
-        } catch (TransactionNotFoundOrExpiredException e) {
-            Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
-            Assertions.assertEquals("Cannot find transaction with transactionCode [trxCode]", e.getMessage());
-        }
+        TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> service.capturePayment("trxCode")
+        );
+
+        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
+        Assertions.assertEquals("Cannot find transaction with transactionCode [trxCode]", exception.getMessage());
     }
 
     @Test
     void testCapturePaymentStatusNotValid() {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
         when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setStatus(SyncTrxStatus.CREATED);
+
         when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
-        try {
-            service.capturePayment("trxCode");
-            Assertions.fail("Expected exception");
-        } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", e.getMessage());
-        }
+
+        OperationNotAllowedException exception = Assertions.assertThrows(
+                OperationNotAllowedException.class,
+                () -> service.capturePayment("trxCode")
+        );
+
+        Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
+        Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", exception.getMessage());
     }
 
     @Test

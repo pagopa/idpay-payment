@@ -56,65 +56,75 @@ class CommonConfirmServiceImplTest {
 
     @Test
     void testTrxNotFound() {
-        try {
-            service.confirmPayment("TRXID", "MERCHID", "ACQID");
-            Assertions.fail("Expected exception");
-        } catch (TransactionNotFoundOrExpiredException e) {
-            Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
-            Assertions.assertEquals("Cannot find transaction with transactionId [TRXID]", e.getMessage());
-        }
+        TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> service.confirmPayment("TRXID", "MERCHID", "ACQID")
+        );
+
+        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
+        Assertions.assertEquals("Cannot find transaction with transactionId [TRXID]", exception.getMessage());
     }
 
     @Test
     void testMerchantIdNotValid() {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         when(repositoryMock.findById("TRXID"))
                 .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
 
-        try {
-            service.confirmPayment("TRXID", "MERCHID", "ACQID");
-            Assertions.fail("Expected exception");
-        } catch (MerchantOrAcquirerNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("The merchant with id [MERCHANTID0] associated to the transaction is not equal to the merchant with id [MERCHID]", e.getMessage());
-        }
+        MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
+                MerchantOrAcquirerNotAllowedException.class,
+                () -> service.confirmPayment("TRXID", "MERCHID", "ACQID")
+        );
+
+        Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
+        Assertions.assertEquals(
+                "The merchant with id [MERCHANTID0] associated to the transaction is not equal to the merchant with id [MERCHID]",
+                exception.getMessage()
+        );
     }
 
     @Test
     void testAcquirerIdNotValid() {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+
         trx.setMerchantId("MERCHID");
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
-        try {
-            service.confirmPayment("TRXID", "MERCHID_2", "ACQID");
-            Assertions.fail("Expected exception");
-        } catch (MerchantOrAcquirerNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("The merchant with id [MERCHID] associated to the transaction is not equal to the merchant with id [MERCHID_2]", e.getMessage());
-        }
+        MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
+                MerchantOrAcquirerNotAllowedException.class,
+                () -> service.confirmPayment("TRXID", "MERCHID_2", "ACQID")
+        );
+
+        Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
+        Assertions.assertEquals(
+                "The merchant with id [MERCHID] associated to the transaction is not equal to the merchant with id [MERCHID_2]",
+                exception.getMessage()
+        );
     }
 
     @Test
     void testStatusNotValid() {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
-        try {
-            service.confirmPayment("TRXID", "MERCHID", "ACQID");
-            Assertions.fail("Expected exception");
-        } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("Cannot operate on transaction with transactionId [TRXID] in status CREATED", e.getMessage());
-        }
+        OperationNotAllowedException exception = Assertions.assertThrows(
+                OperationNotAllowedException.class,
+                () -> service.confirmPayment("TRXID", "MERCHID", "ACQID")
+        );
+
+        Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
+        Assertions.assertEquals("Cannot operate on transaction with transactionId [TRXID] in status CREATED", exception.getMessage());
     }
 
     @Test

@@ -71,7 +71,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                         String channel,
                                                         String userId) {
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -95,7 +95,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                                 String channel,
                                                                 String userId) {
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -114,7 +114,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                                      String userId,
                                                                      OffsetDateTime trxEndDate) {
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);

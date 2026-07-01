@@ -69,7 +69,7 @@ public class CommonPreAuthServiceImpl{
 
   public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel, SyncTrxStatus status) {
     try {
-      trx.setTrxChargeDate(OffsetDateTime.now());
+      trx.setTrxChargeDate(OffsetDateTime.now(ZoneOffset.UTC));
       trx.setChannel(channel);
       AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
       Transaction transaction = transactionRepository.findById(trx.getId())
@@ -138,7 +138,7 @@ public class CommonPreAuthServiceImpl{
       throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(trx.getInitiativeId()));
     }
 
-    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now())) {
+    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
       throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trx.getId()));
     }
 

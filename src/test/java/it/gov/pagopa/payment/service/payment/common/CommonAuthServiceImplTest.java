@@ -331,15 +331,17 @@ class CommonAuthServiceImplTest {
 
         when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
 
-        try {
-            commonAuthService.authPayment(transaction, USERID, TRX_CODE);
-            Assertions.fail("Expected exception");
-        } catch (UserSuspendedException | UserNotOnboardedException e) {
-            if(PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
-                Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, e.getCode());
-            } else {
-                Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, e.getCode());
-            }
+        RuntimeException exception = Assertions.assertThrows(
+                RuntimeException.class,
+                () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE)
+        );
+
+        if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)) {
+            assertInstanceOf(UserSuspendedException.class, exception);
+            Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, ((UserSuspendedException) exception).getCode());
+        } else {
+            assertInstanceOf(UserNotOnboardedException.class, exception);
+            Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, ((UserNotOnboardedException) exception).getCode());
         }
 
         verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);

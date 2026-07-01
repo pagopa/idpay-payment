@@ -75,72 +75,76 @@ class CommonCancelServiceTest {
 
   @Test
   void testTrxNotFound() {
-    try {
-      service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
-      Assertions.fail("Expected exception");
-    } catch (TransactionNotFoundOrExpiredException e) {
-      Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
-      Assertions.assertEquals("Cannot find transaction with transactionId [TRXID]", e.getMessage());
-    }
+    TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
+            TransactionNotFoundOrExpiredException.class,
+            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID")
+    );
+
+    Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
+    Assertions.assertEquals("Cannot find transaction with transactionId [TRXID]", exception.getMessage());
   }
 
   @Test
   void testMerchantIdNotValid() {
     Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
     when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
     when(repositoryMock.findById("TRXID"))
-            .thenReturn(Optional.ofNullable(
-                    TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
+            .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
 
-    try {
-      service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
-      Assertions.fail("Expected exception");
-    } catch (MerchantOrAcquirerNotAllowedException e) {
-      Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
-      Assertions.assertEquals(
-              "The merchant with id [MERCHANTID0] associated to the transaction is not equal to the merchant with id [MERCHID]",
-              e.getMessage());
-    }
+    MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
+            MerchantOrAcquirerNotAllowedException.class,
+            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID")
+    );
+
+    Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
+    Assertions.assertEquals(
+            "The merchant with id [MERCHANTID0] associated to the transaction is not equal to the merchant with id [MERCHID]",
+            exception.getMessage()
+    );
   }
 
   @Test
   void testAcquirerIdNotValid() {
     Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+
     when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx =
-            TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
-    try {
-      service.cancelTransaction("TRXID", "MERCHID", "ACQID_WRONG", "POSID");
-      Assertions.fail("Expected exception");
-    } catch (MerchantOrAcquirerNotAllowedException e) {
-      Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, e.getCode());
-      Assertions.assertEquals(
-              "The merchant with id [MERCHID] associated to the transaction is not equal to the merchant with id [MERCHID]",
-              e.getMessage());
-    }
+    MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
+            MerchantOrAcquirerNotAllowedException.class,
+            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID_WRONG", "POSID")
+    );
+
+    Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
+    Assertions.assertEquals(
+            "The merchant with id [MERCHID] associated to the transaction is not equal to the merchant with id [MERCHID]",
+            exception.getMessage()
+    );
   }
 
   @Test
   void testStatusNotValid() {
     Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.REWARDED);
+
     when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.REWARDED);
+
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
-    try {
-      service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
-      Assertions.fail("Expected exception");
-    } catch (OperationNotAllowedException e) {
-      Assertions.assertEquals(ExceptionCode.TRX_DELETE_NOT_ALLOWED, e.getCode());
-      Assertions.assertEquals("Cannot cancel transaction with transactionId [TRXID]",
-              e.getMessage());
-    }
+    OperationNotAllowedException exception = Assertions.assertThrows(
+            OperationNotAllowedException.class,
+            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID")
+    );
+
+    Assertions.assertEquals(ExceptionCode.TRX_DELETE_NOT_ALLOWED, exception.getCode());
+    Assertions.assertEquals("Cannot cancel transaction with transactionId [TRXID]", exception.getMessage());
   }
 
   @ParameterizedTest
