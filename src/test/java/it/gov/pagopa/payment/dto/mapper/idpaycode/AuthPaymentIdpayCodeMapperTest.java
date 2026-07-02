@@ -37,6 +37,6 @@ class AuthPaymentIdpayCodeMapperTest {
         Assertions.assertEquals(secondFactor, result.getSecondFactor());
 
         TestUtils.checkNotNullFields(result, "splitPayment",
-                "residualAmountCents");
+                "residualAmountCents", "trxNumber");
     }
 }

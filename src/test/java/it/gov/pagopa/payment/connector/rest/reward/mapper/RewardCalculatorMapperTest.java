@@ -71,7 +71,7 @@ import static org.junit.jupiter.api.Assertions.*;
       assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
       assertEquals(responseDTO.getCounterVersion(),result.getCounterVersion());
         TestUtils.checkNotNullFields(result,"residualBudgetCents", "secondFactor","splitPayment",
-                "residualAmountCents");
+                "residualAmountCents", "trxNumber");
     });
   }
 
@@ -97,7 +97,7 @@ import static org.junit.jupiter.api.Assertions.*;
        assertNull(result.getCounters());
        assertEquals(Collections.emptyMap(), result.getRewards());
        TestUtils.checkNotNullFields(result, "counters","residualBudgetCents", "secondFactor","splitPayment",
-               "residualAmountCents");
+               "residualAmountCents", "trxNumber");
      });
    }
 
@@ -122,7 +122,7 @@ import static org.junit.jupiter.api.Assertions.*;
              assertEquals(Map.of(responseDTO.getInitiativeId(), responseDTO.getReward()), result.getRewards());
              assertEquals(responseDTO.getReward().getCounters(), result.getCounters());
              TestUtils.checkNotNullFields(result, "residualBudgetCents", "secondFactor","splitPayment",
-                     "residualAmountCents");
+                     "residualAmountCents", "trxNumber");
          });
      }
 

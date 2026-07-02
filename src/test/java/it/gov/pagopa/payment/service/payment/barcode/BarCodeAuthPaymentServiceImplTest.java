@@ -151,7 +151,7 @@ class BarCodeAuthPaymentServiceImplTest {
         assertNotNull(result);
         assertEquals(authPaymentDTO, result);
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
-        TestUtils.checkNotNullFields(result, "rejectionReasons", "splitPayment", "residualAmountCents");
+        TestUtils.checkNotNullFields(result, "rejectionReasons", "splitPayment", "residualAmountCents", "trxNumber");
         assertEquals(transactionInProgress.getTrxCode(), result.getTrxCode());
     }
 
