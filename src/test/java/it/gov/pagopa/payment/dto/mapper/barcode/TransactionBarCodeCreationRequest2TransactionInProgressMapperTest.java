@@ -41,7 +41,7 @@ class TransactionBarCodeCreationRequest2TransactionInProgressMapperTest {
                 "creditNoteData", "elaborationDateTime", "idTrxIssuer", "amountCents", "effectiveAmountCents", "amountCurrency",
                 "mcc", "acquirerId", "merchantId", "pointOfSaleId", "merchantFiscalCode", "vat", "initiativeName", "businessName",
                 "rewardCents", "rejectionReasons", "rewards", "initiativeRejectionReasons", "initiativeEndDate", "voucherAmountCents",
-                "franchiseName", "pointOfSaleType", "familyId" );
+                "franchiseName", "pointOfSaleType", "familyId", "trxNumber" );
         assertResponse(trxCreationReq, now, result);
     }
     void assertResponse(TransactionBarCodeCreationRequest trxCreationReq, OffsetDateTime now, TransactionInProgress result){
