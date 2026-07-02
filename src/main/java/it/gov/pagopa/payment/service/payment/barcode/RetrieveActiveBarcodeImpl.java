@@ -34,12 +34,9 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
         List<TransactionInProgress> transactions = transactionInProgressRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
         List<Transaction> trxs = transactionRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
 
-        if (transactions.isEmpty()) {
+        if (transactions.isEmpty() && trxs.isEmpty()) {
             throw new TransactionNotFoundOrExpiredException(NO_ACTIVE_TRANSACTION_FOUND_FOR_USER);
         }
-        /*if (trxs.isEmpty()) {
-            throw new TransactionNotFoundOrExpiredException(NO_ACTIVE_TRANSACTION_FOUND_FOR_USER);
-        }*/
 
         TransactionInProgress latest = null;
 
