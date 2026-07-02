@@ -37,9 +37,9 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
         if (transactions.isEmpty()) {
             throw new TransactionNotFoundOrExpiredException(NO_ACTIVE_TRANSACTION_FOUND_FOR_USER);
         }
-        if (trxs.isEmpty()) {
+        /*if (trxs.isEmpty()) {
             throw new TransactionNotFoundOrExpiredException(NO_ACTIVE_TRANSACTION_FOUND_FOR_USER);
-        }
+        }*/
 
         TransactionInProgress latest = null;
 
