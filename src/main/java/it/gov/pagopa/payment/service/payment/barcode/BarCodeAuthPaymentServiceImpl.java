@@ -126,6 +126,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             if(Boolean.TRUE.equals(trx.getExtendedAuthorization())){
                 TransactionInProgress originalTrxWithIncrement = transactionInProgressRepository.incrementSubTransactionCounter(trx);
                 TransactionInProgress subTrx = createSubTransaction(trx, originalTrxWithIncrement.getSubTrxCounter());
+                transactionInProgressRepository.save(subTrx);
                 commonAuthService.checkTrxStatusToInvokePreAuth(subTrx);
                 return invokeAuthRuleEngine(subTrx.getTrxCode(), authBarCodePaymentDTO, merchantId, subTrx);
             }
