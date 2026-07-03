@@ -421,7 +421,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(
         resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate", "initiativeEndDate",
-        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId", "trxNumber");
+        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId", "subTrxCounter");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -474,7 +474,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(
         resultSecondSave, "authDate", "elaborationDateTime", "trxChargeDate", "initiativeEndDate",
-        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId", "trxNumber");
+        "voucherAmountCents", "invoiceData", "creditNoteData", "franchiseName", "pointOfSaleType", "familyId", "subTrxCounter");
     Assertions.assertEquals(SyncTrxStatus.IDENTIFIED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -516,7 +516,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Assertions.assertNotNull(resultSecondSave);
     TestUtils.checkNotNullFields(resultSecondSave, "authDate", "elaborationDateTime", "reward",
         "rewards", "trxChargeDate", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData",
-        "franchiseName", "pointOfSaleType", "familyId", "trxNumber");
+        "franchiseName", "pointOfSaleType", "familyId", "subTrxCounter");
     Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
@@ -942,7 +942,7 @@ class TransactionInProgressRepositoryExtImplTest {
     TestUtils.checkNotNullFields(resultSecondSave,
         "authDate", "elaborationDateTime", "reward", "rewards", "trxChargeDate", "idTrxIssuer",
         "mcc", "initiativeEndDate", "voucherAmountCents", "invoiceData", "creditNoteData",
-        "franchiseName", "pointOfSaleType", "familyId", "trxNumber");
+        "franchiseName", "pointOfSaleType", "familyId", "subTrxCounter");
     Assertions.assertEquals(SyncTrxStatus.REJECTED, resultSecondSave.getStatus());
     Assertions.assertEquals("USERID1", resultSecondSave.getUserId());
   }
