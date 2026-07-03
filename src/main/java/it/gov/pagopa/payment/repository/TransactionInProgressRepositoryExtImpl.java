@@ -247,7 +247,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
         .set(Fields.counterVersion, authPaymentDTO.getCounters().getVersion())
         .set(Fields.familyId,trx.getFamilyId())
-        .set(Fields.trxNumber, trx.getTrxNumber())
+        .set(Fields.subTrxCounter, trx.getSubTrxCounter())
         .currentDate(Fields.updateDate);
 
     if (RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())) {
@@ -641,6 +641,23 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
             .limit(pageSize);
 
     return mongoTemplate.find(query, TransactionInProgress.class);
+  }
+
+  @Override
+  public TransactionInProgress incrementSubTransactionCounter(TransactionInProgress trx) {
+    Query query = new Query(Criteria.where(Fields.id).is(trx.getId()));
+
+    Update update = new Update().inc(Fields.subTrxCounter, 1);
+
+    FindAndModifyOptions options = FindAndModifyOptions.options()
+            .returnNew(true);
+
+    return mongoTemplate.findAndModify(
+            query,
+            update,
+            options,
+            TransactionInProgress.class
+    );
   }
 
 }

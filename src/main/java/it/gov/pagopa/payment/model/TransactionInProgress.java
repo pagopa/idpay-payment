@@ -88,5 +88,5 @@ public class TransactionInProgress {
   private String franchiseName;
   private String pointOfSaleType;
 
-  private Integer trxNumber;
+  private Integer subTrxCounter;
 }

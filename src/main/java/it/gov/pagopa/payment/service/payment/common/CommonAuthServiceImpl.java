@@ -92,11 +92,8 @@ public class CommonAuthServiceImpl {
             Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities
                     .getInitiativeRejectionReason(authPaymentDTO.getInitiativeId(), authPaymentDTO.getRejectionReasons());
 
-
             if(SyncTrxStatus.REWARDED.equals(authPaymentDTO.getStatus())) {
                 log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
-                Integer trxNumber = trx.getTrxNumber() != null ? trx.getTrxNumber() : 0;
-                authPaymentDTO.setTrxNumber(trxNumber + 1 );
                 trx.setCounterVersion(authPaymentDTO.getCounters().getVersion());
                 updateTrxAuthorized(trx, authPaymentDTO, initiativeRejectionReasons);
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);

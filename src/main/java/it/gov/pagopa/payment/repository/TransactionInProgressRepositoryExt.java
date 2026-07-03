@@ -52,5 +52,6 @@ public interface TransactionInProgressRepositoryExt {
   List<TransactionInProgress> findInvoicedTransaction(
           Integer pageSize
   );
+  TransactionInProgress incrementSubTransactionCounter(TransactionInProgress trx);
 
 }

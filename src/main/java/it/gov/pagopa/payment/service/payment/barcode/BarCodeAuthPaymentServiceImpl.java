@@ -19,11 +19,14 @@ import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditiona
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
+
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -121,19 +124,30 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
             commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
-            AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(trx);
+            if(Boolean.TRUE.equals(trx.getExtendedAuthorization())){
+                TransactionInProgress originalTrxWithIncrement = transactionInProgressRepository.incrementSubTransactionCounter(trx);
+                TransactionInProgress subTrx = createSubTransaction(trx, originalTrxWithIncrement.getSubTrxCounter());
+                return invokeAuthRuleEngine(subTrx.getTrxCode(), authBarCodePaymentDTO, merchantId, subTrx);
+            }
 
-            logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
-            authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
-            authPaymentDTO.setRejectionReasons(Collections.emptyList());
-            Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
-            authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
-            authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
-            return authPaymentDTO;
+            return invokeAuthRuleEngine(trxCode, authBarCodePaymentDTO, merchantId, trx);
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);
             throw e;
         }
+    }
+
+    @NotNull
+    private AuthPaymentDTO invokeAuthRuleEngine(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, TransactionInProgress trx) {
+        AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(trx);
+
+        logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
+        authPaymentDTO.setResidualBudgetCents(CommonPaymentUtilities.calculateResidualBudget(authPaymentDTO.getRewards()));
+        authPaymentDTO.setRejectionReasons(Collections.emptyList());
+        Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
+        authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
+        authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
+        return authPaymentDTO;
     }
 
     private Map<String, String> validateAdditionalProperties(TransactionInProgress trx,
@@ -172,5 +186,50 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         trx.setAmountCurrency(PaymentConstants.CURRENCY_EUR);
         trx.setPointOfSaleId(pointOfSaleId);
         trx.setFamilyId(familyId);
+    }
+
+    private TransactionInProgress createSubTransaction(TransactionInProgress trx, Integer trxNumber){
+        return  TransactionInProgress
+                .builder()
+                .id("%s_%s".formatted(trx.getId(), trxNumber))
+                .trxCode("%s_%s".formatted(trx.getTrxCode(),  trxNumber))
+                .idTrxAcquirer(trx.getIdTrxAcquirer())
+                .trxDate(trx.getTrxDate())
+                .trxChargeDate(trx.getTrxChargeDate())
+                .elaborationDateTime(trx.getElaborationDateTime())
+                .operationType(trx.getOperationType())
+                .operationTypeTranscoded(trx.getOperationTypeTranscoded())
+                .idTrxIssuer(trx.getIdTrxIssuer())
+                .correlationId(trx.getCorrelationId())
+                .amountCents(trx.getAmountCents())
+                .effectiveAmountCents(trx.getEffectiveAmountCents())
+                .amountCurrency(trx.getAmountCurrency())
+                .mcc(trx.getMcc())
+                .acquirerId(trx.getAcquirerId())
+                .merchantId(trx.getMerchantId())
+                .pointOfSaleId(trx.getPointOfSaleId())
+                .merchantFiscalCode(trx.getMerchantFiscalCode())
+                .vat(trx.getVat())
+                .initiativeId(trx.getInitiativeId())
+                .initiativeName(trx.getInitiativeName())
+                .businessName(trx.getBusinessName())
+                .rewardCents(trx.getRewardCents())
+                .counterVersion(trx.getCounterVersion())
+                .rejectionReasons((trx.getRejectionReasons()))
+                .userId(trx.getUserId())
+                .familyId((trx.getFamilyId()))
+                .status(trx.getStatus())
+                .channel(trx.getChannel())
+                .updateDate(LocalDateTime.now())
+                .initiatives(trx.getInitiatives())
+                .initiativeRejectionReasons(trx.getInitiativeRejectionReasons())
+                .additionalProperties(trx.getAdditionalProperties())
+                .extendedAuthorization(Boolean.FALSE)
+                .trxEndDate(trx.getTrxEndDate())
+                .initiativeEndDate(trx.getInitiativeEndDate())
+                .voucherAmountCents(trx.getVoucherAmountCents())
+                .franchiseName(trx.getFranchiseName())
+                .pointOfSaleType(trx.getPointOfSaleType())
+                .build();
     }
 }

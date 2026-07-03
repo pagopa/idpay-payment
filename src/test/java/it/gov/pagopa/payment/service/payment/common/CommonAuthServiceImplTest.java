@@ -64,6 +64,7 @@ class CommonAuthServiceImplTest {
     @Test
     void authPayment() {
         TransactionInProgress transaction = getTransactionInProgress();
+        transaction.setExtendedAuthorization(Boolean.FALSE);
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
         authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
@@ -92,7 +93,7 @@ class CommonAuthServiceImplTest {
         commonVerifyForAuthPayment(transaction);
         assertEquals(authPaymentDTO, result);
         TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-                "residualAmountCents");
+                "residualAmountCents","trxNumber");
         assertEquals(transaction.getTrxCode(), result.getTrxCode());
         assertTrue(result.getRejectionReasons().isEmpty());
         assertEquals(Collections.emptyList(), result.getRejectionReasons());
