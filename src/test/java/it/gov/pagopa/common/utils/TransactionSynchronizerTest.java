@@ -134,32 +134,6 @@ class TransactionSynchronizerTest {
         assertEquals(source.getTrxDate(), target.getTrxDate());
         assertEquals(source.getTrxChargeDate(), target.getTrxChargeDate());
         assertEquals(source.getTrxEndDate(), target.getTrxEndDate());
-
-        assertEquals("invoice.pdf",
-                target.getInvoiceFilename());
-
-        assertEquals("INV-001",
-                target.getInvoiceDocNumber());
-
-        assertEquals("credit.pdf",
-                target.getCreditNoteFilename());
-
-        assertEquals("CRN-001",
-                target.getCreditNoteDocNumber());
     }
 
-    @Test
-    void shouldSetInvoiceAndCreditNoteFieldsToNullWhenMissing() {
-
-        TransactionInProgress source = new TransactionInProgress();
-        Transaction target = new Transaction();
-
-        synchronizer.sync(source, target);
-
-        assertNull(target.getInvoiceFilename());
-        assertNull(target.getInvoiceDocNumber());
-
-        assertNull(target.getCreditNoteFilename());
-        assertNull(target.getCreditNoteDocNumber());
-    }
 }

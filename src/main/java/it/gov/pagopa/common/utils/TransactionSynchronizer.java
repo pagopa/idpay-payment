@@ -1,7 +1,6 @@
 package it.gov.pagopa.common.utils;
 
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Component;
 
@@ -112,48 +111,8 @@ public class TransactionSynchronizer {
         target.setExtendedAuthorization(
                 source.getExtendedAuthorization());
 
-        // invoice mapping
-        mapInvoiceData(
-                source.getInvoiceData(),
-                target);
-
-        // credit note mapping
-        mapCreditNoteData(
-                source.getCreditNoteData(),
-                target);
+        target.setInvoiceData(source.getInvoiceData());
+        target.setCreditNoteData(source.getCreditNoteData());
     }
 
-    private void mapInvoiceData(
-            InvoiceData invoiceData,
-            Transaction target) {
-
-        if (invoiceData == null) {
-            target.setInvoiceFilename(null);
-            target.setInvoiceDocNumber(null);
-            return;
-        }
-
-        target.setInvoiceFilename(
-                invoiceData.getFilename());
-
-        target.setInvoiceDocNumber(
-                invoiceData.getDocNumber());
-    }
-
-    private void mapCreditNoteData(
-            InvoiceData creditNoteData,
-            Transaction target) {
-
-        if (creditNoteData == null) {
-            target.setCreditNoteFilename(null);
-            target.setCreditNoteDocNumber(null);
-            return;
-        }
-
-        target.setCreditNoteFilename(
-                creditNoteData.getFilename());
-
-        target.setCreditNoteDocNumber(
-                creditNoteData.getDocNumber());
-    }
 }
