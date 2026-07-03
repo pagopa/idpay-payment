@@ -33,6 +33,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
+    public static final String SUB_TRX_PATTERN = "%s_%s";
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
     private final TransactionInProgressRepository transactionInProgressRepository;
@@ -193,8 +194,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     private TransactionInProgress createSubTransaction(TransactionInProgress trx, Integer trxNumber){
         return  TransactionInProgress
                 .builder()
-                .id("%s_%s".formatted(trx.getId(), trxNumber))
-                .trxCode("%s_%s".formatted(trx.getTrxCode(),  trxNumber))
+                .id(SUB_TRX_PATTERN.formatted(trx.getId(), trxNumber))
+                .trxCode(SUB_TRX_PATTERN.formatted(trx.getTrxCode(),  trxNumber))
                 .idTrxAcquirer(trx.getIdTrxAcquirer())
                 .trxDate(trx.getTrxDate())
                 .trxChargeDate(trx.getTrxChargeDate())
@@ -202,7 +203,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .operationType(trx.getOperationType())
                 .operationTypeTranscoded(trx.getOperationTypeTranscoded())
                 .idTrxIssuer(trx.getIdTrxIssuer())
-                .correlationId(trx.getCorrelationId())
+                .correlationId(SUB_TRX_PATTERN.formatted(trx.getCorrelationId(),trxNumber))
                 .amountCents(trx.getAmountCents())
                 .effectiveAmountCents(trx.getEffectiveAmountCents())
                 .amountCurrency(trx.getAmountCurrency())

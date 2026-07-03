@@ -64,7 +64,8 @@ class RetrieveActiveBarcodeTest {
         TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
 
         //Then
-        Assertions.assertNull(result);
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(trx.getTrxCode(), result.getTrxCode());
     }
 
     @Test
