@@ -4,6 +4,8 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
+
 @Component
 public class TransactionSynchronizer {
 
@@ -98,8 +100,17 @@ public class TransactionSynchronizer {
                 source.getInitiativeRejectionReasons());
 
         // custom properties
-        target.setAdditionalProperties(
-                source.getAdditionalProperties());
+        if (source.getAdditionalProperties() != null) {
+            target.setAdditionalProperties(new HashMap<>(source.getAdditionalProperties()));
+            if (source.getAdditionalProperties().containsKey("productGtin")) {
+                target.setProductGtin(source.getAdditionalProperties().get("productGtin"));
+            }
+            if (source.getAdditionalProperties().containsKey("productName")) {
+                target.setProductName(source.getAdditionalProperties().get("productName"));
+            }
+        } else {
+            target.setAdditionalProperties(new HashMap<>());
+        }
 
         // versioning
         target.setCounterVersion(
