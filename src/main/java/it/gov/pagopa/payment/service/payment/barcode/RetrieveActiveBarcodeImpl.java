@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -35,9 +34,9 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
         TransactionInProgress latest = null;
 
         for (TransactionInProgress trx : transactions) {
-            if (trx.getStatus() == SyncTrxStatus.AUTHORIZED) {
-                return null;
-            }
+//            if (trx.getStatus() == SyncTrxStatus.AUTHORIZED) {
+//                return null;
+//            }
 
             if (latest == null || trx.getTrxDate().isBefore(latest.getTrxDate())) {
                 latest = trx;
