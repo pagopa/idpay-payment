@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS idpay.transaction (
     "trxDate" TIMESTAMPTZ NOT NULL,
     "trxChargeDate" TIMESTAMPTZ,
     "trxEndDate" TIMESTAMPTZ,
-    "elaborationDate" TIMESTAMP,
+    "elaborationDateTime" TIMESTAMP,
     "updateDate" TIMESTAMP,
     "userId" VARCHAR(64),
     "merchantId" VARCHAR(64),
@@ -99,11 +99,12 @@ BEGIN
     VALUES (
         NEW.id,
         'TRANSACTION_' || NEW.status,
-        to_jsonb(NEW)
+        jsonb_strip_nulls(to_jsonb(NEW))
     )
     ON CONFLICT (transaction_id, event_type)
-    DO NOTHING;
-
+    DO UPDATE SET
+        payload = EXCLUDED.payload,
+        created_at = now();
     RETURN NEW;
 END;
 $$;

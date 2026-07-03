@@ -30,7 +30,7 @@ public class TransactionSynchronizer {
         target.setTrxEndDate(source.getTrxEndDate());
 
         if (source.getElaborationDateTime() != null) {
-            target.setElaborationDate(source.getElaborationDateTime());
+            target.setElaborationDateTime(source.getElaborationDateTime());
         }
 
         target.setUpdateDate(source.getUpdateDate());
