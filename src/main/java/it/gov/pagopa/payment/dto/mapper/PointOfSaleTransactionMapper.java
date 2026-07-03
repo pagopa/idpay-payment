@@ -41,7 +41,7 @@ public class PointOfSaleTransactionMapper {
 
         return new PointOfSaleTransactionDTO(
                 trx.getTrxCode(),
-                trx.getCorrelationId(),
+                trx.getId(),
                 fiscalCode,
                 trx.getAmountCents(),
                 trx.getRewardCents() != null ? trx.getRewardCents() : Long.valueOf(0),
