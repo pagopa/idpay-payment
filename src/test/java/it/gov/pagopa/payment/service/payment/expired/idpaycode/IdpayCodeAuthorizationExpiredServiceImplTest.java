@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +58,7 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
                 .thenReturn(transaction);
         idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(transaction.getTrxCode());
 
-        Mockito.verify(transactionInProgressRepositoryMock).findByTrxIdAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES);
+        verify(transactionInProgressRepositoryMock).findByTrxIdAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES);
 
     }
 

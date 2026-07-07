@@ -28,7 +28,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -246,7 +245,7 @@ class CommonCancelServiceTest {
 
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(false);
     when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(
-            Mockito.mock(org.springframework.messaging.Message.class));
+            mock(org.springframework.messaging.Message.class));
     when(paymentErrorNotifierServiceMock.notifyCancelPayment(
             any(), anyString(), eq(true), any(InternalServerErrorException.class)))
             .thenReturn(true);
@@ -268,7 +267,7 @@ class CommonCancelServiceTest {
     RuntimeException exception = new RuntimeException("Notification error");
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenThrow(exception);
     when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(
-            Mockito.mock(org.springframework.messaging.Message.class));
+            mock(org.springframework.messaging.Message.class));
     when(paymentErrorNotifierServiceMock.notifyCancelPayment(
             any(), anyString(), eq(true), eq(exception)))
             .thenReturn(true);
@@ -290,7 +289,7 @@ class CommonCancelServiceTest {
     RuntimeException exception = new RuntimeException("Notification error");
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenThrow(exception);
     when(notifierServiceMock.buildMessage(trx, trx.getUserId())).thenReturn(
-            Mockito.mock(org.springframework.messaging.Message.class));
+            mock(org.springframework.messaging.Message.class));
     when(paymentErrorNotifierServiceMock.notifyCancelPayment(
             any(), anyString(), eq(true), eq(exception)))
             .thenReturn(false);
@@ -332,20 +331,20 @@ class CommonCancelServiceTest {
             .thenReturn(List.of(trx1, trx2))
             .thenReturn(List.of());
 
-    CommonCancelServiceImpl spyService = Mockito.spy(service);
-    Mockito.doNothing().when(spyService).cancelTransaction(
-            Mockito.anyString(),
-            Mockito.anyString(),
-            Mockito.anyString(),
-            Mockito.anyString()
+    CommonCancelServiceImpl spyService = spy(service);
+    doNothing().when(spyService).cancelTransaction(
+            anyString(),
+            anyString(),
+            anyString(),
+            anyString()
     );
 
     spyService.rejectPendingTransactions();
 
-    verify(repositoryMock, Mockito.times(2)).findPendingTransactions(100);
-    verify(spyService, Mockito.times(2))
-            .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-                    Mockito.anyString());
+    verify(repositoryMock, times(2)).findPendingTransactions(100);
+    verify(spyService, times(2))
+            .cancelTransaction(anyString(), anyString(), anyString(),
+                    anyString());
   }
 
   @Test
@@ -396,7 +395,7 @@ class CommonCancelServiceTest {
 
     service.deleteLapsedTransaction("INITIATIVE_ID");
 
-    verify(repositoryMock, Mockito.times(2)).findLapsedTransaction("INITIATIVE_ID",100);
+    verify(repositoryMock, times(2)).findLapsedTransaction("INITIATIVE_ID",100);
   }
 }
 

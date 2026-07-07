@@ -54,7 +54,7 @@ public class CommonConfirmServiceImpl {
             TransactionInProgress trx = repository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            Transaction transaction = transactionRepository.findById(trxId)
+            transactionRepository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){

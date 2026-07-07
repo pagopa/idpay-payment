@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,7 +49,7 @@ class BarCodeAuthorizationExpiredServiceImplTest {
                 .thenReturn(transaction);
         barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
-        Mockito.verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
+        verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
     }
 

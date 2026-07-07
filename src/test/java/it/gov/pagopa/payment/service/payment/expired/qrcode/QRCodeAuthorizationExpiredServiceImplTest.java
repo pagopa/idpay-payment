@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
@@ -26,7 +25,7 @@ import java.time.OffsetDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeAuthorizationExpiredServiceImplTest {
@@ -59,7 +58,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
                 .thenReturn(transaction);
         qrCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
-        Mockito.verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
+        verify(transactionInProgressRepositoryMock).findByTrxCodeAndAuthorizationNotExpired(transaction.getTrxCode());
 
     }
 
@@ -70,7 +69,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
         TransactionInProgress trxIdentifiedException404 = TransactionInProgressFaker.mockInstance(3, SyncTrxStatus.IDENTIFIED);
         TransactionInProgress trxIdentifiedException500 = TransactionInProgressFaker.mockInstance(4, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES))
+        when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES))
                 .thenReturn(trxCreate)
                 .thenReturn(trxIdentified)
                 .thenReturn(trxIdentifiedException404)
@@ -79,30 +78,30 @@ class QRCodeAuthorizationExpiredServiceImplTest {
 
 
         AuthPaymentDTO authTrx = AuthPaymentDTOFaker.mockInstance(1, trxIdentified);
-        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentified)).thenReturn(authTrx);
+        when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentified)).thenReturn(authTrx);
 
-        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException404)).thenThrow(new TransactionNotFoundOrExpiredException("NOT_FOUND"));
-        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException500)).thenThrow(new RewardCalculatorInvocationException("INTERNAL_SERVER_ERROR"));
+        when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException404)).thenThrow(new TransactionNotFoundOrExpiredException("NOT_FOUND"));
+        when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentifiedException500)).thenThrow(new RewardCalculatorInvocationException("INTERNAL_SERVER_ERROR"));
 
         qrCodeAuthorizationExpiredService.execute();
-        Mockito.verify(transactionInProgressRepositoryMock).deleteById(trxCreate.getId());
-        Mockito.verify(transactionInProgressRepositoryMock).deleteById(trxIdentified.getId());
-        Mockito.verify(transactionInProgressRepositoryMock).deleteById(trxIdentifiedException404.getId());
+        verify(transactionInProgressRepositoryMock).deleteById(trxCreate.getId());
+        verify(transactionInProgressRepositoryMock).deleteById(trxIdentified.getId());
+        verify(transactionInProgressRepositoryMock).deleteById(trxIdentifiedException404.getId());
     }
 
     @Test
     void handleExpiredTransactionException() {
         TransactionInProgress trxIdentified = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
 
-        Mockito.when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES))
+        when(transactionInProgressRepositoryMock.findAuthorizationExpiredTransaction(null, EXPIRATION_MINUTES))
                 .thenReturn(trxIdentified)
                 .thenReturn(null);
 
 
-        Mockito.when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentified)).thenThrow(new RuntimeException());
+        when(rewardCalculatorConnectorMock.cancelTransaction(trxIdentified)).thenThrow(new RuntimeException());
 
         qrCodeAuthorizationExpiredService.execute();
-        Mockito.verify(transactionInProgressRepositoryMock, Mockito.never()).deleteById(Mockito.any());
+        verify(transactionInProgressRepositoryMock, never()).deleteById(any());
     }
 
 

@@ -1,27 +1,15 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.common.utils.TransactionSynchronizer;
-import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
-import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
-import it.gov.pagopa.payment.exception.custom.TransactionRejectedException;
-import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.UserSuspendedException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -31,16 +19,20 @@ import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodePreAuthServiceImplTest {
@@ -271,7 +263,7 @@ class QRCodePreAuthServiceImplTest {
   void relateUserOtherException() {
     String errorMessageTest = "DUMMY_MESSAGE";
 
-    Mockito.when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1"))
+    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1"))
             .thenThrow(new RuntimeException(errorMessageTest));
 
     RuntimeException result = Assertions.assertThrows(RuntimeException.class,

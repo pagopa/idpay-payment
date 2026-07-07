@@ -27,6 +27,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -118,7 +119,7 @@ class QRCodeUnrelateServiceImplTest {
 
         TransactionInProgress expectedTrx = trx.toBuilder().status(SyncTrxStatus.CREATED).userId(null).build();
 
-        Mockito.verify(repositoryMock).save(expectedTrx);
+        verify(repositoryMock).save(expectedTrx);
     }
 
     private TransactionInProgress repositoryMockFindInvocation() {

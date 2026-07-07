@@ -16,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.OffsetDateTime;
@@ -46,7 +45,7 @@ class RetrieveActiveBarcodeTest {
     @Test
     void findOldestNotAuthorized_NotFoundInDB() {
         // Given
-        Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+        when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(Collections.emptyList());
 
         //When
@@ -65,9 +64,9 @@ class RetrieveActiveBarcodeTest {
         Transaction transactionAuth = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         TransactionInProgress trxAuth = TransactionInProgressFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
-        Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+        when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(List.of(trx, trxAuth));
-        Mockito.when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+        when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(List.of(transaction, transactionAuth));
 
         //When
@@ -89,7 +88,7 @@ class RetrieveActiveBarcodeTest {
         trx3.setTrxDate(now);
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(anyString(),anyString(), anyString())).thenReturn(List.of(trx));
-        Mockito.when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+        when(transactionInProgressRepositoryMock.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
                 .thenReturn(List.of(trx1, trx2, trx3));
 
         TransactionBarCodeResponse trxExpected = transactionBarCodeInProgress2TransactionResponseMapperMock.apply(trx2);
