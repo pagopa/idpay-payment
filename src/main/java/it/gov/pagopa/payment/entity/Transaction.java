@@ -117,12 +117,6 @@ public class Transaction {
     @Column(name = "\"rewardBatchId\"", length = 64)
     private String rewardBatchId;
 
-    @Column(name = "\"productGtin\"", length = 64)
-    private String productGtin;
-
-    @Column(name = "\"productName\"", length = 64)
-    private String productName;
-
     @Column(name = "\"idTrxAcquirer\"", length = 64)
     private String idTrxAcquirer;
 

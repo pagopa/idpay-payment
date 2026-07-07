@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -37,6 +38,9 @@ class CommonAuthCodeExpirationTest {
     @Mock
     private RewardCalculatorConnector rewardCalculatorConnector;
 
+    @Mock
+    private TransactionSynchronizer transactionSynchronizer;
+
     private CommonAuthCodeExpiration service;
 
     @BeforeEach
@@ -47,7 +51,8 @@ class CommonAuthCodeExpirationTest {
                 15L,
                 transactionRepository,
                 transactionInProgressRepository,
-                rewardCalculatorConnector
+                rewardCalculatorConnector,
+                transactionSynchronizer
         ) {};
     }
 
@@ -63,9 +68,6 @@ class CommonAuthCodeExpirationTest {
         assertEquals(trx, result);
 
         verifyNoInteractions(rewardCalculatorConnector);
-
-        verify(transactionRepository)
-                .deleteById("trxId");
 
         verify(transactionInProgressRepository)
                 .deleteById("trxId");
@@ -85,9 +87,6 @@ class CommonAuthCodeExpirationTest {
         verify(rewardCalculatorConnector)
                 .cancelTransaction(trx);
 
-        verify(transactionRepository)
-                .deleteById("trxId");
-
         verify(transactionInProgressRepository)
                 .deleteById("trxId");
     }
@@ -106,9 +105,6 @@ class CommonAuthCodeExpirationTest {
         TransactionInProgress result = service.handleExpiredTransaction(trx);
 
         assertEquals(trx, result);
-
-        verify(transactionRepository)
-                .deleteById("trxId");
 
         verify(transactionInProgressRepository)
                 .deleteById("trxId");

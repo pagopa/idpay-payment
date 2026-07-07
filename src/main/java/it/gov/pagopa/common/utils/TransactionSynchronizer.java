@@ -102,12 +102,6 @@ public class TransactionSynchronizer {
         // custom properties
         if (source.getAdditionalProperties() != null) {
             target.setAdditionalProperties(new HashMap<>(source.getAdditionalProperties()));
-            if (source.getAdditionalProperties().containsKey("productGtin")) {
-                target.setProductGtin(source.getAdditionalProperties().get("productGtin"));
-            }
-            if (source.getAdditionalProperties().containsKey("productName")) {
-                target.setProductName(source.getAdditionalProperties().get("productName"));
-            }
         } else {
             target.setAdditionalProperties(new HashMap<>());
         }

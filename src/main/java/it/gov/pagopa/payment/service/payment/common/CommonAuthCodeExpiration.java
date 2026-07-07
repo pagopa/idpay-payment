@@ -1,8 +1,10 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -20,17 +22,20 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
     protected final TransactionInProgressRepository transactionInProgressRepository;
     protected final TransactionRepository transactionRepository;
     protected final RewardCalculatorConnector rewardCalculatorConnector;
+    protected final TransactionSynchronizer transactionSynchronizer;
     protected CommonAuthCodeExpiration(AuditUtilities auditUtilities,
                                        String channel,
                                        long authorizationExpirationMinutes,
                                        TransactionRepository transactionRepository,
                                        TransactionInProgressRepository transactionInProgressRepository,
-                                       RewardCalculatorConnector rewardCalculatorConnector) {
+                                       RewardCalculatorConnector rewardCalculatorConnector,
+                                       TransactionSynchronizer transactionSynchronizer) {
         super(auditUtilities, channel);
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
+        this.transactionSynchronizer = transactionSynchronizer;
     }
 
     @Override
@@ -61,8 +66,12 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
                 }
             }
         }
-        transactionRepository.deleteById(trx.getId());
         transactionInProgressRepository.deleteById(trx.getId());
+
+        trx.setStatus(SyncTrxStatus.EXPIRED);
+        Transaction transaction = new Transaction();
+        transactionSynchronizer.sync(trx, transaction);
+        transactionRepository.save(transaction);
         return trx;
     }
 

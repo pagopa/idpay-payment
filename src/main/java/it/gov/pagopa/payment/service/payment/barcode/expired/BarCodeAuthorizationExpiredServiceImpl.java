@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode.expired;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -19,12 +20,14 @@ public class BarCodeAuthorizationExpiredServiceImpl extends CommonAuthorizationE
             @Value("${app.bar-code.expirations.authorization-minutes}") long authorizationExpirationMinutes,
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer) {
         super(transactionRepository,
                 authorizationExpirationMinutes,
                 transactionInProgressRepository,
                 rewardCalculatorConnector,
                 auditUtilities,
+                transactionSynchronizer,
                 RewardConstants.TRX_CHANNEL_BARCODE);
     }
 }

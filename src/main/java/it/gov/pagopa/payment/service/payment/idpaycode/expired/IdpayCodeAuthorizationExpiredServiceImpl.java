@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode.expired;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
@@ -21,14 +22,16 @@ public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpi
                                                     TransactionRepository transactionRepository,
                                                     TransactionInProgressRepository transactionInProgressRepository,
                                                     AuditUtilities auditUtilities,
-                                                    RewardCalculatorConnector rewardCalculatorConnector) {
+                                                    RewardCalculatorConnector rewardCalculatorConnector,
+                                                    TransactionSynchronizer transactionSynchronizer) {
         super(
                 auditUtilities,
                 RewardConstants.TRX_CHANNEL_IDPAYCODE,
                 authorizationExpirationMinutes,
                 transactionRepository,
                 transactionInProgressRepository,
-                rewardCalculatorConnector);
+                rewardCalculatorConnector,
+                transactionSynchronizer);
 
     }
 

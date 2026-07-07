@@ -75,7 +75,11 @@ public class CommonCancelServiceImpl {
 
             if (isDeletableImmediately(trx)) {
                 repository.deleteById(trxId);
-                transactionRepository.deleteById(trxId);
+                
+                trx.setStatus(SyncTrxStatus.CANCELLED);
+                Transaction transaction = new Transaction();
+                transactionSynchronizer.sync(trx, transaction);
+                transactionRepository.save(transaction);
             } else if (SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())) {
                 handleAuthorizedTransaction(trx);
             } else {
@@ -121,25 +125,28 @@ public class CommonCancelServiceImpl {
         AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
 
         repository.deleteById(trx.getId());
-        transactionRepository.deleteById(trx.getId());
+
         if (refund != null) {
             trx.setStatus(SyncTrxStatus.CANCELLED);
             trx.setRewardCents(refund.getRewardCents());
             trx.setRewards(refund.getRewards());
             trx.setElaborationDateTime(LocalDateTime.now(ZoneOffset.UTC));
 
+            Transaction transaction = new Transaction();
+            transactionSynchronizer.sync(trx, transaction);
+            transactionRepository.save(transaction);
             if (isReset) {
-                TransactionInProgress newTransaction = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
-                newTransaction.setTrxCode(trx.getTrxCode());
-                newTransaction.setTrxDate(trx.getTrxDate());
-                repository.save(newTransaction);
+                TransactionInProgress newTrx = barCodeCreationService.createExtendedTransactionPostDelete(new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),trx.getChannel(),trx.getUserId(),trx.getTrxEndDate());
+                newTrx.setTrxCode(trx.getTrxCode());
+                newTrx.setTrxDate(trx.getTrxDate());
+                repository.save(newTrx);
 
-                Transaction transaction = transactionRepository.findById(trx.getId())
+                Transaction newTransaction = transactionRepository.findById(trx.getId())
                         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                                 TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId())));
 
-                transactionSynchronizer.sync(newTransaction, transaction);
-                transactionRepository.save(transaction);
+                transactionSynchronizer.sync(newTrx, newTransaction);
+                transactionRepository.save(newTransaction);
             }
             sendCancelledTransactionNotification(trx, isReset);
         }

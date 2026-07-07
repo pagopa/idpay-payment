@@ -1,9 +1,11 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
@@ -29,17 +31,22 @@ public class CommonConfirmServiceImpl {
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
 
     public CommonConfirmServiceImpl(TransactionRepository transactionRepository,
                                     TransactionInProgressRepository repository,
                                     TransactionInProgress2TransactionResponseMapper mapper,
-                                    TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities) {
+                                    TransactionNotifierService notifierService,
+                                    PaymentErrorNotifierService paymentErrorNotifierService,
+                                    AuditUtilities auditUtilities,
+                                    TransactionSynchronizer transactionSynchronizer) {
         this.transactionRepository = transactionRepository;
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
+        this.transactionSynchronizer = transactionSynchronizer;
     }
 
     public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
@@ -47,7 +54,7 @@ public class CommonConfirmServiceImpl {
             TransactionInProgress trx = repository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
-            transactionRepository.findById(trxId)
+            Transaction transaction = transactionRepository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
@@ -76,7 +83,10 @@ public class CommonConfirmServiceImpl {
         sendConfirmPaymentNotification(trx);
 
         repository.deleteById(trx.getId());
-        transactionRepository.deleteById(trx.getId());
+
+        Transaction transaction = new Transaction();
+        transactionSynchronizer.sync(trx, transaction);
+        transactionRepository.save(transaction);
     }
 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {

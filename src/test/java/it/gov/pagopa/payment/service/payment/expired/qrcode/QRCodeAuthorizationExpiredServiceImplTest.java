@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.expired.qrcode;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -35,6 +36,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
     @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
 
@@ -42,7 +44,7 @@ class QRCodeAuthorizationExpiredServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionRepository, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities);
+        qrCodeAuthorizationExpiredService = new QRCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES, transactionRepository, transactionInProgressRepositoryMock, rewardCalculatorConnectorMock, auditUtilities, transactionSynchronizer);
     }
 
     @Test

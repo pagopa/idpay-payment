@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
@@ -36,6 +37,7 @@ class CommonConfirmServiceImplTest {
     @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
 
     private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
@@ -51,7 +53,8 @@ class CommonConfirmServiceImplTest {
                         mapper,
                         notifierServiceMock,
                         paymentErrorNotifierServiceMock,
-                        auditUtilitiesMock);
+                        auditUtilitiesMock,
+                        transactionSynchronizer);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.entity.Transaction;
@@ -46,6 +47,7 @@ class CommonReversalServiceImplTest {
     private AuditUtilities auditUtilities;
     @Mock
     private MultipartFile file;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     @InjectMocks
     private CommonReversalServiceImpl service;

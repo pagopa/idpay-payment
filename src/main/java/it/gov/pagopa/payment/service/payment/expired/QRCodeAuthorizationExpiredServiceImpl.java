@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.expired;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -19,13 +20,15 @@ public class QRCodeAuthorizationExpiredServiceImpl extends CommonAuthorizationEx
             TransactionRepository transactionRepository,
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer) {
         super(
                 transactionRepository,
                 authorizationExpirationMinutes,
                 transactionInProgressRepository,
                 rewardCalculatorConnector,
                 auditUtilities,
+                transactionSynchronizer,
                 RewardConstants.TRX_CHANNEL_QRCODE);
     }
 

@@ -127,7 +127,7 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
       hibernate:
-        default_schema: idpay
+        default_schema: "idpay-pagamenti"
   mongodb:
     database: ${MONGODB_DBNAME:idpay-beneficiari}
     uri: ${MONGODB_URI:mongodb://localhost:27017}

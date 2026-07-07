@@ -1,8 +1,10 @@
+CREATE DATABASE "idpay-database";
+
 BEGIN;
 
-CREATE SCHEMA IF NOT EXISTS idpay;
+CREATE SCHEMA IF NOT EXISTS "idpay-pagamenti";
 
-CREATE TABLE IF NOT EXISTS idpay.reward_batch (
+CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     merchant_id VARCHAR(64) NOT NULL,
     initiative_id VARCHAR(64),
@@ -28,7 +30,8 @@ CREATE TABLE IF NOT EXISTS idpay.reward_batch (
     approval_date TIMESTAMP,
     merchant_send_date TIMESTAMP
 );
-CREATE TABLE IF NOT EXISTS idpay.transaction (
+
+CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     id VARCHAR(64) PRIMARY KEY,
     "trxCode" VARCHAR(64) NOT NULL,
     "operationType" VARCHAR(32) NOT NULL,
@@ -59,8 +62,6 @@ CREATE TABLE IF NOT EXISTS idpay.transaction (
     "createdAt" TIMESTAMP,
     "rewardBatchStatusTrx" VARCHAR(64),
     "rewardBatchId" VARCHAR(64),
-    "productGtin" VARCHAR(64),
-    "productName" VARCHAR(64),
     "idTrxAcquirer" VARCHAR(64),
     "merchantFiscalCode" VARCHAR(64),
     vat VARCHAR(32),
@@ -77,7 +78,7 @@ CREATE TABLE IF NOT EXISTS idpay.transaction (
     "extendedAuthorization" BOOLEAN
 );
 
-CREATE TABLE IF NOT EXISTS idpay.transaction_outbox (
+CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     transaction_id VARCHAR(64) NOT NULL,
     event_type VARCHAR(64) NOT NULL,
@@ -86,12 +87,12 @@ CREATE TABLE IF NOT EXISTS idpay.transaction_outbox (
     CONSTRAINT uk_transaction_outbox UNIQUE (transaction_id, event_type)
 );
 
-CREATE OR REPLACE FUNCTION idpay.fn_transaction_outbox()
+CREATE OR REPLACE FUNCTION "idpay-pagamenti".fn_transaction_outbox()
 RETURNS TRIGGER
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    INSERT INTO idpay.transaction_outbox (
+    INSERT INTO "idpay-pagamenti".transaction_outbox (
         transaction_id,
         event_type,
         payload
@@ -110,12 +111,12 @@ END;
 $$;
 
 DROP TRIGGER IF EXISTS trg_transaction_outbox
-ON idpay.transaction;
+ON "idpay-pagamenti".transaction;
 
 CREATE TRIGGER trg_transaction_outbox
 AFTER INSERT OR UPDATE OF status
-ON idpay.transaction
+ON "idpay-pagamenti".transaction
 FOR EACH ROW
-EXECUTE FUNCTION idpay.fn_transaction_outbox();
+EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
 COMMIT;

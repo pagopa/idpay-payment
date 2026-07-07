@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.expired.idpaycode;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -32,6 +33,7 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
     @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     private final AuditUtilities auditUtilities = new AuditUtilities();
 
@@ -40,7 +42,7 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        idpayCodeAuthorizationExpiredService = new IdpayCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES,transactionRepository, transactionInProgressRepositoryMock, auditUtilities,rewardCalculatorConnectorMock);
+        idpayCodeAuthorizationExpiredService = new IdpayCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES,transactionRepository, transactionInProgressRepositoryMock, auditUtilities,rewardCalculatorConnectorMock, transactionSynchronizer);
     }
 
     @Test

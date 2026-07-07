@@ -1,9 +1,11 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
@@ -33,6 +35,7 @@ public class CommonReversalServiceImpl {
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
 
     public CommonReversalServiceImpl(
             TransactionRepository transactionRepository,
@@ -40,13 +43,15 @@ public class CommonReversalServiceImpl {
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
             FileStorageClient fileStorageClient,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer) {
         this.transactionRepository = transactionRepository;
         this.repository = repository;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
+        this.transactionSynchronizer = transactionSynchronizer;
     }
 
     public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
@@ -57,7 +62,7 @@ public class CommonReversalServiceImpl {
             // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
-            transactionRepository.findById(transactionId)
+            Transaction transaction = transactionRepository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
             if (!trx.getMerchantId().equals(merchantId)) {
@@ -101,7 +106,9 @@ public class CommonReversalServiceImpl {
 
             // removing the transaction from transaction_in_progress
             repository.deleteById(transactionId);
-            transactionRepository.deleteById(transactionId);
+
+            transactionSynchronizer.sync(trx, transaction);
+            transactionRepository.save(transaction);
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
