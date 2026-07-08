@@ -16,6 +16,7 @@ public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements
 
     private static final String PRODUCT_NAME_KEY = "productName";
     private static final String PRODUCT_GTIN_KEY = "productGtin";
+    private static final String PRODUCT_TYPE_KEY = "productType";
 
     private final PaymentCheckService paymentCheckService;
 
@@ -39,6 +40,7 @@ public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements
         Map<String, String> enrichedAdditionalProperties = new HashMap<>();
         enrichedAdditionalProperties.put(PRODUCT_NAME_KEY, productDTO.getProductName());
         enrichedAdditionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
+        enrichedAdditionalProperties.put(PRODUCT_TYPE_KEY, productDTO.getCategory());
         return enrichedAdditionalProperties;
     }
 

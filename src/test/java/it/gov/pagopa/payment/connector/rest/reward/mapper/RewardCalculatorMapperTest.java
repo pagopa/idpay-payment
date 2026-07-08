@@ -143,6 +143,7 @@ import static org.junit.jupiter.api.Assertions.*;
              assertEquals(transaction.getIdTrxAcquirer(), result.getIdTrxAcquirer());
              assertEquals(transaction.getTrxChargeDate(), result.getTrxChargeDate());
              assertEquals(transaction.getCorrelationId(), result.getTransactionId());
+             assertEquals(transaction.getProductType(), result.getProductType());
              TestUtils.checkNotNullFields(result, "trxChargeDate");
          });
      }
