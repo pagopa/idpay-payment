@@ -75,11 +75,13 @@ public class CommonCancelServiceImpl {
 
             if (isDeletableImmediately(trx)) {
                 repository.deleteById(trxId);
-                
-                trx.setStatus(SyncTrxStatus.CANCELLED);
-                Transaction transaction = new Transaction();
-                transactionSynchronizer.sync(trx, transaction);
-                transactionRepository.save(transaction);
+
+                if(!SyncTrxStatus.INVOICED.equals(trx.getStatus())){
+                    trx.setStatus(SyncTrxStatus.CANCELLED);
+                    Transaction transaction = new Transaction();
+                    transactionSynchronizer.sync(trx, transaction);
+                    transactionRepository.save(transaction);
+                }
             } else if (SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())) {
                 handleAuthorizedTransaction(trx);
             } else {
