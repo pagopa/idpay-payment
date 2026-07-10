@@ -1,9 +1,9 @@
-CREATE DATABASE "idpay-database";
-
 BEGIN;
 
+-- 1. CREAZIONE DELLO SCHEMA
 CREATE SCHEMA IF NOT EXISTS "idpay-pagamenti";
 
+-- 2. TABELLA REWARD_BATCH
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     merchant_id VARCHAR(64) NOT NULL,
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     merchant_send_date TIMESTAMP
 );
 
+-- 3. TABELLA TRANSACTION
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     id VARCHAR(64) PRIMARY KEY,
     "trxCode" VARCHAR(64) NOT NULL,
@@ -78,15 +79,18 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "extendedAuthorization" BOOLEAN
 );
 
+-- 4. TABELLA TRANSACTION_OUTBOX
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     transaction_id VARCHAR(64) NOT NULL,
+    user_id VARCHAR(64) NOT NULL,
     event_type VARCHAR(64) NOT NULL,
     payload JSONB NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uk_transaction_outbox UNIQUE (transaction_id, event_type)
 );
 
+-- 5. FUNZIONE DEL TRIGGER (Popola correttamente user_id prendendolo da "userId" di transaction)
 CREATE OR REPLACE FUNCTION "idpay-pagamenti".fn_transaction_outbox()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -94,11 +98,13 @@ AS $$
 BEGIN
     INSERT INTO "idpay-pagamenti".transaction_outbox (
         transaction_id,
+        user_id,
         event_type,
         payload
     )
     VALUES (
         NEW.id,
+        NEW."userId",
         'TRANSACTION_' || NEW.status,
         jsonb_strip_nulls(to_jsonb(NEW))
     )
@@ -110,13 +116,22 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS trg_transaction_outbox
-ON "idpay-pagamenti".transaction;
+-- 6. PULIZIA DEI VECCHI TRIGGER PER EVITARE CONFLITTI
+DROP TRIGGER IF EXISTS trg_transaction_outbox ON "idpay-pagamenti".transaction;
+DROP TRIGGER IF EXISTS trg_transaction_outbox_insert ON "idpay-pagamenti".transaction;
+DROP TRIGGER IF EXISTS trg_transaction_outbox_update ON "idpay-pagamenti".transaction;
 
-CREATE TRIGGER trg_transaction_outbox
-AFTER INSERT OR UPDATE OF status
-ON "idpay-pagamenti".transaction
+-- 7. TRIGGER PER GLI INSERT (Scatta sempre all'inserimento della transazione)
+CREATE TRIGGER trg_transaction_outbox_insert
+AFTER INSERT ON "idpay-pagamenti".transaction
 FOR EACH ROW
+EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
+
+-- 8. TRIGGER PER GLI UPDATE (Scatta SOLO se lo status è effettivamente cambiato rispetto a prima)
+CREATE TRIGGER trg_transaction_outbox_update
+AFTER UPDATE ON "idpay-pagamenti".transaction
+FOR EACH ROW
+WHEN (OLD.status IS DISTINCT FROM NEW.status)
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
 COMMIT;
