@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedExcept
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -21,18 +22,21 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final PaymentInstrumentConnector paymentInstrumentConnector;
     private final CommonPreAuthServiceImpl commonPreAuthService;
     private final AuthPaymentMapper authPaymentMapper;
     private final AuthPaymentIdpayCodeMapper authPaymentIdpayCodeMapper;
     private final AuditUtilities auditUtilities;
-    public IdpayCodePreviewServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
+    public IdpayCodePreviewServiceImpl(TransactionRepository transactionRepository,
+                                       TransactionInProgressRepository transactionInProgressRepository,
                                        PaymentInstrumentConnector paymentInstrumentConnector,
                                        @Qualifier("commonPreAuth") CommonPreAuthServiceImpl commonPreAuthService,
                                        AuthPaymentMapper authPaymentMapper,
                                        AuthPaymentIdpayCodeMapper authPaymentIdpayCodeMapper,
                                        AuditUtilities auditUtilities) {
+        this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
         this.commonPreAuthService = commonPreAuthService;
@@ -44,6 +48,8 @@ public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
     @Override
     public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
         TransactionInProgress trx = transactionInProgressRepository.findById(trxId)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
+        transactionRepository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
         if(!trx.getMerchantId().equals(merchantId)){

@@ -7,14 +7,17 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.AuthPaymentIdpayCodeMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.TransactionRejectedException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -42,12 +45,15 @@ class IdpayCodePreviewServiceImplTest {
     @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
+    @Mock private TransactionRepository transactionRepository;
 
     private IdpayCodePreviewService idpayCodePreviewService;
 
     @BeforeEach
     void setUp() {
-        idpayCodePreviewService = new IdpayCodePreviewServiceImpl(transactionInProgressRepositoryMock,
+        idpayCodePreviewService = new IdpayCodePreviewServiceImpl(
+                transactionRepository,
+                transactionInProgressRepositoryMock,
                 paymentInstrumentConnectorMock,
                 commonPreAuthServiceMock,
                 new AuthPaymentMapper(),
@@ -58,6 +64,8 @@ class IdpayCodePreviewServiceImplTest {
     @Test
     void previewPayment() {
         //Given
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
@@ -110,6 +118,8 @@ class IdpayCodePreviewServiceImplTest {
     @Test
     void previewPayment_notRelateUser() {
         //Given
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         trx.setMerchantId(MERCHANTID);
 
@@ -135,6 +145,8 @@ class IdpayCodePreviewServiceImplTest {
     @Test
     void previewPayment_RejectedStatusRE() {
         //Given
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
@@ -163,6 +175,8 @@ class IdpayCodePreviewServiceImplTest {
     @Test
     void previewPayment_differentMerchantId() {
         //Given
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setUserId(USER_ID);
         trx.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);

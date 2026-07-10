@@ -2,10 +2,12 @@ package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +19,12 @@ import static it.gov.pagopa.payment.utils.RewardConstants.TRX_CHANNEL_BARCODE;
 @Service
 public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
     public static final String NO_ACTIVE_TRANSACTION_FOUND_FOR_USER = "No active transaction found for user";
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
 
-    public RetrieveActiveBarcodeImpl(TransactionInProgressRepository transactionInProgressRepository, TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
+    public RetrieveActiveBarcodeImpl(TransactionRepository transactionRepository, TransactionInProgressRepository transactionInProgressRepository, TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper) {
+        this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
     }
@@ -28,7 +32,9 @@ public class RetrieveActiveBarcodeImpl implements RetrieveActiveBarcode{
     @Override
     public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
         List<TransactionInProgress> transactions = transactionInProgressRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
-        if (transactions.isEmpty()) {
+        List<Transaction> trxs = transactionRepository.findByUserIdAndInitiativeIdAndChannel(userId, initiativeId, TRX_CHANNEL_BARCODE);
+
+        if (transactions.isEmpty() && trxs.isEmpty()) {
             throw new TransactionNotFoundOrExpiredException(NO_ACTIVE_TRANSACTION_FOUND_FOR_USER);
         }
 

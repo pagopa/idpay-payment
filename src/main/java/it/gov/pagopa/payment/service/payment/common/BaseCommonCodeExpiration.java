@@ -28,36 +28,36 @@ public abstract class BaseCommonCodeExpiration {
     public final Long execute(String initiativeId, long expirationMinutes){
         long count = 0L;
         TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
-         while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
-             log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
-                     flowName,
-                     getFlowName(),
-                     expiredTransaction[0].getId(),
-                     expiredTransaction[0].getStatus(),
-                     expiredTransaction[0].getTrxDate());
-             try{
+        while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
+            log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
+                    flowName,
+                    getFlowName(),
+                    expiredTransaction[0].getId(),
+                    expiredTransaction[0].getStatus(),
+                    expiredTransaction[0].getTrxDate());
+            try{
                 PerformanceLogger.execute(flowName,
                         () -> handleExpiredTransaction(expiredTransaction[0]),
                         t -> "Evaluated transaction with ID %s due to %s ". formatted(t.getId(), getFlowName()));
                 count++;
                 auditUtilities.logExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
-             } catch (Exception e){
-                 log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", flowName, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
-                 auditUtilities.logErrorExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
-             }
-         }
+            } catch (Exception e){
+                log.error("[{}] [{}] An error occurred while handling transaction: {}, with message: {}", flowName, getFlowName(), expiredTransaction[0].getId(), e.getMessage());
+                auditUtilities.logErrorExpiredTransaction(expiredTransaction[0].getInitiativeId(), expiredTransaction[0].getId(), expiredTransaction[0].getTrxCode(), expiredTransaction[0].getUserId(), getFlowName());
+            }
+        }
 
-         return count;
-     }
+        return count;
+    }
 
     /** The trx expiration minutes  */
     protected abstract long getExpirationMinutes();
 
-     /** The invoked function to retrieve lapsed transactions */
-     protected abstract TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes);
+    /** The invoked function to retrieve lapsed transactions */
+    protected abstract TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes);
 
-     /** The invoked function to manage lapsed transactions */
-     protected abstract TransactionInProgress handleExpiredTransaction(TransactionInProgress trx);
+    /** The invoked function to manage lapsed transactions */
+    protected abstract TransactionInProgress handleExpiredTransaction(TransactionInProgress trx);
 
-     protected abstract String getFlowName();
+    protected abstract String getFlowName();
 }

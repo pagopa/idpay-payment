@@ -18,10 +18,12 @@ import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
@@ -43,6 +45,7 @@ import java.util.Optional;
 public class PdfServiceImpl implements PdfService {
 
     private final BarCodePaymentService barCodePaymentService;
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final DecryptRestConnector decryptRestConnector;
     private final ResourceLoader resourceLoader;
@@ -58,6 +61,7 @@ public class PdfServiceImpl implements PdfService {
 
     public PdfServiceImpl(
             BarCodePaymentService barCodePaymentService,
+        TransactionRepository transactionRepository,
         TransactionInProgressRepository transactionInProgressRepository, DecryptRestConnector decryptRestConnector,
             ResourceLoader resourceLoader,
             @Value("${pdf.font}") String font,
@@ -68,6 +72,7 @@ public class PdfServiceImpl implements PdfService {
             @Value("${pdf.iconBarcode}") String iconBarcode
     ) {
         this.barCodePaymentService = barCodePaymentService;
+        this.transactionRepository = transactionRepository;
       this.transactionInProgressRepository = transactionInProgressRepository;
       this.decryptRestConnector = decryptRestConnector;
         this.resourceLoader = resourceLoader;
@@ -176,6 +181,13 @@ public class PdfServiceImpl implements PdfService {
             // Dati transazione
             Optional<TransactionInProgress> optionalTransactionInProgress = transactionInProgressRepository.findById(transactionId);
             TransactionInProgress transactionInProgress;
+
+            Optional<Transaction> optionalTransaction = transactionRepository.findById(transactionId);
+            // Controllo presenza transazione
+            if (optionalTransaction.isEmpty()) {
+
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId));
+            }
 
             // Controllo presenza transazione
             if (optionalTransactionInProgress.isEmpty()) {

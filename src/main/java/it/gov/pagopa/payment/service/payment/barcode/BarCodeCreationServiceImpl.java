@@ -16,10 +16,6 @@ import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +23,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeType;
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeValidPeriod;
@@ -55,7 +55,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                          TransactionInProgressService transactionInProgressService,
                                          @Value("${app.bar-code.expirations.authorization-minutes}") int authorizationExpirationMinutes,
                                          @Value("${app.bar-code.expirations.extended-authorization-minutes}") int extendedAuthorizationExpirationMinutes
-                                         ) {
+    ) {
 
         this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
         this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
@@ -71,7 +71,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                         String channel,
                                                         String userId) {
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -92,10 +92,10 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
     @Override
     public TransactionBarCodeResponse createExtendedTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
-                                                                        String channel,
-                                                                        String userId) {
+                                                                String channel,
+                                                                String userId) {
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -110,16 +110,16 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     }
 
     public TransactionInProgress createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
-                                                                String channel,
-                                                                String userId,
-                                                                OffsetDateTime trxEndDate) {
+                                                                     String channel,
+                                                                     String userId,
+                                                                     OffsetDateTime trxEndDate) {
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
             return transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
-                            trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), true, trxEndDate);
+                    trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), true, trxEndDate);
 
         } catch (RuntimeException e) {
             logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);

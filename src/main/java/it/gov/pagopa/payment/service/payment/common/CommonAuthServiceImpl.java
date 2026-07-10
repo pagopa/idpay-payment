@@ -1,16 +1,19 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import com.mongodb.client.result.UpdateResult;
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
@@ -20,7 +23,9 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,24 +33,33 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CommonAuthServiceImpl {
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
     private final WalletConnector walletConnector;
     private final CommonPreAuthServiceImpl commonPreAuthService;
 
     private final AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService;
 
+    private static final String TRANSACTION_NOT_FOUND_MESSAGE =
+            "Cannot find transaction with trxId [%s]";
+
     protected CommonAuthServiceImpl(
+            TransactionRepository transactionRepository,
             TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer,
             WalletConnector walletConnector,
             @Qualifier("commonPreAuth")CommonPreAuthServiceImpl commonPreAuthService,
             AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService) {
+        this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
         this.auditUtilities = auditUtilities;
+        this.transactionSynchronizer = transactionSynchronizer;
         this.walletConnector = walletConnector;
         this.commonPreAuthService = commonPreAuthService;
         this.timeoutSchedulerService = timeoutSchedulerService;
@@ -53,7 +67,7 @@ public class CommonAuthServiceImpl {
 
     public AuthPaymentDTO previewPayment(TransactionInProgress trx, String userId) {
         checkWalletStatus(trx.getInitiativeId(), ObjectUtils.firstNonNull(trx.getUserId(), userId));
-        trx.setTrxChargeDate(OffsetDateTime.now());
+        trx.setTrxChargeDate(OffsetDateTime.now(ZoneOffset.UTC));
 
         return rewardCalculatorConnector.previewTransaction(trx);
     }
@@ -99,6 +113,12 @@ public class CommonAuthServiceImpl {
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
             } else {
                 transactionInProgressRepository.updateTrxRejected(trx, authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons);
+
+                Transaction transaction = transactionRepository.findById(trx.getId())
+                        .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                                TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId().toLowerCase())));
+                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(ZoneOffset.UTC), "EUR");
+
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
                 if (authPaymentDTO.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
@@ -129,6 +149,20 @@ public class CommonAuthServiceImpl {
         UpdateResult result = transactionInProgressRepository.updateTrxAuthorized(trx,
                 authPaymentDTO,
                 initiativeRejectionReasons);
+
+        Transaction transaction = transactionRepository.findById(trx.getId())
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId().toLowerCase())));
+        transactionRepository.updateTrxAuthorized(
+                transaction,
+                authPaymentDTO,
+                initiativeRejectionReasons,
+                SyncTrxStatus.AUTHORIZATION_REQUESTED,
+                SyncTrxStatus.AUTHORIZED,
+                LocalDateTime.now(ZoneOffset.UTC),
+                "EUR"
+        );
+
         if(result.getModifiedCount() == 0){
             authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
             authPaymentDTO.setRejectionReasons(List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
@@ -190,6 +224,12 @@ public class CommonAuthServiceImpl {
             trx.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
         transactionInProgressRepository.updateTrxWithStatus(trx);
+
+        Transaction transaction = transactionRepository.findById(trx.getId())
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        TRANSACTION_NOT_FOUND_MESSAGE.formatted(trx.getId().toLowerCase())));
+        transactionSynchronizer.sync(trx, transaction);
+        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now(ZoneOffset.UTC));
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {
