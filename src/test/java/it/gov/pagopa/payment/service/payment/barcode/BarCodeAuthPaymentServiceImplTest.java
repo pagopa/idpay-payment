@@ -144,7 +144,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress)).thenReturn(authPaymentDTO);
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(), transactionInProgress.getUserId()))
                 .thenReturn(walletDTO);
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
+        when(paymentCheckService.validateProduct(any(),any())).thenReturn(ProductDTOFaker.mockInstance());
 
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
@@ -189,7 +189,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         assertNotNull(result);
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
     @ParameterizedTest
@@ -242,7 +242,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenThrow(new TooManyRequestsException("Too many request on the ms reward", true, null));
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(), transactionInProgress.getUserId()))
                 .thenReturn(walletDTO);
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
+        when(paymentCheckService.validateProduct(any(), any())).thenReturn(ProductDTOFaker.mockInstance());
 
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
                 () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
@@ -262,12 +262,12 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
+        when(paymentCheckService.validateProduct(any(), any())).thenReturn(ProductDTOFaker.mockInstance());
 
         PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 90000L);
         assertNotNull(result);
         assertEquals(transactionInProgress.getAdditionalProperties(), result.getAdditionalProperties());
-        verify(paymentCheckService).validateProduct("gtin");
+        verify(paymentCheckService).validateProduct("gtin", "INITIATIVE_ID");
     }
 
     @Test
@@ -285,7 +285,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
     @Test
@@ -301,7 +301,7 @@ class BarCodeAuthPaymentServiceImplTest {
       Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
       assertThrows(TransactionInvalidException.class, () ->
                 barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90000L));
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
     @Test
@@ -318,7 +318,7 @@ class BarCodeAuthPaymentServiceImplTest {
       Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
       assertThrows(TransactionInvalidException.class, () ->
                 barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 90L));
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
     @Test
@@ -338,7 +338,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 () -> barCodeAuthPaymentService.previewPayment("trxCode", additionalProperties, 95000L));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
         verify(decryptRestConnector).getPiiByToken(any());
     }
 
@@ -389,7 +389,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
         verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
     }
 
@@ -411,7 +411,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(walletDTO);
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(transactionInProgress);
         when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID)).thenReturn(pointOfSaleDTO);
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
+        when(paymentCheckService.validateProduct(any(), any())).thenReturn(ProductDTOFaker.mockInstance());
 
         doThrow(new TransactionInvalidException(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, "Status error"))
                 .when(commonAuthServiceMock).checkTrxStatusToInvokePreAuth(any());
@@ -444,7 +444,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(transactionInProgress);
         when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID)).thenReturn(pointOfSaleDTO);
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress)).thenReturn(authPaymentDTO);
-        when(paymentCheckService.validateProduct(any())).thenReturn(ProductDTOFaker.mockInstance());
+        when(paymentCheckService.validateProduct(any(), any())).thenReturn(ProductDTOFaker.mockInstance());
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(0, OnboardingStatus.ONBOARDED.getValue());
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(), transactionInProgress.getUserId()))
@@ -485,7 +485,7 @@ class BarCodeAuthPaymentServiceImplTest {
         assertNotNull(result);
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
         assertEquals(Map.of(), result.getAdditionalProperties());
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
     @Test
@@ -523,7 +523,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         assertNotNull(result);
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
-        verify(paymentCheckService, never()).validateProduct(any());
+        verify(paymentCheckService, never()).validateProduct(any(),any());
     }
 
     @Test
@@ -547,7 +547,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
         when(additionalPropertiesValidationResolverMock.resolve(transactionInProgress.getInitiativeId()))
                 .thenReturn(additionalPropertiesValidationStrategyMock);
-        when(additionalPropertiesValidationStrategyMock.validateAndEnrich(any(), any())).thenReturn(null);
+        when(additionalPropertiesValidationStrategyMock.validateAndEnrich(any(), any(), any())).thenReturn(null);
 
         PreviewPaymentResultDTO result = service.previewPayment("trxCode", Map.of("customField", "customValue"), 90000L);
 
@@ -555,7 +555,7 @@ class BarCodeAuthPaymentServiceImplTest {
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
         assertEquals(Map.of(), result.getAdditionalProperties());
         verify(additionalPropertiesValidationResolverMock).resolve(transactionInProgress.getInitiativeId());
-        verify(additionalPropertiesValidationStrategyMock).validateAndEnrich(any(), any());
+        verify(additionalPropertiesValidationStrategyMock).validateAndEnrich(any(), any(), any());
     }
 
     private void configureProductGtinValidation(TransactionInProgress transactionInProgress) {

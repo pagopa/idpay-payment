@@ -18,7 +18,7 @@ class NoOpBarCodeAdditionalPropertiesValidationStrategyTest {
     void validateAndEnrich_shouldReturnEmptyMap() {
         Map<String, String> result = strategy.validateAndEnrich(
                 Map.of("customField", "customValue"),
-                BarCodeAdditionalPropertiesOperation.AUTHORIZE);
+                BarCodeAdditionalPropertiesOperation.AUTHORIZE, "INITIATIVE_ID");
 
         Assertions.assertTrue(result.isEmpty());
     }
