@@ -1,9 +1,11 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
@@ -11,35 +13,48 @@ import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Service("commonConfirm")
 public class CommonConfirmServiceImpl {
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository repository;
     private final TransactionInProgress2TransactionResponseMapper mapper;
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
 
-    public CommonConfirmServiceImpl(TransactionInProgressRepository repository,
+    public CommonConfirmServiceImpl(TransactionRepository transactionRepository,
+                                    TransactionInProgressRepository repository,
                                     TransactionInProgress2TransactionResponseMapper mapper,
-                                    TransactionNotifierService notifierService, PaymentErrorNotifierService paymentErrorNotifierService, AuditUtilities auditUtilities) {
+                                    TransactionNotifierService notifierService,
+                                    PaymentErrorNotifierService paymentErrorNotifierService,
+                                    AuditUtilities auditUtilities,
+                                    TransactionSynchronizer transactionSynchronizer) {
+        this.transactionRepository = transactionRepository;
         this.repository = repository;
         this.mapper = mapper;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.auditUtilities = auditUtilities;
+        this.transactionSynchronizer = transactionSynchronizer;
     }
 
     public TransactionResponse confirmPayment(String trxId, String merchantId, String acquirerId) {
         try {
             TransactionInProgress trx = repository.findById(trxId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
+
+            transactionRepository.findById(trxId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId)));
 
             if(!SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
@@ -63,11 +78,15 @@ public class CommonConfirmServiceImpl {
 
     public void confirmAuthorizedPayment(TransactionInProgress trx) {
         trx.setStatus(SyncTrxStatus.REWARDED);
-        trx.setElaborationDateTime(LocalDateTime.now());
+        trx.setElaborationDateTime(LocalDateTime.now(ZoneOffset.UTC));
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", trx.getId(), trx.getTrxCode());
         sendConfirmPaymentNotification(trx);
 
         repository.deleteById(trx.getId());
+
+        Transaction transaction = new Transaction();
+        transactionSynchronizer.sync(trx, transaction);
+        transactionRepository.save(transaction);
     }
 
     private void sendConfirmPaymentNotification(TransactionInProgress trx) {

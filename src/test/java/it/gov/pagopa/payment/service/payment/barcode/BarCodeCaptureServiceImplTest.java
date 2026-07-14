@@ -1,16 +1,19 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,7 @@ import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +35,8 @@ class BarCodeCaptureServiceImplTest {
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private TransactionBarCodeInProgress2TransactionResponseMapper mapper;
+    @Mock private TransactionRepository transactionRepository;
+    @Mock private TransactionSynchronizer transactionSynchronizer;
 
     BarCodeCaptureServiceImpl service;
 
@@ -38,40 +44,50 @@ class BarCodeCaptureServiceImplTest {
     void init() {
         service =
                 new BarCodeCaptureServiceImpl(
+                        transactionRepository,
                         repositoryMock,
                         mapper,
-                        auditUtilitiesMock);
+                        auditUtilitiesMock,
+                        transactionSynchronizer);
     }
 
     @Test
     void testCapturePaymentTrxNotFound() {
-        try {
-            service.capturePayment("trxCode");
-            Assertions.fail("Expected exception");
-        } catch (TransactionNotFoundOrExpiredException e) {
-            Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", e.getCode());
-            Assertions.assertEquals("Cannot find transaction with transactionCode [trxCode]", e.getMessage());
-        }
+        TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> service.capturePayment("trxCode")
+        );
+
+        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
+        Assertions.assertEquals("Cannot find transaction with transactionCode [trxCode]", exception.getMessage());
     }
 
     @Test
     void testCapturePaymentStatusNotValid() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
         trx.setStatus(SyncTrxStatus.CREATED);
+
         when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
-        try {
-            service.capturePayment("trxCode");
-            Assertions.fail("Expected exception");
-        } catch (OperationNotAllowedException e) {
-            Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, e.getCode());
-            Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", e.getMessage());
-        }
+
+        OperationNotAllowedException exception = Assertions.assertThrows(
+                OperationNotAllowedException.class,
+                () -> service.capturePayment("trxCode")
+        );
+
+        Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
+        Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", exception.getMessage());
     }
 
     @Test
     void testCapturePayment() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
         trx.setMerchantId("MERCHID");
         trx.setAcquirerId("ACQID");
@@ -85,6 +101,8 @@ class BarCodeCaptureServiceImplTest {
 
     @Test
     void capturePayment_deletesWebVoucher_whenTransactionIsApp() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trxCurrent = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trxCurrent.setExtendedAuthorization(false);
         trxCurrent.setUserId("USER01");
@@ -97,10 +115,10 @@ class BarCodeCaptureServiceImplTest {
 
         when(repositoryMock.findByTrxCode("trxcurrent")).thenReturn(Optional.of(trxCurrent));
         when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
-            trxCurrent.getUserId(),
-            trxCurrent.getInitiativeId(),
-            SyncTrxStatus.CREATED,
-            trxCurrent.getExtendedAuthorization()
+                trxCurrent.getUserId(),
+                trxCurrent.getInitiativeId(),
+                SyncTrxStatus.CREATED,
+                trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of(trxOther));
         doNothing().when(repositoryMock).deleteAll(anyList());
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
@@ -115,6 +133,8 @@ class BarCodeCaptureServiceImplTest {
 
     @Test
     void capturePayment_deletesAppVoucher_whenTransactionIsWeb() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trxCurrent = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trxCurrent.setExtendedAuthorization(true);
         trxCurrent.setUserId("USER01");
@@ -127,10 +147,10 @@ class BarCodeCaptureServiceImplTest {
 
         when(repositoryMock.findByTrxCode("trxcurrent")).thenReturn(Optional.of(trxCurrent));
         when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
-            trxCurrent.getUserId(),
-            trxCurrent.getInitiativeId(),
-            SyncTrxStatus.CREATED,
-            trxCurrent.getExtendedAuthorization()
+                trxCurrent.getUserId(),
+                trxCurrent.getInitiativeId(),
+                SyncTrxStatus.CREATED,
+                trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of(trxOther));
         doNothing().when(repositoryMock).deleteAll(anyList());
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
@@ -145,6 +165,8 @@ class BarCodeCaptureServiceImplTest {
 
     @Test
     void capturePayment_noUnusedVouchers_deleteNotCalled() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trxCurrent = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trxCurrent.setExtendedAuthorization(false);
         trxCurrent.setUserId("USER01");
@@ -152,10 +174,10 @@ class BarCodeCaptureServiceImplTest {
 
         when(repositoryMock.findByTrxCode("trxcurrent")).thenReturn(Optional.of(trxCurrent));
         when(repositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
-            trxCurrent.getUserId(),
-            trxCurrent.getInitiativeId(),
-            SyncTrxStatus.CREATED,
-            trxCurrent.getExtendedAuthorization()
+                trxCurrent.getUserId(),
+                trxCurrent.getInitiativeId(),
+                SyncTrxStatus.CREATED,
+                trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of());
 
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
@@ -170,6 +192,8 @@ class BarCodeCaptureServiceImplTest {
 
     @Test
     void retriveVoucher_ok() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findByInitiativeIdAndTrxCodeAndUserId(anyString(),any(),any())).thenReturn(Optional.of(transaction));
         String initiativeId = "INIT1";
         String trxCode = "TRX123";
         String userId = "USR1";
@@ -229,6 +253,8 @@ class BarCodeCaptureServiceImplTest {
 
     @Test
     void retriveVoucher_mapperThrows_logsSuccessThenError_andRethrows() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findByInitiativeIdAndTrxCodeAndUserId(anyString(),any(),any())).thenReturn(Optional.of(transaction));
         String initiativeId = "INIT1";
         String trxCode = "TRX123";
         String userId = "USR1";
