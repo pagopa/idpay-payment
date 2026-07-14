@@ -154,7 +154,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                              BarCodeAdditionalPropertiesOperation operation) {
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(trx.getInitiativeId())
-                .validateAndEnrich(additionalProperties, operation);
+                .validateAndEnrich(additionalProperties, operation, trx.getInitiativeId());
         if (validatedAdditionalProperties == null) {
             return Collections.emptyMap();
         }

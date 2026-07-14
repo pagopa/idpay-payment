@@ -30,13 +30,13 @@ public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements
     }
 
     @Override
-    public Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation) {
+    public Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation, String initiativeId) {
         String productGtin = sanitizeString(additionalProperties != null ? additionalProperties.get(PRODUCT_GTIN_KEY) : null);
         if (StringUtils.isBlank(productGtin)) {
             throw invalidAdditionalProperties(operation);
         }
 
-        ProductDTO productDTO = paymentCheckService.validateProduct(productGtin);
+        ProductDTO productDTO = paymentCheckService.validateProduct(productGtin, initiativeId);
         Map<String, String> enrichedAdditionalProperties = new HashMap<>();
         enrichedAdditionalProperties.put(PRODUCT_NAME_KEY, productDTO.getProductName());
         enrichedAdditionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());

@@ -4,6 +4,6 @@ import it.gov.pagopa.payment.connector.rest.register.dto.ProductDTO;
 
 public interface PaymentCheckService {
 
-    ProductDTO validateProduct(String productGtin);
+    ProductDTO validateProduct(String productGtin, String initiativeId);
 
 }
