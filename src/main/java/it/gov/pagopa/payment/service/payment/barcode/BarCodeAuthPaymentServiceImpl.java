@@ -124,7 +124,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     trx,
                     authBarCodePaymentDTO.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
-            log.info("[TRANSACTION_IN_PROGRESS][ENRICHED_ADDITIONAL_PRPERTIES] Additional properties after product validate {}", trx.getAdditionalProperties()); //todo remove
             trx.setProductType(trx.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
             PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
