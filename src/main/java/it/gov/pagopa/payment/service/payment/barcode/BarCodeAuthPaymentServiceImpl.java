@@ -73,6 +73,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
 
         transactionInProgress.setAmountCents(amountCents);
+        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
+                transactionInProgress,
+                additionalProperties,
+                BarCodeAdditionalPropertiesOperation.PREVIEW));
+        transactionInProgress.setProductType(transactionInProgress.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transactionInProgress, transactionInProgress.getUserId());
@@ -90,11 +95,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
-        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
-                transactionInProgress,
-                additionalProperties,
-                BarCodeAdditionalPropertiesOperation.PREVIEW));
-        transactionInProgress.setProductType(transactionInProgress.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
         return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
