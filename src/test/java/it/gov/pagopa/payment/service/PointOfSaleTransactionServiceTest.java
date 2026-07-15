@@ -1,8 +1,12 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.payment.connector.storage.FileStorageClient;
+import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +21,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -26,12 +31,14 @@ class PointOfSaleTransactionServiceTest {
 
     @Mock
     private TransactionService transactionService;
+    @Mock
+    private FileStorageClient fileStorageClient;
 
     private PointOfSaleTransactionService pointOfSaleTransactionService;
 
     @BeforeEach
     void setUp() {
-        pointOfSaleTransactionService = new PointOfSaleTransactionServiceImpl(transactionService);
+        pointOfSaleTransactionService = new PointOfSaleTransactionServiceImpl(transactionService, fileStorageClient);
     }
 
     @Test
@@ -52,5 +59,48 @@ class PointOfSaleTransactionServiceTest {
         assertEquals(transaction1.getId(), resultPage.getContent().get(0).getId());
         assertEquals(transaction2.getId(), resultPage.getContent().get(1).getId());
         verify(transactionService).getTransactionsByFilters(filters, Pageable.unpaged());
+    }
+
+    @Test
+    void downloadTransactionInvoice_shouldReturnSignedUrlForInvoice() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.INVOICED);
+        transaction.setInvoiceData(new InvoiceData("invoice.pdf", "DOC001"));
+        when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
+                .thenReturn(transaction);
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/merchant/MERCHANT1/pos/POS1/transaction/TRX1/invoice/invoice.pdf"))
+                .thenReturn("https://signed-url/invoice");
+
+        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+
+        assertNotNull(response);
+        assertEquals("https://signed-url/invoice", response.getInvoiceUrl());
+    }
+
+    @Test
+    void downloadTransactionInvoice_shouldReturnSignedUrlForCreditNote() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.REFUNDED);
+        transaction.setCreditNoteData(new InvoiceData("credit-note.pdf", "DOC002"));
+        when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
+                .thenReturn(transaction);
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/merchant/MERCHANT1/pos/POS1/transaction/TRX1/creditNote/credit-note.pdf"))
+                .thenReturn("https://signed-url/credit-note");
+
+        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+
+        assertNotNull(response);
+        assertEquals("https://signed-url/credit-note", response.getInvoiceUrl());
+    }
+
+    @Test
+    void downloadTransactionInvoice_shouldThrowWhenInvoiceDataIsMissing() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.REWARDED);
+        transaction.setInvoiceData(null);
+        when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
+                .thenReturn(transaction);
+
+        assertThrows(
+                TransactionInvalidException.class,
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1")
+        );
     }
 }

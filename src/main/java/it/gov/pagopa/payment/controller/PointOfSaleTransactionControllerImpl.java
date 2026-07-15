@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller;
 
+import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
@@ -20,11 +21,16 @@ import java.util.List;
 public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransactionController {
 
     private static final String LOG_GET_POINT_OF_SALE_TRANSACTIONS = "[GET_POINT-OF-SALE_TRANSACTIONS]";
+    private static final String LOG_DOWNLOAD_TRANSACTION = "[DOWNLOAD_TRANSACTION]";
+    private static final String POINT_OF_SALE_MISMATCH_MESSAGE = "Point of sale mismatch: expected [%s], but received [%s]";
 
     private final PointOfSaleTransactionService pointOfSaleTransactionService;
     private final PointOfSaleTransactionMapper mapper;
 
-    public PointOfSaleTransactionControllerImpl(PointOfSaleTransactionService pointOfSaleTransactionService, PointOfSaleTransactionMapper mapper) {
+    public PointOfSaleTransactionControllerImpl(
+            PointOfSaleTransactionService pointOfSaleTransactionService,
+            PointOfSaleTransactionMapper mapper
+    ) {
         this.pointOfSaleTransactionService = pointOfSaleTransactionService;
         this.mapper = mapper;
     }
@@ -72,6 +78,31 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
                 status,
                 trxCode,
                 pageable
+        );
+    }
+
+    @Override
+    public DownloadInvoiceResponseDTO downloadInvoiceFile(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String pointOfSaleId,
+            String transactionId
+    ) {
+        String sanitizedMerchantId = sanitize(merchantId);
+        String sanitizedTokenPointOfSaleId = sanitize(tokenPointOfSaleId);
+        String sanitizedPointOfSaleId = sanitize(pointOfSaleId);
+        String sanitizedTransactionId = sanitize(transactionId);
+
+        log.info("{} Requested to download invoice for transaction {}",
+                LOG_DOWNLOAD_TRANSACTION,
+                Utilities.sanitizeForLog(sanitizedTransactionId));
+
+        validatePointOfSaleAccess(sanitizedTokenPointOfSaleId, sanitizedPointOfSaleId);
+
+        return pointOfSaleTransactionService.downloadTransactionInvoice(
+                sanitizedMerchantId,
+                sanitizedPointOfSaleId,
+                sanitizedTransactionId
         );
     }
 
@@ -145,8 +176,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     private void validatePointOfSaleAccess(String tokenPointOfSaleId, String pointOfSaleId) {
         if (tokenPointOfSaleId != null && !tokenPointOfSaleId.equals(pointOfSaleId)) {
             throw new PointOfSaleNotAllowedException(
-                    "Point of sale mismatch: expected [%s], but received [%s]"
-                            .formatted(tokenPointOfSaleId, pointOfSaleId));
+                    POINT_OF_SALE_MISMATCH_MESSAGE.formatted(tokenPointOfSaleId, pointOfSaleId));
         }
     }
 }

@@ -2,6 +2,8 @@ package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.TransactionSpecifications;
 import org.apache.commons.lang3.StringUtils;
@@ -10,11 +12,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Objects;
 
 
 @Service
 public class TransactionServiceImpl implements TransactionService {
+
+    private static final List<SyncTrxStatus> DOWNLOADABLE_INVOICE_STATUSES = List.of(
+            SyncTrxStatus.REWARDED,
+            SyncTrxStatus.INVOICED,
+            SyncTrxStatus.REFUNDED
+    );
 
     private final TransactionRepository transactionRepository;
     private final PDVService pdvService;
@@ -27,7 +36,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters, Pageable pageable) {
+    public Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters,
+                                                      Pageable pageable) {
         Objects.requireNonNull(filters, "filters must not be null");
         Objects.requireNonNull(pageable, "pageable must not be null");
 
@@ -35,6 +45,22 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> specification = buildSpecification(filters, encryptedUserId);
 
         return transactionRepository.findAll(specification, pageable);
+    }
+
+    @Override
+    public Transaction getTransactionByIdAndMerchantId(String transactionId,
+                                                       String merchantId) {
+        Objects.requireNonNull(transactionId, "transactionId must not be null");
+        Objects.requireNonNull(merchantId, "merchantId must not be null");
+
+        return transactionRepository.findByIdAndMerchantIdAndStatusIn(
+                        transactionId,
+                        merchantId,
+                        DOWNLOADABLE_INVOICE_STATUSES
+                )
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with transactionId [%s]".formatted(transactionId))
+                );
     }
 
     private String encryptFiscalCode(String fiscalCode) {

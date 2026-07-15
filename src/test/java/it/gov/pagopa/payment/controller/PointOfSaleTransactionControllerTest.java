@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.configuration.ServiceExceptionConfig;
+import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
@@ -96,8 +97,8 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(1, actual.getTotalElements());
         Assertions.assertEquals(1, actual.getTotalPages());
         Assertions.assertEquals(1, actual.getContent().size());
-        Assertions.assertEquals(trx.getTrxCode(), actual.getContent().get(0).getTrxCode());
-        Assertions.assertEquals(FISCAL_CODE, actual.getContent().get(0).getFiscalCode());
+        Assertions.assertEquals(trx.getTrxCode(), actual.getContent().getFirst().getTrxCode());
+        Assertions.assertEquals(FISCAL_CODE, actual.getContent().getFirst().getFiscalCode());
 
         ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
         Mockito.verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(
@@ -207,6 +208,46 @@ class PointOfSaleTransactionControllerTest {
       Assertions.assertEquals("AUTHORIZED", filtersCaptor.getValue().getStatus());
       Assertions.assertEquals("12345-", filtersCaptor.getValue().getProductGtin());
       Assertions.assertEquals("TRXCODE", filtersCaptor.getValue().getTrxCode());
+  }
+
+  @Test
+  void downloadInvoiceFile_shouldSanitizeParametersAndDelegate() throws Exception {
+      DownloadInvoiceResponseDTO response = DownloadInvoiceResponseDTO.builder()
+              .invoiceUrl("https://signed-url")
+              .build();
+
+      Mockito.when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(
+                      "MERCHANT1",
+                      "POS1",
+                      "TRX1"))
+              .thenReturn(response);
+
+      MvcResult result = mockMvc.perform(
+              get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", "POS!@#1", "TRX*1")
+                      .header("x-merchant-id", "MERCHANT\r\n1")
+                      .header("x-point-of-sale-id", "POS!@#1")
+      ).andExpect(status().isOk()).andReturn();
+
+      DownloadInvoiceResponseDTO actual = objectMapper.readValue(
+              result.getResponse().getContentAsString(),
+              DownloadInvoiceResponseDTO.class
+      );
+
+      Assertions.assertNotNull(actual);
+      Assertions.assertEquals("https://signed-url", actual.getInvoiceUrl());
+      Mockito.verify(pointOfSaleTransactionServiceMock)
+              .downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+  }
+
+  @Test
+  void downloadInvoiceFile_unauthorizedPointOfSale_shouldReturn403() throws Exception {
+      MvcResult result = mockMvc.perform(
+              get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", POINT_OF_SALE_ID, TRX_CODE)
+                      .header("x-merchant-id", MERCHANT_ID)
+                      .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
+      ).andExpect(status().isForbidden()).andReturn();
+
+      Assertions.assertTrue(result.getResponse().getContentAsString().contains("Point of sale mismatch"));
   }
 
   @Test

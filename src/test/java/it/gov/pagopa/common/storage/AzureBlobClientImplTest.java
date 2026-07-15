@@ -4,6 +4,7 @@ import com.azure.core.http.rest.PagedIterable;
 import com.azure.core.http.rest.Response;
 import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.models.BlobItem;
 import com.azure.storage.blob.models.BlobProperties;
 import com.azure.storage.blob.models.BlobStorageException;
@@ -41,6 +42,8 @@ class AzureBlobClientImplTest {
     private Response<BlobProperties> blobPropertiesResponse;
     @Mock
     private PagedIterable<BlobItem> pagedIterable;
+    @Mock
+    private BlobServiceClient blobServiceClient;
 
     private AzureBlobClientImpl azureBlobClient;
 
@@ -48,7 +51,7 @@ class AzureBlobClientImplTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         Mockito.when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
-        azureBlobClient = new AzureBlobClientImpl(blobContainerClient);
+        azureBlobClient = new AzureBlobClientImpl(blobContainerClient, blobServiceClient, 3600);
     }
 
     @Test

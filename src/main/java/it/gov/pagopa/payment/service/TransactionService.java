@@ -7,6 +7,9 @@ import org.springframework.data.domain.Pageable;
 
 public interface TransactionService {
 
-    Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters, Pageable pageable);
+    Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters,
+                                               Pageable pageable);
 
+    Transaction getTransactionByIdAndMerchantId(String transactionId,
+                                                String merchantId);
 }

@@ -1,0 +1,107 @@
+package it.gov.pagopa.payment.utils;
+
+
+public final class ExceptionConstants {
+    private ExceptionConstants(){}
+
+    public static final class ExceptionCode {
+        private ExceptionCode(){}
+
+        public static final String TOO_MANY_REQUESTS = "TRANSACTIONS_TOO_MANY_REQUEST";
+        public static final String GENERIC_ERROR = "TRANSACTIONS_GENERIC_ERROR";
+        public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS = "TRANSACTIONS_MISSING_MANDATORY_FILTERS";
+        public static final String TRANSACTION_STATUS_NOT_ALLOWED = "TRANSACTION_STATUS_NOT_ALLOWED";
+        public static final String REWARD_BATCH_TRANSACTION_POSTPONE_LIMIT_EXCEEDED = "REWARD_BATCH_TRANSACTION_POSTPONE_LIMIT_EXCEEDED";
+        public static final String REWARD_BATCH_NOT_FOUND = "REWARD_BATCH_NOT_FOUND";
+        public static final String REWARD_BATCH_NOT_APPROVED = "REWARD_BATCH_NOT_APPROVED";
+        public static final String REWARD_BATCH_MISSING_FILENAME = "REWARD_BATCH_MISSING_FILENAME";
+        public static final String REWARD_BATCH_INVALID_MERCHANT = "REWARD_BATCH_INVALID_MERCHANT";
+        public static final String ROLE_NOT_ALLOWED = "ROLE_NOT_ALLOWED";
+        public static final String REWARD_BATCH_NOT_APPROVED_OR_REFUNDABLE = "REWARD_BATCH_NOT_APPROVED_OR_REFUNDABLE";
+
+        public static final String REWARD_BATCH_NOT_FOUND_OR_INVALID_STATE = "REWARD_BATCH_NOT_FOUND_OR_INVALID_STATE";
+        public static final String REWARD_BATCH_ALREADY_APPROVED = "REWARD_BATCH_ALREADY_APPROVED";
+        public static final String REWARD_BATCH_INVALID_REQUEST = "REWARD_BATCH_INVALID_REQUEST";
+        public static final String REWARD_BATCH_MONTH_TOO_EARLY = "REWARD_BATCH_MONTH_TOO_EARLY";
+        public static final String REWARD_BATCH_TOO_MANY_REQUESTS = "REWARD_BATCH_TOO_MANY_REQUESTS";
+        public static final String REWARD_BATCH_GENERIC_ERROR = "REWARD_BATCH_GENERIC_ERROR";
+        public static final String POINT_OF_SALE_NOT_ALLOWED = "POINT_OF_SALE_NOT_ALLOWED";
+        public static final String REASON_FIELD_IS_MANDATORY = "REASON_FIELD_IS_MANDATORY";
+        public static final String MERCHANT_ID_OR_ORGANIZATION_ROLE_ARE_MANDATORY = "MERCHANT_ID_OR_ORGANIZATION_ROLE_ARE_MANDATORY";
+        public static final String MERCHANT_ID_AND_ORGANIZATION_ROLE_CANNOT_COEXIST = "MERCHANT_ID_AND_ORGANIZATION_ROLE_CANNOT_COEXIST";
+        public static final String INVALID_ORGANIZATION_ROLE = "INVALID_ORGANIZATION_ROLE";
+        public static final String REPORT_MISSING_FILENAME = "REPORT_MISSING_FILENAME";
+        public static final String INVALID_PERIOD = "INVALID_PERIOD";
+        public static final String INVALID_LENGTH_PERIOD = "INVALID_LENGTH_PERIOD";
+        public static final String INVALID_REPORT_TYPE = "INVALID_REPORT_TYPE";
+        public static final String REPORT_TYPE_REQUIRED = "REPORT_TYPE_REQUIRED";
+        public static final String MERCHANT_ID_REQUIRED = "MERCHANT_ID_REQUIRED";
+
+        public static final String ROLE_NOT_ALLOWED_FOR_L1_PROMOTION = "ROLE_NOT_ALLOWED_FOR_L1_PROMOTION";
+        public static final String ROLE_NOT_ALLOWED_FOR_L2_PROMOTION = "ROLE_NOT_ALLOWED_FOR_L2_PROMOTION";
+        public static final String BATCH_NOT_ELABORATED_15_PERCENT = "BATCH_NOT_ELABORATED_15_PERCENT";
+        public static final String INVALID_BATCH_STATE_FOR_PROMOTION = "INVALID_BATCH_STATE_FOR_PROMOTION";
+        public static final String REWARD_BATCH_ALREADY_SENT = "REWARD_BATCH_ALREADY_SENT";
+        public static final String REWARD_BATCH_STATUS_NOT_ALLOWED = "REWARD_BATCH_STATUS_NOT_ALLOWED";
+        public static final String REWARD_BATCH_TRX_STATUS_NOT_ALLOWED = "REWARD_BATCH_TRX_STATUS_NOT_ALLOWED";
+        public static final String REWARD_BATCH_PREVIOUS_NOT_SENT = "REWARD_BATCH_PREVIOUS_NOT_SENT";
+        public static final String INVALID_CHECKS_ERROR = "INVALID_CHECKS_ERROR";
+        public static final String REPORT_NOT_FOUND = "REPORT_NOT_FOUND";
+        public static final String REPORT_NOT_GENERATED = "REPORT_NOT_GENERATED";
+        public static final String MERCHANT_NOT_FOUND = "MERCHANT_NOT_FOUND";
+        public static final String MERCHANT_NOT_FOUND_IN_SELFCARE = "MERCHANT_NOT_FOUND_IN_SELFCARE";
+        public static final String AMBIGUOUS_MERCHANT_DATA_IN_SELFCARE = "AMBIGUOUS_MERCHANT_DATA_IN_SELFCARE";
+    }
+
+    public static final class ExceptionMessage {
+        private ExceptionMessage(){}
+
+        public static final String TOO_MANY_REQUESTS = "Too Many Requests";
+        public static final String GENERIC_ERROR = "Something gone wrong";
+        public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS = "Mandatory filters are missing. Insert one of the following options: 1) idTrxIssuer 2) userId, trxDateStart and trxDateEnd";
+        public static final String TRANSACTION_MISSING_INVOICE = "Invoice missing from transaction for which download was required";
+        public static final String TRANSACTION_NOT_FOUND = "Transaction not found for ID: %s";
+        public static final String TRANSACTION_NOT_STATUS_INVOICED_OR_REWARDED = "Transaction is not in invoiced or rewarded status";
+        public static final String TRANSACTION_NOT_STATUS_APPROVED = "Transaction is not in approved status";
+        public static final String REWARD_BATCH_TRANSACTION_POSTPONE_LIMIT_EXCEEDED = "Transaction can be postponed only until the end of the month following the initiative end date";
+        public static final String ERROR_ON_GET_FILE_URL_REQUEST = "Error occurred while attempting to get file url";
+        public static final String MISSING_TRANSACTIONS_FILTERS = "Mandatory filters are missing. Insert one of the following options: 1) organizationRole 2) merchantId";
+        public static final String REWARD_BATCH_STATUS_MISMATCH = "Operation not allowed: the batch is no longer in CREATED status";
+        public static final String ERROR_MESSAGE_REWARD_BATCH_STATUS_NOT_ALLOWED = "Operation not allowed: the batch is no longer in CREATED or EVALUATING status";
+        public static final String ERROR_MESSAGE_MERCHANT_ID_OR_ORGANIZATION_ROLE_ARE_MANDATORY = "MerchantId or OrganizationRole must be provided";
+        public static final String ERROR_MESSAGE_MERCHANT_ID_AND_ORGANIZATION_ROLE_CANNOT_COEXIST = "Only one between merchantId and organizationRole must be provided";
+        public static final String ERROR_MESSAGE_INVALID_ORGANIZATION_ROLE = "The provided organization role is not a valid operator";
+        public static final String ERROR_MESSAGE_INVALID_PERIOD = "The provided period is invalid";
+        public static final String ERROR_MESSAGE_INVALID_LENGTH_PERIOD = "The provided period length is greater than %s";
+
+        public static final String REASON_FIELD_IS_MANDATORY = "Reason field is mandatory";
+        public static final String ERROR_MESSAGE_NOT_FOUND_OR_INVALID_STATE_BATCH = "Reward batch  %s not  found  or  not in  a  valid  state";
+        public static final String ERROR_MESSAGE_NOT_FOUND_BATCH = "Reward batch  %s not  found";
+        public static final String ERROR_MESSAGE_INVALID_STATE_BATCH = "Reward batch  %s  not in  a  valid  state";
+        public static final String ERROR_MESSAGE_INVALID_STATE_OR_AMOUNT_BATCH = "Reward batch %s is either not in a valid state or has an invalid approved amount";
+        public static final String ERROR_MESSAGE_ROLE_NOT_ALLOWED = "Role not allowed";
+        public static final String ERROR_MESSAGE_REWARD_BATCH_NOT_APPROVED = "Reward batch  %s not APPROVED";
+        public static final String ERROR_MESSAGE_REWARD_BATCH_MISSING_FILENAME = "Reward batch  %s missing file name";
+        public static final String MERCHANT_OR_OPERATOR_HEADER_MANDATORY = "Merchant or operator information is missing";
+        public static final String ERROR_MESSAGE_REWARD_BATCH_NOT_APPROVED_OR_REFUNDABLE = "Reward batch  %s not APPROVED or REFUNDABLE";
+
+        public static final String ERROR_MESSAGE_MERCHANT_ID_MANDATORY = "Merchant information is missing";
+        public static final String ERROR_MESSAGE_PREVIOUS_BATCH_TO_APPROVE = "Is not possible to approve batch %s because there are previous Batch to approve";
+        public static final String ERROR_MESSAGE_NOT_FOUND_REWARD_BATCH_SENT = "No reward batches found with status SENT";
+        public static final String ERROR_MESSAGE_REWARD_BATCH_ALREADY_SENT = "Reward batch has already been sent";
+        public static final String ERROR_MESSAGE_ROLE_NOT_ALLOWED_FOR_L1_PROMOTION = "Operator not allowed to promote from L1";
+        public static final String ERROR_MESSAGE_BATCH_NOT_ELABORATED_15_PERCENT = "At least 15% of transactions must be elaborated";
+        public static final String ERROR_MESSAGE_ROLE_NOT_ALLOWED_FOR_L2_PROMOTION = "Operator not allowed to promote from L2";
+        public static final String ERROR_MESSAGE_INVALID_BATCH_STATE_FOR_PROMOTION = "Invalid state for batch promotion";
+
+        public static final String ERROR_MESSAGE_INVALID_CHECKS_ERROR = "At least one checksError field must be true";
+        public static final String  ERROR_MESSAGE_REPORT_NOT_FOUND = "Report %s not found for initiative %s ";
+        public static final String  ERROR_MESSAGE_MERCHANT_NOT_FOUND = "Merchant %s not found for initiative %s ";
+        public static final String  ERROR_MESSAGE_MERCHANT_NOT_FOUND_IN_SELFCARE = "No institution records found for merchant fiscal code %s ";
+        public static final String ERROR_MESSAGE_AMBIGUOUS_MERCHANT_DATA_IN_SELFCARE = "Multiple institutions found for the same fiscal code %s. Data is ambiguous.";
+        public static final String ERROR_MESSAGE_REPORT_MISSING_FILENAME = "The report %s does not have an associated file name and cannot be downloaded";
+        public static final String ERROR_MESSAGE_REPORT_NOT_GENERATED = "The report %s is not generated yet and cannot be downloaded";
+        public static final String ERROR_MESSAGE_INVALID_REPORT_TYPE = "Unsupported ReportType";
+        public static final String ERROR_MESSAGE_REPORT_TYPE_REQUIRED = "ReportType is mandatory when merchantId is not provided";
+    }
+}
