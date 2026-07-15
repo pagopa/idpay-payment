@@ -18,10 +18,10 @@ public class RegisterConnectorImpl implements RegisterConnector {
     }
 
     @Override
-    public ProductListDTO getProductList(String productGtin, ProductStatus status) {
+    public ProductListDTO getProductList(String productGtin, ProductStatus status, String initiativeId) {
         ProductListDTO productListDTO;
         try {
-            productListDTO = restClient.getProductList(productGtin, status);
+            productListDTO = restClient.getProductList(productGtin, status, initiativeId);
             log.info("[REGISTER_CONNECTOR] Successfully retrieved products from register ProductGtin: {} and ProductStatus: {}, ReturnedCount: {}",productGtin,status, productListDTO != null ? productListDTO.getContent().size() : 0);
         } catch (FeignException e) {
             log.error("[REGISTER_CONNECTOR] Error calling register service ProductGtin: {} and ProductStatus: {}, message: {}",productGtin, status, e.getMessage());

@@ -495,6 +495,15 @@ components:
             - BARCODE
           description: Channel from which the transaction takes place
           example: BARCODE
+        voucherAmountCents:
+          type: integer
+          format: int64
+          description: Maximum budget available for the beneficiary voucher in cents
+          example: 7000
+        productType:
+          type: string
+          description: Product type selected during discount voucher redemption
+          example: DTSC
         rewards:
           type: object
           additionalProperties: false

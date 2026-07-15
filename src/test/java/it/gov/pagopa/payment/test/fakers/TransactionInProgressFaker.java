@@ -74,6 +74,7 @@ public class TransactionInProgressFaker {
         .rewards(rewards)
         .additionalProperties(additionalProperties)
         .extendedAuthorization(false)
+        .productType("DTSC")
         .trxEndDate(trxEndDate).voucherAmountCents(100L)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }
