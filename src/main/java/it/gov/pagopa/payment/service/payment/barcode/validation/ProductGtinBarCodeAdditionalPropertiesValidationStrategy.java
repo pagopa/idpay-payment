@@ -40,11 +40,10 @@ public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements
         }
 
         ProductDTO productDTO = paymentCheckService.validateProduct(productGtin, initiativeId);
-        log.info("[PRODUCT_VALIDATION] Product validated: {}", productDTO); //todo remove
         Map<String, String> enrichedAdditionalProperties = new HashMap<>();
         enrichedAdditionalProperties.put(PRODUCT_NAME_KEY, productDTO.getProductName());
         enrichedAdditionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
-        enrichedAdditionalProperties.put(PRODUCT_TYPE_KEY, productDTO.getCategory());
+        enrichedAdditionalProperties.put(PRODUCT_TYPE_KEY, productDTO.getCategoryCode());
         return enrichedAdditionalProperties;
     }
 

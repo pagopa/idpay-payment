@@ -153,7 +153,7 @@ class BarCodeAuthPaymentServiceImplTest {
         verify(barCodeAuthorizationExpiredServiceMock).findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1);
         TestUtils.checkNotNullFields(result, "rejectionReasons", "splitPayment", "residualAmountCents");
         assertEquals(transactionInProgress.getTrxCode(), result.getTrxCode());
-        assertEquals("category", transactionInProgress.getProductType());
+        assertEquals("category_code", transactionInProgress.getProductType());
     }
 
     @Test
@@ -267,7 +267,7 @@ class BarCodeAuthPaymentServiceImplTest {
         PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment("trxCode", Map.of("productGtin", "gtin"), 90000L);
         assertNotNull(result);
         assertEquals(transactionInProgress.getAdditionalProperties(), result.getAdditionalProperties());
-        verify(paymentCheckService).validateProduct("gtin", "INITIATIVE_ID");
+        verify(paymentCheckService).validateProduct("gtin", transactionInProgress.getInitiativeId());
     }
 
     @Test
@@ -464,7 +464,7 @@ class BarCodeAuthPaymentServiceImplTest {
         assertEquals(ACQUIRER_ID, transactionInProgress.getAcquirerId());
         assertEquals(PaymentConstants.CURRENCY_EUR, transactionInProgress.getAmountCurrency());
         assertEquals(POINTOFSALE_ID, transactionInProgress.getPointOfSaleId());
-        assertEquals("category", transactionInProgress.getProductType());
+        assertEquals("category_code", transactionInProgress.getProductType());
     }
 
     @Test

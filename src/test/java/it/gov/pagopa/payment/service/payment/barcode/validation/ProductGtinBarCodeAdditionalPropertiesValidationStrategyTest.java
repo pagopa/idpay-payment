@@ -54,7 +54,7 @@ class ProductGtinBarCodeAdditionalPropertiesValidationStrategyTest {
 
         Assertions.assertEquals(productDTO.getProductName(), result.get("productName"));
         Assertions.assertEquals(productDTO.getGtinCode(), result.get("productGtin"));
-        Assertions.assertEquals(productDTO.getCategory(), result.get("productType"));
+        Assertions.assertEquals(productDTO.getCategoryCode(), result.get("productType"));
         verify(paymentCheckService).validateProduct("123123", "INITIATIVE_ID");
     }
 }
