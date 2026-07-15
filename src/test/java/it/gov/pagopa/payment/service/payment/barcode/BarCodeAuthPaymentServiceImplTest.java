@@ -330,8 +330,6 @@ class BarCodeAuthPaymentServiceImplTest {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
-        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
-        when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
         Map<String, String> additionalProperties = Map.of("productGtin", " ");
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class,
@@ -339,7 +337,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
         verify(paymentCheckService, never()).validateProduct(any(), any());
-        verify(decryptRestConnector).getPiiByToken(any());
+        verify(decryptRestConnector, never()).getPiiByToken(any());
     }
 
     @Test
