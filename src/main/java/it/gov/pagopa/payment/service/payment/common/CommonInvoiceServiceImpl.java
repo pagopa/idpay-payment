@@ -1,11 +1,13 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
@@ -14,6 +16,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.Utilities;
@@ -25,33 +28,41 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Service("commonInvoice")
 public class CommonInvoiceServiceImpl {
 
     private final long minDaysToInvoiceTransaction;
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository repository;
     private final TransactionNotifierService notifierService;
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
+    private final TransactionSynchronizer transactionSynchronizer;
     private final MerchantConnector merchantConnector;
 
     public CommonInvoiceServiceImpl(
             @Value("${app.common.expirations.minDaysToInvoiceTransaction:0}") long minDaysToInvoiceTransaction,
+            TransactionRepository transactionRepository,
             TransactionInProgressRepository repository,
             TransactionNotifierService notifierService,
             PaymentErrorNotifierService paymentErrorNotifierService,
             FileStorageClient fileStorageClient,
-            AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
+            AuditUtilities auditUtilities,
+            TransactionSynchronizer transactionSynchronizer,
+            MerchantConnector merchantConnector) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
+        this.transactionRepository = transactionRepository;
         this.repository = repository;
         this.notifierService = notifierService;
         this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
-      this.merchantConnector = merchantConnector;
+        this.transactionSynchronizer = transactionSynchronizer;
+        this.merchantConnector = merchantConnector;
     }
 
     public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
@@ -62,6 +73,9 @@ public class CommonInvoiceServiceImpl {
             // getting the transaction from transaction_in_progress and checking if it is valid for the invoiced status
             TransactionInProgress trx = repository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
+            Transaction transaction = transactionRepository.findById(transactionId)
+                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
+
             if (!trx.getMerchantId().equals(merchantId)) {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
             }
@@ -72,7 +86,7 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
+            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneOffset.UTC))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(trx.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
@@ -83,11 +97,11 @@ public class CommonInvoiceServiceImpl {
 
             // updating the transaction status to invoiced
             trx.setStatus(SyncTrxStatus.INVOICED);
-            trx.setUpdateDate(LocalDateTime.now());
+            trx.setUpdateDate(LocalDateTime.now(ZoneOffset.UTC));
             trx.setInvoiceData(InvoiceData.builder()
-                .filename(file.getOriginalFilename())
-                .docNumber(docNumber)
-                .build());
+                    .filename(file.getOriginalFilename())
+                    .docNumber(docNumber)
+                    .build());
 
             if (trx.getFranchiseName() == null || trx.getPointOfSaleType() == null) {
                 PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
@@ -117,6 +131,9 @@ public class CommonInvoiceServiceImpl {
 
             // removing the transaction from transaction_in_progress collection
             repository.save(trx);
+
+            transactionSynchronizer.sync(trx, transaction);
+            transactionRepository.save(transaction);
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);

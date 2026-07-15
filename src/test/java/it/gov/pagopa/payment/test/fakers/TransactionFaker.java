@@ -2,9 +2,9 @@ package it.gov.pagopa.payment.test.fakers;
 
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.Reward;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.time.LocalDateTime;
@@ -15,13 +15,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TransactionInProgressFaker {
+public class TransactionFaker {
 
-  public static TransactionInProgress mockInstance(Integer bias, SyncTrxStatus status) {
+  public static Transaction mockInstance(Integer bias, SyncTrxStatus status) {
     return mockInstanceBuilder(bias, status).build();
   }
 
-  public static TransactionInProgress.TransactionInProgressBuilder<?,?> mockInstanceBuilder(Integer bias, SyncTrxStatus status) {
+  public static Transaction.TransactionBuilder mockInstanceBuilder(Integer bias, SyncTrxStatus status) {
 
     String id = "MOCKEDTRANSACTION_qr-code_%d".formatted(bias);
     String initiativeId = "INITIATIVEID%d".formatted(bias);
@@ -44,7 +44,7 @@ public class TransactionInProgressFaker {
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1).truncatedTo(ChronoUnit.MILLIS);
 
-    return TransactionInProgress.builder()
+    return Transaction.builder()
         .id(id)
         .correlationId(id)
         .initiativeId(initiativeId)
@@ -74,7 +74,6 @@ public class TransactionInProgressFaker {
         .rewards(rewards)
         .additionalProperties(additionalProperties)
         .extendedAuthorization(false)
-        .productType("DTSC")
         .trxEndDate(trxEndDate).voucherAmountCents(100L)
         .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
   }

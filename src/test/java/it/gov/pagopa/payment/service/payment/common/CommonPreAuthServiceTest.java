@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.gov.pagopa.common.utils.TestUtils;
+import it.gov.pagopa.common.utils.TransactionSynchronizer;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
 import it.gov.pagopa.payment.exception.custom.TransactionAlreadyAuthorizedException;
@@ -23,13 +25,17 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +50,8 @@ class CommonPreAuthServiceTest {
   @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
   @Mock private AuditUtilities auditUtilitiesMock;
   @Mock private WalletConnector walletConnectorMock;
+  @Mock private TransactionRepository transactionRepository;
+  @Mock private TransactionSynchronizer transactionSynchronizer;
 
   private CommonPreAuthServiceImpl commonPreAuthService;
 
@@ -57,8 +65,10 @@ class CommonPreAuthServiceTest {
             new CommonPreAuthServiceImpl(
                     authorizationExpirationMinutes,
                     transactionInProgressRepositoryMock,
+                    transactionRepository,
                     rewardCalculatorConnectorMock,
                     auditUtilitiesMock,
+                    transactionSynchronizer,
                     walletConnectorMock);
   }
 
@@ -99,6 +109,8 @@ class CommonPreAuthServiceTest {
 
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
@@ -121,6 +133,8 @@ class CommonPreAuthServiceTest {
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
     authPaymentDTO.setRejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
 
@@ -141,9 +155,9 @@ class CommonPreAuthServiceTest {
     AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
     authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
     authPaymentDTO.setRejectionReasons(List.of("NO_ACTIVE_INITIATIVES"));
-
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
     when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
-
     TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
       commonPreAuthService.previewPayment(trx, "CHANNEL",SyncTrxStatus.IDENTIFIED)
     );
@@ -279,6 +293,8 @@ class CommonPreAuthServiceTest {
 
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
     trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
+    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
     AuthPaymentDTO responseRE = AuthPaymentDTOFaker.mockInstance(1, trx);
     responseRE.setStatus(SyncTrxStatus.REJECTED);

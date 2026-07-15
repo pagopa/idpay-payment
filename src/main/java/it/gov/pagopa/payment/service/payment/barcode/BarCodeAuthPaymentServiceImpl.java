@@ -13,25 +13,30 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.barcode.expired.BarCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesOperation;
 import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditionalPropertiesValidationResolver;
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
+    private static final String PRODUCT_TYPE_KEY = "productType";
+
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
+    private final TransactionRepository transactionRepository;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final CommonAuthServiceImpl commonAuthService;
     private final DecryptRestConnector decryptRestConnector;
@@ -40,6 +45,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
     public BarCodeAuthPaymentServiceImpl(BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService,
                                          MerchantConnector merchantConnector,
+                                         TransactionRepository transactionRepository,
                                          TransactionInProgressRepository transactionInProgressRepository,
                                          CommonAuthServiceImpl commonAuthService,
                                          DecryptRestConnector decryptRestConnector,
@@ -47,6 +53,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                          AuditUtilities auditUtilities) {
         this.barCodeAuthorizationExpiredService = barCodeAuthorizationExpiredService;
         this.merchantConnector = merchantConnector;
+        this.transactionRepository = transactionRepository;
         this.transactionInProgressRepository = transactionInProgressRepository;
         this.commonAuthService = commonAuthService;
         this.decryptRestConnector = decryptRestConnector;
@@ -61,7 +68,16 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
                         .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                                 "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+        transactionRepository.findByTrxCode(trxCode.toLowerCase())
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+
         transactionInProgress.setAmountCents(amountCents);
+        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
+                transactionInProgress,
+                additionalProperties,
+                BarCodeAdditionalPropertiesOperation.PREVIEW));
+        transactionInProgress.setProductType(transactionInProgress.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transactionInProgress, transactionInProgress.getUserId());
@@ -79,10 +95,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
-        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
-                transactionInProgress,
-                additionalProperties,
-                BarCodeAdditionalPropertiesOperation.PREVIEW));
 
         return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
@@ -112,6 +124,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     trx,
                     authBarCodePaymentDTO.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
+            trx.setProductType(trx.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
             PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
 
@@ -141,7 +154,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                              BarCodeAdditionalPropertiesOperation operation) {
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(trx.getInitiativeId())
-                .validateAndEnrich(additionalProperties, operation);
+                .validateAndEnrich(additionalProperties, operation, trx.getInitiativeId());
         if (validatedAdditionalProperties == null) {
             return Collections.emptyMap();
         }

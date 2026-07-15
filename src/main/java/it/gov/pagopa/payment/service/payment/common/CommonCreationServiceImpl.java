@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 @Slf4j
 @Service("commonCreate")
@@ -59,7 +60,7 @@ public class CommonCreationServiceImpl {
           String acquirerId,
           String idTrxIssuer) {
 
-    LocalDate today = LocalDate.now();
+    LocalDate today = LocalDate.now(ZoneOffset.UTC);
     try {
       if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[{}] Cannot create transaction with invalid amount: [{}]", getFlow(), trxCreationRequest.getAmountCents());
@@ -116,7 +117,7 @@ public class CommonCreationServiceImpl {
               flowName,
               initiative.getStartDate(), initiative.getEndDate());
       throw new InitiativeInvalidException("Cannot create transaction out of valid period. Initiative startDate: %s endDate: %s"
-                      .formatted(initiative.getStartDate(), initiative.getEndDate()));
+              .formatted(initiative.getStartDate(), initiative.getEndDate()));
     }
   }
 
