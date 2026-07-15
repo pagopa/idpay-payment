@@ -5,9 +5,8 @@ import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-public interface PointOfSaleTransactionService {
+public interface TransactionService {
 
-    Page<Transaction> getPointOfSaleTransactions(TrxFiltersDTO filters,
-                                                 Pageable pageable);
+    Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters, Pageable pageable);
 
 }

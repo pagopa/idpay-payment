@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.service.PDVService;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -27,7 +27,7 @@ public class PointOfSaleTransactionMapper {
         this.pdvService = pdvService;
     }
 
-    public PointOfSaleTransactionDTO toPointOfSaleTransactionDTO(TransactionInProgress trx, String fiscalCodeInput) {
+    public PointOfSaleTransactionDTO toPointOfSaleTransactionDTO(Transaction trx, String fiscalCodeInput) {
         String fiscalCode = StringUtils.isNotBlank(fiscalCodeInput) ? fiscalCodeInput : pdvService.decryptCF(trx.getUserId());
 
         String trxCodeImgUrl = null;

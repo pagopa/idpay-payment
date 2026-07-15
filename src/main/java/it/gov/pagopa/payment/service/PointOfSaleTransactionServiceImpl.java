@@ -1,35 +1,29 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import org.apache.commons.lang3.StringUtils;
+import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 
 @Service
 public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransactionService {
 
-    private final TransactionInProgressRepository transactionInProgressRepository;
-    private final PDVService pdvService;
+    private final TransactionService transactionService;
 
     public PointOfSaleTransactionServiceImpl(
-            TransactionInProgressRepository transactionInProgressRepository,
-            PDVService pdvService) {
-        this.transactionInProgressRepository = transactionInProgressRepository;
-        this.pdvService = pdvService;
+            TransactionService transactionService) {
+        this.transactionService = transactionService;
     }
 
     @Override
-    public Page<TransactionInProgress> getPointOfSaleTransactions(String merchantId,
-                                                                  String initiativeId,
-                                                                  String pointOfSaleId,
-                                                                  String fiscalCode,
-                                                                  TrxFiltersDTO filters,
-                                                                  Pageable pageable) {
-        String userId = StringUtils.isNotBlank(fiscalCode) ? pdvService.encryptCF(fiscalCode) : null;
-        return transactionInProgressRepository.findPageByFilter(merchantId, pointOfSaleId, initiativeId, userId, filters, pageable);
+    public Page<Transaction> getPointOfSaleTransactions(TrxFiltersDTO filters,
+                                                        Pageable pageable) {
+        Objects.requireNonNull(filters, "filters must not be null");
+        Objects.requireNonNull(pageable, "pageable must not be null");
+        return transactionService.getTransactionsByFilters(filters, pageable);
     }
 }
