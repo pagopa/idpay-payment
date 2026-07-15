@@ -329,7 +329,6 @@ class BarCodeAuthPaymentServiceImplTest {
         configureProductGtinValidation(transactionInProgress);
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transactionInProgress);
         Map<String, String> additionalProperties = Map.of("productGtin", " ");
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class,
