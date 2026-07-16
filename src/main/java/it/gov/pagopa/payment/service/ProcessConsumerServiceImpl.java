@@ -58,7 +58,7 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
                     queueCommandOperationDTO.getEntityId());
 
             usersId.forEach(userId -> auditUtilities.logDeleteTransactions(userId, queueCommandOperationDTO.getEntityId()));
-            log.info(
+            log.trace(
                     "[PERFORMANCE_LOG] [DELETE_INITIATIVE] Time occurred to perform business logic: {} ms. initiative={}",
                     System.currentTimeMillis() - startTime,
                     queueCommandOperationDTO.getEntityId());
