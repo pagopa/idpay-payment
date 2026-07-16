@@ -17,7 +17,9 @@ public class TrxFiltersDTO {
     private String merchantId;
     private String initiativeId;
     private String fiscalCode;
+    private String userId;
     private String rewardBatchId;
     private RewardBatchTrxStatus rewardBatchTrxStatus;
     private String pointOfSaleId;
+    private boolean includeToCheckWithConsultable;
 }

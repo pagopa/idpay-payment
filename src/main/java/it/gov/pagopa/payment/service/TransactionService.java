@@ -12,4 +12,8 @@ public interface TransactionService {
 
     Transaction getTransactionByIdAndMerchantId(String transactionId,
                                                 String merchantId);
+
+    Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters,
+                                                     Pageable pageable);
+
 }

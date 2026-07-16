@@ -1,12 +1,50 @@
 package it.gov.pagopa.payment.utils;
 
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
 public class TransactionSpecifications {
+
+    public static Specification<Transaction> getFilters(
+            TrxFiltersDTO filters,
+            String userId) {
+
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            addTextPredicate(predicates, root, cb, "merchantId", filters.getMerchantId());
+            addTextPredicate(predicates, root, cb, "initiativeId", filters.getInitiativeId());
+            addTextPredicate(predicates, root, cb, "userId", userId);
+            addTextPredicate(predicates, root, cb, "pointOfSaleId", filters.getPointOfSaleId());
+            addTextPredicate(predicates, root, cb, "trxCode", filters.getTrxCode());
+            addTextPredicate(predicates, root, cb, "rewardBatchId", filters.getRewardBatchId());
+            addTextPredicate(predicates, root, cb, "status", filters.getStatus());
+
+            if (filters.getRewardBatchTrxStatus() != null) {
+                if (filters.isIncludeToCheckWithConsultable()) {
+                    predicates.add(root.get("rewardBatchTrxStatus").in(
+                            RewardBatchTrxStatus.CONSULTABLE,
+                            RewardBatchTrxStatus.TO_CHECK
+                    ));
+                } else {
+                    predicates.add(cb.equal(root.get("rewardBatchTrxStatus"), filters.getRewardBatchTrxStatus()));
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
 
     public static Specification<Transaction> hasStatus(String statusStr) {
         return (root, query, criteriaBuilder) -> {
@@ -14,7 +52,7 @@ public class TransactionSpecifications {
                 return criteriaBuilder.conjunction();
             }
             try {
-                SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(statusStr.toUpperCase());
+                SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(statusStr.toUpperCase(Locale.ROOT));
                 return criteriaBuilder.equal(root.get("status"), statusEnum);
             } catch (IllegalArgumentException e) {
                 return criteriaBuilder.disjunction();
@@ -103,5 +141,15 @@ public class TransactionSpecifications {
                     productGtin
             );
         };
+    }
+
+    private static void addTextPredicate(List<Predicate> predicates,
+                                         Root<Transaction> root,
+                                         CriteriaBuilder criteriaBuilder,
+                                         String field,
+                                         String value) {
+        if (StringUtils.hasText(value)) {
+            predicates.add(criteriaBuilder.equal(root.get(field), value));
+        }
     }
 }

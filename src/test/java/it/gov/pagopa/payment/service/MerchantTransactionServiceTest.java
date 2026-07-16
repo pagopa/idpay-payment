@@ -36,12 +36,12 @@ class MerchantTransactionServiceTest {
     @Mock private DecryptRestConnector decryptRestConnector;
     @Mock private TransactionInProgressRepository repositoryMock;
     @Mock private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock;
-
+    @Mock private  TransactionService transactionService;
     private MerchantTransactionService service;
 
     @BeforeEach
     void setUp() {
-        service = new MerchantTransactionServiceImpl(4320, decryptRestConnector, encryptRestConnector, repositoryMock, transactionInProgress2TransactionResponseMapperMock);
+        service = new MerchantTransactionServiceImpl(4320, decryptRestConnector, encryptRestConnector, transactionService, repositoryMock, transactionInProgress2TransactionResponseMapperMock);
     }
 
     @Test
