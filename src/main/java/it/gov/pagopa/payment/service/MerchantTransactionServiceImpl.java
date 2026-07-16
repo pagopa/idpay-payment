@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -112,6 +113,24 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .toList();
 
         return toMerchantTransactionsListDTO(merchantTransactions, transactionPage);
+    }
+
+    @Override
+    public List<String> getProcessedTransactionStatuses(
+            String organizationRole) {
+
+        List<String> allStatuses = Arrays.stream(RewardBatchTrxStatus.values())
+                .map(Enum::name)
+                .toList();
+
+        if (isOperator(organizationRole)) {
+            return allStatuses;
+        } else {
+            return
+                    allStatuses.stream()
+                            .filter(s -> !"TO_CHECK".equalsIgnoreCase(s))
+                            .toList();
+        }
     }
 
     private RewardBatchTrxStatus parseRewardBatchTrxStatus(String rewardBatchTrxStatus) {
@@ -264,7 +283,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     }
 
     private MerchantTransactionsListDTO toMerchantTransactionsListDTO(List<MerchantTransactionDTO> merchantTransactions,
-                                                                       Page<?> page) {
+                                                                      Page<?> page) {
         return new MerchantTransactionsListDTO(
                 merchantTransactions,
                 page.getNumber(),

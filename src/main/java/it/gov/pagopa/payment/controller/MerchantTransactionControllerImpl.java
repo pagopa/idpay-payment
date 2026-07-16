@@ -8,6 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @Slf4j
 public class MerchantTransactionControllerImpl implements MerchantTransactionController {
@@ -59,6 +61,16 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
                 sanitize(trxCode),
                 pageable
         );
+    }
+
+
+
+    @Override
+    public List<String> getProcessedTransactionStatuses(
+            String organizationRole) {
+
+        return merchantTransactionService.getProcessedTransactionStatuses(
+                organizationRole);
     }
 
     private String sanitize(String value) {

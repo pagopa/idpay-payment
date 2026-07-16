@@ -58,6 +58,8 @@ public class PaymentConstants {
     public static final String PAYMENT_TRANSACTION_VERSION_PENDING = "PAYMENT_TRANSACTION_VERSION_PENDING";
     public static final String REWARD_NOT_VALID = "REWARD_NOT_VALID";
     public static final String PDF_GENERIC_EXCEPTION = "PDF_GENERIC_EXCEPTION";
+    public static final String ERROR_ON_GET_FILE_URL_REQUEST = "Error occurred while attempting to get file url";
+
 
     private ExceptionCode() {}
   }

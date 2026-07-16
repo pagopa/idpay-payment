@@ -32,7 +32,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
 import java.util.Set;
 
-import static it.gov.pagopa.payment.utils.ExceptionConstants.ExceptionMessage.ERROR_ON_GET_FILE_URL_REQUEST;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.ERROR_ON_GET_FILE_URL_REQUEST;
 
 @Slf4j
 @Component

@@ -3,6 +3,8 @@ package it.gov.pagopa.payment.service;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface MerchantTransactionService {
 
     MerchantTransactionsListDTO getMerchantTransactions(String merchantId,
@@ -20,4 +22,6 @@ public interface MerchantTransactionService {
                                                                  String pointOfSaleId,
                                                                  String trxCode,
                                                                  Pageable pageable);
+
+    List<String> getProcessedTransactionStatuses(String organizationRole);
 }
