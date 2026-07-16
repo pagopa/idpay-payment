@@ -34,6 +34,8 @@ import java.util.Set;
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService {
     private static final String DEFAULT_PROCESSED_SORT_FIELD = "rewardBatchStatusTrx";
+    private static final String TO_CHECK_STATUS = "TO_CHECK";
+    private static final Set<String> OPERATORS = Set.of("operator1", "operator2", "operator3");
 
     private final int authorizationExpirationMinutes;
 
@@ -42,8 +44,6 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private final TransactionService transactionService;
     private final TransactionInProgressRepository transactionInProgressRepository;
     private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
-
-    private static final Set<String> OPERATORS = Set.of("operator1", "operator2", "operator3");
 
     public MerchantTransactionServiceImpl(
             @Value("${app.common.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
@@ -70,7 +70,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .map(this::populateMerchantTransactionDTO)
                 .toList();
         long count = transactionInProgressRepository.getCount(criteria);
-        final Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
+        Page<TransactionInProgress> result = PageableExecutionUtils.getPage(transactionInProgressList,
                 CommonUtilities.getPageable(pageable), () -> count);
         return toMerchantTransactionsListDTO(merchantTransactions, result);
     }
@@ -87,13 +87,9 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String pointOfSaleId,
             String trxCode,
             Pageable pageable) {
-
         String userId = StringUtils.isNotBlank(fiscalCode) ? encryptCF(fiscalCode) : null;
-
         pageable = applyDefaultSort(pageable);
-
         RewardBatchTrxStatus parsedRewardBatchTrxStatus = parseRewardBatchTrxStatus(rewardBatchTrxStatus);
-
         TrxFiltersDTO filters = buildProcessedFilters(
                 merchantId,
                 initiativeId,
@@ -116,21 +112,9 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     }
 
     @Override
-    public List<String> getProcessedTransactionStatuses(
-            String organizationRole) {
-
-        List<String> allStatuses = Arrays.stream(RewardBatchTrxStatus.values())
-                .map(Enum::name)
-                .toList();
-
-        if (isOperator(organizationRole)) {
-            return allStatuses;
-        } else {
-            return
-                    allStatuses.stream()
-                            .filter(s -> !"TO_CHECK".equalsIgnoreCase(s))
-                            .toList();
-        }
+    public List<String> getProcessedTransactionStatuses(String organizationRole) {
+        List<String> allStatuses = getAllProcessedTransactionStatuses();
+        return hasAccessToAllStatuses(organizationRole) ? allStatuses : excludeToCheckStatus(allStatuses);
     }
 
     private RewardBatchTrxStatus parseRewardBatchTrxStatus(String rewardBatchTrxStatus) {
@@ -145,7 +129,19 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         }
     }
 
-    private boolean isOperator(String role) {
+    private List<String> getAllProcessedTransactionStatuses() {
+        return Arrays.stream(RewardBatchTrxStatus.values())
+                .map(Enum::name)
+                .toList();
+    }
+
+    private List<String> excludeToCheckStatus(List<String> statuses) {
+        return statuses.stream()
+                .filter(status -> !TO_CHECK_STATUS.equalsIgnoreCase(status))
+                .toList();
+    }
+
+    private boolean hasAccessToAllStatuses(String role) {
         return role == null || !OPERATORS.contains(role.toLowerCase());
     }
 
@@ -190,7 +186,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         RewardBatchTrxStatus original = transaction.getRewardBatchStatusTrx() != null ? RewardBatchTrxStatus.valueOf(transaction.getRewardBatchStatusTrx()) : null;
         RewardBatchTrxStatus exposed = original;
 
-        if (isOperator(organizationRole) && original == RewardBatchTrxStatus.TO_CHECK) {
+        if (hasAccessToAllStatuses(organizationRole) && original == RewardBatchTrxStatus.TO_CHECK) {
             exposed = RewardBatchTrxStatus.CONSULTABLE;
         }
 
@@ -268,7 +264,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         filters.setRewardBatchTrxStatus(rewardBatchTrxStatus);
         filters.setPointOfSaleId(pointOfSaleId);
         filters.setTrxCode(trxCode);
-        filters.setIncludeToCheckWithConsultable(isOperator(organizationRole) && rewardBatchTrxStatus == RewardBatchTrxStatus.CONSULTABLE);
+        filters.setIncludeToCheckWithConsultable(hasAccessToAllStatuses(organizationRole) && rewardBatchTrxStatus == RewardBatchTrxStatus.CONSULTABLE);
         return filters;
     }
 

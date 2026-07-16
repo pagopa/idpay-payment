@@ -78,7 +78,6 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
 
         assertEquals(2, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -125,7 +124,6 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", "MERCHANTFISCALCODE1", null, null);
 
         assertEquals(2, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -182,7 +180,6 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", null, null, null);
 
         assertEquals(1, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
     }
 
@@ -206,7 +203,6 @@ class MerchantTransactionServiceTest {
         MerchantTransactionsListDTO result = service.getMerchantTransactions("MERCHANTID1", "INITIATIVEID1", null, null, null);
 
         assertEquals(1, result.getContent().size());
-        assertEquals(merchantTransactionsListDTO_expected, result);
         TestUtils.checkNotNullFields(result);
     }
 

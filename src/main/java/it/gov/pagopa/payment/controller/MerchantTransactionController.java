@@ -18,7 +18,7 @@ public interface MerchantTransactionController {
                                                         @PathVariable("initiativeId") String initiativeId,
                                                         @RequestParam(required = false) String fiscalCode,
                                                         @RequestParam(required = false) String status,
-                                                        @PageableDefault(sort="updateDate", direction = Sort.Direction.DESC) Pageable pageable);
+                                                        @PageableDefault(sort = "updateDate", direction = Sort.Direction.DESC) Pageable pageable);
 
 
     @GetMapping("/initiatives/{initiativeId}/transactions/processed")
@@ -35,8 +35,4 @@ public interface MerchantTransactionController {
 
     @GetMapping("/initiatives/{initiativeId}/transactions/processed/statuses")
     List<String> getProcessedTransactionStatuses(@RequestHeader(value = "x-organization-role", required = false) String organizationRole);
-
-
-
-
 }

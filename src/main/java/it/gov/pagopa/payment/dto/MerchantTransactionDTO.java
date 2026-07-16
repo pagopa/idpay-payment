@@ -43,15 +43,14 @@ public class MerchantTransactionDTO {
     private Map<String, String> additionalProperties;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @JsonProperty("updateDate")
-    LocalDateTime elaborationDateTime;
-    String pointOfSaleId;
+    private LocalDateTime elaborationDateTime;
+    private String pointOfSaleId;
 
-    OffsetDateTime trxChargeDate;
-    Long authorizedAmountCents;
-    InvoiceData invoiceData;
-    RewardBatchTrxStatus rewardBatchTrxStatus;
-    List<ReasonDTO> rewardBatchRejectionReason;
-    ChecksErrorDTO checksError;
-    String franchiseName;
+    private OffsetDateTime trxChargeDate;
+    private Long authorizedAmountCents;
+    private InvoiceData invoiceData;
+    private RewardBatchTrxStatus rewardBatchTrxStatus;
+    private List<ReasonDTO> rewardBatchRejectionReason;
+    private ChecksErrorDTO checksError;
+    private String franchiseName;
 }

@@ -16,6 +16,19 @@ import java.util.Locale;
 
 public class TransactionSpecifications {
 
+    public static Specification<Transaction> buildSpecification(TrxFiltersDTO filters, String encryptedUserId) {
+        return Specification
+                .where(TransactionSpecifications.hasStatus(filters.getStatus()))
+                .and(TransactionSpecifications.hasTrxCode(filters.getTrxCode()))
+                .and(TransactionSpecifications.hasMerchantId(filters.getMerchantId()))
+                .and(TransactionSpecifications.hasInitiativeId(filters.getInitiativeId()))
+                .and(TransactionSpecifications.hasFiscalCode(encryptedUserId))
+                .and(TransactionSpecifications.hasRewardBatchId(filters.getRewardBatchId()))
+                .and(TransactionSpecifications.hasRewardBatchTrxStatus(filters.getRewardBatchTrxStatus()))
+                .and(TransactionSpecifications.hasPointOfSaleId(filters.getPointOfSaleId()))
+                .and(TransactionSpecifications.hasProductGtin(filters.getProductGtin()));
+    }
+
     public static Specification<Transaction> getFilters(
             TrxFiltersDTO filters,
             String userId) {

@@ -14,6 +14,7 @@ import java.util.List;
 @Slf4j
 public class MerchantTransactionControllerImpl implements MerchantTransactionController {
     private static final String LOG_GET_MERCHANT_TRANSACTIONS = "[GET_MERCHANT_TRANSACTIONS]";
+    private static final String LOG_GET_MERCHANT_TRANSACTIONS_PROCESSED = "[GET_MERCHANT_TRANSACTIONS_PROCESSED]";
 
     private final MerchantTransactionService merchantTransactionService;
 
@@ -25,7 +26,7 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
     @PerformanceLog("GET_MERCHANT_TRANSACTIONS")
     public MerchantTransactionsListDTO getMerchantTransactions(String merchantId, String initiativeId, String fiscalCode, String status, Pageable pageable) {
         String sanitizedMerchantId = sanitize(merchantId);
-        log.info("{} Merchant {} requested to retrieve transactions", LOG_GET_MERCHANT_TRANSACTIONS, sanitizedMerchantId);
+        logMerchantTransactionRequest(LOG_GET_MERCHANT_TRANSACTIONS, sanitizedMerchantId);
         return merchantTransactionService.getMerchantTransactions(
                 sanitizedMerchantId,
                 sanitize(initiativeId),
@@ -38,17 +39,17 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
     @Override
     @PerformanceLog("GET_MERCHANT_TRANSACTIONS")
     public MerchantTransactionsListDTO getMerchantTransactionsProcessed(String merchantId,
-                                                                     String organizationRole,
-                                                                     String initiativeId,
-                                                                     String fiscalCode,
-                                                                     String status,
-                                                                     String rewardBatchId,
-                                                                     String rewardBatchTrxStatus,
-                                                                     String pointOfSaleId,
-                                                                     String trxCode,
-                                                                     Pageable pageable) {
+                                                                        String organizationRole,
+                                                                        String initiativeId,
+                                                                        String fiscalCode,
+                                                                        String status,
+                                                                        String rewardBatchId,
+                                                                        String rewardBatchTrxStatus,
+                                                                        String pointOfSaleId,
+                                                                        String trxCode,
+                                                                        Pageable pageable) {
         String sanitizedMerchantId = sanitize(merchantId);
-        log.info("{} Merchant {} requested to retrieve transactions", LOG_GET_MERCHANT_TRANSACTIONS, sanitizedMerchantId);
+        logMerchantTransactionRequest(LOG_GET_MERCHANT_TRANSACTIONS_PROCESSED, sanitizedMerchantId);
         return merchantTransactionService.getMerchantTransactionsProcessed(
                 sanitizedMerchantId,
                 sanitize(organizationRole),
@@ -63,14 +64,15 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
         );
     }
 
-
-
     @Override
     public List<String> getProcessedTransactionStatuses(
             String organizationRole) {
 
-        return merchantTransactionService.getProcessedTransactionStatuses(
-                organizationRole);
+        return merchantTransactionService.getProcessedTransactionStatuses(sanitize(organizationRole));
+    }
+
+    private void logMerchantTransactionRequest(String logPrefix, String merchantId) {
+        log.info("{} Merchant {} requested to retrieve transactions", logPrefix, Utilities.sanitizeForLog(merchantId));
     }
 
     private String sanitize(String value) {

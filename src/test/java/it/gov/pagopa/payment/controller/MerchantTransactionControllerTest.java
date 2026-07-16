@@ -116,4 +116,17 @@ class MerchantTransactionControllerTest {
                 any()
         );
     }
+
+    @Test
+    void getProcessedTransactionStatuses() throws Exception {
+        Mockito.when(merchantTransactionServiceMock.getProcessedTransactionStatuses(Mockito.anyString()))
+                .thenReturn(Collections.emptyList());
+
+        mockMvc.perform(
+                get("/idpay/merchant/portal/initiatives/{initiativeId}/transactions/processed/statuses", INITIATIVE_ID)
+                        .header("x-organization-role", "ROLE\n!")
+        ).andExpect(status().is2xxSuccessful());
+
+        Mockito.verify(merchantTransactionServiceMock).getProcessedTransactionStatuses(eq("ROLE"));
+    }
 }
