@@ -32,6 +32,8 @@ import java.util.Map;
 @Service
 public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService {
 
+    private static final String PRODUCT_TYPE_KEY = "productType";
+
     private final BarCodeAuthorizationExpiredService barCodeAuthorizationExpiredService;
     private final MerchantConnector merchantConnector;
     private final TransactionRepository transactionRepository;
@@ -71,6 +73,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
 
         transactionInProgress.setAmountCents(amountCents);
+        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
+                transactionInProgress,
+                additionalProperties,
+                BarCodeAdditionalPropertiesOperation.PREVIEW));
+        transactionInProgress.setProductType(transactionInProgress.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transactionInProgress, transactionInProgress.getUserId());
@@ -88,10 +95,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
 
         final String userCf = decryptRestConnector.getPiiByToken(transactionInProgress.getUserId()).getPii();
-        transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
-                transactionInProgress,
-                additionalProperties,
-                BarCodeAdditionalPropertiesOperation.PREVIEW));
 
         return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
@@ -121,6 +124,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     trx,
                     authBarCodePaymentDTO.getAdditionalProperties(),
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
+            trx.setProductType(trx.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
             PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
 
@@ -150,7 +154,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                              BarCodeAdditionalPropertiesOperation operation) {
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(trx.getInitiativeId())
-                .validateAndEnrich(additionalProperties, operation);
+                .validateAndEnrich(additionalProperties, operation, trx.getInitiativeId());
         if (validatedAdditionalProperties == null) {
             return Collections.emptyMap();
         }

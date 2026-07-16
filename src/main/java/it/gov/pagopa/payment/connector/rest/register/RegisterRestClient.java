@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Pattern;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -16,11 +17,12 @@ import static it.gov.pagopa.payment.connector.rest.register.dto.ValidationPatter
         url = "${rest-client.register.baseUrl}")
 public interface RegisterRestClient {
     @GetMapping(
-            value = "/idpay/register/initiatives/68dd003ccce8c534d1da22bc/products",
+            value = "/idpay/register/initiatives/{initiativeId}/products",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     ProductListDTO getProductList(
                                   @RequestParam(required = false) @Pattern(regexp = GTIN_CODE) String gtinCode,
-                                  @RequestParam(required = false) ProductStatus status
+                                  @RequestParam(required = false) ProductStatus status,
+                                  @PathVariable("initiativeId") String initiativeId
     );
 }

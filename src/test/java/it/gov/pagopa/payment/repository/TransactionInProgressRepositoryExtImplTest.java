@@ -123,7 +123,8 @@ class TransactionInProgressRepositoryExtImplTest {
         "creditNoteData",
         "franchiseName",
         "pointOfSaleType",
-        "familyId");
+        "familyId",
+        "productType");
   }
 
   @Test
