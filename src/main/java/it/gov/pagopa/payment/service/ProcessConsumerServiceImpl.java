@@ -54,13 +54,14 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
 
             List<String> usersId = deletedTrx.stream().map(TransactionInProgress::getUserId).distinct().toList();
 
-            log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transaction_in_progress",
+            log.trace("[DELETE_INITIATIVE] Deleted initiative {} from collection: transaction_in_progress",
                     queueCommandOperationDTO.getEntityId());
 
             usersId.forEach(userId -> auditUtilities.logDeleteTransactions(userId, queueCommandOperationDTO.getEntityId()));
             log.info(
-                    "[PERFORMANCE_LOG] [DELETE_INITIATIVE] Time occurred to perform business logic: {} ms",
-                    System.currentTimeMillis() - startTime);
+                    "[PERFORMANCE_LOG] [DELETE_INITIATIVE] Time occurred to perform business logic: {} ms. initiative={}",
+                    System.currentTimeMillis() - startTime,
+                    queueCommandOperationDTO.getEntityId());
         }
     }
 }
