@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.controller;
 
+import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
@@ -36,15 +37,18 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId,
-                                                                     String tokenPointOfSaleId,
-                                                                     String initiativeId,
-                                                                     String pointOfSaleId,
-                                                                     String fiscalCode,
-                                                                     String status,
-                                                                     String productGtin,
-                                                                     String trxCode,
-                                                                     Pageable pageable) {
+    @PerformanceLog("GET_POS_TRANSACTIONS")
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String initiativeId,
+            String pointOfSaleId,
+            String fiscalCode,
+            String status,
+            String productGtin,
+            String trxCode,
+            Pageable pageable) {
+
         return retrievePointOfSaleTransactions(
                 merchantId,
                 tokenPointOfSaleId,
@@ -59,15 +63,18 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactionsProcessed(String merchantId,
-                                                                              String tokenPointOfSaleId,
-                                                                              String initiativeId,
-                                                                              String pointOfSaleId,
-                                                                              String productGtin,
-                                                                              String fiscalCode,
-                                                                              String status,
-                                                                              String trxCode,
-                                                                              Pageable pageable) {
+    @PerformanceLog("GET_POS_TRANSACTIONS_PROCESSED")
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactionsProcessed(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String initiativeId,
+            String pointOfSaleId,
+            String productGtin,
+            String fiscalCode,
+            String status,
+            String trxCode,
+            Pageable pageable) {
+
         return retrievePointOfSaleTransactions(
                 merchantId,
                 tokenPointOfSaleId,
@@ -82,12 +89,13 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     }
 
     @Override
+    @PerformanceLog("DOWNLOAD_POS_INVOICE")
     public DownloadInvoiceResponseDTO downloadInvoiceFile(
             String merchantId,
             String tokenPointOfSaleId,
             String pointOfSaleId,
-            String transactionId
-    ) {
+            String transactionId) {
+
         String sanitizedMerchantId = sanitize(merchantId);
         String sanitizedTokenPointOfSaleId = sanitize(tokenPointOfSaleId);
         String sanitizedPointOfSaleId = sanitize(pointOfSaleId);
@@ -106,15 +114,17 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         );
     }
 
-    private PointOfSaleTransactionsListDTO retrievePointOfSaleTransactions(String merchantId,
-                                                                           String tokenPointOfSaleId,
-                                                                           String initiativeId,
-                                                                           String pointOfSaleId,
-                                                                           String productGtin,
-                                                                           String fiscalCode,
-                                                                           String status,
-                                                                           String trxCode,
-                                                                           Pageable pageable) {
+    private PointOfSaleTransactionsListDTO retrievePointOfSaleTransactions(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String initiativeId,
+            String pointOfSaleId,
+            String productGtin,
+            String fiscalCode,
+            String status,
+            String trxCode,
+            Pageable pageable) {
+
         TrxFiltersDTO filters = buildSanitizedFilters(
                 merchantId,
                 initiativeId,
@@ -136,13 +146,15 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         return toPointOfSaleTransactionsListDTO(transactions, filters.getFiscalCode());
     }
 
-    private TrxFiltersDTO buildSanitizedFilters(String merchantId,
-                                                String initiativeId,
-                                                String pointOfSaleId,
-                                                String productGtin,
-                                                String fiscalCode,
-                                                String status,
-                                                String trxCode) {
+    private TrxFiltersDTO buildSanitizedFilters(
+            String merchantId,
+            String initiativeId,
+            String pointOfSaleId,
+            String productGtin,
+            String fiscalCode,
+            String status,
+            String trxCode) {
+
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setMerchantId(sanitize(merchantId));
         filters.setInitiativeId(sanitize(initiativeId));
@@ -154,8 +166,10 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         return filters;
     }
 
-    private PointOfSaleTransactionsListDTO toPointOfSaleTransactionsListDTO(Page<Transaction> transactions,
-                                                                             String sanitizedFiscalCode) {
+    private PointOfSaleTransactionsListDTO toPointOfSaleTransactionsListDTO(
+            Page<Transaction> transactions,
+            String sanitizedFiscalCode) {
+
         List<PointOfSaleTransactionDTO> dtos = transactions.getContent().stream()
                 .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, sanitizedFiscalCode))
                 .toList();

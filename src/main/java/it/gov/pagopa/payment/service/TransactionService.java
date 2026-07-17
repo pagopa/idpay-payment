@@ -5,15 +5,25 @@ import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 public interface TransactionService {
 
-    Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters,
-                                               Pageable pageable);
+    List<Transaction> findAll(
+            String idTrxIssuer,
+            String userId,
+            LocalDateTime trxDateStart,
+            LocalDateTime trxDateEnd,
+            Long amountCents,
+            Pageable pageable);
 
-    Transaction getTransactionByIdAndMerchantId(String transactionId,
-                                                String merchantId);
+    List<Transaction> findByInitiativeIdAndUserId(String initiativeId, String userId);
 
-    Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters,
-                                                     Pageable pageable);
+    Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters, Pageable pageable);
+
+    Transaction getTransactionByIdAndMerchantId(String transactionId, String merchantId);
+
+    Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters, Pageable pageable);
 
 }

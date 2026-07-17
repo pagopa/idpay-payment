@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.constants;
 
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE;
+
 public class PaymentConstants {
 
   public static final String OPERATION_TYPE_CHARGE = "00";
@@ -21,6 +23,11 @@ public class PaymentConstants {
   public static final String INVOICED = "INVOICED_";
 
   public static final class ExceptionCode {
+
+    public static final String TRANSACTION_NOT_FOUND = "TRANSACTION_NOT_FOUND";
+    public static final String TRANSACTION_INVALID_REQUEST = "TRANSACTION_INVALID_REQUEST";
+    public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS = "TRANSACTIONS_MISSING_MANDATORY_FILTERS";
+
     public static final String TRX_ADDITIONAL_PROPERTIES_NOT_EXIST = "PAYMENT_ADDITIONAL_PROPERTIES_IS_NULL_OR_EMPTY";
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_OR_EXPIRED";
     public static final String TRX_USER_NOT_ASSOCIATED = "PAYMENT_USER_NOT_ASSOCIATED";
@@ -59,10 +66,19 @@ public class PaymentConstants {
     public static final String REWARD_NOT_VALID = "REWARD_NOT_VALID";
     public static final String PDF_GENERIC_EXCEPTION = "PDF_GENERIC_EXCEPTION";
     public static final String ERROR_ON_GET_FILE_URL_REQUEST = "Error occurred while attempting to get file url";
-
-
-    private ExceptionCode() {}
   }
 
-  private PaymentConstants() {}
+  public static final class ExceptionMessage {
+    public static final String TRANSACTION_MISSING_INVOICE_MESSAGE = "Invoice missing from transaction for which download was required";
+    public static final String TRANSACTION_NOT_FOUND_MESSAGE = "Transaction not found with id: %s";
+    public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE = "Missing mandatory filters: %s";
+  }
+
+  public static String buildMissingFiltersMessage(String... missingFields) {
+    if (missingFields == null || missingFields.length == 0) {
+      return "Missing mandatory filters";
+    }
+    String joinedFields = String.join(", ", missingFields);
+    return TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE.formatted(joinedFields);
+  }
 }

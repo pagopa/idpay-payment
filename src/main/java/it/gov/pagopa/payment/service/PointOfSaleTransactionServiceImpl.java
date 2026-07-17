@@ -1,26 +1,28 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
+import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import java.util.Objects;
-
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTIONS_MISSING_MANDATORY_FILTERS;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTION_INVALID_REQUEST;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.TRANSACTION_MISSING_INVOICE_MESSAGE;
+import static it.gov.pagopa.payment.constants.PaymentConstants.buildMissingFiltersMessage;
 
 @Service
 public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransactionService {
 
     private static final String INVOICE_FOLDER = "invoice";
     private static final String CREDIT_NOTE_FOLDER = "creditNote";
-    private static final String TRANSACTION_MISSING_INVOICE_MESSAGE = "Invoice missing from transaction for which download was required";
 
     private final TransactionService transactionService;
     private final FileStorageClient fileStorageClient;
@@ -33,10 +35,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
     }
 
     @Override
-    public Page<Transaction> getPointOfSaleTransactions(TrxFiltersDTO filters,
-                                                        Pageable pageable) {
-        Objects.requireNonNull(filters, "filters must not be null");
-        Objects.requireNonNull(pageable, "pageable must not be null");
+    public Page<Transaction> getPointOfSaleTransactions(TrxFiltersDTO filters, Pageable pageable) {
         return transactionService.getTransactionsByFilters(filters, pageable);
     }
 
@@ -44,14 +43,20 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
     public DownloadInvoiceResponseDTO downloadTransactionInvoice(
             String merchantId,
             String pointOfSaleId,
-            String transactionId
-    ) {
-        Objects.requireNonNull(merchantId, "merchantId must not be null");
-        Objects.requireNonNull(pointOfSaleId, "pointOfSaleId must not be null");
-        Objects.requireNonNull(transactionId, "transactionId must not be null");
+            String transactionId) {
+
+        if (!StringUtils.hasText(merchantId) ||
+                !StringUtils.hasText(pointOfSaleId) ||
+                !StringUtils.hasText(transactionId)) {
+            throw new TransactionMissingParametersException(
+                    TRANSACTIONS_MISSING_MANDATORY_FILTERS,
+                    buildMissingFiltersMessage("merchantId", "pointOfSaleId", "transactionId")
+            );
+        }
 
         Transaction transaction = transactionService.getTransactionByIdAndMerchantId(transactionId, merchantId);
         InvoiceDocument invoiceDocument = resolveInvoiceDocument(transaction);
+
         String blobPath = buildBlobPath(
                 merchantId,
                 pointOfSaleId,
@@ -82,7 +87,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
     }
 
     private void validateInvoiceData(InvoiceData invoiceData) {
-        if (invoiceData == null || invoiceData.getFilename() == null) {
+        if (invoiceData == null || !org.springframework.util.StringUtils.hasText(invoiceData.getFilename())) {
             throw buildMissingInvoiceException();
         }
     }
@@ -92,8 +97,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
             String pointOfSaleId,
             String transactionId,
             String folderName,
-            String filename
-    ) {
+            String filename) {
         return String.format(
                 "invoices/merchant/%s/pos/%s/transaction/%s/%s/%s",
                 merchantId,
@@ -106,7 +110,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
 
     private TransactionInvalidException buildMissingInvoiceException() {
         return new TransactionInvalidException(
-                PaymentConstants.ExceptionCode.GENERIC_ERROR,
+                TRANSACTION_INVALID_REQUEST,
                 TRANSACTION_MISSING_INVOICE_MESSAGE
         );
     }

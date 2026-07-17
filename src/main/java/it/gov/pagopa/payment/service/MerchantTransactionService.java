@@ -7,21 +7,24 @@ import java.util.List;
 
 public interface MerchantTransactionService {
 
-    MerchantTransactionsListDTO getMerchantTransactions(String merchantId,
-                                                        String initiativeId,
-                                                        String fiscalCode,
-                                                        String status, Pageable pageable);
+    MerchantTransactionsListDTO getMerchantTransactions(
+            String merchantId,
+            String initiativeId,
+            String fiscalCode,
+            String status, Pageable pageable);
 
-    MerchantTransactionsListDTO getMerchantTransactionsProcessed(String merchantId,
-                                                                 String organizationRole,
-                                                                 String initiativeId,
-                                                                 String fiscalCode,
-                                                                 String status,
-                                                                 String rewardBatchId,
-                                                                 String rewardBatchTrxStatus,
-                                                                 String pointOfSaleId,
-                                                                 String trxCode,
-                                                                 Pageable pageable);
+    MerchantTransactionsListDTO getMerchantTransactionsProcessed(
+            String merchantId,
+            String organizationRole,
+            String initiativeId,
+            String fiscalCode,
+            String status,
+            String rewardBatchId,
+            String rewardBatchTrxStatus,
+            String pointOfSaleId,
+            String trxCode,
+            Pageable pageable);
 
-    List<String> getProcessedTransactionStatuses(String organizationRole);
+    List<String> getProcessedTransactionStatuses(
+            String organizationRole);
 }
