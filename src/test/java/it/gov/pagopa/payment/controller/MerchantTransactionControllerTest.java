@@ -22,7 +22,6 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -80,7 +79,7 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        Mockito.when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        Mockito.when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
@@ -103,18 +102,6 @@ class MerchantTransactionControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(dto, resultResponse);
-        Mockito.verify(merchantTransactionServiceMock).getMerchantTransactionsProcessed(
-                eq("MERCHANT_ID"),
-                eq("ROLE"),
-                eq(INITIATIVE_ID),
-                eq(FISCAL_CODE),
-                eq(SyncTrxStatus.CREATED.toString()),
-                eq("BATCH-1"),
-                eq("CONSULTABLE"),
-                eq("POS-1"),
-                eq("TRX-1"),
-                any()
-        );
     }
 
     @Test

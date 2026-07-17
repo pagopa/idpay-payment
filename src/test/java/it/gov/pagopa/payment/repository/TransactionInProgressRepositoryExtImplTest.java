@@ -583,7 +583,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Pageable pageable = PageRequest.of(0, 10);
 
     TrxFiltersDTO filters = new TrxFiltersDTO();
-    filters.setStatus(SyncTrxStatus.AUTHORIZED.toString());
+    filters.setStatuses(List.of(SyncTrxStatus.AUTHORIZED.toString()));
     filters.setProductGtin(PRODUCT_GTIN);
 
 
@@ -615,7 +615,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Pageable pageableStatus = PageRequest.of(0, 10, Sort.by("status"));
 
     TrxFiltersDTO filters = new TrxFiltersDTO();
-    filters.setStatus(SyncTrxStatus.AUTHORIZED.toString());
+    filters.setStatuses(List.of(SyncTrxStatus.AUTHORIZED.toString()));
     Page<TransactionInProgress> resultStatus = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,
         POINT_OF_SALE_ID,
@@ -643,7 +643,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Pageable pageable = PageRequest.of(0, 10, Sort.by("productName"));
 
     TrxFiltersDTO filters = new TrxFiltersDTO();
-    filters.setStatus(SyncTrxStatus.AUTHORIZED.toString());
+    filters.setStatuses(List.of(SyncTrxStatus.AUTHORIZED.toString()));
 
     Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,
@@ -672,7 +672,7 @@ class TransactionInProgressRepositoryExtImplTest {
     Pageable pageable = PageRequest.of(0, 10, Sort.by("trxDate"));
 
     TrxFiltersDTO filters = new TrxFiltersDTO();
-    filters.setStatus(SyncTrxStatus.AUTHORIZED.toString());
+    filters.setStatuses(List.of(SyncTrxStatus.AUTHORIZED.toString()));
 
     Page<TransactionInProgress> result = transactionInProgressRepository.findPageByFilter(
         MERCHANT_ID,

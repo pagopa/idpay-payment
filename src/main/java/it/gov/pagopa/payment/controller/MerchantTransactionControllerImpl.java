@@ -2,10 +2,12 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.service.MerchantTransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -61,12 +63,23 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
         String sanitizedMerchantId = sanitize(merchantId);
         logRequest(LOG_GET_MERCHANT_TRANSACTIONS_PROCESSED, sanitizedMerchantId);
 
+        String sanitizedStatus = sanitize(status);
+        List<String> processedStatuses;
+
+        // Se lo status è valido, filtra solo per quello, altrimenti applica la lista di default
+        if (StringUtils.hasText(sanitizedStatus) &&
+                TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.contains(sanitizedStatus.toUpperCase())) {
+            processedStatuses = List.of(sanitizedStatus.toUpperCase());
+        } else {
+            processedStatuses = TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES;
+        }
+
         return merchantTransactionService.getMerchantTransactionsProcessed(
                 sanitizedMerchantId,
                 sanitize(organizationRole),
                 sanitize(initiativeId),
                 sanitize(fiscalCode),
-                sanitize(status),
+                processedStatuses,
                 sanitize(rewardBatchId),
                 sanitize(rewardBatchTrxStatus),
                 sanitize(pointOfSaleId),

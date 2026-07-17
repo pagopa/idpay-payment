@@ -13,6 +13,7 @@ import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -49,17 +50,17 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
             String trxCode,
             Pageable pageable) {
 
-        return retrievePointOfSaleTransactions(
+        TrxFiltersDTO filters = buildSanitizedFilters(
                 merchantId,
-                tokenPointOfSaleId,
                 initiativeId,
                 pointOfSaleId,
                 productGtin,
                 fiscalCode,
-                status,
-                trxCode,
-                pageable
+                status != null ? List.of(sanitize(status)) : null,
+                trxCode
         );
+
+        return executeGetTransactions(filters, tokenPointOfSaleId, pageable);
     }
 
     @Override
@@ -75,17 +76,27 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
             String trxCode,
             Pageable pageable) {
 
-        return retrievePointOfSaleTransactions(
+        String sanitizedStatus = sanitize(status);
+        List<String> processedStatuses;
+
+        if (StringUtils.hasText(sanitizedStatus) &&
+                TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.contains(sanitizedStatus.toUpperCase())) {
+            processedStatuses = List.of(sanitizedStatus.toUpperCase());
+        } else {
+            processedStatuses = TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES;
+        }
+
+        TrxFiltersDTO filters = buildSanitizedFilters(
                 merchantId,
-                tokenPointOfSaleId,
                 initiativeId,
                 pointOfSaleId,
                 productGtin,
                 fiscalCode,
-                status,
-                trxCode,
-                pageable
+                processedStatuses,
+                trxCode
         );
+
+        return executeGetTransactions(filters, tokenPointOfSaleId, pageable);
     }
 
     @Override
@@ -114,26 +125,11 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         );
     }
 
-    private PointOfSaleTransactionsListDTO retrievePointOfSaleTransactions(
-            String merchantId,
+    private PointOfSaleTransactionsListDTO executeGetTransactions(
+            TrxFiltersDTO filters,
             String tokenPointOfSaleId,
-            String initiativeId,
-            String pointOfSaleId,
-            String productGtin,
-            String fiscalCode,
-            String status,
-            String trxCode,
             Pageable pageable) {
 
-        TrxFiltersDTO filters = buildSanitizedFilters(
-                merchantId,
-                initiativeId,
-                pointOfSaleId,
-                productGtin,
-                fiscalCode,
-                status,
-                trxCode
-        );
         String sanitizedTokenPointOfSaleId = sanitize(tokenPointOfSaleId);
 
         log.info("{} Point Of Sale {} requested to retrieve transactions",
@@ -152,7 +148,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
             String pointOfSaleId,
             String productGtin,
             String fiscalCode,
-            String status,
+            List<String> statuses,
             String trxCode) {
 
         TrxFiltersDTO filters = new TrxFiltersDTO();
@@ -161,7 +157,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         filters.setPointOfSaleId(sanitize(pointOfSaleId));
         filters.setProductGtin(sanitize(productGtin));
         filters.setFiscalCode(sanitize(fiscalCode));
-        filters.setStatus(sanitize(status));
+        filters.setStatuses(statuses);
         filters.setTrxCode(sanitize(trxCode));
         return filters;
     }

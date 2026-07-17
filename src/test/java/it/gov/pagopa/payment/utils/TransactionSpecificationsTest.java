@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -166,7 +167,7 @@ class TransactionSpecificationsTest {
     @Test
     void buildSpecification_combinesAllFilters() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
-        filters.setStatus("REWARDED");
+        filters.setStatuses(List.of("REWARDED"));
         filters.setTrxCode("CODE123");
         filters.setMerchantId("MERCH1");
         filters.setInitiativeId("INIT1");

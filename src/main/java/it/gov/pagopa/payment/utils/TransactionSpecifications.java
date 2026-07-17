@@ -9,12 +9,14 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 public final class TransactionSpecifications {
 
@@ -75,7 +77,7 @@ public final class TransactionSpecifications {
 
     public static Specification<Transaction> buildSpecification(TrxFiltersDTO filters, String encryptedUserId) {
         return Specification
-                .where(hasStatus(filters.getStatus()))
+                .where(hasStatuses(filters.getStatuses()))
                 .and(hasTrxCode(filters.getTrxCode()))
                 .and(hasMerchantId(filters.getMerchantId()))
                 .and(hasInitiativeId(filters.getInitiativeId()))
@@ -96,7 +98,32 @@ public final class TransactionSpecifications {
             addTextPredicate(predicates, root, cb, "pointOfSaleId", filters.getPointOfSaleId());
             addTextPredicate(predicates, root, cb, "trxCode", filters.getTrxCode());
             addTextPredicate(predicates, root, cb, "rewardBatchId", filters.getRewardBatchId());
-            addTextPredicate(predicates, root, cb, "status", filters.getStatus());
+
+            if (!CollectionUtils.isEmpty(filters.getStatuses())) {
+                List<SyncTrxStatus> statusEnums = filters.getStatuses().stream()
+                        .map(s -> {
+                            try {
+                                return SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT));
+                            } catch (IllegalArgumentException e) {
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull)
+                        .toList();
+
+                if (!statusEnums.isEmpty()) {
+                    predicates.add(root.get("status").in(statusEnums));
+                } else {
+                    predicates.add(cb.disjunction());
+                }
+            } else if (StringUtils.hasText(filters.getStatus())) {
+                try {
+                    SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(filters.getStatus().toUpperCase(Locale.ROOT));
+                    predicates.add(cb.equal(root.get("status"), statusEnum));
+                } catch (IllegalArgumentException e) {
+                    predicates.add(cb.disjunction());
+                }
+            }
 
             if (filters.getRewardBatchTrxStatus() != null) {
                 Path<String> statusField = root.get("rewardBatchStatusTrx");
@@ -110,6 +137,22 @@ public final class TransactionSpecifications {
                 }
             }
             return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    public static Specification<Transaction> hasStatuses(List<String> statuses) {
+        return (root, query, cb) -> {
+            if (CollectionUtils.isEmpty(statuses)) {
+                return cb.conjunction();
+            }
+            try {
+                List<SyncTrxStatus> statusEnums = statuses.stream()
+                        .map(s -> SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT)))
+                        .toList();
+                return root.get("status").in(statusEnums);
+            } catch (IllegalArgumentException e) {
+                return cb.disjunction();
+            }
         };
     }
 

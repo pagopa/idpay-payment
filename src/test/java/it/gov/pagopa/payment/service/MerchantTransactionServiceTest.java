@@ -211,7 +211,7 @@ class MerchantTransactionServiceTest {
 
         // When
         MerchantTransactionsListDTO result = service.getMerchantTransactionsProcessed(
-                merchantId, "ADMIN", initiativeId, fiscalCode, "AUTHORIZED",
+                merchantId, "ADMIN", initiativeId, fiscalCode, List.of("AUTHORIZED"),
                 "BATCH_1", "TO_CHECK", "POS_1", "TRX_CODE_1", pageable
         );
 

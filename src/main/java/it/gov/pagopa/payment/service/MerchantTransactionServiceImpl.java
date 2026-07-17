@@ -92,7 +92,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String organizationRole,
             String initiativeId,
             String fiscalCode,
-            String status,
+            List<String> statuses,
             String rewardBatchId,
             String rewardBatchTrxStatus,
             String pointOfSaleId,
@@ -104,7 +104,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         RewardBatchTrxStatus parsedStatus = parseRewardBatchTrxStatus(rewardBatchTrxStatus);
 
         TrxFiltersDTO filters = buildProcessedFilters(
-                merchantId, initiativeId, userId, status, rewardBatchId,
+                merchantId, initiativeId, userId, statuses, rewardBatchId,
                 parsedStatus, pointOfSaleId, trxCode, organizationRole
         );
 
@@ -262,7 +262,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String merchantId,
             String initiativeId,
             String userId,
-            String status,
+            List<String> statuses,
             String rewardBatchId,
             RewardBatchTrxStatus rewardBatchTrxStatus,
             String pointOfSaleId,
@@ -273,7 +273,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         filters.setMerchantId(merchantId);
         filters.setInitiativeId(initiativeId);
         filters.setUserId(userId);
-        filters.setStatus(status);
+        filters.setStatuses(statuses);
         filters.setRewardBatchId(rewardBatchId);
         filters.setRewardBatchTrxStatus(rewardBatchTrxStatus);
         filters.setPointOfSaleId(pointOfSaleId);
