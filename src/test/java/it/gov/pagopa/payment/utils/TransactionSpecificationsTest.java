@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,9 +45,27 @@ class TransactionSpecificationsTest {
         lenient().when(root.get(any(String.class))).thenReturn(path);
     }
 
-    // =========================================================================
-    // 2. TEST: findByRangeFilters
-    // =========================================================================
+    @Test
+    void findByInitiativeAndUser_success() {
+        String initiativeId = "INIT_1";
+        String userId = "USER_1";
+
+        Predicate eqUser = mock(Predicate.class);
+        Predicate eqInit = mock(Predicate.class);
+        Predicate finalAnd = mock(Predicate.class);
+
+        when(cb.equal(root.get("userId"), userId)).thenReturn(eqUser);
+        when(cb.equal(root.get("initiativeId"), initiativeId)).thenReturn(eqInit);
+        when(cb.and(any(Predicate[].class))).thenReturn(finalAnd);
+
+        Specification<Transaction> spec = TransactionSpecifications.findByInitiativeAndUser(initiativeId, userId);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertNotNull(result);
+        assertEquals(finalAnd, result);
+    }
+
+
     @Test
     void findByRangeFilters_withAmount_generatesAllPredicates() {
         String userId = "USER_1";
@@ -83,13 +102,10 @@ class TransactionSpecificationsTest {
         Specification<Transaction> spec = TransactionSpecifications.findByRangeFilters(userId, start, end, null);
         spec.toPredicate(root, query, cb);
 
-        // Verifica che "amountCents" non sia mai stato richiesto al root
         verify(root, never()).get("amountCents");
     }
 
-    // =========================================================================
-    // 3. TEST: findByIssuerFilters
-    // =========================================================================
+
     @Test
     void findByIssuerFilters_withAllParameters() {
         String issuer = "ISSUER_1";
@@ -135,9 +151,17 @@ class TransactionSpecificationsTest {
         verify(cb).lessThanOrEqualTo(any(), eq(end));
     }
 
-    // =========================================================================
-    // 4. TEST: buildSpecification (Chiamate concatenate delle specifiche singole)
-    // =========================================================================
+    @Test
+    void findByIssuerFilters_withoutDatesOrUser() {
+        Predicate finalAnd = mock(Predicate.class);
+        when(cb.and(any(Predicate[].class))).thenReturn(finalAnd);
+
+        Specification<Transaction> spec = TransactionSpecifications.findByIssuerFilters("ISSUER_1", "", null, null, null);
+        spec.toPredicate(root, query, cb);
+
+        verify(root, never()).get("userId");
+    }
+
     @Test
     void buildSpecification_combinesAllFilters() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
@@ -151,15 +175,9 @@ class TransactionSpecificationsTest {
         filters.setProductGtin("GTIN123");
 
         Specification<Transaction> spec = TransactionSpecifications.buildSpecification(filters, "ENCRYPTED_FC");
-
-        // buildSpecification concatena con .and() / .where()
-        // Verifichiamo che non sia nullo (la logica di combinazione è gestita internamente da Spring Data JPA)
         assertNotNull(spec);
     }
 
-    // =========================================================================
-    // 5. TEST: getFilters
-    // =========================================================================
     @Test
     void getFilters_withIncludeToCheckWithConsultable_true() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
@@ -189,9 +207,84 @@ class TransactionSpecificationsTest {
         verify(cb).equal(path, RewardBatchTrxStatus.CONSULTABLE.name());
     }
 
-    // =========================================================================
-    // 6. TEST: Specifiche di base (hasStatus, hasProductGtin, ecc.)
-    // =========================================================================
+    @Test
+    void getFilters_withStatusesList() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setStatuses(List.of("REWARDED", "INVALID_ENUM_SHOULD_BE_FILTERED"));
+
+        CriteriaBuilder.In<Object> mockIn = mock(CriteriaBuilder.In.class);
+        when(path.in(any(List.class))).thenReturn(mockIn);
+
+        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        spec.toPredicate(root, query, cb);
+
+        verify(root).get("status");
+    }
+
+    @Test
+    void getFilters_withStatusesListAllInvalid_returnsDisjunction() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setStatuses(List.of("INVALID_STATUS_A", "INVALID_STATUS_B"));
+
+        Predicate disjunction = mock(Predicate.class);
+        when(cb.disjunction()).thenReturn(disjunction);
+
+        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).disjunction();
+    }
+
+
+    @Test
+    void getFilters_withSingleStatusInvalid_returnsDisjunction() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setStatuses(List.of("UNKNOWN_STATUS"));
+
+        Predicate disjunction = mock(Predicate.class);
+        when(cb.disjunction()).thenReturn(disjunction);
+
+        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).disjunction();
+    }
+
+    @Test
+    void hasStatuses_validStatuses_returnsInPredicate() {
+        List<String> statuses = List.of("REWARDED", "AUTHORIZED");
+        CriteriaBuilder.In<Object> mockIn = mock(CriteriaBuilder.In.class);
+        when(path.in(any(List.class))).thenReturn(mockIn);
+
+        Specification<Transaction> spec = TransactionSpecifications.hasStatuses(statuses);
+        spec.toPredicate(root, query, cb);
+
+        verify(root).get("status");
+    }
+
+    @Test
+    void hasStatuses_invalidStatuses_returnsDisjunction() {
+        List<String> statuses = List.of("NOT_A_STATUS");
+        Predicate disjunction = mock(Predicate.class);
+        when(cb.disjunction()).thenReturn(disjunction);
+
+        Specification<Transaction> spec = TransactionSpecifications.hasStatuses(statuses);
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(disjunction, result);
+    }
+
+    @Test
+    void hasStatuses_emptyStatuses_returnsConjunction() {
+        Predicate conjunction = mock(Predicate.class);
+        when(cb.conjunction()).thenReturn(conjunction);
+
+        Specification<Transaction> spec = TransactionSpecifications.hasStatuses(Collections.emptyList());
+        Predicate result = spec.toPredicate(root, query, cb);
+
+        assertEquals(conjunction, result);
+    }
+
     @Test
     void hasStatus_validStatus_returnsEqualPredicate() {
         Specification<Transaction> spec = TransactionSpecifications.hasStatus("REWARDED");
@@ -220,6 +313,108 @@ class TransactionSpecificationsTest {
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertEquals(conjunction, result);
+    }
+
+    @Test
+    void hasTrxCode_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasTrxCode("TX123");
+        spec.toPredicate(root, query, cb);
+        verify(cb).equal(path, "TX123");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasTrxCode("");
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasMerchantId_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasMerchantId("M1");
+        spec.toPredicate(root, query, cb);
+        verify(cb).equal(path, "M1");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasMerchantId(null);
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasInitiativeId_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasInitiativeId("I1");
+        spec.toPredicate(root, query, cb);
+        verify(cb).equal(path, "I1");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasInitiativeId(" ");
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasFiscalCode_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasFiscalCode("FC123");
+        spec.toPredicate(root, query, cb);
+        verify(root).get("merchantFiscalCode");
+        verify(cb).equal(path, "FC123");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasFiscalCode(null);
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasRewardBatchId_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasRewardBatchId("B1");
+        spec.toPredicate(root, query, cb);
+        verify(cb).equal(path, "B1");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasRewardBatchId("");
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasRewardBatchTrxStatus_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
+        spec.toPredicate(root, query, cb);
+        verify(cb).equal(path, "CONSULTABLE");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasRewardBatchTrxStatus(null);
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasPointOfSaleId_validAndEmpty() {
+        Specification<Transaction> spec = TransactionSpecifications.hasPointOfSaleId("POS1");
+        spec.toPredicate(root, query, cb);
+        verify(cb).equal(path, "POS1");
+
+        reset(cb);
+        Specification<Transaction> specEmpty = TransactionSpecifications.hasPointOfSaleId(null);
+        specEmpty.toPredicate(root, query, cb);
+        verify(cb).conjunction();
+    }
+
+    @Test
+    void hasProductGtin_validValue_returnsFunctionCall() {
+        Expression<String> mockFunction = mock(Expression.class);
+        when(cb.function(eq("jsonb_extract_path_text"), eq(String.class), any(), any())).thenReturn(mockFunction);
+
+        Specification<Transaction> spec = TransactionSpecifications.hasProductGtin("GTIN_999");
+        spec.toPredicate(root, query, cb);
+
+        verify(cb).function(
+                eq("jsonb_extract_path_text"),
+                eq(String.class),
+                eq(path),
+                any()
+        );
+        verify(cb).equal(mockFunction, "GTIN_999");
     }
 
     @Test

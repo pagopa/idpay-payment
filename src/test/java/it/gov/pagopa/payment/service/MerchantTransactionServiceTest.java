@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
+import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.test.fakers.MerchantTransactionDTOFaker;
@@ -18,6 +19,8 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -27,9 +30,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -60,9 +66,6 @@ class MerchantTransactionServiceTest {
         );
     }
 
-    // ==========================================
-    // TEST METODI ESISTENTI (getMerchantTransactions)
-    // ==========================================
 
     @Test
     void getMerchantTransactionList() {
@@ -183,13 +186,9 @@ class MerchantTransactionServiceTest {
         TestUtils.checkNotNullFields(result);
     }
 
-    // ==========================================
-    // TEST NUOVI METODI (getMerchantTransactionsProcessed)
-    // ==========================================
 
     @Test
     void getMerchantTransactionsProcessed_success() {
-        // Given
         String merchantId = "MERCHANT_1";
         String initiativeId = "INITIATIVE_1";
         String fiscalCode = "FISCAL_CODE";
@@ -203,47 +202,80 @@ class MerchantTransactionServiceTest {
         transaction.setStatus(SyncTrxStatus.AUTHORIZED);
         transaction.setRewardBatchStatusTrx(RewardBatchTrxStatus.TO_CHECK.name());
 
+        Map<String, Reward> rewards = new HashMap<>();
+        Reward reward = new Reward();
+        reward.setAccruedRewardCents(150L);
+        rewards.put(initiativeId, reward);
+        transaction.setRewards(rewards);
+
         Page<Transaction> transactionPage = new PageImpl<>(List.of(transaction), pageable, 1);
 
         when(encryptRestConnector.upsertToken(any())).thenReturn(new EncryptedCfDTO(encryptedUserId));
         when(transactionService.getMerchantTransactionByFilter(any(TrxFiltersDTO.class), any(Pageable.class)))
                 .thenReturn(transactionPage);
 
-        // When
         MerchantTransactionsListDTO result = service.getMerchantTransactionsProcessed(
                 merchantId, "ADMIN", initiativeId, fiscalCode, "AUTHORIZED",
                 "BATCH_1", "TO_CHECK", "POS_1", "TRX_CODE_1", pageable
         );
 
-        // Then
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         MerchantTransactionDTO dto = result.getContent().getFirst();
         assertEquals("TX_ID_1", dto.getTrxId());
         assertEquals(RewardBatchTrxStatus.CONSULTABLE, dto.getRewardBatchTrxStatus());
+        assertEquals(150L, dto.getRewardAmountCents());
+        assertEquals(850L, dto.getAuthorizedAmountCents());
     }
 
     @Test
-    void getMerchantTransactionsProcessed_withExcludedOperator() {
-        // Given
-        String merchantId = "MERCHANT_1";
-        String initiativeId = "INITIATIVE_1";
+    void getMerchantTransactionsProcessed_withNullFieldsAndMissingRewards() {
         Pageable pageable = PageRequest.of(0, 10);
-
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transaction.setPointOfSaleId(null);
+        transaction.setFranchiseName(null);
+        transaction.setRewards(null);
+        transaction.setTrxDate(null);
+        transaction.setRewardBatchStatusTrx(null);
 
         Page<Transaction> transactionPage = new PageImpl<>(List.of(transaction), pageable, 1);
 
         when(transactionService.getMerchantTransactionByFilter(any(TrxFiltersDTO.class), any(Pageable.class)))
                 .thenReturn(transactionPage);
 
-        // When - "operator1" è un ruolo escluso (hasAccessToAllStatuses restituirà false)
+        MerchantTransactionsListDTO result = service.getMerchantTransactionsProcessed(
+                "M1", "ADMIN", "I1", null, null,
+                null, null, null, null, pageable
+        );
+
+        assertNotNull(result);
+        MerchantTransactionDTO dto = result.getContent().getFirst();
+        assertEquals("-", dto.getPointOfSaleId());
+        assertEquals("-", dto.getFranchiseName());
+        assertEquals(0L, dto.getRewardAmountCents());
+        assertEquals(LocalDateTime.MIN, dto.getTrxDate());
+        assertNull(dto.getRewardBatchTrxStatus());
+    }
+
+    @Test
+    void getMerchantTransactionsProcessed_withExcludedOperator() {
+        String merchantId = "MERCHANT_1";
+        String initiativeId = "INITIATIVE_1";
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        transaction.setRewardBatchStatusTrx(RewardBatchTrxStatus.TO_CHECK.name());
+
+        Page<Transaction> transactionPage = new PageImpl<>(List.of(transaction), pageable, 1);
+
+        when(transactionService.getMerchantTransactionByFilter(any(TrxFiltersDTO.class), any(Pageable.class)))
+                .thenReturn(transactionPage);
+
         MerchantTransactionsListDTO result = service.getMerchantTransactionsProcessed(
                 merchantId, "operator1", initiativeId, null, null,
                 null, null, null, null, pageable
         );
 
-        // Then
         assertNotNull(result);
         MerchantTransactionDTO dto = result.getContent().getFirst();
         assertEquals(RewardBatchTrxStatus.TO_CHECK, dto.getRewardBatchTrxStatus());
@@ -251,34 +283,47 @@ class MerchantTransactionServiceTest {
 
     @Test
     void getMerchantTransactionsProcessed_invalidRewardStatus_throwsException() {
-        // When & Then
+        PageRequest pageable = PageRequest.of(0, 10);
+
         ResponseStatusException exception = assertThrows(ResponseStatusException.class, () ->
                 service.getMerchantTransactionsProcessed(
                         "M1", "ADMIN", "I1", null, null,
-                        null, "INVALID_STATUS", null, null, PageRequest.of(0, 10)
+                        null, "INVALID_STATUS", null, null, pageable
                 )
         );
+
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         assertTrue(exception.getReason().contains("Invalid rewardBatchTrxStatus value"));
     }
 
     @Test
+    void getMerchantTransactionsProcessed_invalidTrxStatus_throwsException() {
+        PageRequest pageable = PageRequest.of(0, 10);
+
+        TransactionMissingParametersException exception = assertThrows(TransactionMissingParametersException.class, () ->
+                service.getMerchantTransactionsProcessed(
+                        "M1", "ADMIN", "I1", null, "INVALID_TRX_STATUS",
+                        null, null, null, null, pageable
+                )
+        );
+
+        assertEquals("STATUS_NOT_ALLOWED", exception.getCode());
+    }
+
+    @Test
     void getProcessedTransactionStatuses_allStatuses_whenRoleHasAccess() {
-        // When
         List<String> statuses = service.getProcessedTransactionStatuses("ADMIN");
 
-        // Then
         assertNotNull(statuses);
         assertTrue(statuses.contains("TO_CHECK"));
         assertEquals(RewardBatchTrxStatus.values().length, statuses.size());
     }
 
-    @Test
-    void getProcessedTransactionStatuses_excludeToCheck_whenOperatorExcluded() {
-        // When - "operator2" è nella blacklist EXCLUDED_OPERATORS
-        List<String> statuses = service.getProcessedTransactionStatuses("operator2");
+    @ParameterizedTest
+    @ValueSource(strings = {"operator1", "operator2", "operator3", "OPERATOR1"})
+    void getProcessedTransactionStatuses_excludeToCheck_whenOperatorExcluded(String role) {
+        List<String> statuses = service.getProcessedTransactionStatuses(role);
 
-        // Then
         assertNotNull(statuses);
         assertFalse(statuses.contains("TO_CHECK"));
         assertEquals(RewardBatchTrxStatus.values().length - 1, statuses.size());

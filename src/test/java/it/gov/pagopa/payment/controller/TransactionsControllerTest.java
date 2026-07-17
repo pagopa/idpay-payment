@@ -42,7 +42,6 @@ class TransactionsControllerImplTest {
         Pageable pageable = PageRequest.of(0, 10);
         List<Transaction> expectedTransactions = List.of(new Transaction());
 
-        // Simuliamo il comportamento del service
         when(transactionService.findAll(
                 ID_TRX_ISSUER,
                 USER_ID,
@@ -52,7 +51,6 @@ class TransactionsControllerImplTest {
                 pageable
         )).thenReturn(expectedTransactions);
 
-        // Mocking statico di Utilities (se necessario, altrimenti esegue il codice reale di Utilities)
         try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
             utilitiesMock.when(() -> Utilities.sanitizeString(ID_TRX_ISSUER)).thenReturn(ID_TRX_ISSUER);
             utilitiesMock.when(() -> Utilities.sanitizeString(USER_ID)).thenReturn(USER_ID);
@@ -72,7 +70,6 @@ class TransactionsControllerImplTest {
             assertEquals(1, result.size());
             assertEquals(expectedTransactions, result);
 
-            // Verifichiamo che il service sia stato chiamato con i parametri corretti (e sanitizzati)
             verify(transactionService, times(1)).findAll(
                     ID_TRX_ISSUER,
                     USER_ID,

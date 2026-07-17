@@ -20,7 +20,6 @@ import java.util.Objects;
 
 public final class TransactionSpecifications {
 
-    // Costanti per eliminare le duplicazioni dei letterali (Sonar)
     private static final String FIELD_USER_ID = "userId";
     private static final String FIELD_TRX_DATE = "trxDate";
     private static final String FIELD_STATUS = "status";
@@ -111,7 +110,6 @@ public final class TransactionSpecifications {
             addTextPredicate(predicates, root, cb, FIELD_TRX_CODE, filters.getTrxCode());
             addTextPredicate(predicates, root, cb, FIELD_REWARD_BATCH_ID, filters.getRewardBatchId());
 
-            // Gestione dello stato delegata per abbassare la complessità
             handleStatusFilters(predicates, root, cb, filters);
 
             if (filters.getRewardBatchTrxStatus() != null) {

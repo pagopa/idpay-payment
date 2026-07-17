@@ -9,7 +9,6 @@ import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

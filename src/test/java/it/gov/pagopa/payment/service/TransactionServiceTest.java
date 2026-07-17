@@ -56,10 +56,6 @@ class TransactionServiceImplTest {
         specificationsMockedStatic.close();
     }
 
-    // =========================================================================
-    // TEST: getTransactionsByFilters
-    // =========================================================================
-
     @Test
     void getTransactionsByFilters_success() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
@@ -82,19 +78,36 @@ class TransactionServiceImplTest {
     }
 
     @Test
+    void getTransactionsByFilters_successWithNullFiscalCode() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setFiscalCode(null);
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Specification<Transaction> dummySpec = mock(Specification.class);
+        Page<Transaction> expectedPage = new PageImpl<>(List.of(new Transaction()));
+
+        specificationsMockedStatic.when(() -> TransactionSpecifications.buildSpecification(filters, null))
+                .thenReturn(dummySpec);
+        when(transactionRepository.findAll(dummySpec, pageable)).thenReturn(expectedPage);
+
+        Page<Transaction> result = transactionService.getTransactionsByFilters(filters, pageable);
+
+        assertNotNull(result);
+        verifyNoInteractions(pdvService);
+    }
+
+    @Test
     void getTransactionsByFilters_nullFilters_throwsException() {
+        Pageable pageable = Pageable.unpaged();
+
         TransactionMissingParametersException exception = assertThrows(
                 TransactionMissingParametersException.class,
-                () -> transactionService.getTransactionsByFilters(null, Pageable.unpaged())
+                () -> transactionService.getTransactionsByFilters(null, pageable)
         );
 
         assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
         assertTrue(exception.getMessage().contains("Missing mandatory filters: filters"));
     }
-
-    // =========================================================================
-    // TEST: getTransactionByIdAndMerchantId
-    // =========================================================================
 
     @Test
     void getTransactionByIdAndMerchantId_success() {
@@ -114,7 +127,31 @@ class TransactionServiceImplTest {
     }
 
     @Test
-    void getTransactionByIdAndMerchantId_missingParameters_throwsException() {
+    void getTransactionByIdAndMerchantId_missingTransactionId_throwsException() {
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.getTransactionByIdAndMerchantId(" ", "M_1")
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertTrue(exception.getMessage().contains("transactionId"));
+        assertFalse(exception.getMessage().contains("merchantId"));
+    }
+
+    @Test
+    void getTransactionByIdAndMerchantId_missingMerchantId_throwsException() {
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.getTransactionByIdAndMerchantId("TX_1", "")
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertFalse(exception.getMessage().contains("transactionId"));
+        assertTrue(exception.getMessage().contains("merchantId"));
+    }
+
+    @Test
+    void getTransactionByIdAndMerchantId_missingBothParameters_throwsException() {
         TransactionMissingParametersException exception = assertThrows(
                 TransactionMissingParametersException.class,
                 () -> transactionService.getTransactionByIdAndMerchantId("", null)
@@ -141,10 +178,6 @@ class TransactionServiceImplTest {
 
         assertTrue(exception.getMessage().contains(txId));
     }
-
-    // =========================================================================
-    // TEST: findAll (Regole di instradamento e validazione complessa)
-    // =========================================================================
 
     @Test
     void findAll_routeTo_findByIdTrxIssuer() {
@@ -186,15 +219,14 @@ class TransactionServiceImplTest {
 
     @Test
     void findAll_missingUserIdAndRange_throwsDynamicException() {
-        // Nessun parametro compilato: deve segnalare che mancano i filtri minimi sia del Flusso 1 che del Flusso 2
+        Pageable pageable = Pageable.unpaged();
+
         TransactionMissingParametersException exception = assertThrows(
                 TransactionMissingParametersException.class,
-                () -> transactionService.findAll(null, null, null, null, null, Pageable.unpaged())
+                () -> transactionService.findAll(null, null, null, null, null, pageable)
         );
 
         assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
-        // Se non viene specificato idTrxIssuer, si aspetta i dati del Flusso 2.
-        // Se mancano tutti e 3 (userId, start, end) l'eccezione dinamica li inserisce tutti, incluso "idTrxIssuer" come alternativa
         assertTrue(exception.getMessage().contains("idTrxIssuer"));
         assertTrue(exception.getMessage().contains("userId"));
         assertTrue(exception.getMessage().contains("trxDateStart"));
@@ -202,22 +234,70 @@ class TransactionServiceImplTest {
     }
 
     @Test
-    void findAll_partialRangeProvided_throwsDynamicException() {
-        // userId presente, ma mancano le date
+    void findAll_partialRangeMissingDates_throwsDynamicException() {
+        Pageable pageable = Pageable.unpaged();
+
         TransactionMissingParametersException exception = assertThrows(
                 TransactionMissingParametersException.class,
-                () -> transactionService.findAll(null, "USER_123", null, null, null, Pageable.unpaged())
+                () -> transactionService.findAll(null, "USER_123", null, null, null, pageable)
         );
 
         assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
-        assertFalse(exception.getMessage().contains("userId")); // userId c'è, quindi non dev'essere segnalato
+        assertFalse(exception.getMessage().contains("idTrxIssuer"));
+        assertFalse(exception.getMessage().contains("userId"));
         assertTrue(exception.getMessage().contains("trxDateStart"));
         assertTrue(exception.getMessage().contains("trxDateEnd"));
     }
 
-    // =========================================================================
-    // TEST: findByInitiativeIdAndUserId
-    // =========================================================================
+    @Test
+    void findAll_partialRangeMissingUserId_throwsDynamicException() {
+        Pageable pageable = Pageable.unpaged();
+        LocalDateTime start = LocalDateTime.now().minusDays(1);
+        LocalDateTime end = LocalDateTime.now();
+
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.findAll(null, " ", start, end, null, pageable)
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertFalse(exception.getMessage().contains("idTrxIssuer"));
+        assertTrue(exception.getMessage().contains("userId"));
+        assertFalse(exception.getMessage().contains("trxDateStart"));
+        assertFalse(exception.getMessage().contains("trxDateEnd"));
+    }
+
+    @Test
+    void findAll_partialRangeMissingStart_throwsDynamicException() {
+        Pageable pageable = Pageable.unpaged();
+        LocalDateTime end = LocalDateTime.now();
+
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.findAll("", "USER_123", null, end, null, pageable)
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertTrue(exception.getMessage().contains("trxDateStart"));
+        assertFalse(exception.getMessage().contains("userId"));
+        assertFalse(exception.getMessage().contains("trxDateEnd"));
+    }
+
+    @Test
+    void findAll_partialRangeMissingEnd_throwsDynamicException() {
+        Pageable pageable = Pageable.unpaged();
+        LocalDateTime start = LocalDateTime.now().minusDays(1);
+
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.findAll(null, "USER_123", start, null, null, pageable)
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertFalse(exception.getMessage().contains("userId"));
+        assertFalse(exception.getMessage().contains("trxDateStart"));
+        assertTrue(exception.getMessage().contains("trxDateEnd"));
+    }
 
     @Test
     void findByInitiativeIdAndUserId_success() {
@@ -237,20 +317,40 @@ class TransactionServiceImplTest {
     }
 
     @Test
-    void findByInitiativeIdAndUserId_missingParameters_throwsException() {
+    void findByInitiativeIdAndUserId_missingInitiativeId_throwsException() {
         TransactionMissingParametersException exception = assertThrows(
                 TransactionMissingParametersException.class,
-                () -> transactionService.findByInitiativeIdAndUserId("", " ")
+                () -> transactionService.findByInitiativeIdAndUserId("", "USER_1")
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertTrue(exception.getMessage().contains("initiativeId"));
+        assertFalse(exception.getMessage().contains("userId"));
+    }
+
+    @Test
+    void findByInitiativeIdAndUserId_missingUserId_throwsException() {
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.findByInitiativeIdAndUserId("INIT_1", "   ")
+        );
+
+        assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
+        assertFalse(exception.getMessage().contains("initiativeId"));
+        assertTrue(exception.getMessage().contains("userId"));
+    }
+
+    @Test
+    void findByInitiativeIdAndUserId_missingBothParameters_throwsException() {
+        TransactionMissingParametersException exception = assertThrows(
+                TransactionMissingParametersException.class,
+                () -> transactionService.findByInitiativeIdAndUserId("", null)
         );
 
         assertEquals(TRANSACTIONS_MISSING_MANDATORY_FILTERS, exception.getCode());
         assertTrue(exception.getMessage().contains("initiativeId"));
         assertTrue(exception.getMessage().contains("userId"));
     }
-
-    // =========================================================================
-    // TEST: getMerchantTransactionByFilter
-    // =========================================================================
 
     @Test
     void getMerchantTransactionByFilter_success() {
@@ -270,5 +370,23 @@ class TransactionServiceImplTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(pdvService, times(1)).encryptCF("CF_456");
+    }
+
+    @Test
+    void getMerchantTransactionByFilter_successWithBlankFiscalCode() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setFiscalCode("");
+        Pageable pageable = PageRequest.of(0, 10);
+        Specification<Transaction> dummySpec = mock(Specification.class);
+        Page<Transaction> expectedPage = new PageImpl<>(Collections.emptyList());
+
+        specificationsMockedStatic.when(() -> TransactionSpecifications.getFilters(filters, null))
+                .thenReturn(dummySpec);
+        when(transactionRepository.findAll(dummySpec, pageable)).thenReturn(expectedPage);
+
+        Page<Transaction> result = transactionService.getMerchantTransactionByFilter(filters, pageable);
+
+        assertNotNull(result);
+        verifyNoInteractions(pdvService);
     }
 }

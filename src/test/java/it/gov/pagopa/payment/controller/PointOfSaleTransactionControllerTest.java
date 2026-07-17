@@ -67,7 +67,7 @@ class PointOfSaleTransactionControllerTest {
         Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
         when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
-                        any(), any()))
+                any(), any()))
                 .thenReturn(trxPage);
 
         PointOfSaleTransactionDTO pointOfSaleTransactionDTO = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -98,8 +98,8 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(1, actual.getTotalElements());
         Assertions.assertEquals(1, actual.getTotalPages());
         Assertions.assertEquals(1, actual.getContent().size());
-        Assertions.assertEquals(trx.getTrxCode(), actual.getContent().get(0).getTrxCode());
-        Assertions.assertEquals(FISCAL_CODE, actual.getContent().get(0).getFiscalCode());
+        Assertions.assertEquals(trx.getTrxCode(), actual.getContent().getFirst().getTrxCode());
+        Assertions.assertEquals(FISCAL_CODE, actual.getContent().getFirst().getFiscalCode());
 
         ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
         verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(
@@ -113,154 +113,176 @@ class PointOfSaleTransactionControllerTest {
         verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
     }
 
-  @Test
-  void getPointOfSaleTransactionsList_unauthorizedPointOfSale_shouldReturn403() throws Exception {
-    MvcResult result = mockMvc.perform(
-            get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
-                INITIATIVE_ID, POINT_OF_SALE_ID)
-                .header("x-merchant-id", MERCHANT_ID)
-                .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
-                .param("fiscalCode", FISCAL_CODE)
-                .param("page", "1")
-                .param("size", "10")
-                .param("status", SyncTrxStatus.AUTHORIZED.toString())
-                .param("productGtin", PRODUCT_GTIN)
-        )
-        .andExpect(status().isForbidden())
-        .andReturn();
+    @Test
+    void getPointOfSaleTransactionsList_unauthorizedPointOfSale_shouldReturn403() throws Exception {
+        MvcResult result = mockMvc.perform(
+                        get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
+                                INITIATIVE_ID, POINT_OF_SALE_ID)
+                                .header("x-merchant-id", MERCHANT_ID)
+                                .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
+                                .param("fiscalCode", FISCAL_CODE)
+                                .param("page", "1")
+                                .param("size", "10")
+                                .param("status", SyncTrxStatus.AUTHORIZED.toString())
+                                .param("productGtin", PRODUCT_GTIN)
+                )
+                .andExpect(status().isForbidden())
+                .andReturn();
 
-    String content = result.getResponse().getContentAsString();
-    Assertions.assertTrue(content.contains("Point of sale mismatch"));
-  }
+        String content = result.getResponse().getContentAsString();
+        Assertions.assertTrue(content.contains("Point of sale mismatch"));
+    }
 
-  @Test
-  void getPointOfSaleTransactionsList_withoutPointOfSaleHeader() throws Exception {
-    Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    PageRequest pageRequest = PageRequest.of(0, 10);
-    Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
+    @Test
+    void getPointOfSaleTransactionsList_withoutPointOfSaleHeader() throws Exception {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
-    when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
-            any(), any()))
-        .thenReturn(trxPage);
+        when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
+                any(), any()))
+                .thenReturn(trxPage);
 
-    PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    dto.setFiscalCode(FISCAL_CODE);
+        PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        dto.setFiscalCode(FISCAL_CODE);
 
-    when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
-        .thenReturn(dto);
+        when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
+                .thenReturn(dto);
 
-    MvcResult result = mockMvc.perform(
-        get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
-            INITIATIVE_ID, POINT_OF_SALE_ID)
-            .header("x-merchant-id", MERCHANT_ID)
-            .param("fiscalCode", FISCAL_CODE)
-            .param("page", "1")
-            .param("size", "10")
-            .param("status", SyncTrxStatus.AUTHORIZED.toString())
-            .param("productGtin", PRODUCT_GTIN)
-            .param("trxCode", TRX_CODE)
-    ).andExpect(status().isOk()).andReturn();
+        MvcResult result = mockMvc.perform(
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions",
+                        INITIATIVE_ID, POINT_OF_SALE_ID)
+                        .header("x-merchant-id", MERCHANT_ID)
+                        .param("fiscalCode", FISCAL_CODE)
+                        .param("page", "1")
+                        .param("size", "10")
+                        .param("status", SyncTrxStatus.AUTHORIZED.toString())
+                        .param("productGtin", PRODUCT_GTIN)
+                        .param("trxCode", TRX_CODE)
+        ).andExpect(status().isOk()).andReturn();
 
-    PointOfSaleTransactionsListDTO actual = objectMapper.readValue(
-        result.getResponse().getContentAsString(),
-        PointOfSaleTransactionsListDTO.class
-    );
+        PointOfSaleTransactionsListDTO actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                PointOfSaleTransactionsListDTO.class
+        );
 
-    Assertions.assertNotNull(actual);
-    Assertions.assertEquals(1, actual.getTotalElements());
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals(1, actual.getTotalElements());
 
-    ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
-    verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
-    Assertions.assertEquals(POINT_OF_SALE_ID, filtersCaptor.getValue().getPointOfSaleId());
-  }
+        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
+        verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
+        Assertions.assertEquals(POINT_OF_SALE_ID, filtersCaptor.getValue().getPointOfSaleId());
+    }
 
-  @Test
-  void getPointOfSaleTransactionsProcessed_shouldSanitizeFilters() throws Exception {
-      Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-      PageRequest pageRequest = PageRequest.of(0, 10);
-      Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
+    @Test
+    void getPointOfSaleTransactionsProcessed_shouldSanitizeFilters() throws Exception {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
-      when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(any(), any()))
-              .thenReturn(trxPage);
+        when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(any(), any()))
+                .thenReturn(trxPage);
 
-      PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
-      dto.setFiscalCode("FISCALCODE1");
-      when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, "FISCALCODE1"))
-              .thenReturn(dto);
+        PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        dto.setFiscalCode("FISCALCODE1");
+        when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, "FISCALCODE1"))
+                .thenReturn(dto);
 
-      mockMvc.perform(
-              get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/processed",
-                      "INIT!@#", "POS\n1")
-                      .header("x-merchant-id", "MERCHANT\r\n1")
-                      .header("x-point-of-sale-id", "POS\n1")
-                      .param("fiscalCode", "FISCAL@CODE1")
-                      .param("status", "AUTH$ORIZED")
-                      .param("productGtin", "12345-@@")
-                      .param("trxCode", "TRX*CODE")
-      ).andExpect(status().isOk());
+        mockMvc.perform(
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/processed",
+                        "INIT!@#", "POS\n1")
+                        .header("x-merchant-id", "MERCHANT\r\n1")
+                        .header("x-point-of-sale-id", "POS\n1")
+                        .param("fiscalCode", "FISCAL@CODE1")
+                        .param("status", "AUTH$ORIZED")
+                        .param("productGtin", "12345-@@")
+                        .param("trxCode", "TRX*CODE")
+        ).andExpect(status().isOk());
 
-      ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
-      verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
+        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
+        verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
 
-      Assertions.assertEquals("MERCHANT1", filtersCaptor.getValue().getMerchantId());
-      Assertions.assertEquals("INIT", filtersCaptor.getValue().getInitiativeId());
-      Assertions.assertEquals("POS1", filtersCaptor.getValue().getPointOfSaleId());
-      Assertions.assertEquals("FISCALCODE1", filtersCaptor.getValue().getFiscalCode());
-      Assertions.assertEquals("AUTHORIZED", filtersCaptor.getValue().getStatus());
-      Assertions.assertEquals("12345-", filtersCaptor.getValue().getProductGtin());
-      Assertions.assertEquals("TRXCODE", filtersCaptor.getValue().getTrxCode());
-  }
+        Assertions.assertEquals("MERCHANT1", filtersCaptor.getValue().getMerchantId());
+        Assertions.assertEquals("INIT", filtersCaptor.getValue().getInitiativeId());
+        Assertions.assertEquals("POS1", filtersCaptor.getValue().getPointOfSaleId());
+        Assertions.assertEquals("FISCALCODE1", filtersCaptor.getValue().getFiscalCode());
+        Assertions.assertEquals(List.of("AUTHORIZED"), filtersCaptor.getValue().getStatuses());
+        Assertions.assertEquals("12345-", filtersCaptor.getValue().getProductGtin());
+        Assertions.assertEquals("TRXCODE", filtersCaptor.getValue().getTrxCode());
+    }
 
-  @Test
-  void downloadInvoiceFile_shouldSanitizeParametersAndDelegate() throws Exception {
-      DownloadInvoiceResponseDTO response = DownloadInvoiceResponseDTO.builder()
-              .invoiceUrl("https://signed-url")
-              .build();
+    @Test
+    void getPointOfSaleTransactionsProcessed_withInvalidOrEmptyStatus_shouldUseAllowedStatuses() throws Exception {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        PageRequest pageRequest = PageRequest.of(0, 10);
+        Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
-      when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(
-                      "MERCHANT1",
-                      "POS1",
-                      "TRX1"))
-              .thenReturn(response);
+        when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(any(), any()))
+                .thenReturn(trxPage);
 
-      MvcResult result = mockMvc.perform(
-              get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", "POS!@#1", "TRX*1")
-                      .header("x-merchant-id", "MERCHANT\r\n1")
-                      .header("x-point-of-sale-id", "POS!@#1")
-      ).andExpect(status().isOk()).andReturn();
+        mockMvc.perform(
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/processed",
+                        INITIATIVE_ID, POINT_OF_SALE_ID)
+                        .header("x-merchant-id", MERCHANT_ID)
+                        .header("x-point-of-sale-id", POINT_OF_SALE_ID)
+                        .param("status", "INVALID_STATUS_NOT_IN_ALLOWED_LIST")
+        ).andExpect(status().isOk());
 
-      DownloadInvoiceResponseDTO actual = objectMapper.readValue(
-              result.getResponse().getContentAsString(),
-              DownloadInvoiceResponseDTO.class
-      );
+        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
+        verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
 
-      Assertions.assertNotNull(actual);
-      Assertions.assertEquals("https://signed-url", actual.getInvoiceUrl());
-      verify(pointOfSaleTransactionServiceMock)
-              .downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
-  }
+        Assertions.assertEquals(TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES, filtersCaptor.getValue().getStatuses());
+    }
 
-  @Test
-  void downloadInvoiceFile_unauthorizedPointOfSale_shouldReturn403() throws Exception {
-      MvcResult result = mockMvc.perform(
-              get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", POINT_OF_SALE_ID, TRX_CODE)
-                      .header("x-merchant-id", MERCHANT_ID)
-                      .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
-      ).andExpect(status().isForbidden()).andReturn();
+    @Test
+    void downloadInvoiceFile_shouldSanitizeParametersAndDelegate() throws Exception {
+        DownloadInvoiceResponseDTO response = DownloadInvoiceResponseDTO.builder()
+                .invoiceUrl("https://signed-url")
+                .build();
 
-      Assertions.assertTrue(result.getResponse().getContentAsString().contains("Point of sale mismatch"));
-  }
+        when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(
+                "MERCHANT1",
+                "POS1",
+                "TRX1"))
+                .thenReturn(response);
 
-  @Test
-  void constructor_withMessage_shouldInitializeCorrectly() {
-    String message = "POS not found";
+        MvcResult result = mockMvc.perform(
+                get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", "POS!@#1", "TRX*1")
+                        .header("x-merchant-id", "MERCHANT\r\n1")
+                        .header("x-point-of-sale-id", "POS!@#1")
+        ).andExpect(status().isOk()).andReturn();
 
-    PosNotFoundException ex = new PosNotFoundException(message);
+        DownloadInvoiceResponseDTO actual = objectMapper.readValue(
+                result.getResponse().getContentAsString(),
+                DownloadInvoiceResponseDTO.class
+        );
 
-    Assertions.assertNotNull(ex);
-    Assertions.assertEquals("POS not found", ex.getMessage());
-    Assertions.assertEquals("PAYMENT_POINT_OF_SALE_NOT_FOUND", ex.getCode());
-    Assertions.assertNull(ex.getCause());
-  }
+        Assertions.assertNotNull(actual);
+        Assertions.assertEquals("https://signed-url", actual.getInvoiceUrl());
+        verify(pointOfSaleTransactionServiceMock)
+                .downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+    }
+
+    @Test
+    void downloadInvoiceFile_unauthorizedPointOfSale_shouldReturn403() throws Exception {
+        MvcResult result = mockMvc.perform(
+                get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", POINT_OF_SALE_ID, TRX_CODE)
+                        .header("x-merchant-id", MERCHANT_ID)
+                        .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
+        ).andExpect(status().isForbidden()).andReturn();
+
+        Assertions.assertTrue(result.getResponse().getContentAsString().contains("Point of sale mismatch"));
+    }
+
+    @Test
+    void constructor_withMessage_shouldInitializeCorrectly() {
+        String message = "POS not found";
+
+        PosNotFoundException ex = new PosNotFoundException(message);
+
+        Assertions.assertNotNull(ex);
+        Assertions.assertEquals("POS not found", ex.getMessage());
+        Assertions.assertEquals("PAYMENT_POINT_OF_SALE_NOT_FOUND", ex.getCode());
+        Assertions.assertNull(ex.getCause());
+    }
 }
-
