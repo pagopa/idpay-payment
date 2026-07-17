@@ -90,7 +90,6 @@ public class TransactionServiceImpl implements TransactionService {
             Long amountCents,
             Pageable pageable) {
 
-        // Flusso 1: Ricerca per idTrxIssuer
         if (StringUtils.isNotBlank(idTrxIssuer)) {
             return findByIdTrxIssuer(idTrxIssuer, userId, trxDateStart, trxDateEnd, amountCents, pageable);
         }

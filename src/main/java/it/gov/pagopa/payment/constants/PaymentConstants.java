@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.constants;
 
-import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.STATUS_NOT_ALLOWED_MESSAGE;
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE;
 
 public class PaymentConstants {

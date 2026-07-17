@@ -27,7 +27,7 @@ public final class TransactionSpecifications {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("userId"), userId));
-            predicates.add(cb.isMember(initiativeId, root.get("initiatives")));
+            predicates.add(cb.equal(root.get("initiativeId"), initiativeId));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
