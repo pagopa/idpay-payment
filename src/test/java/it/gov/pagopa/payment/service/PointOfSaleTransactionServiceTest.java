@@ -8,7 +8,6 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,9 +19,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,11 +34,6 @@ class PointOfSaleTransactionServiceTest {
 
     @InjectMocks
     private PointOfSaleTransactionServiceImpl pointOfSaleTransactionService;
-
-    @BeforeEach
-    void setUp() {
-        pointOfSaleTransactionService = new PointOfSaleTransactionServiceImpl(transactionService, fileStorageClient);
-    }
 
     @Test
     void getPointOfSaleTransactionList_shouldDelegateToTransactionService() {

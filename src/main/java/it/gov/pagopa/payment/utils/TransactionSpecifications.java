@@ -146,7 +146,7 @@ public final class TransactionSpecifications {
             try {
                 SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(filters.getStatus().toUpperCase(Locale.ROOT));
                 predicates.add(cb.equal(root.get(FIELD_STATUS), statusEnum));
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException _) {
                 predicates.add(cb.disjunction());
             }
         }
@@ -157,7 +157,7 @@ public final class TransactionSpecifications {
                 .map(s -> {
                     try {
                         return SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT));
-                    } catch (IllegalArgumentException e) {
+                    } catch (IllegalArgumentException _) {
                         return null;
                     }
                 })
@@ -175,7 +175,7 @@ public final class TransactionSpecifications {
                         .map(s -> SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT)))
                         .toList();
                 return root.get(FIELD_STATUS).in(statusEnums);
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException _) {
                 return cb.disjunction();
             }
         };
@@ -189,7 +189,7 @@ public final class TransactionSpecifications {
             try {
                 SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(statusStr.toUpperCase(Locale.ROOT));
                 return cb.equal(root.get(FIELD_STATUS), statusEnum);
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException _) {
                 return cb.disjunction();
             }
         };

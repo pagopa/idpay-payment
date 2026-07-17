@@ -133,7 +133,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
 
     private List<String> validateAndBuildProcessedStatuses(String status) {
         if (StringUtils.isBlank(status)) {
-            return null;
+            return Collections.emptyList();
         }
 
         String upperStatus = status.toUpperCase();

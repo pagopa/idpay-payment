@@ -26,8 +26,8 @@ class PointOfSaleTransactionMapperTest {
 
     @BeforeEach
     void setup() {
-        transactionInProgress2TransactionResponseMapper = Mockito.mock(TransactionInProgress2TransactionResponseMapper.class);
-        pdvService = Mockito.mock(PDVService.class);
+        transactionInProgress2TransactionResponseMapper = mock(TransactionInProgress2TransactionResponseMapper.class);
+        pdvService = mock(PDVService.class);
         mapper = new PointOfSaleTransactionMapper(10, transactionInProgress2TransactionResponseMapper, pdvService);
     }
 

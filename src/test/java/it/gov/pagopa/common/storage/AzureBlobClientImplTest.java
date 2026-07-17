@@ -9,14 +9,12 @@ import com.azure.storage.blob.models.*;
 import com.azure.storage.blob.options.BlobDownloadToFileOptions;
 import com.azure.storage.blob.options.BlobParallelUploadOptions;
 import com.azure.storage.blob.options.BlobUploadFromFileOptions;
-import com.azure.storage.blob.sas.BlobSasPermission;
 import com.azure.storage.blob.sas.BlobServiceSasSignatureValues;
 import it.gov.pagopa.common.web.exception.ClientException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import java.io.ByteArrayInputStream;
@@ -28,9 +26,7 @@ import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class AzureBlobClientImplTest {
@@ -106,7 +102,7 @@ class AzureBlobClientImplTest {
     @Test
     void download_withPath_blobStorageExceptionNot404_shouldThrow() {
         Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "test.txt");
-        BlobStorageException ex = Mockito.mock(BlobStorageException.class);
+        BlobStorageException ex = mock(BlobStorageException.class);
         when(ex.getStatusCode()).thenReturn(500);
         when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenThrow(ex);
         assertThrows(BlobStorageException.class, () -> azureBlobClient.download("file.txt", tempFile));
@@ -115,7 +111,7 @@ class AzureBlobClientImplTest {
     @Test
     void download_withPath_blobStorageException404_shouldReturnNull() {
         Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "test.txt");
-        BlobStorageException ex = Mockito.mock(BlobStorageException.class);
+        BlobStorageException ex = mock(BlobStorageException.class);
         when(ex.getStatusCode()).thenReturn(404);
         when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenThrow(ex);
         assertNull(azureBlobClient.download("file.txt", tempFile));
@@ -123,7 +119,7 @@ class AzureBlobClientImplTest {
 
     @Test
     void download_withString_shouldCallDownloadStream() {
-        Mockito.doAnswer(invocation -> {
+        doAnswer(invocation -> {
             ByteArrayOutputStream os = invocation.getArgument(0);
             os.write("test".getBytes());
             return null;
@@ -137,7 +133,7 @@ class AzureBlobClientImplTest {
 
     @Test
     void download_withString_blobStorageExceptionNot404_shouldThrow() {
-        BlobStorageException ex = Mockito.mock(BlobStorageException.class);
+        BlobStorageException ex = mock(BlobStorageException.class);
         when(ex.getStatusCode()).thenReturn(500);
         doThrow(ex).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
         assertThrows(BlobStorageException.class, () -> azureBlobClient.download("file.txt"));
@@ -145,7 +141,7 @@ class AzureBlobClientImplTest {
 
     @Test
     void download_withString_blobStorageException404_shouldReturnNull() {
-        BlobStorageException ex = Mockito.mock(BlobStorageException.class);
+        BlobStorageException ex = mock(BlobStorageException.class);
         when(ex.getStatusCode()).thenReturn(404);
         doThrow(ex).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
         assertNull(azureBlobClient.download("file.txt"));
@@ -216,7 +212,7 @@ class AzureBlobClientImplTest {
     @Test
     void getInvoiceFileSignedUrl_shouldThrowClientExceptionOnBlobStorageException() {
         String blobPath = "invoices/2024/invoice-error.pdf";
-        BlobStorageException blobStorageException = Mockito.mock(BlobStorageException.class);
+        BlobStorageException blobStorageException = mock(BlobStorageException.class);
         
         when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);

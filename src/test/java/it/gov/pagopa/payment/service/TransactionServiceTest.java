@@ -48,8 +48,6 @@ class TransactionServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        transactionService = new TransactionServiceImpl(transactionRepository, pdvService);
-        // Mock statico delle specifiche per isolare i test dall'effettiva compilazione dei criteri SQL
         specificationsMockedStatic = Mockito.mockStatic(TransactionSpecifications.class);
     }
 

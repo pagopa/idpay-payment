@@ -218,9 +218,8 @@ class MerchantTransactionServiceTest {
         // Then
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
-        MerchantTransactionDTO dto = result.getContent().get(0);
+        MerchantTransactionDTO dto = result.getContent().getFirst();
         assertEquals("TX_ID_1", dto.getTrxId());
-        // Essendo il ruolo ADMIN (non escluso), lo stato TO_CHECK viene rimappato a CONSULTABLE
         assertEquals(RewardBatchTrxStatus.CONSULTABLE, dto.getRewardBatchTrxStatus());
     }
 
@@ -246,7 +245,7 @@ class MerchantTransactionServiceTest {
 
         // Then
         assertNotNull(result);
-        MerchantTransactionDTO dto = result.getContent().get(0);
+        MerchantTransactionDTO dto = result.getContent().getFirst();
         assertEquals(RewardBatchTrxStatus.TO_CHECK, dto.getRewardBatchTrxStatus());
     }
 
