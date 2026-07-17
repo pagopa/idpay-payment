@@ -21,6 +21,8 @@ public class ServiceExceptionConfig {
     exceptionMap.put(TransactionInvalidException.class, HttpStatus.BAD_REQUEST);
     exceptionMap.put(ProductNotValidException.class, HttpStatus.BAD_REQUEST);
     exceptionMap.put(TransactionMissingParametersException.class, HttpStatus.BAD_REQUEST);
+    exceptionMap.put(TransactionNotAllowedStatusException.class, HttpStatus.BAD_REQUEST);
+
 
     // Forbidden
     exceptionMap.put(BudgetExhaustedException.class, HttpStatus.FORBIDDEN);

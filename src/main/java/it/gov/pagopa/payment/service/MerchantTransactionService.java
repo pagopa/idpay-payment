@@ -18,7 +18,7 @@ public interface MerchantTransactionService {
             String organizationRole,
             String initiativeId,
             String fiscalCode,
-            List<String> statuses,
+            String status,
             String rewardBatchId,
             String rewardBatchTrxStatus,
             String pointOfSaleId,

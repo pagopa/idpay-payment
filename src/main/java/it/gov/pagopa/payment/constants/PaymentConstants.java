@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.constants;
 
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.STATUS_NOT_ALLOWED_MESSAGE;
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE;
 
 public class PaymentConstants {
@@ -24,6 +25,7 @@ public class PaymentConstants {
 
   public static final class ExceptionCode {
 
+    public static final String STATUS_NOT_ALLOWED = "STATUS_NOT_ALLOWED";
     public static final String TRANSACTION_NOT_FOUND = "TRANSACTION_NOT_FOUND";
     public static final String TRANSACTION_INVALID_REQUEST = "TRANSACTION_INVALID_REQUEST";
     public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS = "TRANSACTIONS_MISSING_MANDATORY_FILTERS";
@@ -72,6 +74,7 @@ public class PaymentConstants {
     public static final String TRANSACTION_MISSING_INVOICE_MESSAGE = "Invoice missing from transaction for which download was required";
     public static final String TRANSACTION_NOT_FOUND_MESSAGE = "Transaction not found with id: %s";
     public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE = "Missing mandatory filters: %s";
+    public static final String STATUS_NOT_ALLOWED_MESSAGE = "Statues allowed only: %s";
   }
 
   public static String buildMissingFiltersMessage(String... missingFields) {

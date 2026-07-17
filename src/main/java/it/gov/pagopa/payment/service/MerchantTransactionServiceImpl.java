@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionRespons
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
+import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -32,12 +33,17 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.STATUS_NOT_ALLOWED;
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.STATUS_NOT_ALLOWED_MESSAGE;
+import static it.gov.pagopa.payment.dto.TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES;
+
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService {
 
     private static final String DEFAULT_PROCESSED_SORT_FIELD = "rewardBatchStatusTrx";
     private static final String TO_CHECK_STATUS = "TO_CHECK";
     private static final Set<String> EXCLUDED_OPERATORS = Set.of("operator1", "operator2", "operator3");
+    private static final String MISSING_VALUE_PLACEHOLDER = "-";
 
     private final int authorizationExpirationMinutes;
     private final DecryptRestConnector decryptRestConnector;
@@ -92,7 +98,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String organizationRole,
             String initiativeId,
             String fiscalCode,
-            List<String> statuses,
+            String status,
             String rewardBatchId,
             String rewardBatchTrxStatus,
             String pointOfSaleId,
@@ -103,8 +109,10 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         Pageable sortedPageable = applyDefaultSort(pageable);
         RewardBatchTrxStatus parsedStatus = parseRewardBatchTrxStatus(rewardBatchTrxStatus);
 
+        List<String> processedStatuses = validateAndBuildProcessedStatuses(status);
+
         TrxFiltersDTO filters = buildProcessedFilters(
-                merchantId, initiativeId, userId, statuses, rewardBatchId,
+                merchantId, initiativeId, userId, processedStatuses, rewardBatchId,
                 parsedStatus, pointOfSaleId, trxCode, organizationRole
         );
 
@@ -121,6 +129,20 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     public List<String> getProcessedTransactionStatuses(String organizationRole) {
         List<String> allStatuses = getAllProcessedTransactionStatuses();
         return hasAccessToAllStatuses(organizationRole) ? allStatuses : excludeToCheckStatus(allStatuses);
+    }
+
+    private List<String> validateAndBuildProcessedStatuses(String status) {
+        if (StringUtils.isBlank(status)) {
+            return null;
+        }
+
+        String upperStatus = status.toUpperCase();
+        if (PROCESSED_ALLOWED_STATUSES.contains(upperStatus)) {
+            return List.of(upperStatus);
+        } else {
+            throw new TransactionMissingParametersException(STATUS_NOT_ALLOWED,
+                    STATUS_NOT_ALLOWED_MESSAGE.formatted(PROCESSED_ALLOWED_STATUSES.toString()));
+        }
     }
 
     private RewardBatchTrxStatus parseRewardBatchTrxStatus(String rewardBatchTrxStatus) {
@@ -148,7 +170,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     }
 
     private boolean hasAccessToAllStatuses(String role) {
-        return role == null || !EXCLUDED_OPERATORS.contains(role.toLowerCase());
+        return role == null || !EXCLUDED_OPERATORS.contains(role.toLowerCase(Locale.ROOT));
     }
 
     private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgress transaction) {
@@ -190,27 +212,26 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String fiscalCode,
             String organizationRole) {
 
-        RewardBatchTrxStatus original = transaction.getRewardBatchStatusTrx() != null
-                ? RewardBatchTrxStatus.valueOf(transaction.getRewardBatchStatusTrx())
-                : null;
+        RewardBatchTrxStatus original = Optional.ofNullable(transaction.getRewardBatchStatusTrx())
+                .map(RewardBatchTrxStatus::valueOf)
+                .orElse(null);
 
-        RewardBatchTrxStatus exposed = original;
-        if (hasAccessToAllStatuses(organizationRole) && original == RewardBatchTrxStatus.TO_CHECK) {
-            exposed = RewardBatchTrxStatus.CONSULTABLE;
-        }
+        RewardBatchTrxStatus exposed = (original == RewardBatchTrxStatus.TO_CHECK && hasAccessToAllStatuses(organizationRole))
+                ? RewardBatchTrxStatus.CONSULTABLE
+                : original;
 
         long rewardAmount = Optional.ofNullable(transaction.getRewards())
                 .map(rewards -> rewards.get(initiativeId))
                 .map(reward -> Objects.requireNonNullElse(reward.getAccruedRewardCents(), 0L))
                 .orElse(0L);
 
-        LocalDateTime trxDateTime = transaction.getTrxDate() != null
-                ? transaction.getTrxDate().toLocalDateTime()
-                : LocalDateTime.MIN;
+        LocalDateTime trxDateTime = Optional.ofNullable(transaction.getTrxDate())
+                .map(java.time.OffsetDateTime::toLocalDateTime)
+                .orElse(LocalDateTime.MIN);
 
         return MerchantTransactionDTO.builder()
                 .trxId(transaction.getId())
-                .fiscalCode(Objects.requireNonNullElse(fiscalCode, "-"))
+                .fiscalCode(Objects.requireNonNullElse(fiscalCode, MISSING_VALUE_PLACEHOLDER))
                 .effectiveAmountCents(transaction.getAmountCents())
                 .rewardAmountCents(rewardAmount)
                 .trxDate(trxDateTime)
@@ -223,8 +244,8 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .authorizedAmountCents(transaction.getAmountCents() - rewardAmount)
                 .invoiceData(Objects.requireNonNullElseGet(transaction.getInvoiceData(), InvoiceData::new))
                 .rewardBatchTrxStatus(exposed)
-                .pointOfSaleId(Objects.requireNonNullElse(transaction.getPointOfSaleId(), "-"))
-                .franchiseName(Objects.requireNonNullElse(transaction.getFranchiseName(), "-"))
+                .pointOfSaleId(Objects.requireNonNullElse(transaction.getPointOfSaleId(), MISSING_VALUE_PLACEHOLDER))
+                .franchiseName(Objects.requireNonNullElse(transaction.getFranchiseName(), MISSING_VALUE_PLACEHOLDER))
                 .build();
     }
 
