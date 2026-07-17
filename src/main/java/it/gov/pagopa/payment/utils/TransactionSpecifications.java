@@ -20,14 +20,26 @@ import java.util.Objects;
 
 public final class TransactionSpecifications {
 
+    // Costanti per eliminare le duplicazioni dei letterali (Sonar)
+    private static final String FIELD_USER_ID = "userId";
+    private static final String FIELD_TRX_DATE = "trxDate";
+    private static final String FIELD_STATUS = "status";
+
+    private static final String FIELD_INITIATIVE_ID = "initiativeId";
+    private static final String FIELD_MERCHANT_ID = "merchantId";
+    private static final String FIELD_POINT_OF_SALE_ID = "pointOfSaleId";
+    private static final String FIELD_TRX_CODE = "trxCode";
+    private static final String FIELD_REWARD_BATCH_ID = "rewardBatchId";
+    private static final String FIELD_REWARD_BATCH_STATUS_TRX = "rewardBatchStatusTrx";
+
     private TransactionSpecifications() {
     }
 
     public static Specification<Transaction> findByInitiativeAndUser(String initiativeId, String userId) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("userId"), userId));
-            predicates.add(cb.equal(root.get("initiativeId"), initiativeId));
+            predicates.add(cb.equal(root.get(FIELD_USER_ID), userId));
+            predicates.add(cb.equal(root.get(FIELD_INITIATIVE_ID), initiativeId));
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -39,8 +51,8 @@ public final class TransactionSpecifications {
             Long amountCents) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            predicates.add(cb.equal(root.get("userId"), userId));
-            predicates.add(cb.between(root.get("trxDate"), trxDateStart, trxDateEnd));
+            predicates.add(cb.equal(root.get(FIELD_USER_ID), userId));
+            predicates.add(cb.between(root.get(FIELD_TRX_DATE), trxDateStart, trxDateEnd));
             if (amountCents != null) {
                 predicates.add(cb.equal(root.get("amountCents"), amountCents));
             }
@@ -59,17 +71,17 @@ public final class TransactionSpecifications {
             predicates.add(cb.equal(root.get("idTrxIssuer"), idTrxIssuer));
 
             if (StringUtils.hasText(userId)) {
-                predicates.add(cb.equal(root.get("userId"), userId));
+                predicates.add(cb.equal(root.get(FIELD_USER_ID), userId));
             }
             if (amountCents != null) {
                 predicates.add(cb.equal(root.get("amountCents"), amountCents));
             }
             if (trxDateStart != null && trxDateEnd != null) {
-                predicates.add(cb.between(root.get("trxDate"), trxDateStart, trxDateEnd));
+                predicates.add(cb.between(root.get(FIELD_TRX_DATE), trxDateStart, trxDateEnd));
             } else if (trxDateStart != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("trxDate"), trxDateStart));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(FIELD_TRX_DATE), trxDateStart));
             } else if (trxDateEnd != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("trxDate"), trxDateEnd));
+                predicates.add(cb.lessThanOrEqualTo(root.get(FIELD_TRX_DATE), trxDateEnd));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -92,41 +104,18 @@ public final class TransactionSpecifications {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            addTextPredicate(predicates, root, cb, "merchantId", filters.getMerchantId());
-            addTextPredicate(predicates, root, cb, "initiativeId", filters.getInitiativeId());
-            addTextPredicate(predicates, root, cb, "userId", userId);
-            addTextPredicate(predicates, root, cb, "pointOfSaleId", filters.getPointOfSaleId());
-            addTextPredicate(predicates, root, cb, "trxCode", filters.getTrxCode());
-            addTextPredicate(predicates, root, cb, "rewardBatchId", filters.getRewardBatchId());
+            addTextPredicate(predicates, root, cb, FIELD_MERCHANT_ID, filters.getMerchantId());
+            addTextPredicate(predicates, root, cb, FIELD_INITIATIVE_ID, filters.getInitiativeId());
+            addTextPredicate(predicates, root, cb, FIELD_USER_ID, userId);
+            addTextPredicate(predicates, root, cb, FIELD_POINT_OF_SALE_ID, filters.getPointOfSaleId());
+            addTextPredicate(predicates, root, cb, FIELD_TRX_CODE, filters.getTrxCode());
+            addTextPredicate(predicates, root, cb, FIELD_REWARD_BATCH_ID, filters.getRewardBatchId());
 
-            if (!CollectionUtils.isEmpty(filters.getStatuses())) {
-                List<SyncTrxStatus> statusEnums = filters.getStatuses().stream()
-                        .map(s -> {
-                            try {
-                                return SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT));
-                            } catch (IllegalArgumentException e) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .toList();
-
-                if (!statusEnums.isEmpty()) {
-                    predicates.add(root.get("status").in(statusEnums));
-                } else {
-                    predicates.add(cb.disjunction());
-                }
-            } else if (StringUtils.hasText(filters.getStatus())) {
-                try {
-                    SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(filters.getStatus().toUpperCase(Locale.ROOT));
-                    predicates.add(cb.equal(root.get("status"), statusEnum));
-                } catch (IllegalArgumentException e) {
-                    predicates.add(cb.disjunction());
-                }
-            }
+            // Gestione dello stato delegata per abbassare la complessità
+            handleStatusFilters(predicates, root, cb, filters);
 
             if (filters.getRewardBatchTrxStatus() != null) {
-                Path<String> statusField = root.get("rewardBatchStatusTrx");
+                Path<String> statusField = root.get(FIELD_REWARD_BATCH_STATUS_TRX);
                 if (filters.isIncludeToCheckWithConsultable()) {
                     predicates.add(statusField.in(
                             RewardBatchTrxStatus.CONSULTABLE.name(),
@@ -140,6 +129,42 @@ public final class TransactionSpecifications {
         };
     }
 
+    private static void handleStatusFilters(
+            List<Predicate> predicates,
+            Root<Transaction> root,
+            CriteriaBuilder cb,
+            TrxFiltersDTO filters) {
+
+        if (!CollectionUtils.isEmpty(filters.getStatuses())) {
+            List<SyncTrxStatus> statusEnums = extractStatusEnums(filters.getStatuses());
+            if (!statusEnums.isEmpty()) {
+                predicates.add(root.get(FIELD_STATUS).in(statusEnums));
+            } else {
+                predicates.add(cb.disjunction());
+            }
+        } else if (StringUtils.hasText(filters.getStatus())) {
+            try {
+                SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(filters.getStatus().toUpperCase(Locale.ROOT));
+                predicates.add(cb.equal(root.get(FIELD_STATUS), statusEnum));
+            } catch (IllegalArgumentException e) {
+                predicates.add(cb.disjunction());
+            }
+        }
+    }
+
+    private static List<SyncTrxStatus> extractStatusEnums(List<String> statuses) {
+        return statuses.stream()
+                .map(s -> {
+                    try {
+                        return SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT));
+                    } catch (IllegalArgumentException e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     public static Specification<Transaction> hasStatuses(List<String> statuses) {
         return (root, query, cb) -> {
             if (CollectionUtils.isEmpty(statuses)) {
@@ -149,7 +174,7 @@ public final class TransactionSpecifications {
                 List<SyncTrxStatus> statusEnums = statuses.stream()
                         .map(s -> SyncTrxStatus.valueOf(s.toUpperCase(Locale.ROOT)))
                         .toList();
-                return root.get("status").in(statusEnums);
+                return root.get(FIELD_STATUS).in(statusEnums);
             } catch (IllegalArgumentException e) {
                 return cb.disjunction();
             }
@@ -163,7 +188,7 @@ public final class TransactionSpecifications {
             }
             try {
                 SyncTrxStatus statusEnum = SyncTrxStatus.valueOf(statusStr.toUpperCase(Locale.ROOT));
-                return cb.equal(root.get("status"), statusEnum);
+                return cb.equal(root.get(FIELD_STATUS), statusEnum);
             } catch (IllegalArgumentException e) {
                 return cb.disjunction();
             }
@@ -171,15 +196,15 @@ public final class TransactionSpecifications {
     }
 
     public static Specification<Transaction> hasTrxCode(String trxCode) {
-        return (root, query, cb) -> StringUtils.hasText(trxCode) ? cb.equal(root.get("trxCode"), trxCode) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(trxCode) ? cb.equal(root.get(FIELD_TRX_CODE), trxCode) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasMerchantId(String merchantId) {
-        return (root, query, cb) -> StringUtils.hasText(merchantId) ? cb.equal(root.get("merchantId"), merchantId) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(merchantId) ? cb.equal(root.get(FIELD_MERCHANT_ID), merchantId) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasInitiativeId(String initiativeId) {
-        return (root, query, cb) -> StringUtils.hasText(initiativeId) ? cb.equal(root.get("initiativeId"), initiativeId) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(initiativeId) ? cb.equal(root.get(FIELD_INITIATIVE_ID), initiativeId) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasFiscalCode(String fiscalCode) {
@@ -187,15 +212,15 @@ public final class TransactionSpecifications {
     }
 
     public static Specification<Transaction> hasRewardBatchId(String rewardBatchId) {
-        return (root, query, cb) -> StringUtils.hasText(rewardBatchId) ? cb.equal(root.get("rewardBatchId"), rewardBatchId) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(rewardBatchId) ? cb.equal(root.get(FIELD_REWARD_BATCH_ID), rewardBatchId) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasRewardBatchTrxStatus(RewardBatchTrxStatus status) {
-        return (root, query, cb) -> status != null ? cb.equal(root.get("rewardBatchStatusTrx"), status.name()) : cb.conjunction();
+        return (root, query, cb) -> status != null ? cb.equal(root.get(FIELD_REWARD_BATCH_STATUS_TRX), status.name()) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasPointOfSaleId(String pointOfSaleId) {
-        return (root, query, cb) -> StringUtils.hasText(pointOfSaleId) ? cb.equal(root.get("pointOfSaleId"), pointOfSaleId) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(pointOfSaleId) ? cb.equal(root.get(FIELD_POINT_OF_SALE_ID), pointOfSaleId) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasProductGtin(String productGtin) {

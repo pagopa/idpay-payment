@@ -23,6 +23,8 @@ import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,7 +51,7 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        Mockito.when(merchantTransactionServiceMock.getMerchantTransactions(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        when(merchantTransactionServiceMock.getMerchantTransactions(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
@@ -67,7 +69,7 @@ class MerchantTransactionControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(dto,resultResponse);
-        Mockito.verify(merchantTransactionServiceMock).getMerchantTransactions(eq("MERCHANT_ID"), eq(INITIATIVE_ID), eq(FISCAL_CODE), eq(SyncTrxStatus.CREATED.toString()), any());
+        verify(merchantTransactionServiceMock).getMerchantTransactions(eq("MERCHANT_ID"), eq(INITIATIVE_ID), eq(FISCAL_CODE), eq(SyncTrxStatus.CREATED.toString()), any());
     }
 
     @Test
@@ -79,7 +81,7 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        Mockito.when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
@@ -106,7 +108,7 @@ class MerchantTransactionControllerTest {
 
     @Test
     void getProcessedTransactionStatuses() throws Exception {
-        Mockito.when(merchantTransactionServiceMock.getProcessedTransactionStatuses(Mockito.anyString()))
+        when(merchantTransactionServiceMock.getProcessedTransactionStatuses(Mockito.anyString()))
                 .thenReturn(Collections.emptyList());
 
         mockMvc.perform(
@@ -114,6 +116,6 @@ class MerchantTransactionControllerTest {
                         .header("x-organization-role", "ROLE\n!")
         ).andExpect(status().is2xxSuccessful());
 
-        Mockito.verify(merchantTransactionServiceMock).getProcessedTransactionStatuses(eq("ROLE"));
+        verify(merchantTransactionServiceMock).getProcessedTransactionStatuses(eq("ROLE"));
     }
 }

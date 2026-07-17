@@ -35,6 +35,8 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,14 +67,14 @@ class PointOfSaleTransactionControllerTest {
         PageRequest pageRequest = PageRequest.of(0, 10);
         Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
-        Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
+        when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
                         any(), any()))
                 .thenReturn(trxPage);
 
         PointOfSaleTransactionDTO pointOfSaleTransactionDTO = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
         pointOfSaleTransactionDTO.setFiscalCode(FISCAL_CODE);
 
-        Mockito.when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
+        when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
                 .thenReturn(pointOfSaleTransactionDTO);
 
         MvcResult result = mockMvc.perform(
@@ -97,11 +99,11 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(1, actual.getTotalElements());
         Assertions.assertEquals(1, actual.getTotalPages());
         Assertions.assertEquals(1, actual.getContent().size());
-        Assertions.assertEquals(trx.getTrxCode(), actual.getContent().getFirst().getTrxCode());
-        Assertions.assertEquals(FISCAL_CODE, actual.getContent().getFirst().getFiscalCode());
+        Assertions.assertEquals(trx.getTrxCode(), actual.getContent().get(0).getTrxCode());
+        Assertions.assertEquals(FISCAL_CODE, actual.getContent().get(0).getFiscalCode());
 
         ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
-        Mockito.verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(
+        verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(
                 filtersCaptor.capture(), any());
         Assertions.assertEquals(MERCHANT_ID, filtersCaptor.getValue().getMerchantId());
         Assertions.assertEquals(INITIATIVE_ID, filtersCaptor.getValue().getInitiativeId());
@@ -109,7 +111,7 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(FISCAL_CODE, filtersCaptor.getValue().getFiscalCode());
         Assertions.assertEquals(PRODUCT_GTIN, filtersCaptor.getValue().getProductGtin());
         Assertions.assertEquals(TRX_CODE, filtersCaptor.getValue().getTrxCode());
-        Mockito.verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
+        verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
     }
 
   @Test
@@ -138,14 +140,14 @@ class PointOfSaleTransactionControllerTest {
     PageRequest pageRequest = PageRequest.of(0, 10);
     Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
-    Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
+    when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(
             any(), any()))
         .thenReturn(trxPage);
 
     PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
     dto.setFiscalCode(FISCAL_CODE);
 
-    Mockito.when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
+    when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, FISCAL_CODE))
         .thenReturn(dto);
 
     MvcResult result = mockMvc.perform(
@@ -169,7 +171,7 @@ class PointOfSaleTransactionControllerTest {
     Assertions.assertEquals(1, actual.getTotalElements());
 
     ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
-    Mockito.verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
+    verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
     Assertions.assertEquals(POINT_OF_SALE_ID, filtersCaptor.getValue().getPointOfSaleId());
   }
 
@@ -179,12 +181,12 @@ class PointOfSaleTransactionControllerTest {
       PageRequest pageRequest = PageRequest.of(0, 10);
       Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
 
-      Mockito.when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(any(), any()))
+      when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(any(), any()))
               .thenReturn(trxPage);
 
       PointOfSaleTransactionDTO dto = PointOfSaleTransactionDTOFaker.mockInstance(1, SyncTrxStatus.CREATED);
       dto.setFiscalCode("FISCALCODE1");
-      Mockito.when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, "FISCALCODE1"))
+      when(pointOfSaleTransactionMapper.toPointOfSaleTransactionDTO(trx, "FISCALCODE1"))
               .thenReturn(dto);
 
       mockMvc.perform(
@@ -199,7 +201,7 @@ class PointOfSaleTransactionControllerTest {
       ).andExpect(status().isOk());
 
       ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
-      Mockito.verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
+      verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
 
       Assertions.assertEquals("MERCHANT1", filtersCaptor.getValue().getMerchantId());
       Assertions.assertEquals("INIT", filtersCaptor.getValue().getInitiativeId());
@@ -216,7 +218,7 @@ class PointOfSaleTransactionControllerTest {
               .invoiceUrl("https://signed-url")
               .build();
 
-      Mockito.when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(
+      when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(
                       "MERCHANT1",
                       "POS1",
                       "TRX1"))
@@ -235,7 +237,7 @@ class PointOfSaleTransactionControllerTest {
 
       Assertions.assertNotNull(actual);
       Assertions.assertEquals("https://signed-url", actual.getInvoiceUrl());
-      Mockito.verify(pointOfSaleTransactionServiceMock)
+      verify(pointOfSaleTransactionServiceMock)
               .downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
   }
 

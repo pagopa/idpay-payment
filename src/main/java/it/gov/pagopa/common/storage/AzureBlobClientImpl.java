@@ -30,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Set;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.ERROR_ON_GET_FILE_URL_REQUEST;
@@ -51,7 +52,7 @@ public class AzureBlobClientImpl implements AzureBlobClient {
 
     @Override
     public String getInvoiceFileSignedUrl(String blobPath) {
-        OffsetDateTime expiryTime = OffsetDateTime.now().plusSeconds(sasDurationSeconds);
+        OffsetDateTime expiryTime = OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(sasDurationSeconds);
         UserDelegationKey userDelegationKey =
                 blobServiceClient.getUserDelegationKey(null, expiryTime);
 

@@ -151,7 +151,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         }
         try {
             return RewardBatchTrxStatus.valueOf(rewardBatchTrxStatus);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException _) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Invalid rewardBatchTrxStatus value: " + rewardBatchTrxStatus);
         }

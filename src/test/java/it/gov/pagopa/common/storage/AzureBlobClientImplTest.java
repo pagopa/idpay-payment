@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 class AzureBlobClientImplTest {
     @Mock
@@ -55,59 +56,59 @@ class AzureBlobClientImplTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        Mockito.when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
+        when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
         azureBlobClient = new AzureBlobClientImpl(blobContainerClient, blobServiceClient, 3600);
     }
 
     @Test
     void uploadFile_shouldCallUploadFromFileWithResponse() {
         File file = new File("test.txt");
-        Mockito.when(blobClient.uploadFromFileWithResponse(any(BlobUploadFromFileOptions.class), any(), any())).thenReturn(blockBlobItemResponse);
+        when(blobClient.uploadFromFileWithResponse(any(BlobUploadFromFileOptions.class), any(), any())).thenReturn(blockBlobItemResponse);
         Response<BlockBlobItem> response = azureBlobClient.uploadFile(file, "dest", "text/plain");
         assertEquals(blockBlobItemResponse, response);
-        Mockito.verify(blobClient).uploadFromFileWithResponse(any(BlobUploadFromFileOptions.class), any(), any());
+        verify(blobClient).uploadFromFileWithResponse(any(BlobUploadFromFileOptions.class), any(), any());
     }
 
     @Test
     void upload_shouldCallUploadWithResponse() {
         InputStream is = new ByteArrayInputStream("test".getBytes());
-        Mockito.when(blobClient.uploadWithResponse(any(BlobParallelUploadOptions.class), any(), any())).thenReturn(blockBlobItemResponse);
+        when(blobClient.uploadWithResponse(any(BlobParallelUploadOptions.class), any(), any())).thenReturn(blockBlobItemResponse);
         Response<BlockBlobItem> response = azureBlobClient.upload(is, "dest", "text/plain");
         assertEquals(blockBlobItemResponse, response);
-        Mockito.verify(blobClient).uploadWithResponse(any(BlobParallelUploadOptions.class), any(), any());
+        verify(blobClient).uploadWithResponse(any(BlobParallelUploadOptions.class), any(), any());
     }
 
     @Test
     void deleteFile_shouldCallDeleteIfExistsWithResponse() {
-        Mockito.when(blobClient.deleteIfExistsWithResponse(any(), any(), any(), any())).thenReturn(booleanResponse);
+        when(blobClient.deleteIfExistsWithResponse(any(), any(), any(), any())).thenReturn(booleanResponse);
         Response<Boolean> response = azureBlobClient.deleteFile("dest");
         assertEquals(booleanResponse, response);
-        Mockito.verify(blobClient).deleteIfExistsWithResponse(any(), any(), any(), any());
+        verify(blobClient).deleteIfExistsWithResponse(any(), any(), any(), any());
     }
 
     @Test
     void listFiles_shouldCallListBlobsByHierarchy() {
-        Mockito.when(blobContainerClient.listBlobsByHierarchy(anyString())).thenReturn(pagedIterable);
+        when(blobContainerClient.listBlobsByHierarchy(anyString())).thenReturn(pagedIterable);
         PagedIterable<BlobItem> result = azureBlobClient.listFiles("path");
         assertEquals(pagedIterable, result);
-        Mockito.verify(blobContainerClient).listBlobsByHierarchy("path");
+        verify(blobContainerClient).listBlobsByHierarchy("path");
     }
 
     @Test
     void download_withPath_shouldCallDownloadToFileWithResponse() {
         Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "test.txt");
-        Mockito.when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenReturn(blobPropertiesResponse);
+        when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenReturn(blobPropertiesResponse);
         Response<BlobProperties> response = azureBlobClient.download("file.txt", tempFile);
         assertEquals(blobPropertiesResponse, response);
-        Mockito.verify(blobClient).downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any());
+        verify(blobClient).downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any());
     }
 
     @Test
     void download_withPath_blobStorageExceptionNot404_shouldThrow() {
         Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "test.txt");
         BlobStorageException ex = Mockito.mock(BlobStorageException.class);
-        Mockito.when(ex.getStatusCode()).thenReturn(500);
-        Mockito.when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenThrow(ex);
+        when(ex.getStatusCode()).thenReturn(500);
+        when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenThrow(ex);
         assertThrows(BlobStorageException.class, () -> azureBlobClient.download("file.txt", tempFile));
     }
 
@@ -115,8 +116,8 @@ class AzureBlobClientImplTest {
     void download_withPath_blobStorageException404_shouldReturnNull() {
         Path tempFile = Paths.get(System.getProperty("java.io.tmpdir"), "test.txt");
         BlobStorageException ex = Mockito.mock(BlobStorageException.class);
-        Mockito.when(ex.getStatusCode()).thenReturn(404);
-        Mockito.when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenThrow(ex);
+        when(ex.getStatusCode()).thenReturn(404);
+        when(blobClient.downloadToFileWithResponse(any(BlobDownloadToFileOptions.class), any(), any())).thenThrow(ex);
         assertNull(azureBlobClient.download("file.txt", tempFile));
     }
 
@@ -127,26 +128,26 @@ class AzureBlobClientImplTest {
             os.write("test".getBytes());
             return null;
         }).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
-        Mockito.when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
+        when(blobContainerClient.getBlobClient(anyString())).thenReturn(blobClient);
         ByteArrayOutputStream result = azureBlobClient.download("file.txt");
         assertNotNull(result);
         assertEquals("test", result.toString());
-        Mockito.verify(blobClient).downloadStream(any(ByteArrayOutputStream.class));
+        verify(blobClient).downloadStream(any(ByteArrayOutputStream.class));
     }
 
     @Test
     void download_withString_blobStorageExceptionNot404_shouldThrow() {
         BlobStorageException ex = Mockito.mock(BlobStorageException.class);
-        Mockito.when(ex.getStatusCode()).thenReturn(500);
-        Mockito.doThrow(ex).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
+        when(ex.getStatusCode()).thenReturn(500);
+        doThrow(ex).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
         assertThrows(BlobStorageException.class, () -> azureBlobClient.download("file.txt"));
     }
 
     @Test
     void download_withString_blobStorageException404_shouldReturnNull() {
         BlobStorageException ex = Mockito.mock(BlobStorageException.class);
-        Mockito.when(ex.getStatusCode()).thenReturn(404);
-        Mockito.doThrow(ex).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
+        when(ex.getStatusCode()).thenReturn(404);
+        doThrow(ex).when(blobClient).downloadStream(any(ByteArrayOutputStream.class));
         assertNull(azureBlobClient.download("file.txt"));
     }
 
@@ -156,11 +157,11 @@ class AzureBlobClientImplTest {
         String blobUrl = "https://storage.blob.core.windows.net/container/invoices/2024/invoice-123.pdf";
         String sasToken = "sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlac&se=2024-12-31T23:59:59Z";
         
-        Mockito.when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
+        when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);
-        Mockito.when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
+        when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
                 .thenReturn(sasToken);
-        Mockito.when(blobClient.getBlobUrl()).thenReturn(blobUrl);
+        when(blobClient.getBlobUrl()).thenReturn(blobUrl);
         
         String result = azureBlobClient.getInvoiceFileSignedUrl(blobPath);
         
@@ -168,8 +169,8 @@ class AzureBlobClientImplTest {
         assertTrue(result.contains(blobUrl));
         assertTrue(result.contains(sasToken));
         assertTrue(result.contains("?"));
-        Mockito.verify(blobServiceClient).getUserDelegationKey(eq(null), any(OffsetDateTime.class));
-        Mockito.verify(blobClient).generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class));
+        verify(blobServiceClient).getUserDelegationKey(eq(null), any(OffsetDateTime.class));
+        verify(blobClient).generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class));
     }
 
     @Test
@@ -177,16 +178,16 @@ class AzureBlobClientImplTest {
         String blobPath = "invoices/2024/invoice-456.pdf";
         String sasToken = "sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlac";
         
-        Mockito.when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
+        when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);
-        Mockito.when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
+        when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
                 .thenReturn(sasToken);
-        Mockito.when(blobClient.getBlobUrl()).thenReturn("https://storage.blob.core.windows.net/container/invoices/2024/invoice-456.pdf");
+        when(blobClient.getBlobUrl()).thenReturn("https://storage.blob.core.windows.net/container/invoices/2024/invoice-456.pdf");
         
         azureBlobClient.getInvoiceFileSignedUrl(blobPath);
         
         ArgumentCaptor<OffsetDateTime> dateTimeCaptor = ArgumentCaptor.forClass(OffsetDateTime.class);
-        Mockito.verify(blobServiceClient).getUserDelegationKey(eq(null), dateTimeCaptor.capture());
+        verify(blobServiceClient).getUserDelegationKey(eq(null), dateTimeCaptor.capture());
         
         OffsetDateTime capturedDateTime = dateTimeCaptor.getValue();
         assertNotNull(capturedDateTime);
@@ -197,16 +198,16 @@ class AzureBlobClientImplTest {
         String blobPath = "invoices/2024/invoice-789.pdf";
         String sasToken = "sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlac";
         
-        Mockito.when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
+        when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);
-        Mockito.when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
+        when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
                 .thenReturn(sasToken);
-        Mockito.when(blobClient.getBlobUrl()).thenReturn("https://storage.blob.core.windows.net/container/invoices/2024/invoice-789.pdf");
+        when(blobClient.getBlobUrl()).thenReturn("https://storage.blob.core.windows.net/container/invoices/2024/invoice-789.pdf");
         
         azureBlobClient.getInvoiceFileSignedUrl(blobPath);
         
         ArgumentCaptor<BlobServiceSasSignatureValues> sasValuesCaptor = ArgumentCaptor.forClass(BlobServiceSasSignatureValues.class);
-        Mockito.verify(blobClient).generateUserDelegationSas(sasValuesCaptor.capture(), any(UserDelegationKey.class));
+        verify(blobClient).generateUserDelegationSas(sasValuesCaptor.capture(), any(UserDelegationKey.class));
         
         BlobServiceSasSignatureValues capturedValues = sasValuesCaptor.getValue();
         assertNotNull(capturedValues);
@@ -217,13 +218,13 @@ class AzureBlobClientImplTest {
         String blobPath = "invoices/2024/invoice-error.pdf";
         BlobStorageException blobStorageException = Mockito.mock(BlobStorageException.class);
         
-        Mockito.when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
+        when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);
-        Mockito.when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
+        when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
                 .thenThrow(blobStorageException);
         
         assertThrows(ClientException.class, () -> azureBlobClient.getInvoiceFileSignedUrl(blobPath));
-        Mockito.verify(blobClient).generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class));
+        verify(blobClient).generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class));
     }
 
     @Test
@@ -231,15 +232,15 @@ class AzureBlobClientImplTest {
         String blobPath = "invoices/2024/invoice-specific.pdf";
         String sasToken = "sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlac";
         
-        Mockito.when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
+        when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);
-        Mockito.when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
+        when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
                 .thenReturn(sasToken);
-        Mockito.when(blobClient.getBlobUrl()).thenReturn("https://storage.blob.core.windows.net/container/invoices/2024/invoice-specific.pdf");
+        when(blobClient.getBlobUrl()).thenReturn("https://storage.blob.core.windows.net/container/invoices/2024/invoice-specific.pdf");
         
         azureBlobClient.getInvoiceFileSignedUrl(blobPath);
         
-        Mockito.verify(blobContainerClient).getBlobClient(blobPath);
+        verify(blobContainerClient).getBlobClient(blobPath);
     }
 
     @Test
@@ -248,11 +249,11 @@ class AzureBlobClientImplTest {
         String encodedBlobUrl = "https://storage.blob.core.windows.net/container/invoices/2024/invoice%20special.pdf";
         String sasToken = "sv=2021-06-08&ss=bfqt&srt=sco&sp=rwdlac";
         
-        Mockito.when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
+        when(blobServiceClient.getUserDelegationKey(eq(null), any(OffsetDateTime.class)))
                 .thenReturn(userDelegationKey);
-        Mockito.when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
+        when(blobClient.generateUserDelegationSas(any(BlobServiceSasSignatureValues.class), any(UserDelegationKey.class)))
                 .thenReturn(sasToken);
-        Mockito.when(blobClient.getBlobUrl()).thenReturn(encodedBlobUrl);
+        when(blobClient.getBlobUrl()).thenReturn(encodedBlobUrl);
         
         String result = azureBlobClient.getInvoiceFileSignedUrl(blobPath);
         

@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -34,7 +35,8 @@ class PointOfSaleTransactionServiceTest {
     @Mock
     private FileStorageClient fileStorageClient;
 
-    private PointOfSaleTransactionService pointOfSaleTransactionService;
+    @InjectMocks
+    private PointOfSaleTransactionServiceImpl pointOfSaleTransactionService;
 
     @BeforeEach
     void setUp() {

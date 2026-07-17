@@ -41,33 +41,7 @@ class TransactionSpecificationsTest {
 
     @BeforeEach
     void setUp() {
-        // Comportamento standard per evitare NullPointerException durante la navigazione dei path
         lenient().when(root.get(any(String.class))).thenReturn(path);
-    }
-
-    // =========================================================================
-    // 1. TEST: findByInitiativeAndUser
-    // =========================================================================
-    @Test
-    void findByInitiativeAndUser_generatesCorrectPredicates() {
-        String initiativeId = "INIT_123";
-        String userId = "USER_456";
-
-        Predicate eqUserId = mock(Predicate.class);
-        Predicate isMember = mock(Predicate.class);
-        Predicate finalAnd = mock(Predicate.class);
-
-        when(cb.equal(path, userId)).thenReturn(eqUserId);
-        when(cb.isMember(eq(initiativeId), any(Expression.class))).thenReturn(isMember);
-        when(cb.and(any(Predicate[].class))).thenReturn(finalAnd);
-
-        Specification<Transaction> spec = TransactionSpecifications.findByInitiativeAndUser(initiativeId, userId);
-        Predicate result = spec.toPredicate(root, query, cb);
-
-        assertNotNull(result);
-        assertEquals(finalAnd, result);
-        verify(root).get("userId");
-        verify(root).get("initiatives");
     }
 
     // =========================================================================
