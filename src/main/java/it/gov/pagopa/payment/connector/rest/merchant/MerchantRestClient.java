@@ -28,4 +28,14 @@ public interface MerchantRestClient {
         @PathVariable("merchantId") String merchantId,
         @PathVariable("pointOfSaleId") String pointOfSaleId
     );
+
+    @GetMapping(
+            value = "/idpay/merchant/portal/{merchantId}/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    PointOfSaleDTO getPointOfSaleByInitiativeId(
+            @PathVariable("merchantId") String merchantId,
+            @PathVariable("pointOfSaleId") String pointOfSaleId,
+            @PathVariable("initiativeId") String initiativeId
+    );
 }

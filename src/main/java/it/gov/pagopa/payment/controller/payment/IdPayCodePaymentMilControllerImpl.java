@@ -21,11 +21,11 @@ public class IdPayCodePaymentMilControllerImpl implements IdPayCodePaymentMilCon
     @PerformanceLog(
             value = "IDPAYCODE_PREVIEW_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
+    public AuthPaymentDTO previewPayment(String trxId, String merchantId, String initiativeId) {
         log.info(
-                "[IDPAYCODE_PREVIEW_TRANSACTION] The merchant {} request preview for transaction having transactionId {}",
-                merchantId, trxId);
-        return idpayCodePaymentService.previewPayment(trxId, merchantId);
+                "[IDPAYCODE_PREVIEW_TRANSACTION] The merchant {} request preview for transaction having transactionId {} on initiative {}",
+                merchantId, trxId, initiativeId);
+        return idpayCodePaymentService.previewPayment(trxId, merchantId, initiativeId);
     }
 
     @Override
@@ -33,8 +33,9 @@ public class IdPayCodePaymentMilControllerImpl implements IdPayCodePaymentMilCon
             value = "IDPAYCODE_AUTHORIZE_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class
     )
-    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockbody) {
-        log.info("[IDPAYCODE_AUTHORIZE_TRANSACTION] Request to authorize transaction with transactionId {}, by merchant having merchantId {}",trxId,merchantId);
-        return idpayCodePaymentService.authPayment(trxId,merchantId,pinBlockbody);
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, String initiativeId, PinBlockDTO pinBlockbody) { // <-- Aggiunto initiativeId
+        log.info("[IDPAYCODE_AUTHORIZE_TRANSACTION] Request to authorize transaction with transactionId {}, by merchant having merchantId {} on initiative {}",
+                trxId, merchantId, initiativeId);
+        return idpayCodePaymentService.authPayment(trxId, merchantId, initiativeId, pinBlockbody);
     }
 }

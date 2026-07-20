@@ -12,11 +12,13 @@ public interface IdPayCodePaymentMilController {
     @PutMapping("/{transactionId}/preview")
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO previewPayment(@PathVariable("transactionId") String trxId,
-                                  @RequestHeader("x-merchant-id") String merchantId);
+                                  @RequestHeader("x-merchant-id") String merchantId,
+                                  @RequestHeader("x-initiative-id") String initiativeId); // <-- AGGIUNTO HEADER
 
     @PutMapping("/{transactionId}/authorize")
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(@PathVariable("transactionId") String trxId,
                                @RequestHeader("x-merchant-id") String merchantId,
+                               @RequestHeader("x-initiative-id") String initiativeId, // <-- AGGIUNTO HEADER
                                @RequestBody @Valid PinBlockDTO pinBlockbody);
 }

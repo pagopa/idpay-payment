@@ -30,12 +30,12 @@ public class IdpayCodePaymentServiceImpl implements IdpayCodePaymentService{
     }
 
     @Override
-    public AuthPaymentDTO previewPayment(String trxId, String merchantId) {
-        return idpayCodePreviewService.previewPayment(trxId, merchantId);
+    public AuthPaymentDTO previewPayment(String trxId, String merchantId, String initiativeId) {
+        return idpayCodePreviewService.previewPayment(trxId, merchantId, initiativeId);
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
-        return idpayCodeAuthPaymentService.authPayment(trxId, merchantId, pinBlockBody);
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, String initiativeId, PinBlockDTO pinBlockBody) {
+        return idpayCodeAuthPaymentService.authPayment(trxId, merchantId, initiativeId, pinBlockBody);
     }
 }

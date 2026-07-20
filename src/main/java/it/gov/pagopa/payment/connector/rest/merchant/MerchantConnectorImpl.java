@@ -50,4 +50,20 @@ public class MerchantConnectorImpl implements MerchantConnector{
                 "An error occurred in the microservice merchant", true, e);
         }
     }
+
+    @Override
+    public PointOfSaleDTO getPointOfSaleByInitiativeId(String merchantId, String pointOfSaleId, String initiativeId) {
+        try {
+            return restClient.getPointOfSaleByInitiativeId(merchantId, pointOfSaleId, initiativeId);
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new PosNotFoundException(
+                        String.format("POS with id [%s] not found for merchant [%s] and initiative [%s]", pointOfSaleId, merchantId, initiativeId), e
+                );
+            }
+
+            throw new MerchantInvocationException(
+                    "An error occurred in the microservice merchant", true, e);
+        }
+    }
 }

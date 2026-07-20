@@ -12,24 +12,34 @@ import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 @Slf4j
 @Service
 public class IdpayCodeAuthPaymentServiceImpl implements IdpayCodeAuthPaymentService {
     private final IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
     private final PaymentInstrumentConnectorImpl paymentInstrumentConnector;
     private final CommonAuthServiceImpl commonAuthService;
+
     protected IdpayCodeAuthPaymentServiceImpl(IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService,
                                               PaymentInstrumentConnectorImpl paymentInstrumentConnector, CommonAuthServiceImpl commonAuthService) {
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
         this.commonAuthService = commonAuthService;
     }
+
     @Override
-    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, String initiativeId, PinBlockDTO pinBlockBody) { // <-- Aggiunto initiativeId
         TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId);
 
         if(trx == null){
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
+        }
+
+        if (!trx.getInitiativeId().equals(initiativeId)) {
+            log.error("[IDPAY_CODE_AUTH] Transaction [{}] belongs to initiative [{}] but requested for initiative [{}]",
+                    trxId, trx.getInitiativeId(), initiativeId);
+            throw new TransactionNotFoundOrExpiredException(
+                    "Cannot find transaction with transactionId [%s] for initiative [%s]".formatted(trxId, initiativeId));
         }
 
         if(trx.getUserId() == null){
@@ -42,7 +52,7 @@ public class IdpayCodeAuthPaymentServiceImpl implements IdpayCodeAuthPaymentServ
         if (!merchantId.equals(trx.getMerchantId())){
             throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(),merchantId));
         }
-        return commonAuthService.authPayment(trx,trx.getUserId(),trx.getTrxCode());
 
+        return commonAuthService.authPayment(trx,trx.getUserId(),trx.getTrxCode());
     }
 }
