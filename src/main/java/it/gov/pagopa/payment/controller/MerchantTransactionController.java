@@ -33,6 +33,6 @@ public interface MerchantTransactionController {
                                                                  @RequestParam(required = false) String trxCode,
                                                                  @PageableDefault Pageable pageable);
 
-    @GetMapping("/initiatives/{initiativeId}/transactions/processed/statuses")
+    @GetMapping("/initiatives/transactions/processed/statuses")
     List<String> getProcessedTransactionStatuses(@RequestHeader(value = "x-organization-role", required = false) String organizationRole);
 }

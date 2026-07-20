@@ -112,7 +112,7 @@ class MerchantTransactionControllerTest {
                 .thenReturn(Collections.emptyList());
 
         mockMvc.perform(
-                get("/idpay/merchant/portal/initiatives/{initiativeId}/transactions/processed/statuses", INITIATIVE_ID)
+                get("/idpay/merchant/portal/initiatives/transactions/processed/statuses", INITIATIVE_ID)
                         .header("x-organization-role", "ROLE\n!")
         ).andExpect(status().is2xxSuccessful());
     }
