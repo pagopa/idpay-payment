@@ -30,6 +30,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,7 +58,7 @@ class IdPayCodePaymentMilControllerTest {
     AuthPaymentDTO authPaymentDTO =  AuthPaymentDTOFaker.mockInstance(1,trx);
     authPaymentDTO.setRewards(null);
 
-    Mockito.when(idpayCodePaymentServiceMock.previewPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID)).thenReturn(authPaymentDTO);
+    when(idpayCodePaymentServiceMock.previewPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID)).thenReturn(authPaymentDTO);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/mil/payment/idpay-code/{transactionId}/preview",
@@ -118,7 +119,7 @@ class IdPayCodePaymentMilControllerTest {
     AuthPaymentDTO authPaymentDTO =  AuthPaymentDTOFaker.mockInstance(1,trx);
     authPaymentDTO.setRewards(null);
 
-    Mockito.when(idpayCodePaymentServiceMock.authPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID, pinBlockDTO)).thenReturn(authPaymentDTO);
+    when(idpayCodePaymentServiceMock.authPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID, pinBlockDTO)).thenReturn(authPaymentDTO);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/mil/payment/idpay-code/{transactionId}/authorize", trx.getId())

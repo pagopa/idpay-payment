@@ -160,12 +160,13 @@ class IdpayCodePreviewServiceImplTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         trx.setMerchantId(MERCHANTID);
         trx.setInitiativeId(INITIATIVE_ID);
+        String trxId = trx.getId();
 
-        when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
+        when(transactionInProgressRepositoryMock.findById(trxId)).thenReturn(Optional.of(trx));
 
         //When & Then
         TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID, "WRONG_INITIATIVE")
+                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, "WRONG_INITIATIVE")
         );
 
         Assertions.assertNotNull(result);
@@ -286,11 +287,12 @@ class IdpayCodePreviewServiceImplTest {
         trx.setMerchantId(MERCHANTID);
         trx.setInitiativeId(INITIATIVE_ID);
         trx.setProductType("INVALID_CAT");
+        String trxId = trx.getId();
 
-        when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
+        when(transactionInProgressRepositoryMock.findById(trxId)).thenReturn(Optional.of(trx));
 
         Assertions.assertThrows(InvalidProductCategoryException.class, () ->
-                idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID)
+                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, INITIATIVE_ID)
         );
     }
 
@@ -303,11 +305,12 @@ class IdpayCodePreviewServiceImplTest {
         trx.setMerchantId(MERCHANTID);
         trx.setInitiativeId(INITIATIVE_ID);
         trx.setProductType(null);
+        String trxId = trx.getId();
 
-        when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
+        when(transactionInProgressRepositoryMock.findById(trxId)).thenReturn(Optional.of(trx));
 
         Assertions.assertThrows(InvalidProductCategoryException.class, () ->
-                idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID)
+                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, INITIATIVE_ID)
         );
     }
 }

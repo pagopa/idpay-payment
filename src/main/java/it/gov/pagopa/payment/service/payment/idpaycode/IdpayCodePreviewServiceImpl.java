@@ -105,7 +105,7 @@ public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
         ProductCategory category;
         try {
             category = ProductCategory.valueOf(productType.toUpperCase());
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException _) {
             throw new InvalidProductCategoryException(
                     "Product category [%s] is not eligible for this initiative".formatted(productType)
             );

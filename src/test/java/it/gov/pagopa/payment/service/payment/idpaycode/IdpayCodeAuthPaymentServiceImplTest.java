@@ -15,9 +15,9 @@ import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthoriz
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,15 +33,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
     @Mock private CommonAuthServiceImpl commonAuthServiceMock;
 
-    private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
-
-    @BeforeEach
-    void setUp() {
-        idpayCodeAuthPaymentService = new IdpayCodeAuthPaymentServiceImpl(
-                idpayCodeAuthorizationExpiredServiceMock,
-                paymentInstrumentConnectorMock,
-                commonAuthServiceMock);
-    }
+    @InjectMocks private IdpayCodeAuthPaymentServiceImpl idpayCodeAuthPaymentService;
 
     @Test
     void authTrxNotFound() {

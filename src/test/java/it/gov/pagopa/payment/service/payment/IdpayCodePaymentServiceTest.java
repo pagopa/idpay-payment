@@ -13,9 +13,9 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -30,12 +30,7 @@ class IdpayCodePaymentServiceTest {
     @Mock private IdpayCodeRelateUserService idpayCodeRelateUserServiceMock;
     @Mock private IdpayCodePreviewService idpayCodePreviewServiceMock;
     @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
-    private IdpayCodePaymentService idpayCodePaymentService;
-
-    @BeforeEach
-    void setUp(){
-        idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodeRelateUserServiceMock, idpayCodePreviewServiceMock, idpayCodeAuthPaymentServiceMock);
-    }
+    @InjectMocks private IdpayCodePaymentServiceImpl idpayCodePaymentService;
 
     @Test
     void relateUser() {
