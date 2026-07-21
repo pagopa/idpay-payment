@@ -75,7 +75,7 @@ public class IdpayCodePreviewServiceImpl implements IdpayCodePreviewService{
         merchantConnector.merchantDetail(merchantId, trx.getInitiativeId());
 
         if (trx.getPointOfSaleId() != null) {
-            merchantConnector.getPointOfSaleByInitiativeId(merchantId, trx.getPointOfSaleId(), initiativeId);
+            merchantConnector.getPointOfSale(merchantId, trx.getPointOfSaleId(), initiativeId);
         }
 
         Long calculatedVoucher = calculateVoucherAmount(trx.getProductType(), trx.getAmountCents());

@@ -106,7 +106,7 @@ class IdpayCodePreviewServiceImplTest {
         Assertions.assertEquals(7000L, trx.getVoucherAmountCents());
 
         verify(merchantConnectorMock, times(1)).merchantDetail(MERCHANTID, trx.getInitiativeId());
-        verify(merchantConnectorMock, times(1)).getPointOfSaleByInitiativeId(MERCHANTID, "POS_123", INITIATIVE_ID);
+        verify(merchantConnectorMock, times(1)).getPointOfSale(MERCHANTID, "POS_123", INITIATIVE_ID);
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
         verify(transactionInProgressRepositoryMock, times(1)).save(trx);
@@ -147,7 +147,7 @@ class IdpayCodePreviewServiceImplTest {
         Assertions.assertNotNull(result);
 
         verify(merchantConnectorMock, times(1)).merchantDetail(MERCHANTID, trx.getInitiativeId());
-        verify(merchantConnectorMock, never()).getPointOfSaleByInitiativeId(anyString(), anyString(), anyString());
+        verify(merchantConnectorMock, never()).getPointOfSale(anyString(), anyString(), anyString());
 
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
     }

@@ -33,7 +33,7 @@ public interface MerchantRestClient {
             value = "/idpay/merchant/portal/{merchantId}/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    PointOfSaleDTO getPointOfSaleByInitiativeId(
+    PointOfSaleDTO getPointOfSale(
             @PathVariable("merchantId") String merchantId,
             @PathVariable("pointOfSaleId") String pointOfSaleId,
             @PathVariable("initiativeId") String initiativeId
