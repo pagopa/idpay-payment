@@ -56,9 +56,13 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
-    @PutMapping("/bar-code/{trxCode}/capture")
+    @PutMapping("/initiatives/{initiativeId}/bar-code/{trxCode}/capture")
     TransactionBarCodeResponse capturePayment(
-            @PathVariable("trxCode") String trxCode);
+            @PathVariable("initiativeId") String initiativeId,
+            @PathVariable("trxCode") String trxCode,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+            @RequestHeader("x-acquirer-id") String acquirerId);
 
     @PostMapping("/bar-code/extended")
     @ResponseStatus(code = HttpStatus.CREATED)

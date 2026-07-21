@@ -3,6 +3,9 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
@@ -55,6 +58,7 @@ class CommonCancelServiceTest {
   private BarCodeCreationServiceImpl barCodeCreationService;
   @Mock private TransactionRepository transactionRepository;
   @Mock private TransactionSynchronizer transactionSynchronizer;
+  @Mock private MerchantConnector merchantConnector;
 
   private CommonCancelServiceImpl service;
 
@@ -69,14 +73,15 @@ class CommonCancelServiceTest {
                     paymentErrorNotifierServiceMock,
                     auditUtilitiesMock,
                     transactionSynchronizer,
-                    barCodeCreationService);
+                    barCodeCreationService,
+                    merchantConnector);
   }
 
   @Test
   void testTrxNotFound() {
     TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
             TransactionNotFoundOrExpiredException.class,
-            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID")
+            () -> service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID")
     );
 
     Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
@@ -88,12 +93,15 @@ class CommonCancelServiceTest {
     Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
     when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
+    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+    trx.setInitiativeId("INITIATIVEID");
+    trx.setPointOfSaleId("POSID");
     when(repositoryMock.findById("TRXID"))
-            .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
+            .thenReturn(Optional.of(trx));
 
     MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
             MerchantOrAcquirerNotAllowedException.class,
-            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID")
+            () -> service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID")
     );
 
     Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
@@ -110,13 +118,15 @@ class CommonCancelServiceTest {
     when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
 
+    trx.setInitiativeId("INITIATIVEID");
+    trx.setPointOfSaleId("POSID");
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
 
     MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
             MerchantOrAcquirerNotAllowedException.class,
-            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID_WRONG", "POSID")
+            () -> service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID_WRONG", "POSID")
     );
 
     Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
@@ -133,13 +143,17 @@ class CommonCancelServiceTest {
     when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.REWARDED);
 
+    trx.setInitiativeId("INITIATIVEID");
+    trx.setPointOfSaleId("POSID");
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
+    when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
+    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
 
     OperationNotAllowedException exception = Assertions.assertThrows(
             OperationNotAllowedException.class,
-            () -> service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID")
+            () -> service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID")
     );
 
     Assertions.assertEquals(ExceptionCode.TRX_DELETE_NOT_ALLOWED, exception.getCode());
@@ -159,19 +173,23 @@ class CommonCancelServiceTest {
     TransactionInProgress trx =
             TransactionInProgressFaker.mockInstance(0, status);
     trx.setId("TRXID");
+    trx.setInitiativeId("INITIATIVEID");
+    trx.setPointOfSaleId("POSID");
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     trx.setRewardCents(1000L);
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
+    when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
+    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
 
     boolean expectedNotify = SyncTrxStatus.AUTHORIZED.equals(status);
 
     if (expectedNotify) {
       when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(new AuthPaymentDTO());
-      when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(notifyOutcome);
+      when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(notifyOutcome);
     }
 
-    service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
+    service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID");
 
     verify(repositoryMock).deleteById("TRXID");
     if (expectedNotify && !notifyOutcome) {
@@ -187,14 +205,18 @@ class CommonCancelServiceTest {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
             SyncTrxStatus.AUTHORIZED);
     trx.setId("TRXID");
+    trx.setInitiativeId("INITIATIVEID");
+    trx.setPointOfSaleId("POSID");
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     trx.setExtendedAuthorization(false);
 
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
+    when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
+    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(null);
 
-    service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
+    service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID");
 
     verify(repositoryMock).deleteById("TRXID");
     verifyNoInteractions(notifierServiceMock);
@@ -206,6 +228,9 @@ class CommonCancelServiceTest {
   void testAuthorizedTransaction_WithReset_ShouldResetAndSave() {
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0,
             SyncTrxStatus.AUTHORIZED);
+    trx.setId("TRXID");
+    trx.setInitiativeId("INITIATIVEID");
+    trx.setPointOfSaleId("POSID");
     trx.setMerchantId("MERCHID");
     trx.setAcquirerId("ACQID");
     trx.setExtendedAuthorization(true);
@@ -223,13 +248,15 @@ class CommonCancelServiceTest {
     trxNew.setTrxCode(trx.getTrxCode());
 
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
+    when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
+    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
     when(barCodeCreationService.createExtendedTransactionPostDelete(
             new TransactionBarCodeCreationRequest(trx.getInitiativeId(), trx.getVoucherAmountCents()),
             trx.getChannel(), trx.getUserId(), trx.getTrxEndDate())).thenReturn(trxNew);
 
-    service.cancelTransaction("TRXID", "MERCHID", "ACQID", "POSID");
+    service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID");
     verify(notifierServiceMock).notify(trx, trx.getUserId());
     verify(repositoryMock).save(any());
     Assertions.assertEquals(trx.getTrxCode(), trxNew.getTrxCode());
@@ -336,6 +363,7 @@ class CommonCancelServiceTest {
             anyString(),
             anyString(),
             anyString(),
+            anyString(),
             anyString()
     );
 
@@ -343,7 +371,7 @@ class CommonCancelServiceTest {
 
     verify(repositoryMock, times(2)).findPendingTransactions(100);
     verify(spyService, times(2))
-            .cancelTransaction(anyString(), anyString(), anyString(),
+            .cancelTransaction(anyString(), anyString(), anyString(), anyString(),
                     anyString());
   }
 
@@ -388,6 +416,8 @@ class CommonCancelServiceTest {
     when(repositoryMock.findLapsedTransaction("INITIATIVE_ID",100))
             .thenReturn(List.of(trx1, trx2,trx3, trx4))
             .thenReturn(List.of());
+
+    when(rewardCalculatorConnectorMock.cancelTransaction(trx1)).thenReturn(new AuthPaymentDTO());
 
     when(rewardCalculatorConnectorMock.cancelTransaction(trx2)).thenThrow(new TransactionNotFoundOrExpiredException("message"));
 

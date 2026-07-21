@@ -16,7 +16,6 @@ import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -38,6 +37,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -108,7 +110,7 @@ class CommonPaymentControllerTest {
   void createCommonTransaction() throws Exception {
     TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
     TransactionResponse response = TransactionResponseFaker.mockInstance(1);
-    Mockito.when(commonCreationServiceMock.createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID,
+    when(commonCreationServiceMock.createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID,
         ID_TRX_ISSUER)).thenReturn(response);
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -127,7 +129,7 @@ class CommonPaymentControllerTest {
 
     Assertions.assertNotNull(resultResponse);
     Assertions.assertEquals(response.getId(), resultResponse.getId());
-    Mockito.verify(commonCreationServiceMock)
+    verify(commonCreationServiceMock)
         .createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER);
   }
 
@@ -153,7 +155,7 @@ class CommonPaymentControllerTest {
   void confirmCommonTransaction() throws Exception {
     TransactionResponse response = TransactionResponseFaker.mockInstance(1);
 
-    Mockito.when(commonConfirmServiceMock.confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID))
+    when(commonConfirmServiceMock.confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID))
         .thenReturn(response);
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -169,7 +171,7 @@ class CommonPaymentControllerTest {
 
     Assertions.assertNotNull(resultResponse);
     Assertions.assertEquals(response.getId(), resultResponse.getId());
-    Mockito.verify(commonConfirmServiceMock)
+    verify(commonConfirmServiceMock)
         .confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID);
   }
 
@@ -177,8 +179,8 @@ class CommonPaymentControllerTest {
   void cancelTransaction() throws Exception {
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .delete("/idpay/payment/transactions/{transactionId}",
-                TRANSACTION_ID)
+            .delete("/idpay/payment/initiatives/{initiativeId}/transactions/{transactionId}",
+                INITIATIVE_ID, TRANSACTION_ID)
             .header("x-merchant-id", MERCHANT_ID)
             .header("x-acquirer-id", ACQUIRER_ID)
             .header("x-point-of-sale-id", POINT_OF_SALE_ID))
@@ -186,9 +188,9 @@ class CommonPaymentControllerTest {
         .andReturn();
 
     assertEquals("", result.getResponse().getContentAsString());
-    Mockito.verify(commonCancelServiceMock)
-        .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.anyString());
+    verify(commonCancelServiceMock)
+        .cancelTransaction(INITIATIVE_ID, TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID,
+            POINT_OF_SALE_ID);
 
   }
 
@@ -196,8 +198,8 @@ class CommonPaymentControllerTest {
   void cancelTransaction_testMandatoryHeaders() throws Exception {
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .delete("/idpay/payment/transactions/{transactionId}",
-                TRANSACTION_ID)
+            .delete("/idpay/payment/initiatives/{initiativeId}/transactions/{transactionId}",
+                INITIATIVE_ID, TRANSACTION_ID)
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest())
         .andReturn();
@@ -211,7 +213,7 @@ class CommonPaymentControllerTest {
 
   @Test
   void reversalTransaction() throws Exception {
-    MultipartFile file = Mockito.mock(MultipartFile.class);
+    MultipartFile file = mock(MultipartFile.class);
 
     MockPart docNumberPart = new MockPart("docNumber", DOCUMENT_NUMBER.getBytes());
     docNumberPart.getHeaders().setContentType(MediaType.TEXT_PLAIN);
@@ -227,14 +229,14 @@ class CommonPaymentControllerTest {
         .andReturn();
 
     assertEquals("", result.getResponse().getContentAsString());
-    Mockito.verify(commonReversalService)
-        .reversalTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.any(), Mockito.anyString());
+    verify(commonReversalService)
+        .reversalTransaction(anyString(), anyString(), anyString(),
+            any(), anyString());
   }
 
   @Test
   void invoiceTransaction() throws Exception {
-    MultipartFile file = Mockito.mock(MultipartFile.class);
+    MultipartFile file = mock(MultipartFile.class);
 
     MockPart docNumberPart = new MockPart("docNumber", DOCUMENT_NUMBER.getBytes());
     docNumberPart.getHeaders().setContentType(MediaType.TEXT_PLAIN);
@@ -250,9 +252,9 @@ class CommonPaymentControllerTest {
         .andReturn();
 
     assertEquals("", result.getResponse().getContentAsString());
-    Mockito.verify(commonRewardService)
-        .invoiceTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.any(), Mockito.anyString());
+    verify(commonRewardService)
+        .invoiceTransaction(anyString(), anyString(), anyString(),
+            any(), anyString());
   }
 
   @Test
@@ -278,7 +280,7 @@ class CommonPaymentControllerTest {
   void getStatusTransaction() throws Exception {
     SyncTrxStatusDTO response = SyncTrxStatusFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
-    Mockito.when(
+    when(
             commonStatusTransactionServiceMock.getStatusTransaction(TRANSACTION_ID, MERCHANT_ID))
         .thenReturn(response);
 
@@ -296,7 +298,7 @@ class CommonPaymentControllerTest {
 
     Assertions.assertNotNull(resultResponse);
     Assertions.assertEquals(response.getId(), resultResponse.getId());
-    Mockito.verify(commonStatusTransactionServiceMock)
+    verify(commonStatusTransactionServiceMock)
         .getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
 
   }
@@ -304,7 +306,7 @@ class CommonPaymentControllerTest {
   @Test
   void forceConfirmTrxExpiration() throws Exception {
 
-    Mockito.when(qrCodeExpirationServiceMock.forceConfirmTrxExpiration(INITIATIVE_ID))
+    when(qrCodeExpirationServiceMock.forceConfirmTrxExpiration(INITIATIVE_ID))
         .thenReturn(1L);
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -316,13 +318,13 @@ class CommonPaymentControllerTest {
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(1L, Long.valueOf(result.getResponse().getContentAsString()));
-    Mockito.verify(qrCodeExpirationServiceMock).forceConfirmTrxExpiration(INITIATIVE_ID);
+    verify(qrCodeExpirationServiceMock).forceConfirmTrxExpiration(INITIATIVE_ID);
   }
 
   @Test
   void forceAuthorizationTrxExpiration() throws Exception {
 
-    Mockito.when(qrCodeExpirationServiceMock.forceAuthorizationTrxExpiration(INITIATIVE_ID))
+    when(qrCodeExpirationServiceMock.forceAuthorizationTrxExpiration(INITIATIVE_ID))
         .thenReturn(1L);
 
     MvcResult result = mockMvc.perform(MockMvcRequestBuilders
@@ -334,39 +336,39 @@ class CommonPaymentControllerTest {
 
     Assertions.assertNotNull(result);
     Assertions.assertEquals(1L, Long.valueOf(result.getResponse().getContentAsString()));
-    Mockito.verify(qrCodeExpirationServiceMock).forceAuthorizationTrxExpiration(INITIATIVE_ID);
+    verify(qrCodeExpirationServiceMock).forceAuthorizationTrxExpiration(INITIATIVE_ID);
   }
 
   @Test
   void cancelPendingTransactions_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).rejectPendingTransactions();
+    doNothing().when(commonCancelServiceMock).rejectPendingTransactions();
 
     mockMvc.perform(MockMvcRequestBuilders
             .delete("/idpay/payment/pendingTransactions")
             .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).rejectPendingTransactions();
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
+    verify(commonCancelServiceMock, times(1)).rejectPendingTransactions();
+    verifyNoMoreInteractions(commonCancelServiceMock);
   }
 
 
   @Test
   void testDeleteInvoicedTransaction_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).deleteInvoicedTransaction();
+    doNothing().when(commonCancelServiceMock).deleteInvoicedTransaction();
 
     mockMvc.perform(MockMvcRequestBuilders
                     .delete("/idpay/payment/deleteInvoicedTransaction")
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).deleteInvoicedTransaction();
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
+    verify(commonCancelServiceMock, times(1)).deleteInvoicedTransaction();
+    verifyNoMoreInteractions(commonCancelServiceMock);
   }
 
   @Test
   void deleteLapsedTransactions_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).deleteLapsedTransaction(INITIATIVE_ID);
+    doNothing().when(commonCancelServiceMock).deleteLapsedTransaction(INITIATIVE_ID);
 
     mockMvc.perform(MockMvcRequestBuilders
                     .delete("/idpay/payment/deleteLapsedTransaction/{initiativeId}",
@@ -374,7 +376,7 @@ class CommonPaymentControllerTest {
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk());
 
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).deleteLapsedTransaction(INITIATIVE_ID);
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
+    verify(commonCancelServiceMock, times(1)).deleteLapsedTransaction(INITIATIVE_ID);
+    verifyNoMoreInteractions(commonCancelServiceMock);
   }
 }

@@ -56,8 +56,8 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public TransactionBarCodeResponse capturePayment(String trxCode) {
-        return barCodeCaptureService.capturePayment(trxCode);
+    public TransactionBarCodeResponse capturePayment(String initiativeId, String trxCode, String merchantId, String pointOfSaleId, String acquirerId) {
+        return barCodeCaptureService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Override

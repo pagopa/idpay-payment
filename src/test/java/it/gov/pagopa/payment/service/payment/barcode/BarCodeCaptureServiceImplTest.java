@@ -1,12 +1,18 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
 import it.gov.pagopa.common.utils.TransactionSynchronizer;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
+import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
+import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -37,6 +43,7 @@ class BarCodeCaptureServiceImplTest {
     @Mock private TransactionBarCodeInProgress2TransactionResponseMapper mapper;
     @Mock private TransactionRepository transactionRepository;
     @Mock private TransactionSynchronizer transactionSynchronizer;
+    @Mock private MerchantConnector merchantConnector;
 
     BarCodeCaptureServiceImpl service;
 
@@ -48,14 +55,15 @@ class BarCodeCaptureServiceImplTest {
                         repositoryMock,
                         mapper,
                         auditUtilitiesMock,
-                        transactionSynchronizer);
+                        transactionSynchronizer,
+                        merchantConnector);
     }
 
     @Test
     void testCapturePaymentTrxNotFound() {
         TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
                 TransactionNotFoundOrExpiredException.class,
-                () -> service.capturePayment("trxCode")
+                () -> service.capturePayment("initiativeId", "trxCode", "merchantId", "pointOfSaleId", "acquirerId")
         );
 
         Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
@@ -77,11 +85,12 @@ class BarCodeCaptureServiceImplTest {
 
         OperationNotAllowedException exception = Assertions.assertThrows(
                 OperationNotAllowedException.class,
-                () -> service.capturePayment("trxCode")
+                () -> service.capturePayment("initiativeId", "trxCode", "merchantId", "pointOfSaleId", "acquirerId")
         );
 
         Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
         Assertions.assertEquals("Cannot operate on transaction with transactionCode [trxCode] in status CREATED", exception.getMessage());
+        verifyNoInteractions(merchantConnector);
     }
 
     @Test
@@ -89,14 +98,86 @@ class BarCodeCaptureServiceImplTest {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
+        trx.setInitiativeId("INITIATIVEID");
         trx.setMerchantId("MERCHID");
+        trx.setPointOfSaleId("POSID");
         trx.setAcquirerId("ACQID");
         trx.setStatus(SyncTrxStatus.AUTHORIZED);
         when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
+        when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
+        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
 
-        TransactionBarCodeResponse result = service.capturePayment("trxCode");
+        TransactionBarCodeResponse result = service.capturePayment("INITIATIVEID", "trxCode", "MERCHID", "POSID", "ACQID");
 
         Assertions.assertEquals(result, mapper.apply(trx));
+        verify(merchantConnector).merchantDetail("MERCHID", "INITIATIVEID");
+        verify(merchantConnector).getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID");
+    }
+
+    @Test
+    void capturePayment_initiativeMismatch_throwsException() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        trx.setInitiativeId("INITIATIVE_ASSOCIATED");
+        trx.setMerchantId("MERCHID");
+        trx.setPointOfSaleId("POSID");
+        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
+
+        InitiativeNotfoundException exception = assertThrows(
+                InitiativeNotfoundException.class,
+                () -> service.capturePayment("INITIATIVE_REQUEST", "trxCode", "MERCHID", "POSID", "ACQID")
+        );
+
+        assertEquals(ExceptionCode.INITIATIVE_NOT_FOUND, exception.getCode());
+        assertEquals(
+                "The initiative with id [INITIATIVE_ASSOCIATED] associated to the transaction is not equal to the initiative with id [INITIATIVE_REQUEST]",
+                exception.getMessage());
+        verifyNoInteractions(merchantConnector);
+    }
+
+    @Test
+    void capturePayment_merchantMismatch_throwsException() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        trx.setInitiativeId("INITIATIVEID");
+        trx.setMerchantId("MERCHANT_ASSOCIATED");
+        trx.setPointOfSaleId("POSID");
+        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
+
+        MerchantOrAcquirerNotAllowedException exception = assertThrows(
+                MerchantOrAcquirerNotAllowedException.class,
+                () -> service.capturePayment("INITIATIVEID", "trxCode", "MERCHANT_REQUEST", "POSID", "ACQID")
+        );
+
+        assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
+        assertEquals(
+                "The merchant with id [MERCHANT_ASSOCIATED] associated to the transaction is not equal to the merchant with id [MERCHANT_REQUEST]",
+                exception.getMessage());
+        verifyNoInteractions(merchantConnector);
+    }
+
+    @Test
+    void capturePayment_pointOfSaleMismatch_throwsException() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
+        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
+        trx.setInitiativeId("INITIATIVEID");
+        trx.setMerchantId("MERCHID");
+        trx.setPointOfSaleId("POS_ASSOCIATED");
+        when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
+
+        PointOfSaleNotAllowedException exception = assertThrows(
+                PointOfSaleNotAllowedException.class,
+                () -> service.capturePayment("INITIATIVEID", "trxCode", "MERCHID", "POS_REQUEST", "ACQID")
+        );
+
+        assertEquals(ExceptionCode.PAYMENT_POS_NOT_ALLOWED, exception.getCode());
+        assertEquals(
+                "The pointOfSaleId with id [POS_ASSOCIATED] associated to the transaction is not equal to the pointOfSaleId with id [POS_REQUEST]",
+                exception.getMessage());
+        verifyNoInteractions(merchantConnector);
     }
 
     @Test
@@ -120,11 +201,15 @@ class BarCodeCaptureServiceImplTest {
                 SyncTrxStatus.CREATED,
                 trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of(trxOther));
+        when(merchantConnector.merchantDetail("MERCHID", "INIT01")).thenReturn(MerchantDetailDTO.builder().initiativeId("INIT01").build());
+        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        trxCurrent.setMerchantId("MERCHID");
+        trxCurrent.setPointOfSaleId("POS01");
         doNothing().when(repositoryMock).deleteAll(anyList());
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
         when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
 
-        TransactionBarCodeResponse response = service.capturePayment("trxcurrent");
+        TransactionBarCodeResponse response = service.capturePayment("INIT01", "trxcurrent", "MERCHID", "POS01", "ACQID");
 
         assertNotNull(response);
         verify(repositoryMock).deleteAll(List.of(trxOther));
@@ -152,11 +237,15 @@ class BarCodeCaptureServiceImplTest {
                 SyncTrxStatus.CREATED,
                 trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of(trxOther));
+        when(merchantConnector.merchantDetail("MERCHID", "INIT01")).thenReturn(MerchantDetailDTO.builder().initiativeId("INIT01").build());
+        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        trxCurrent.setMerchantId("MERCHID");
+        trxCurrent.setPointOfSaleId("POS01");
         doNothing().when(repositoryMock).deleteAll(anyList());
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
         when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
 
-        TransactionBarCodeResponse response = service.capturePayment("trxcurrent");
+        TransactionBarCodeResponse response = service.capturePayment("INIT01", "trxcurrent", "MERCHID", "POS01", "ACQID");
 
         assertNotNull(response);
         verify(repositoryMock).deleteAll(List.of(trxOther));
@@ -179,11 +268,15 @@ class BarCodeCaptureServiceImplTest {
                 SyncTrxStatus.CREATED,
                 trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of());
+        when(merchantConnector.merchantDetail("MERCHID", "INIT01")).thenReturn(MerchantDetailDTO.builder().initiativeId("INIT01").build());
+        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        trxCurrent.setMerchantId("MERCHID");
+        trxCurrent.setPointOfSaleId("POS01");
 
         when(repositoryMock.save(trxCurrent)).thenReturn(trxCurrent);
         when(mapper.apply(trxCurrent)).thenReturn(new TransactionBarCodeResponse());
 
-        TransactionBarCodeResponse response = service.capturePayment("trxcurrent");
+        TransactionBarCodeResponse response = service.capturePayment("INIT01", "trxcurrent", "MERCHID", "POS01", "ACQID");
 
         assertNotNull(response);
         verify(repositoryMock, never()).deleteAll(anyList());

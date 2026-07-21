@@ -5,11 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -47,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -81,12 +76,20 @@ class BarCodePaymentControllerTest {
 
     @Test
     void captureCommonTransactionByTrxCode() throws Exception {
+        String initiativeId = "INITIATIVE_ID";
+        String trxCode = "trxCode";
+        String merchantId = "MERCHANT_ID";
+        String pointOfSaleId = "POINT_OF_SALE_ID";
+        String acquirerId = "ACQUIRER_ID";
         TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
+        when(barCodePaymentService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId)).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                .put("/idpay/payment/bar-code/{trxCode}/capture", "trxCode")
+                .put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/capture", initiativeId, trxCode)
+                .header("x-merchant-id", merchantId)
+                .header("x-point-of-sale-id", pointOfSaleId)
+                .header("x-acquirer-id", acquirerId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().is2xxSuccessful()).andReturn();
@@ -97,6 +100,7 @@ class BarCodePaymentControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(txrResponse.getId(), resultResponse.getId());
+        verify(barCodePaymentService).capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Test

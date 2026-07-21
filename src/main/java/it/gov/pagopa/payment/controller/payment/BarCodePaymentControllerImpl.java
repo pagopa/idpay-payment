@@ -108,8 +108,16 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_CAPTURE_PAYMENT",
             payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
-    public TransactionBarCodeResponse capturePayment(String trxCode) {
-        return barCodePaymentService.capturePayment(trxCode);
+    public TransactionBarCodeResponse capturePayment(String initiativeId, String trxCode, String merchantId, String pointOfSaleId, String acquirerId) {
+        log.info(
+                "[CAPTURE_PAYMENT] The merchant {} through acquirer {} is capture the transaction {} at POS {} for initiative {}",
+                Utilities.sanitizeString(merchantId),
+                Utilities.sanitizeString(acquirerId),
+                Utilities.sanitizeString(trxCode),
+                Utilities.sanitizeString(pointOfSaleId),
+                Utilities.sanitizeString(initiativeId)
+        );
+        return barCodePaymentService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
     }
 
     @PerformanceLog(

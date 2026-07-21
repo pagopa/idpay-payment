@@ -4,15 +4,18 @@ import it.gov.pagopa.common.performancelogger.PerformanceLogger;
 import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
+import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
@@ -21,6 +24,7 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
@@ -29,6 +33,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.*;
 
@@ -44,6 +49,7 @@ public class CommonCancelServiceImpl {
     private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final AuditUtilities auditUtilities;
     private final TransactionSynchronizer transactionSynchronizer;
+    private final MerchantConnector merchantConnector;
     private static final String RESET_TRANSACTION = "RESET_TRANSACTION";
     private static final String CANCEL_TRANSACTION = "CANCEL_TRANSACTION";
 
@@ -58,7 +64,8 @@ public class CommonCancelServiceImpl {
             PaymentErrorNotifierService paymentErrorNotifierService,
             AuditUtilities auditUtilities,
             TransactionSynchronizer transactionSynchronizer,
-            BarCodeCreationServiceImpl barCodeCreationService) {
+            BarCodeCreationServiceImpl barCodeCreationService,
+            MerchantConnector merchantConnector) {
         this.transactionRepository = transactionRepository;
         this.repository = repository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
@@ -67,13 +74,22 @@ public class CommonCancelServiceImpl {
         this.auditUtilities = auditUtilities;
         this.transactionSynchronizer = transactionSynchronizer;
         this.barCodeCreationService = barCodeCreationService;
+        this.merchantConnector = merchantConnector;
     }
 
-    public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
+    public void cancelTransaction(String initiativeId, String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         try {
-            TransactionInProgress trx = findAndValidateTransaction(trxId, merchantId, acquirerId);
+            log.info("[CANCEL_TRANSACTION] START - initiativeId={}, trxId={}, merchantId={}, acquirerId={}, pointOfSaleId={}",
+                    Utilities.sanitizeString(initiativeId),
+                    Utilities.sanitizeString(trxId),
+                    Utilities.sanitizeString(merchantId),
+                    Utilities.sanitizeString(acquirerId),
+                    Utilities.sanitizeString(pointOfSaleId));
+
+            TransactionInProgress trx = findAndValidateTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
 
             if (isDeletableImmediately(trx)) {
+                log.info("[CANCEL_TRANSACTION] BRANCH - immediate-delete status={}", trx.getStatus());
                 repository.deleteById(trxId);
 
                 if(!SyncTrxStatus.INVOICED.equals(trx.getStatus())){
@@ -83,6 +99,7 @@ public class CommonCancelServiceImpl {
                     transactionRepository.save(transaction);
                 }
             } else if (SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())) {
+                log.info("[CANCEL_TRANSACTION] BRANCH - authorized cancellation trxId={}", Utilities.sanitizeString(trx.getId()));
                 handleAuthorizedTransaction(trx);
             } else {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_DELETE_NOT_ALLOWED,
@@ -98,7 +115,7 @@ public class CommonCancelServiceImpl {
         }
     }
 
-    private TransactionInProgress findAndValidateTransaction(String trxId, String merchantId, String acquirerId) {
+    private TransactionInProgress findAndValidateTransaction(String initiativeId, String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         TransactionInProgress trx = repository.findById(trxId)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         TRANSACTION_NOT_FOUND_MESSAGE.formatted(trxId)));
@@ -112,7 +129,28 @@ public class CommonCancelServiceImpl {
                     "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]"
                             .formatted(trx.getMerchantId(), merchantId));
         }
+        validateTransactionContext(trx, initiativeId, pointOfSaleId);
+        log.info("[CANCEL_TRANSACTION] Merchant/POS onboarding checks - merchantId={}, pointOfSaleId={}, initiativeId={}",
+                Utilities.sanitizeString(merchantId),
+                Utilities.sanitizeString(pointOfSaleId),
+                Utilities.sanitizeString(initiativeId));
+        merchantConnector.merchantDetail(merchantId, initiativeId);
+        merchantConnector.getPointOfSaleByInitiativeId(merchantId, pointOfSaleId, initiativeId);
+        log.info("[CANCEL_TRANSACTION] Checks Passed");
         return trx;
+    }
+
+    private void validateTransactionContext(TransactionInProgress trx, String initiativeId, String pointOfSaleId) {
+        if (!Objects.equals(trx.getInitiativeId(), initiativeId)) {
+            throw new InitiativeNotfoundException(
+                    "The initiative with id [%s] associated to the transaction is not equal to the initiative with id [%s]"
+                            .formatted(trx.getInitiativeId(), initiativeId));
+        }
+        if (!Objects.equals(trx.getPointOfSaleId(), pointOfSaleId)) {
+            throw new PointOfSaleNotAllowedException(
+                    "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]"
+                            .formatted(trx.getPointOfSaleId(), pointOfSaleId));
+        }
     }
 
     private boolean isDeletableImmediately(TransactionInProgress trx) {
@@ -124,6 +162,8 @@ public class CommonCancelServiceImpl {
     private void handleAuthorizedTransaction(TransactionInProgress trx) {
 
         boolean isReset = trx.getExtendedAuthorization();
+        log.info("[CANCEL_TRANSACTION] Reward cancellation call - trxId={}, reset={}",
+                Utilities.sanitizeString(trx.getId()), isReset);
         AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(trx);
 
         repository.deleteById(trx.getId());
@@ -200,6 +240,7 @@ public class CommonCancelServiceImpl {
             log.info("[CANCEL_AUTHORIZED_TRANSACTIONS] Transactions to cancel: {} / {}", transactions.size(), pageSize);
             transactions.forEach(transaction ->
                     this.cancelTransaction(
+                            transaction.getInitiativeId(),
                             transaction.getId(),
                             transaction.getMerchantId(),
                             transaction.getAcquirerId(),
@@ -285,7 +326,7 @@ public class CommonCancelServiceImpl {
             boolean canDelete = PerformanceLogger.execute(
                     LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
                     () -> handleExpiredTransactionBulk(trx),
-                    result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
+                    _ -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
                             .formatted(trx.getId())
             );
 
@@ -343,7 +384,7 @@ public class CommonCancelServiceImpl {
         if (SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())) {
             try {
                 rewardCalculatorConnector.cancelTransaction(trx);
-            } catch (TransactionNotFoundOrExpiredException e) {
+            } catch (TransactionNotFoundOrExpiredException _) {
                 log.debug("[{}] [{}] Transaction {} already expired, skipping cancel",
                         "LAPSED"+RewardConstants.TRX_CHANNEL_QRCODE,
                         DELETE_LAPSED_TRANSACTION,
