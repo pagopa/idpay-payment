@@ -1,16 +1,19 @@
 package it.gov.pagopa.payment.controller;
 
+import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.PointOfSaleTransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -19,49 +22,171 @@ import java.util.List;
 @Slf4j
 public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransactionController {
 
+    private static final String LOG_GET_POINT_OF_SALE_TRANSACTIONS = "[GET_POINT-OF-SALE_TRANSACTIONS]";
+    private static final String LOG_DOWNLOAD_TRANSACTION = "[DOWNLOAD_TRANSACTION]";
+    private static final String POINT_OF_SALE_MISMATCH_MESSAGE = "Point of sale mismatch: expected [%s], but received [%s]";
+
     private final PointOfSaleTransactionService pointOfSaleTransactionService;
     private final PointOfSaleTransactionMapper mapper;
 
-    public PointOfSaleTransactionControllerImpl(PointOfSaleTransactionService pointOfSaleTransactionService, PointOfSaleTransactionMapper mapper) {
+    public PointOfSaleTransactionControllerImpl(
+            PointOfSaleTransactionService pointOfSaleTransactionService,
+            PointOfSaleTransactionMapper mapper
+    ) {
         this.pointOfSaleTransactionService = pointOfSaleTransactionService;
         this.mapper = mapper;
     }
 
     @Override
-    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(String merchantId,
-                                                                     String tokenPointOfSaleId,
-                                                                     String initiativeId,
-                                                                     String pointOfSaleId,
-                                                                     String fiscalCode,
-                                                                     String status,
-                                                                     String productGtin,
-                                                                     String trxCode,
-                                                                     Pageable pageable) {
-        log.info("[GET_POINT-OF-SALE_TRANSACTIONS] Point of sale {} requested to retrieve transactions", pointOfSaleId == null ? "null" : pointOfSaleId.replaceAll("[\\r\\n]", "").replaceAll("[^\\w\\s-]", ""));
+    @PerformanceLog("GET_POS_TRANSACTIONS")
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactions(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String initiativeId,
+            String pointOfSaleId,
+            String fiscalCode,
+            String status,
+            String productGtin,
+            String trxCode,
+            Pageable pageable) {
 
-      if (tokenPointOfSaleId != null && (!Utilities.sanitizeString(tokenPointOfSaleId)
-          .equals(Utilities.sanitizeString(pointOfSaleId)))){
+        TrxFiltersDTO filters = buildSanitizedFilters(
+                merchantId,
+                initiativeId,
+                pointOfSaleId,
+                productGtin,
+                fiscalCode,
+                status != null ? List.of(sanitize(status)) : null,
+                trxCode
+        );
 
-          throw new PointOfSaleNotAllowedException(
-              "Point of sale mismatch: expected [%s], but received [%s]"
-                  .formatted(tokenPointOfSaleId, pointOfSaleId));
-         }
+        return executeGetTransactions(filters, tokenPointOfSaleId, pageable);
+    }
 
-        TrxFiltersDTO filters = new TrxFiltersDTO(status, productGtin, trxCode);
+    @Override
+    @PerformanceLog("GET_POS_TRANSACTIONS_PROCESSED")
+    public PointOfSaleTransactionsListDTO getPointOfSaleTransactionsProcessed(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String initiativeId,
+            String pointOfSaleId,
+            String productGtin,
+            String fiscalCode,
+            String status,
+            String trxCode,
+            Pageable pageable) {
 
-      Page<TransactionInProgress> page = pointOfSaleTransactionService.getPointOfSaleTransactions(
-                merchantId, initiativeId, pointOfSaleId, fiscalCode, filters, pageable);
+        String sanitizedStatus = sanitize(status);
+        List<String> processedStatuses;
 
-        List<PointOfSaleTransactionDTO> dtos = page.getContent().stream()
-                .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, fiscalCode))
+        if (StringUtils.hasText(sanitizedStatus) &&
+                TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.contains(sanitizedStatus.toUpperCase())) {
+            processedStatuses = List.of(sanitizedStatus.toUpperCase());
+        } else {
+            processedStatuses = TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES;
+        }
+
+        TrxFiltersDTO filters = buildSanitizedFilters(
+                merchantId,
+                initiativeId,
+                pointOfSaleId,
+                productGtin,
+                fiscalCode,
+                processedStatuses,
+                trxCode
+        );
+
+        return executeGetTransactions(filters, tokenPointOfSaleId, pageable);
+    }
+
+    @Override
+    @PerformanceLog("DOWNLOAD_POS_INVOICE")
+    public DownloadInvoiceResponseDTO downloadInvoiceFile(
+            String merchantId,
+            String tokenPointOfSaleId,
+            String pointOfSaleId,
+            String transactionId) {
+
+        String sanitizedMerchantId = sanitize(merchantId);
+        String sanitizedTokenPointOfSaleId = sanitize(tokenPointOfSaleId);
+        String sanitizedPointOfSaleId = sanitize(pointOfSaleId);
+        String sanitizedTransactionId = sanitize(transactionId);
+
+        log.info("{} Requested to download invoice for transaction {}",
+                LOG_DOWNLOAD_TRANSACTION,
+                Utilities.sanitizeForLog(sanitizedTransactionId));
+
+        validatePointOfSaleAccess(sanitizedTokenPointOfSaleId, sanitizedPointOfSaleId);
+
+        return pointOfSaleTransactionService.downloadTransactionInvoice(
+                sanitizedMerchantId,
+                sanitizedPointOfSaleId,
+                sanitizedTransactionId
+        );
+    }
+
+    private PointOfSaleTransactionsListDTO executeGetTransactions(
+            TrxFiltersDTO filters,
+            String tokenPointOfSaleId,
+            Pageable pageable) {
+
+        String sanitizedTokenPointOfSaleId = sanitize(tokenPointOfSaleId);
+
+        log.info("{} Point Of Sale {} requested to retrieve transactions",
+                LOG_GET_POINT_OF_SALE_TRANSACTIONS,
+                Utilities.sanitizeForLog(filters.getPointOfSaleId()));
+
+        validatePointOfSaleAccess(sanitizedTokenPointOfSaleId, filters.getPointOfSaleId());
+
+        Page<Transaction> transactions = pointOfSaleTransactionService.getPointOfSaleTransactions(filters, pageable);
+        return toPointOfSaleTransactionsListDTO(transactions, filters.getFiscalCode());
+    }
+
+    private TrxFiltersDTO buildSanitizedFilters(
+            String merchantId,
+            String initiativeId,
+            String pointOfSaleId,
+            String productGtin,
+            String fiscalCode,
+            List<String> statuses,
+            String trxCode) {
+
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setMerchantId(sanitize(merchantId));
+        filters.setInitiativeId(sanitize(initiativeId));
+        filters.setPointOfSaleId(sanitize(pointOfSaleId));
+        filters.setProductGtin(sanitize(productGtin));
+        filters.setFiscalCode(sanitize(fiscalCode));
+        filters.setStatuses(statuses);
+        filters.setTrxCode(sanitize(trxCode));
+        return filters;
+    }
+
+    private PointOfSaleTransactionsListDTO toPointOfSaleTransactionsListDTO(
+            Page<Transaction> transactions,
+            String sanitizedFiscalCode) {
+
+        List<PointOfSaleTransactionDTO> dtos = transactions.getContent().stream()
+                .map(tx -> mapper.toPointOfSaleTransactionDTO(tx, sanitizedFiscalCode))
                 .toList();
 
         return new PointOfSaleTransactionsListDTO(
                 dtos,
-                page.getNumber(),
-                page.getSize(),
-                (int) page.getTotalElements(),
-                page.getTotalPages()
+                transactions.getNumber(),
+                transactions.getSize(),
+                (int) transactions.getTotalElements(),
+                transactions.getTotalPages()
         );
+    }
+
+    private String sanitize(String value) {
+        return Utilities.sanitizeString(value);
+    }
+
+    private void validatePointOfSaleAccess(String tokenPointOfSaleId, String pointOfSaleId) {
+        if (tokenPointOfSaleId != null && !tokenPointOfSaleId.equals(pointOfSaleId)) {
+            throw new PointOfSaleNotAllowedException(
+                    POINT_OF_SALE_MISMATCH_MESSAGE.formatted(tokenPointOfSaleId, pointOfSaleId));
+        }
     }
 }
