@@ -62,7 +62,18 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
+    public PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+        return previewPayment(initiativeId, trxCode, additionalProperties, amountCents, true);
+    }
+
+    @Override
     public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+        return previewPayment(null, trxCode, additionalProperties, amountCents, false);
+    }
+
+    private PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode,
+                                                   Map<String, String> additionalProperties,
+                                                   Long amountCents, boolean validateInitiative) {
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -71,6 +82,12 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         transactionRepository.findByTrxCode(trxCode.toLowerCase())
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+
+        if (validateInitiative && !transactionInProgress.getInitiativeId().equals(initiativeId)) {
+            throw new TransactionNotFoundOrExpiredException(
+                    "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
+                            trxCode.toLowerCase(), initiativeId));
+        }
 
         transactionInProgress.setAmountCents(amountCents);
         transactionInProgress.setAdditionalProperties(validateAdditionalProperties(
@@ -126,7 +143,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
             trx.setProductType(trx.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
-            PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
+            PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(
+                    merchantId, pointOfSaleId, trx.getInitiativeId());
 
             WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(trx.getInitiativeId(), trx.getUserId());
 

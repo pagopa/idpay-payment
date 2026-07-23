@@ -13,6 +13,8 @@ public interface BarCodePaymentService {
 
     AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePayment, String merchantId, String pointOfSaleId, String acquirerId);
 
+    PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents);
+
     PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents);
 
     TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId);

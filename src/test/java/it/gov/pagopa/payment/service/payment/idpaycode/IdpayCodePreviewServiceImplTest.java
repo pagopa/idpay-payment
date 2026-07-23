@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.service.payment.idpaycode;
 
 import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentConnector;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.dto.SecondFactorDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -10,7 +9,6 @@ import it.gov.pagopa.payment.dto.mapper.AuthPaymentMapper;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.AuthPaymentIdpayCodeMapper;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.InvalidProductCategoryException;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.TransactionRejectedException;
@@ -51,7 +49,6 @@ class IdpayCodePreviewServiceImplTest {
     @Mock private AuditUtilities auditUtilitiesMock;
     @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
     @Mock private TransactionRepository transactionRepository;
-    @Mock private MerchantConnector merchantConnectorMock;
 
     private IdpayCodePreviewService idpayCodePreviewService;
 
@@ -64,8 +61,7 @@ class IdpayCodePreviewServiceImplTest {
                 commonPreAuthServiceMock,
                 new AuthPaymentMapper(),
                 new AuthPaymentIdpayCodeMapper(),
-                auditUtilitiesMock,
-                merchantConnectorMock);
+                auditUtilitiesMock);
     }
 
     @Test
@@ -97,19 +93,12 @@ class IdpayCodePreviewServiceImplTest {
                 .thenReturn(authPaymentDTO);
 
         //When
-        AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID);
+        AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
         TestUtils.checkNotNullFields(result, "rejectionReasons","splitPayment","residualAmountCents");
-
-        Assertions.assertEquals(7000L, trx.getVoucherAmountCents());
-
-        verify(merchantConnectorMock, times(1)).merchantDetail(MERCHANTID, trx.getInitiativeId());
-        verify(merchantConnectorMock, times(1)).getPointOfSale(MERCHANTID, "POS_123", INITIATIVE_ID);
-
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
-        verify(transactionInProgressRepositoryMock, times(1)).save(trx);
     }
 
     @Test
@@ -141,36 +130,12 @@ class IdpayCodePreviewServiceImplTest {
                 .thenReturn(authPaymentDTO);
 
         //When
-        AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID);
+        AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
 
-        verify(merchantConnectorMock, times(1)).merchantDetail(MERCHANTID, trx.getInitiativeId());
-        verify(merchantConnectorMock, never()).getPointOfSale(anyString(), anyString(), anyString());
-
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
-    }
-
-    @Test
-    void previewPayment_initiativeIdMismatch() {
-        //Given
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        trx.setMerchantId(MERCHANTID);
-        trx.setInitiativeId(INITIATIVE_ID);
-        String trxId = trx.getId();
-
-        when(transactionInProgressRepositoryMock.findById(trxId)).thenReturn(Optional.of(trx));
-
-        //When & Then
-        TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, "WRONG_INITIATIVE")
-        );
-
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
     }
 
     @Test
@@ -183,7 +148,7 @@ class IdpayCodePreviewServiceImplTest {
 
         //When
         TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, INITIATIVE_ID)
+                idpayCodePreviewService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
@@ -205,7 +170,7 @@ class IdpayCodePreviewServiceImplTest {
         when(transactionInProgressRepositoryMock.findById(trx.getId())).thenReturn(Optional.of(trx));
 
         //When
-        AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID);
+        AuthPaymentDTO result = idpayCodePreviewService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
@@ -242,7 +207,7 @@ class IdpayCodePreviewServiceImplTest {
 
         //When
         TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
-                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, INITIATIVE_ID)
+                idpayCodePreviewService.previewPayment(trxId, MERCHANTID)
         );
 
         //Then
@@ -268,7 +233,7 @@ class IdpayCodePreviewServiceImplTest {
 
         //When
         MerchantOrAcquirerNotAllowedException result = Assertions.assertThrows(MerchantOrAcquirerNotAllowedException.class, () ->
-                idpayCodePreviewService.previewPayment(trxId, "DUMMYMERCHANT", INITIATIVE_ID)
+                idpayCodePreviewService.previewPayment(trxId, "DUMMYMERCHANT")
         );
 
         //Then
@@ -278,39 +243,4 @@ class IdpayCodePreviewServiceImplTest {
         verify(transactionInProgressRepositoryMock, times(1)).findById(anyString());
     }
 
-    @Test
-    void previewPayment_invalidProductCategory() {
-        //Given
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        trx.setMerchantId(MERCHANTID);
-        trx.setInitiativeId(INITIATIVE_ID);
-        trx.setProductType("INVALID_CAT");
-        String trxId = trx.getId();
-
-        when(transactionInProgressRepositoryMock.findById(trxId)).thenReturn(Optional.of(trx));
-
-        Assertions.assertThrows(InvalidProductCategoryException.class, () ->
-                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, INITIATIVE_ID)
-        );
-    }
-
-    @Test
-    void previewPayment_productTypeNull() {
-        //Given
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        trx.setMerchantId(MERCHANTID);
-        trx.setInitiativeId(INITIATIVE_ID);
-        trx.setProductType(null);
-        String trxId = trx.getId();
-
-        when(transactionInProgressRepositoryMock.findById(trxId)).thenReturn(Optional.of(trx));
-
-        Assertions.assertThrows(InvalidProductCategoryException.class, () ->
-                idpayCodePreviewService.previewPayment(trxId, MERCHANTID, INITIATIVE_ID)
-        );
-    }
 }

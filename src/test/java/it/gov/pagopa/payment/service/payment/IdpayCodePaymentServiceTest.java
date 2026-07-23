@@ -54,10 +54,10 @@ class IdpayCodePaymentServiceTest {
         //Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1,trx);
-        when(idpayCodePreviewServiceMock.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID))
+        when(idpayCodePreviewServiceMock.previewPayment(trx.getId(), MERCHANTID))
                 .thenReturn(preview);
         //When
-        AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID);
+        AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
@@ -72,10 +72,10 @@ class IdpayCodePaymentServiceTest {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         PinBlockDTO pinBlockDTO = PinBlockDTOFaker.mockInstance();
 
-        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID, INITIATIVE_ID, pinBlockDTO))
+        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID, pinBlockDTO))
                 .thenReturn(authPaymentDTO);
         //When
-        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID, INITIATIVE_ID, pinBlockDTO);
+        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID, pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);

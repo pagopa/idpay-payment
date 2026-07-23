@@ -80,7 +80,8 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
         final long amountCents = validatePreviewAmount(previewPaymentRequestDTO.getAmountCents());
 
         final PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService
-                .previewPayment(sanitizedTrxCode, buildLegacyPreviewAdditionalProperties(sanitizedProductName, sanitizedProductGtin), amountCents);
+                .previewPayment(sanitizedTrxCode,
+                        buildLegacyPreviewAdditionalProperties(sanitizedProductName, sanitizedProductGtin), amountCents);
 
         return mapPreviewPaymentV1(previewPaymentResult, sanitizedProductName, sanitizedProductGtin);
     }
@@ -89,10 +90,13 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_PREVIEW_PAYMENT",
             payloadBuilderBeanClass = PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder.class)
-    public PreviewPaymentResponseV2DTO previewPaymentV2(String trxCode, PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO) {
+    public PreviewPaymentResponseV2DTO previewPaymentV2(String initiativeId, String trxCode, PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO) {
+        final String sanitizedInitiativeId = sanitizeString(initiativeId);
         final String sanitizedTrxCode = sanitizeString(trxCode);
         final long amountCents = validatePreviewAmount(previewPaymentRequestV2DTO.getAmountCents());
-        PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService.previewPayment(sanitizedTrxCode, previewPaymentRequestV2DTO.getAdditionalProperties(), amountCents);
+        PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService.previewPayment(
+                sanitizedInitiativeId, sanitizedTrxCode,
+                previewPaymentRequestV2DTO.getAdditionalProperties(), amountCents);
         return mapPreviewPaymentV2(previewPaymentResult);
     }
 

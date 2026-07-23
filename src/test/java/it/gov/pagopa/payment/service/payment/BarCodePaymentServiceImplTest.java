@@ -128,13 +128,13 @@ class BarCodePaymentServiceImplTest {
                 .build();
         Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
 
-        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
+        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any(), any()))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("trxCode", additionalProperties, 500L);
+        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(barCodeAuthPaymentService).previewPayment("trxCode", additionalProperties, 500L);
+        Mockito.verify(barCodeAuthPaymentService).previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
     }
 
     @Test

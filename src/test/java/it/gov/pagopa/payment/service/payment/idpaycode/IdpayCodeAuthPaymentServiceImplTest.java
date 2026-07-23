@@ -46,31 +46,10 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //When
         TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", INITIATIVE_ID, pinBlockDTO)
+                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", pinBlockDTO)
         );
 
         //Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
-    }
-
-    @Test
-    void authTrx_initiativeIdMismatch() {
-        //Given
-        String trxId = "trxId".toLowerCase();
-        PinBlockDTO pinBlockDTO = new PinBlockDTO("PINBLOCK", "KEY");
-
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        trx.setInitiativeId(INITIATIVE_ID);
-
-        when(idpayCodeAuthorizationExpiredServiceMock.findByTrxIdAndAuthorizationNotExpired(trxId))
-                .thenReturn(trx);
-
-        //When & Then
-        TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", "WRONG_INITIATIVE", pinBlockDTO)
-        );
-
         Assertions.assertNotNull(result);
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
     }
@@ -89,7 +68,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //When
         OperationNotAllowedException result = Assertions.assertThrows(OperationNotAllowedException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", INITIATIVE_ID, pinBlockDTO)
+                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", pinBlockDTO)
         );
 
         //Then
@@ -115,7 +94,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.authPayment(trx, trx.getUserId(), trx.getTrxCode()))
                 .thenReturn(authPaymentDTO);
         //When
-        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID, pinBlockDTO);
+        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(), trx.getMerchantId(), pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);
@@ -141,7 +120,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //When
         MerchantOrAcquirerNotAllowedException result = Assertions.assertThrows(MerchantOrAcquirerNotAllowedException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "DUMMY_MERCHANTID", INITIATIVE_ID, pinBlockDTO)
+                idpayCodeAuthPaymentService.authPayment(trxId, "DUMMY_MERCHANTID", pinBlockDTO)
         );
 
         //Then

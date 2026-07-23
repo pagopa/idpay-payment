@@ -86,15 +86,15 @@ class BarCodePaymentControllerImplUnitTest {
                 .extendedAuthorization(true)
                 .build();
 
-        when(barCodePaymentService.previewPayment("trxCode", Map.of("customField", "customValue"), 100L))
+        when(barCodePaymentService.previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResponseV2DTO result = controller.previewPaymentV2("trxCode", request);
+        PreviewPaymentResponseV2DTO result = controller.previewPaymentV2("initiativeId", "trxCode", request);
 
         Assertions.assertEquals("trxCode", result.getTrxCode());
         Assertions.assertEquals(Map.of("customField", "validatedValue"), result.getAdditionalProperties());
         Assertions.assertTrue(result.isExtendedAuthorization());
-        verify(barCodePaymentService).previewPayment("trxCode", Map.of("customField", "customValue"), 100L);
+        verify(barCodePaymentService).previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L);
     }
 
     @Test
