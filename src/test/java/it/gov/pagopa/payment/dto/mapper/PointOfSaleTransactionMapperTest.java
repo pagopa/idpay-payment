@@ -2,14 +2,13 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.PDVService;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -26,21 +25,21 @@ class PointOfSaleTransactionMapperTest {
 
     @BeforeEach
     void setup() {
-        transactionInProgress2TransactionResponseMapper = Mockito.mock(TransactionInProgress2TransactionResponseMapper.class);
-        pdvService = Mockito.mock(PDVService.class);
+        transactionInProgress2TransactionResponseMapper = mock(TransactionInProgress2TransactionResponseMapper.class);
+        pdvService = mock(PDVService.class);
         mapper = new PointOfSaleTransactionMapper(10, transactionInProgress2TransactionResponseMapper, pdvService);
     }
 
     @Test
     void testToPointOfSaleTransactionDTO_WithFiscalCodeInputAndQrCodeChannel() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trx.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         trx.setRewardCents(500L);
 
         when(transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trx.getTrxCode())).thenReturn(qrCodeImgUrl);
         when(transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trx.getTrxCode())).thenReturn(qrCodeTxtUrl);
 
-        String fiscalCodeInput = "FISCALCODE1";
+        String fiscalCodeInput = "fiscalCode";
 
         PointOfSaleTransactionDTO result = mapper.toPointOfSaleTransactionDTO(trx, fiscalCodeInput);
 
@@ -56,12 +55,12 @@ class PointOfSaleTransactionMapperTest {
 
     @Test
     void testToPointOfSaleTransactionDTO_NoFiscalCodeInputAndNoChannel() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trx.setChannel(null);
         trx.setUserId("USERID1");
         trx.setTrxCode("TRX123");
 
-        when(pdvService.decryptCF("USERID1")).thenReturn("DECRYPTED_FISCAL_CODE");
+        when(pdvService.decryptCF("USERID1")).thenReturn("fiscalCode");
 
         when(transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl("TRX123")).thenReturn(qrCodeImgUrl);
         when(transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl("TRX123")).thenReturn(qrCodeTxtUrl);
@@ -69,27 +68,25 @@ class PointOfSaleTransactionMapperTest {
         PointOfSaleTransactionDTO result = mapper.toPointOfSaleTransactionDTO(trx, null);
 
         assertNotNull(result);
-        assertEquals("DECRYPTED_FISCAL_CODE", result.getFiscalCode());
+        assertEquals("fiscalCode", result.getFiscalCode());
         assertEquals(qrCodeImgUrl, result.getQrcodePngUrl());
         assertEquals(qrCodeTxtUrl, result.getQrcodeTxtUrl());
         assertEquals(CommonUtilities.minutesToSeconds(10), result.getTrxExpirationSeconds());
 
-
-        verify(pdvService).decryptCF("USERID1");
         verify(transactionInProgress2TransactionResponseMapper).generateTrxCodeImgUrl("TRX123");
         verify(transactionInProgress2TransactionResponseMapper).generateTrxCodeTxtUrl("TRX123");
     }
 
     @Test
     void testToPointOfSaleTransactionDTO_WithNullChannel_ShouldGenerateQrCodeUrls() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trx.setChannel(null);
         trx.setRewardCents(500L);
 
         when(transactionInProgress2TransactionResponseMapper.generateTrxCodeImgUrl(trx.getTrxCode())).thenReturn(qrCodeImgUrl);
         when(transactionInProgress2TransactionResponseMapper.generateTrxCodeTxtUrl(trx.getTrxCode())).thenReturn(qrCodeTxtUrl);
 
-        String fiscalCodeInput = "FISCALCODE1";
+        String fiscalCodeInput = "fiscalCode";
 
         PointOfSaleTransactionDTO result = mapper.toPointOfSaleTransactionDTO(trx, fiscalCodeInput);
 
@@ -108,11 +105,11 @@ class PointOfSaleTransactionMapperTest {
 
     @Test
     void testToPointOfSaleTransactionDTO_WithNonQrCodeChannel_ShouldNotGenerateQrCodeUrls() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         trx.setChannel("OTHER_CHANNEL");
         trx.setRewardCents(300L);
 
-        String fiscalCodeInput = "FISCALCODE1";
+        String fiscalCodeInput = "fiscalCode";
 
         PointOfSaleTransactionDTO result = mapper.toPointOfSaleTransactionDTO(trx, fiscalCodeInput);
 

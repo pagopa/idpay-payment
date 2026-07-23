@@ -1,3 +1,6 @@
+CREATE DATABASE "idpay-database";
+
+
 BEGIN;
 
 -- 1. CREAZIONE DELLO SCHEMA
@@ -116,11 +119,6 @@ BEGIN
 END;
 $$;
 
--- 6. PULIZIA DEI VECCHI TRIGGER PER EVITARE CONFLITTI
-DROP TRIGGER IF EXISTS trg_transaction_outbox ON "idpay-pagamenti".transaction;
-DROP TRIGGER IF EXISTS trg_transaction_outbox_insert ON "idpay-pagamenti".transaction;
-DROP TRIGGER IF EXISTS trg_transaction_outbox_update ON "idpay-pagamenti".transaction;
-
 -- 7. TRIGGER PER GLI INSERT (Scatta sempre all'inserimento della transazione)
 CREATE TRIGGER trg_transaction_outbox_insert
 AFTER INSERT ON "idpay-pagamenti".transaction
@@ -133,5 +131,7 @@ AFTER UPDATE ON "idpay-pagamenti".transaction
 FOR EACH ROW
 WHEN (OLD.status IS DISTINCT FROM NEW.status)
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
+
+ALTER ROLE idpaydbadmin WITH REPLICATION;
 
 COMMIT;
