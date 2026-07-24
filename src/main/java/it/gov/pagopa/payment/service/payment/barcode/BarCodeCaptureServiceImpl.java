@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 @Slf4j
@@ -60,10 +61,18 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
                     Utilities.sanitizeString(pointOfSaleId),
                     Utilities.sanitizeString(acquirerId));
 
-            TransactionInProgress trx = repository.findByTrxCode(trxCode)
+            String normalizedTrxCode = trxCode == null
+                    ? null
+                    : trxCode.toLowerCase(Locale.ROOT);
+
+            if (normalizedTrxCode == null) {
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode));
+            }
+
+            TransactionInProgress trx = repository.findByTrxCode(normalizedTrxCode)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
-            Transaction transaction = transactionRepository.findByTrxCode(trxCode)
+            Transaction transaction = transactionRepository.findByTrxCode(normalizedTrxCode)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
             if(!trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)){
