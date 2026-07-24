@@ -181,7 +181,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress)).thenReturn(authPaymentDTO);
 
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(
-                NO_OP_INITIATIVE_ID,
+                transactionInProgress.getInitiativeId(),
                 TRX_CODE1,
                 authBarCodePaymentDTO,
                 MERCHANT_ID,
