@@ -65,6 +65,8 @@ class BarCodePaymentServiceImplTest {
                 .amountCents(1000L)
                 .idTrxAcquirer("ID_TRX_ACQUIRER")
                 .build();
+
+        String initiativeId = "INITIATIVE_ID";
         String trxCode = "TRX_CODE";
         String merchantId = "MERCHANT_ID";
         String pointOfSaleId = "POS_ID";
@@ -72,13 +74,13 @@ class BarCodePaymentServiceImplTest {
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-        when(barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
+        when(barCodeAuthPaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
                 .thenReturn(authPaymentDTO);
 
         AuthPaymentDTO result = barCodePaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
 
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
-        verify(barCodeAuthPaymentService, times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
+        verify(barCodeAuthPaymentService, times(1)).authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
         verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
 

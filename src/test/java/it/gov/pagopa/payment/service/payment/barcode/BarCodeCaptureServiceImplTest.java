@@ -105,13 +105,13 @@ class BarCodeCaptureServiceImplTest {
         trx.setStatus(SyncTrxStatus.AUTHORIZED);
         when(repositoryMock.findByTrxCode(any())).thenReturn(Optional.of(trx));
         when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
-        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        when(merchantConnector.getPointOfSale("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
 
         TransactionBarCodeResponse result = service.capturePayment("INITIATIVEID", "trxCode", "MERCHID", "POSID", "ACQID");
 
         Assertions.assertEquals(result, mapper.apply(trx));
         verify(merchantConnector).merchantDetail("MERCHID", "INITIATIVEID");
-        verify(merchantConnector).getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID");
+        verify(merchantConnector).getPointOfSale("MERCHID", "POSID", "INITIATIVEID");
     }
 
     @Test
@@ -202,7 +202,7 @@ class BarCodeCaptureServiceImplTest {
                 trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of(trxOther));
         when(merchantConnector.merchantDetail("MERCHID", "INIT01")).thenReturn(MerchantDetailDTO.builder().initiativeId("INIT01").build());
-        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        when(merchantConnector.getPointOfSale("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
         trxCurrent.setMerchantId("MERCHID");
         trxCurrent.setPointOfSaleId("POS01");
         doNothing().when(repositoryMock).deleteAll(anyList());
@@ -238,7 +238,7 @@ class BarCodeCaptureServiceImplTest {
                 trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of(trxOther));
         when(merchantConnector.merchantDetail("MERCHID", "INIT01")).thenReturn(MerchantDetailDTO.builder().initiativeId("INIT01").build());
-        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        when(merchantConnector.getPointOfSale("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
         trxCurrent.setMerchantId("MERCHID");
         trxCurrent.setPointOfSaleId("POS01");
         doNothing().when(repositoryMock).deleteAll(anyList());
@@ -269,7 +269,7 @@ class BarCodeCaptureServiceImplTest {
                 trxCurrent.getExtendedAuthorization()
         )).thenReturn(List.of());
         when(merchantConnector.merchantDetail("MERCHID", "INIT01")).thenReturn(MerchantDetailDTO.builder().initiativeId("INIT01").build());
-        when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
+        when(merchantConnector.getPointOfSale("MERCHID", "POS01", "INIT01")).thenReturn(PointOfSaleDTO.builder().businessName("Business").build());
         trxCurrent.setMerchantId("MERCHID");
         trxCurrent.setPointOfSaleId("POS01");
 

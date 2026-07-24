@@ -149,7 +149,7 @@ class CommonCancelServiceTest {
     trx.setAcquirerId("ACQID");
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
-    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
+    when(merchantConnector.getPointOfSale("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
 
     OperationNotAllowedException exception = Assertions.assertThrows(
             OperationNotAllowedException.class,
@@ -180,7 +180,7 @@ class CommonCancelServiceTest {
     trx.setRewardCents(1000L);
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
-    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
+    when(merchantConnector.getPointOfSale("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
 
     boolean expectedNotify = SyncTrxStatus.AUTHORIZED.equals(status);
 
@@ -213,7 +213,7 @@ class CommonCancelServiceTest {
 
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
-    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
+    when(merchantConnector.getPointOfSale("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(null);
 
     service.cancelTransaction("INITIATIVEID", "TRXID", "MERCHID", "ACQID", "POSID");
@@ -249,7 +249,7 @@ class CommonCancelServiceTest {
 
     when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
     when(merchantConnector.merchantDetail("MERCHID", "INITIATIVEID")).thenReturn(MerchantDetailDTO.builder().initiativeId("INITIATIVEID").build());
-    when(merchantConnector.getPointOfSaleByInitiativeId("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
+    when(merchantConnector.getPointOfSale("MERCHID", "POSID", "INITIATIVEID")).thenReturn(PointOfSaleDTO.builder().businessName("business").build());
     when(rewardCalculatorConnectorMock.cancelTransaction(trx)).thenReturn(refund);
     when(notifierServiceMock.notify(trx, trx.getUserId())).thenReturn(true);
     when(barCodeCreationService.createExtendedTransactionPostDelete(
