@@ -298,8 +298,9 @@ class BarCodeAuthPaymentServiceImplTest {
                 .when(commonAuthServiceMock).previewPayment(any(), any());
 
         Map<String, String> additionalProperties = Map.of("productGtin", "");
+        String initiativeId = transactionInProgress.getInitiativeId();
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment(transactionInProgress.getInitiativeId(), "trxCode", additionalProperties, 90000L));
+                barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 90000L));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
         verify(paymentCheckService, never()).validateProduct(any(), any());
@@ -315,9 +316,10 @@ class BarCodeAuthPaymentServiceImplTest {
         authPaymentDTO.setRewardCents(-100L);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
-      Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
-      assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment(transactionInProgress.getInitiativeId(), "trxCode", additionalProperties, 90000L));
+        Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
+        String initiativeId = transactionInProgress.getInitiativeId();
+        assertThrows(TransactionInvalidException.class, () ->
+                barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 90000L));
         verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
@@ -332,9 +334,10 @@ class BarCodeAuthPaymentServiceImplTest {
         authPaymentDTO.setRewardCents(100L);
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
 
-      Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
-      assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.previewPayment(transactionInProgress.getInitiativeId(), "trxCode", additionalProperties, 90L));
+        Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
+        String initiativeId = transactionInProgress.getInitiativeId();
+        assertThrows(TransactionInvalidException.class, () ->
+                barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 90L));
         verify(paymentCheckService, never()).validateProduct(any(), any());
     }
 
@@ -347,9 +350,10 @@ class BarCodeAuthPaymentServiceImplTest {
         when(transaction.findByTrxCode(any())).thenReturn(Optional.of(transactionInProgress));
 
         Map<String, String> additionalProperties = Map.of("productGtin", " ");
+        String initiativeId = transactionInProgress.getInitiativeId();
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class,
-                () -> barCodeAuthPaymentService.previewPayment(transactionInProgress.getInitiativeId(), "trxCode", additionalProperties, 95000L));
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 95000L));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
         verify(paymentCheckService, never()).validateProduct(any(), any());

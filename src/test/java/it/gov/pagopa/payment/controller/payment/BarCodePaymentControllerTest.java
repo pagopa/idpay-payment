@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -83,7 +82,7 @@ class BarCodePaymentControllerTest {
     void captureCommonTransactionByTrxCode() throws Exception {
         TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
+        when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                 .put("/idpay/payment/bar-code/{trxCode}/capture", "trxCode")

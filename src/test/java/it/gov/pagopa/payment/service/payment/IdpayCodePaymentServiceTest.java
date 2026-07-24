@@ -25,8 +25,6 @@ import static org.mockito.Mockito.when;
 class IdpayCodePaymentServiceTest {
     private static final String MERCHANTID = "MERCHANTID";
     private static final String FISCALCODE = "FISCALCODE";
-    private static final String INITIATIVE_ID = "INITIATIVE_ID";
-
     @Mock private IdpayCodeRelateUserService idpayCodeRelateUserServiceMock;
     @Mock private IdpayCodePreviewService idpayCodePreviewServiceMock;
     @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
