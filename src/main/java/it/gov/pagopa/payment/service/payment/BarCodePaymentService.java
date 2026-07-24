@@ -11,7 +11,7 @@ public interface BarCodePaymentService {
 
     TransactionBarCodeResponse createTransaction(TransactionBarCodeCreationRequest trxBRCodeCreationRequest, String userId);
 
-    AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePayment, String merchantId, String pointOfSaleId, String acquirerId);
+    AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePayment, String merchantId, String pointOfSaleId, String acquirerId);
 
     PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents);
 

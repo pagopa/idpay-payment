@@ -107,12 +107,12 @@ class BarCodePaymentControllerTest {
         when(barCodePaymentService.createTransaction(trxCreationReq, "USER_ID")).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(
-                        post("/idpay/payment/bar-code")
-                                .header("x-user-id", "USER_ID")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .accept(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(trxCreationReq))
-                ).andExpect(status().isCreated()).andReturn();
+                post("/idpay/payment/bar-code")
+                        .header("x-user-id", "USER_ID")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxCreationReq))
+        ).andExpect(status().isCreated()).andReturn();
 
         TransactionBarCodeResponse resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
@@ -159,6 +159,7 @@ class BarCodePaymentControllerTest {
 
     @Test
     void authorizeTransaction() throws Exception {
+        String initiativeId = "INITIATIVEID1";
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
                 .amountCents(1000L)
                 .idTrxAcquirer("ACQUIRERID1")
@@ -169,10 +170,11 @@ class BarCodePaymentControllerTest {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         authPaymentDTO.setRewards(null);
 
-        when(barCodePaymentService.authPayment(trx.getTrxCode(), authBarCodePaymentDTO, "MERCHANTID1", "POINTOFSALEID1", "ACQUIRERID1")).thenReturn(authPaymentDTO);
+        when(barCodePaymentService.authPayment(initiativeId, trx.getTrxCode(), authBarCodePaymentDTO, "MERCHANTID1", "POINTOFSALEID1", "ACQUIRERID1"))
+                .thenReturn(authPaymentDTO);
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/{trxCode}/authorize", trx.getTrxCode())
+                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/authorize", initiativeId, trx.getTrxCode())
                                 .header("x-merchant-id", "MERCHANTID1")
                                 .header("x-point-of-sale-id", "POINTOFSALEID1")
                                 .header("x-acquirer-id", "ACQUIRERID1")
@@ -192,7 +194,7 @@ class BarCodePaymentControllerTest {
         List<String> expectedInvalidFields = List.of("amountCents");
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/trxCode/authorize")
+                        put("/idpay/payment/initiatives/INITIATIVE_ID/bar-code/trxCode/authorize")
                                 .header("x-merchant-id", "MERCHANT_ID")
                                 .header("x-acquirer-id", "ACQUIRER_ID")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +215,7 @@ class BarCodePaymentControllerTest {
                 .build();
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/trxCode/authorize")
+                        put("/idpay/payment/initiatives/INITIATIVE_ID/bar-code/trxCode/authorize")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(authBarCodePaymentDTO)))
                 .andExpect(status().isBadRequest())
@@ -265,6 +267,7 @@ class BarCodePaymentControllerTest {
         verify(barCodePaymentService).previewPayment("trxCode", Map.of("productGtin", "123456abc"), 100L);
     }
 
+    @Test
     void previewPaymentV2_ok() throws Exception {
         PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO = PreviewPaymentRequestV2DTO.builder()
                 .amountCents(BigDecimal.valueOf(100))

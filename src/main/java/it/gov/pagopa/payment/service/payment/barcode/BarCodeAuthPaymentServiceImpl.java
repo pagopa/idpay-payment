@@ -110,7 +110,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
+    public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         try {
             if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
@@ -118,6 +118,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             }
 
             TransactionInProgress trx = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+
+            if (trx == null || !trx.getInitiativeId().equals(initiativeId)) {
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(trxCode, initiativeId));
+            }
+
             commonAuthService.checkAuth(trxCode, trx);
 
             trx.setAdditionalProperties(validateAdditionalProperties(
@@ -142,6 +147,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
+
             return authPaymentDTO;
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);

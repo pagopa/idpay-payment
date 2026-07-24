@@ -41,8 +41,8 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
-        return barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
+    public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
+        return barCodeAuthPaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Override

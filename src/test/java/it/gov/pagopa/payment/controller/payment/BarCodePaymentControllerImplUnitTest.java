@@ -1,11 +1,14 @@
 package it.gov.pagopa.payment.controller.payment;
 
+import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
+import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
+import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.pdf.PdfService;
@@ -37,6 +40,35 @@ class BarCodePaymentControllerImplUnitTest {
     @BeforeEach
     void setUp() {
         controller = new BarCodePaymentControllerImpl(barCodePaymentService, pdfService);
+    }
+
+    @Test
+    void authPayment_shouldDelegateToService() {
+        String initiativeId = "INITIATIVE_ID";
+        String trxCode = "TRX_CODE";
+        String merchantId = "MERCHANT_ID";
+        String pointOfSaleId = "POS_ID";
+        String acquirerId = "ACQUIRER_ID";
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(1000L)
+                .idTrxAcquirer("ACQUIRER_TRX_ID")
+                .build();
+
+        AuthPaymentDTO expectedResponse = AuthPaymentDTO.builder()
+                .id("TRX_ID")
+                .status(SyncTrxStatus.AUTHORIZED)
+                .build();
+
+        when(barCodePaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId))
+                .thenReturn(expectedResponse);
+
+        AuthPaymentDTO result = controller.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
+
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(expectedResponse.getId(), result.getId());
+        Assertions.assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+
+        verify(barCodePaymentService).authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Test
@@ -95,6 +127,31 @@ class BarCodePaymentControllerImplUnitTest {
         Assertions.assertEquals(Map.of("customField", "validatedValue"), result.getAdditionalProperties());
         Assertions.assertTrue(result.isExtendedAuthorization());
         verify(barCodePaymentService).previewPayment("trxCode", Map.of("customField", "customValue"), 100L);
+    }
+
+    @Test
+    void downloadBarcode_shouldBuildInlineJsonResponse() {
+        String initiativeId = "INITIATIVE_ID";
+        String trxCode = "TRXCODE";
+        String userId = "USER_ID";
+        String username = "USERNAME";
+        String fiscalCode = "FISCALCODE";
+
+        ReportDTO report = ReportDTO.builder()
+                .data("base64-content")
+                .build();
+
+        when(pdfService.create(initiativeId, trxCode, userId, username, fiscalCode)).thenReturn(report);
+
+        ResponseEntity<ReportDTO> result = controller.downloadBarcode(initiativeId, trxCode, userId, username, fiscalCode);
+
+        Assertions.assertEquals(200, result.getStatusCode().value());
+        Assertions.assertEquals(MediaType.APPLICATION_JSON, result.getHeaders().getContentType());
+        Assertions.assertEquals("no-store", result.getHeaders().getCacheControl());
+        Assertions.assertTrue(result.getHeaders().getFirst("Content-Disposition").contains("barcode_TRXCODE.pdf"));
+        Assertions.assertSame(report, result.getBody());
+
+        verify(pdfService).create(initiativeId, trxCode, userId, username, fiscalCode);
     }
 
     @Test

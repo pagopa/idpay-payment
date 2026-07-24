@@ -25,9 +25,10 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
-    @PutMapping("/bar-code/{trxCode}/authorize")
+    @PutMapping("/initiatives/{initiativeId}/bar-code/{trxCode}/authorize")
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(
+            @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
             @RequestHeader("x-merchant-id") String merchantId,
