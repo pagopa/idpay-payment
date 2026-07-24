@@ -60,12 +60,10 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
                     Utilities.sanitizeString(pointOfSaleId),
                     Utilities.sanitizeString(acquirerId));
 
-            String normalizedTrxCode = trxCode.toLowerCase();
-
-            TransactionInProgress trx = repository.findByTrxCode(normalizedTrxCode)
+            TransactionInProgress trx = repository.findByTrxCode(trxCode)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
-            Transaction transaction = transactionRepository.findByTrxCode(normalizedTrxCode)
+            Transaction transaction = transactionRepository.findByTrxCode(trxCode)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
             if(!trx.getStatus().equals(SyncTrxStatus.AUTHORIZED)){
