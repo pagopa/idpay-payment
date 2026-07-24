@@ -75,7 +75,7 @@ class BarCodePaymentServiceImplTest {
         when(barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
                 .thenReturn(authPaymentDTO);
 
-        AuthPaymentDTO result = barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
+        AuthPaymentDTO result = barCodePaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
 
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
         verify(barCodeAuthPaymentService, times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);

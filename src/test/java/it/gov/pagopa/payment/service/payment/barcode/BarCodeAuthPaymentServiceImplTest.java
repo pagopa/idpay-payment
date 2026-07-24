@@ -146,7 +146,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .thenReturn(walletDTO);
         when(paymentCheckService.validateProduct(any(),any())).thenReturn(ProductDTOFaker.mockInstance());
 
-        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
+        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
         assertNotNull(result);
         assertEquals(authPaymentDTO, result);
@@ -181,6 +181,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.invokeRuleEngine(transactionInProgress)).thenReturn(authPaymentDTO);
 
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(
+                NO_OP_INITIATIVE_ID,
                 TRX_CODE1,
                 authBarCodePaymentDTO,
                 MERCHANT_ID,
@@ -201,21 +202,45 @@ class BarCodeAuthPaymentServiceImplTest {
                 .build();
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class,
-                () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+                () -> barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
 
         assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, result.getCode());
     }
 
     @Test
     void barCodeAuthPayment_trxNotFound() {
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(null);
-        doThrow(new TransactionNotFoundOrExpiredException("DUMMY_EXCEPTION"))
-                .when(commonAuthServiceMock).checkAuth(TRX_CODE1, null);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1))
+                .thenReturn(null);
 
-        TransactionNotFoundOrExpiredException result = assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+        TransactionNotFoundOrExpiredException result = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> barCodeAuthPaymentService.authPayment(
+                        PRODUCT_GTIN_INITIATIVE_ID,
+                        TRX_CODE1,
+                        AUTH_BAR_CODE_PAYMENT_DTO,
+                        MERCHANT_ID,
+                        POINTOFSALE_ID,
+                        ACQUIRER_ID
+                )
+        );
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
+
+        verify(commonAuthServiceMock, never()).checkAuth(anyString(), any());
+    }
+
+    @Test
+    void barCodeAuthPayment_initiativeMismatch() {
+        TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        transactionInProgress.setInitiativeId("DIFFERENT_INITIATIVE_ID");
+
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(transactionInProgress);
+
+        TransactionNotFoundOrExpiredException result = assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
+        verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
     }
 
     @Test
@@ -245,7 +270,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(paymentCheckService.validateProduct(any(), any())).thenReturn(ProductDTOFaker.mockInstance());
 
         TooManyRequestsException result = Assertions.assertThrows(TooManyRequestsException.class,
-                () -> barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+                () -> barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
 
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TOO_MANY_REQUESTS, result.getCode());
         verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
@@ -383,7 +408,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(transactionInProgress);
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+                barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
         verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
@@ -392,6 +417,7 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void barCodeAuthPayment_checkAuthThrowsException() {
         TransactionInProgress transactionInProgress = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        transactionInProgress.setInitiativeId(PRODUCT_GTIN_INITIATIVE_ID);
         when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(transactionInProgress);
 
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
@@ -404,7 +430,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .when(commonAuthServiceMock).checkAuth(eq(TRX_CODE1), any());
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+                barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
         verify(paymentCheckService, never()).validateProduct(any(), any());
@@ -435,7 +461,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .when(commonAuthServiceMock).checkTrxStatusToInvokePreAuth(any());
 
         TransactionInvalidException result = assertThrows(TransactionInvalidException.class, () ->
-                barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+                barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_STATUS_NOT_VALID, result.getCode());
         verify(auditUtilitiesMock, times(1)).logBarCodeErrorAuthorizedPayment(TRX_CODE1, MERCHANT_ID);
@@ -468,7 +494,7 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transactionInProgress.getInitiativeId(), transactionInProgress.getUserId()))
                 .thenReturn(walletDTO);
 
-        barCodeAuthPaymentService.authPayment(TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
+        barCodeAuthPaymentService.authPayment(PRODUCT_GTIN_INITIATIVE_ID, TRX_CODE1, AUTH_BAR_CODE_PAYMENT_DTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
         assertEquals(AMOUNT_CENTS, transactionInProgress.getAmountCents());
         assertEquals(AMOUNT_CENTS, transactionInProgress.getEffectiveAmountCents());
@@ -537,7 +563,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .additionalProperties(additionalProperties)
                 .build();
 
-        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
+        AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(NO_OP_INITIATIVE_ID, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
         assertNotNull(result);
         assertEquals(Map.of(), transactionInProgress.getAdditionalProperties());
