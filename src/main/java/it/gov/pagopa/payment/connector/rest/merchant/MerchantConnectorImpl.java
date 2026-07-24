@@ -52,9 +52,9 @@ public class MerchantConnectorImpl implements MerchantConnector{
     }
 
     @Override
-    public PointOfSaleDTO getPointOfSaleByInitiativeId(String merchantId, String pointOfSaleId, String initiativeId) {
+    public PointOfSaleDTO getPointOfSale(String merchantId, String pointOfSaleId, String initiativeId) {
         try {
-            return restClient.getPointOfSaleByInitiativeId(merchantId, pointOfSaleId, initiativeId);
+            return restClient.getPointOfSale(merchantId, pointOfSaleId, initiativeId);
         } catch (FeignException e) {
             if (e.status() == 404) {
                 throw new PosNotFoundException(

@@ -276,9 +276,9 @@ class BarCodePaymentControllerTest {
                 .build();
         PreviewPaymentResultDTO previewPaymentResultDTO = buildPreviewPaymentResult(Map.of("customField", "validatedCustomValue"));
 
-        when(barCodePaymentService.previewPayment(any(), any(), any())).thenReturn(previewPaymentResultDTO);
+        when(barCodePaymentService.previewPayment(any(), any(), any(), any())).thenReturn(previewPaymentResultDTO);
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
+                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/preview", "initiativeId", "trxCode")
                                 .header("X-API-Version", "2")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(previewPaymentRequestV2DTO)))
@@ -290,7 +290,7 @@ class BarCodePaymentControllerTest {
         JsonNode jsonNode = objectMapper.readTree(result.getResponse().getContentAsString());
         assertFalse(jsonNode.has("productName"));
         assertFalse(jsonNode.has("productGtin"));
-        verify(barCodePaymentService).previewPayment("trxCode", Map.of("customField", "customValue"), 100L);
+        verify(barCodePaymentService).previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L);
     }
 
     @Test
@@ -320,7 +320,7 @@ class BarCodePaymentControllerTest {
                 .build();
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
+                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/preview", "initiativeId", "trxCode")
                                 .header("X-API-Version", "2")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(previewPaymentRequestV2DTO)))

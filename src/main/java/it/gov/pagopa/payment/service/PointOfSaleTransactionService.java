@@ -1,15 +1,20 @@
 package it.gov.pagopa.payment.service;
 
+import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface PointOfSaleTransactionService {
-    Page<TransactionInProgress> getPointOfSaleTransactions(String merchantId,
-                                                           String initiativeId,
-                                                           String pointOfSaleId,
-                                                           String fiscalCode,
-                                                           TrxFiltersDTO filters,
-                                                           Pageable pageable);
+
+    Page<Transaction> getPointOfSaleTransactions(TrxFiltersDTO filters,
+                                                 Pageable pageable);
+
+    DownloadInvoiceResponseDTO downloadTransactionInvoice(
+            String merchantId,
+            String pointOfSaleId,
+            String transactionId
+    );
+
 }

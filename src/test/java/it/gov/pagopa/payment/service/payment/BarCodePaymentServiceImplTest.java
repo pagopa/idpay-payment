@@ -19,9 +19,9 @@ import it.gov.pagopa.payment.utils.RewardConstants;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -39,12 +39,8 @@ class BarCodePaymentServiceImplTest {
     @Mock
     private RetrieveActiveBarcode retrieveActiveBarcode;
 
-    private BarCodePaymentService barCodePaymentService;
-
-    @BeforeEach
-    void setup() {
-        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeCaptureService, barCodeAuthPaymentService, retrieveActiveBarcode);
-    }
+    @InjectMocks
+    private BarCodePaymentServiceImpl barCodePaymentService;
 
     @Test
     void createTransaction() {
@@ -133,13 +129,13 @@ class BarCodePaymentServiceImplTest {
                 .build();
         Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
 
-        when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
+        when(barCodeAuthPaymentService.previewPayment(any(), any(), any(), any()))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("trxCode", additionalProperties, 500L);
+        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
 
         Assertions.assertNotNull(result);
-        verify(barCodeAuthPaymentService).previewPayment("trxCode", additionalProperties, 500L);
+        verify(barCodeAuthPaymentService).previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
     }
 
     @Test

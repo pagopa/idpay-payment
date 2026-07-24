@@ -15,9 +15,9 @@ import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthoriz
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,15 +33,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
     @Mock private PaymentInstrumentConnectorImpl paymentInstrumentConnectorMock;
     @Mock private CommonAuthServiceImpl commonAuthServiceMock;
 
-    private IdpayCodeAuthPaymentService idpayCodeAuthPaymentService;
-
-    @BeforeEach
-    void setUp() {
-        idpayCodeAuthPaymentService = new IdpayCodeAuthPaymentServiceImpl(
-                idpayCodeAuthorizationExpiredServiceMock,
-                paymentInstrumentConnectorMock,
-                commonAuthServiceMock);
-    }
+    @InjectMocks private IdpayCodeAuthPaymentServiceImpl idpayCodeAuthPaymentService;
 
     @Test
     void authTrxNotFound() {
@@ -54,31 +46,10 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //When
         TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", INITIATIVE_ID, pinBlockDTO)
+                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", pinBlockDTO)
         );
 
         //Then
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
-    }
-
-    @Test
-    void authTrx_initiativeIdMismatch() {
-        //Given
-        String trxId = "trxId".toLowerCase();
-        PinBlockDTO pinBlockDTO = new PinBlockDTO("PINBLOCK", "KEY");
-
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        trx.setInitiativeId(INITIATIVE_ID);
-
-        when(idpayCodeAuthorizationExpiredServiceMock.findByTrxIdAndAuthorizationNotExpired(trxId))
-                .thenReturn(trx);
-
-        //When & Then
-        TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", "WRONG_INITIATIVE", pinBlockDTO)
-        );
-
         Assertions.assertNotNull(result);
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, result.getCode());
     }
@@ -97,7 +68,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //When
         OperationNotAllowedException result = Assertions.assertThrows(OperationNotAllowedException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", INITIATIVE_ID, pinBlockDTO)
+                idpayCodeAuthPaymentService.authPayment(trxId, "MERCHANTID", pinBlockDTO)
         );
 
         //Then
@@ -123,7 +94,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.authPayment(trx, trx.getUserId(), trx.getTrxCode()))
                 .thenReturn(authPaymentDTO);
         //When
-        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID, pinBlockDTO);
+        AuthPaymentDTO result = idpayCodeAuthPaymentService.authPayment(trx.getId(), trx.getMerchantId(), pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);
@@ -149,7 +120,7 @@ class IdpayCodeAuthPaymentServiceImplTest {
 
         //When
         MerchantOrAcquirerNotAllowedException result = Assertions.assertThrows(MerchantOrAcquirerNotAllowedException.class, () ->
-                idpayCodeAuthPaymentService.authPayment(trxId, "DUMMY_MERCHANTID", INITIATIVE_ID, pinBlockDTO)
+                idpayCodeAuthPaymentService.authPayment(trxId, "DUMMY_MERCHANTID", pinBlockDTO)
         );
 
         //Then

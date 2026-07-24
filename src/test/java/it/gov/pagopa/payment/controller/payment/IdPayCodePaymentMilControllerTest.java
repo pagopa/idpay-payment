@@ -14,7 +14,6 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -30,6 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -57,7 +57,7 @@ class IdPayCodePaymentMilControllerTest {
     AuthPaymentDTO authPaymentDTO =  AuthPaymentDTOFaker.mockInstance(1,trx);
     authPaymentDTO.setRewards(null);
 
-    Mockito.when(idpayCodePaymentServiceMock.previewPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID)).thenReturn(authPaymentDTO);
+    when(idpayCodePaymentServiceMock.previewPayment(trx.getId(), trx.getMerchantId())).thenReturn(authPaymentDTO);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/mil/payment/idpay-code/{transactionId}/preview",
@@ -95,22 +95,6 @@ class IdPayCodePaymentMilControllerTest {
   }
 
   @Test
-  void previewPayment_testMandatoryInitiativeHeader() throws Exception {
-    MvcResult result = mockMvc.perform(
-                    put("/idpay/mil/payment/idpay-code/{transactionId}/preview", "TRANSACTION_ID")
-                            .header("x-merchant-id", MERCHANT_ID)
-                            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-
-    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorDTO.class);
-    assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
-    assertEquals("Required request header "
-                    + "'x-initiative-id' for method parameter type String is not present",
-            actual.getMessage());
-  }
-
-  @Test
   void authorization() throws Exception {
     PinBlockDTO pinBlockDTO = PinBlockDTOFaker.mockInstance();
     TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
@@ -118,7 +102,7 @@ class IdPayCodePaymentMilControllerTest {
     AuthPaymentDTO authPaymentDTO =  AuthPaymentDTOFaker.mockInstance(1,trx);
     authPaymentDTO.setRewards(null);
 
-    Mockito.when(idpayCodePaymentServiceMock.authPayment(trx.getId(), trx.getMerchantId(), INITIATIVE_ID, pinBlockDTO)).thenReturn(authPaymentDTO);
+    when(idpayCodePaymentServiceMock.authPayment(trx.getId(), trx.getMerchantId(), pinBlockDTO)).thenReturn(authPaymentDTO);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/mil/payment/idpay-code/{transactionId}/authorize", trx.getId())
@@ -172,19 +156,4 @@ class IdPayCodePaymentMilControllerTest {
 
   }
 
-  @Test
-  void authPayment_testMandatoryInitiativeHeader() throws Exception {
-    MvcResult result = mockMvc.perform(
-                    put("/idpay/mil/payment/idpay-code/{transactionId}/authorize", TRANSACTION_ID)
-                            .header("x-merchant-id", MERCHANT_ID)
-                            .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isBadRequest())
-            .andReturn();
-
-    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorDTO.class);
-    assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
-    assertEquals("Required request header "
-                    + "'x-initiative-id' for method parameter type String is not present",
-            actual.getMessage());
-  }
 }

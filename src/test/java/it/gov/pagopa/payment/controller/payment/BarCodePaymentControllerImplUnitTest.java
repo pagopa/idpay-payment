@@ -13,9 +13,9 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
@@ -32,12 +32,8 @@ class BarCodePaymentControllerImplUnitTest {
     @Mock
     private PdfService pdfService;
 
+    @InjectMocks
     private BarCodePaymentControllerImpl controller;
-
-    @BeforeEach
-    void setUp() {
-        controller = new BarCodePaymentControllerImpl(barCodePaymentService, pdfService);
-    }
 
     @Test
     void previewPayment_withoutProductGtin_shouldSkipLegacyProperty() {
@@ -86,15 +82,15 @@ class BarCodePaymentControllerImplUnitTest {
                 .extendedAuthorization(true)
                 .build();
 
-        when(barCodePaymentService.previewPayment("trxCode", Map.of("customField", "customValue"), 100L))
+        when(barCodePaymentService.previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResponseV2DTO result = controller.previewPaymentV2("trxCode", request);
+        PreviewPaymentResponseV2DTO result = controller.previewPaymentV2("initiativeId", "trxCode", request);
 
         Assertions.assertEquals("trxCode", result.getTrxCode());
         Assertions.assertEquals(Map.of("customField", "validatedValue"), result.getAdditionalProperties());
         Assertions.assertTrue(result.isExtendedAuthorization());
-        verify(barCodePaymentService).previewPayment("trxCode", Map.of("customField", "customValue"), 100L);
+        verify(barCodePaymentService).previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L);
     }
 
     @Test

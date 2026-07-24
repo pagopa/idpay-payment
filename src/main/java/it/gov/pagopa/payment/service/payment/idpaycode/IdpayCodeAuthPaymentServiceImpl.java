@@ -28,18 +28,11 @@ public class IdpayCodeAuthPaymentServiceImpl implements IdpayCodeAuthPaymentServ
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxId, String merchantId, String initiativeId, PinBlockDTO pinBlockBody) { // <-- Aggiunto initiativeId
+    public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
         TransactionInProgress trx = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId);
 
         if(trx == null){
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trxId));
-        }
-
-        if (!trx.getInitiativeId().equals(initiativeId)) {
-            log.error("[IDPAY_CODE_AUTH] Transaction [{}] belongs to initiative [{}] but requested for initiative [{}]",
-                    trxId, trx.getInitiativeId(), initiativeId);
-            throw new TransactionNotFoundOrExpiredException(
-                    "Cannot find transaction with transactionId [%s] for initiative [%s]".formatted(trxId, initiativeId));
         }
 
         if(trx.getUserId() == null){

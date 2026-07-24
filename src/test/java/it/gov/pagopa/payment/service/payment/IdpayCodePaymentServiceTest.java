@@ -13,9 +13,9 @@ import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -25,17 +25,10 @@ import static org.mockito.Mockito.when;
 class IdpayCodePaymentServiceTest {
     private static final String MERCHANTID = "MERCHANTID";
     private static final String FISCALCODE = "FISCALCODE";
-    private static final String INITIATIVE_ID = "INITIATIVE_ID";
-
     @Mock private IdpayCodeRelateUserService idpayCodeRelateUserServiceMock;
     @Mock private IdpayCodePreviewService idpayCodePreviewServiceMock;
     @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
-    private IdpayCodePaymentService idpayCodePaymentService;
-
-    @BeforeEach
-    void setUp(){
-        idpayCodePaymentService = new IdpayCodePaymentServiceImpl(idpayCodeRelateUserServiceMock, idpayCodePreviewServiceMock, idpayCodeAuthPaymentServiceMock);
-    }
+    @InjectMocks private IdpayCodePaymentServiceImpl idpayCodePaymentService;
 
     @Test
     void relateUser() {
@@ -59,10 +52,10 @@ class IdpayCodePaymentServiceTest {
         //Given
         TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         AuthPaymentDTO preview = AuthPaymentDTOFaker.mockInstance(1,trx);
-        when(idpayCodePreviewServiceMock.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID))
+        when(idpayCodePreviewServiceMock.previewPayment(trx.getId(), MERCHANTID))
                 .thenReturn(preview);
         //When
-        AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), MERCHANTID, INITIATIVE_ID);
+        AuthPaymentDTO result = idpayCodePaymentService.previewPayment(trx.getId(), MERCHANTID);
 
         //Then
         Assertions.assertNotNull(result);
@@ -77,10 +70,10 @@ class IdpayCodePaymentServiceTest {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         PinBlockDTO pinBlockDTO = PinBlockDTOFaker.mockInstance();
 
-        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID, INITIATIVE_ID, pinBlockDTO))
+        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID, pinBlockDTO))
                 .thenReturn(authPaymentDTO);
         //When
-        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID, INITIATIVE_ID, pinBlockDTO);
+        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID, pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);

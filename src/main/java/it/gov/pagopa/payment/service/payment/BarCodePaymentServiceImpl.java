@@ -46,6 +46,11 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
+    public PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+        return barCodeAuthPaymentService.previewPayment(initiativeId, trxCode, additionalProperties, amountCents);
+    }
+
+    @Override
     public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
         return barCodeAuthPaymentService.previewPayment(trxCode, additionalProperties, amountCents);
     }
