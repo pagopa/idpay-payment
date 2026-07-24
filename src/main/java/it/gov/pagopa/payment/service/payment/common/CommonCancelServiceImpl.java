@@ -124,7 +124,7 @@ public class CommonCancelServiceImpl {
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         TRANSACTION_NOT_FOUND_MESSAGE.formatted(trxId)));
 
-        if (!merchantId.equals(trx.getMerchantId()) || !acquirerId.equals(trx.getAcquirerId())) {
+        if (!Objects.equals(merchantId, trx.getMerchantId()) || !Objects.equals(acquirerId, trx.getAcquirerId())) {
             throw new MerchantOrAcquirerNotAllowedException(
                     "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]"
                             .formatted(trx.getMerchantId(), merchantId));
@@ -135,7 +135,7 @@ public class CommonCancelServiceImpl {
                 Utilities.sanitizeString(pointOfSaleId),
                 Utilities.sanitizeString(initiativeId));
         merchantConnector.merchantDetail(merchantId, initiativeId);
-        merchantConnector.getPointOfSaleByInitiativeId(merchantId, pointOfSaleId, initiativeId);
+        merchantConnector.getPointOfSale(merchantId, pointOfSaleId, initiativeId);
         log.info("[CANCEL_TRANSACTION] Checks Passed");
         return trx;
     }

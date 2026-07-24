@@ -80,7 +80,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
                     Utilities.sanitizeString(pointOfSaleId),
                     Utilities.sanitizeString(initiativeId));
             merchantConnector.merchantDetail(merchantId, initiativeId);
-            merchantConnector.getPointOfSaleByInitiativeId(merchantId, pointOfSaleId, initiativeId);
+            merchantConnector.getPointOfSale(merchantId, pointOfSaleId, initiativeId);
             log.info("[CAPTURE_PAYMENT] Checks Passed");
 
             deleteUnusedVouchers(trx);
