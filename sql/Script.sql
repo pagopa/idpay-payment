@@ -1,6 +1,5 @@
 CREATE DATABASE "idpay-database";
 
-
 BEGIN;
 
 -- 1. CREAZIONE DELLO SCHEMA
@@ -34,6 +33,14 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     merchant_send_date TIMESTAMP
 );
 
+-- ALTER PER REWARD_BATCH (Sulla migrazione di DB esistenti)
+ALTER TABLE "idpay-pagamenti".reward_batch
+    ALTER COLUMN refund_outcome_timestamp TYPE TIMESTAMP USING refund_outcome_timestamp::TIMESTAMP,
+    ALTER COLUMN creation_date TYPE TIMESTAMP USING creation_date::TIMESTAMP,
+    ALTER COLUMN update_date TYPE TIMESTAMP USING update_date::TIMESTAMP,
+    ALTER COLUMN approval_date TYPE TIMESTAMP USING approval_date::TIMESTAMP,
+    ALTER COLUMN merchant_send_date TYPE TIMESTAMP USING merchant_send_date::TIMESTAMP;
+
 -- 3. TABELLA TRANSACTION
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     id VARCHAR(64) PRIMARY KEY,
@@ -41,16 +48,16 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "operationType" VARCHAR(32) NOT NULL,
     "operationTypeTranscoded" VARCHAR(32),
     status VARCHAR(32) NOT NULL,
-    "trxDate" TIMESTAMPTZ NOT NULL,
-    "trxChargeDate" TIMESTAMPTZ,
-    "trxEndDate" TIMESTAMPTZ,
+    "trxDate" TIMESTAMP NOT NULL,
+    "trxChargeDate" TIMESTAMP,
+    "trxEndDate" TIMESTAMP,
     "elaborationDateTime" TIMESTAMP,
     "updateDate" TIMESTAMP,
     "userId" VARCHAR(64),
     "merchantId" VARCHAR(64),
     "acquirerId" VARCHAR(64),
     "pointOfSaleId" VARCHAR(64),
-    "amountCents" BIGINT,
+    "amountCents" BIGINT NOT NULL,
     "effectiveAmountCents" BIGINT,
     "voucherAmountCents" BIGINT,
     "amountCurrency" VARCHAR(8),
@@ -70,6 +77,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "merchantFiscalCode" VARCHAR(64),
     vat VARCHAR(32),
     "pointOfSaleType" VARCHAR(32),
+    "productType" VARCHAR(16),
     "familyId" VARCHAR(64),
     "rewardCents" BIGINT,
     "counterVersion" BIGINT,
@@ -82,6 +90,16 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "extendedAuthorization" BOOLEAN
 );
 
+-- ALTER PER TRANSACTION (Mancava la virgola prima di ADD COLUMN)
+ALTER TABLE "idpay-pagamenti".transaction
+    ALTER COLUMN "trxDate" TYPE TIMESTAMP USING "trxDate"::TIMESTAMP,
+    ALTER COLUMN "trxChargeDate" TYPE TIMESTAMP USING "trxChargeDate"::TIMESTAMP,
+    ALTER COLUMN "trxEndDate" TYPE TIMESTAMP USING "trxEndDate"::TIMESTAMP,
+    ALTER COLUMN "elaborationDateTime" TYPE TIMESTAMP USING "elaborationDateTime"::TIMESTAMP,
+    ALTER COLUMN "updateDate" TYPE TIMESTAMP USING "updateDate"::TIMESTAMP,
+    ALTER COLUMN "createdAt" TYPE TIMESTAMP USING "createdAt"::TIMESTAMP,
+    ADD COLUMN IF NOT EXISTS "productType" VARCHAR(16);
+
 -- 4. TABELLA TRANSACTION_OUTBOX
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -89,9 +107,14 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     user_id VARCHAR(64) NOT NULL,
     event_type VARCHAR(64) NOT NULL,
     payload JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    created_at TIMESTAMP NOT NULL DEFAULT clock_timestamp(),
     CONSTRAINT uk_transaction_outbox UNIQUE (transaction_id, event_type)
 );
+
+-- ALTER PER TRANSACTION_OUTBOX
+ALTER TABLE "idpay-pagamenti".transaction_outbox
+    ALTER COLUMN created_at TYPE TIMESTAMP USING created_at::TIMESTAMP,
+    ALTER COLUMN created_at SET DEFAULT clock_timestamp();
 
 -- 5. FUNZIONE DEL TRIGGER (Popola correttamente user_id prendendolo da "userId" di transaction)
 CREATE OR REPLACE FUNCTION "idpay-pagamenti".fn_transaction_outbox()
@@ -114,18 +137,18 @@ BEGIN
     ON CONFLICT (transaction_id, event_type)
     DO UPDATE SET
         payload = EXCLUDED.payload,
-        created_at = now();
+        created_at = clock_timestamp();
     RETURN NEW;
 END;
 $$;
 
--- 7. TRIGGER PER GLI INSERT (Scatta sempre all'inserimento della transazione)
+DROP TRIGGER IF EXISTS trg_transaction_outbox_insert ON "idpay-pagamenti".transaction;
 CREATE TRIGGER trg_transaction_outbox_insert
 AFTER INSERT ON "idpay-pagamenti".transaction
 FOR EACH ROW
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
--- 8. TRIGGER PER GLI UPDATE (Scatta SOLO se lo status è effettivamente cambiato rispetto a prima)
+DROP TRIGGER IF EXISTS trg_transaction_outbox_update ON "idpay-pagamenti".transaction;
 CREATE TRIGGER trg_transaction_outbox_update
 AFTER UPDATE ON "idpay-pagamenti".transaction
 FOR EACH ROW

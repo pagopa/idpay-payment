@@ -1,80 +1,153 @@
 package it.gov.pagopa.payment.utils;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.TimeZone;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class UtilitiesTest {
 
-    private TimeZone previousTz;
+    @Mock
+    private MultipartFile multipartFileMock;
 
-    @BeforeEach
-    void saveTz() {
-        previousTz = TimeZone.getDefault();
+    // ------------------------------------------------------------------------------------------------
+    // Test: sanitizeString
+    // ------------------------------------------------------------------------------------------------
+    @Nested
+    class SanitizeStringTest {
+
+        @Test
+        void testSanitizeString_NullInput_ReturnsNull() {
+            assertNull(Utilities.sanitizeString(null));
+        }
+
+        @Test
+        void testSanitizeString_RemovesNewLinesAndSpecialCharacters() {
+            String input = "Hello\r\n World!@#$%^&*()_+-=[]{}|;:',.<>/?";
+            // Deve mantenere alfanumerici, spazi e trattini
+            String expected = "Hello World_-";
+
+            String result = Utilities.sanitizeString(input);
+
+            assertEquals(expected, result);
+        }
+
+        @Test
+        void testSanitizeString_ValidString_Unchanged() {
+            String input = "Valid String-123";
+            assertEquals(input, Utilities.sanitizeString(input));
+        }
     }
 
-    @AfterEach
-    void restoreTz() {
-        TimeZone.setDefault(previousTz);
+    // ------------------------------------------------------------------------------------------------
+    // Test: sanitizeForLog
+    // ------------------------------------------------------------------------------------------------
+    @Nested
+    class SanitizeForLogTest {
+
+        @Test
+        void testSanitizeForLog_NullInput_ReturnsNullString() {
+            assertEquals("null", Utilities.sanitizeForLog(null));
+        }
+
+        @Test
+        void testSanitizeForLog_ReplacesNewLinesWithUnderscore() {
+            String input = "Log\rLine1\nLine2\r\nEnd";
+            String expected = "Log_Line1_Line2__End";
+
+            assertEquals(expected, Utilities.sanitizeForLog(input));
+        }
+
+        @Test
+        void testSanitizeForLog_CleanString_Unchanged() {
+            String input = "Clean log message 123";
+            assertEquals(input, Utilities.sanitizeForLog(input));
+        }
     }
 
-    @Test
-    void testSanitizeString() {
-        assertNull(null, Utilities.sanitizeString(null));
-        assertEquals("trxCode", Utilities.sanitizeString("trx\nCode"));
-        assertEquals("trxCode2", Utilities.sanitizeString("trx\rCode2"));
-        assertEquals("123-aaf-555", Utilities.sanitizeString("123-aaf-555"));
-        assertEquals("123_aaf_555", Utilities.sanitizeString("123_aaf_555"));
-        assertEquals("key value", Utilities.sanitizeString("key [value]"));
+    // ------------------------------------------------------------------------------------------------
+    // Test: getLocalDate
+    // ------------------------------------------------------------------------------------------------
+    @Nested
+    class GetLocalDateTest {
+
+        @Test
+        void testGetLocalDate_ConvertsCorrectly() {
+            LocalDateTime offsetDateTime = LocalDateTime.of(2026, 7, 24, 12, 0, 0);
+            LocalDate expectedDate = offsetDateTime.toLocalDate();
+
+            LocalDate result = Utilities.getLocalDate(offsetDateTime);
+
+            assertEquals(expectedDate, result);
+        }
     }
 
-    @Test
-    void testSanitizeForLog() {
-        assertEquals("null", Utilities.sanitizeForLog(null));
-        assertEquals("GET_Injected", Utilities.sanitizeForLog("GET\nInjected"));
-        assertEquals("/test_Injected", Utilities.sanitizeForLog("/test\rInjected"));
-        assertEquals("test_string", Utilities.sanitizeForLog("test_string"));
-    }
+    // ------------------------------------------------------------------------------------------------
+    // Test: checkFileExtensionOrThrow
+    // ------------------------------------------------------------------------------------------------
+    @Nested
+    class CheckFileExtensionOrThrowTest {
 
-    @Test
-    void getLocalDate_sameDay_inEuropeRome_forMiddayUTC() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
-        OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 12, 0, 0, 0, ZoneOffset.UTC);
+        @Test
+        void testCheckFileExtensionOrThrow_NullFile_ThrowsException() {
+            InvalidInvoiceFormatException exception = assertThrows(
+                    InvalidInvoiceFormatException.class,
+                    () -> Utilities.checkFileExtensionOrThrow(null)
+            );
 
-        LocalDate result = Utilities.getLocalDate(odt);
+            assertEquals("File is required", exception.getMessage());
+        }
 
-        assertEquals(LocalDate.of(2025, 1, 10), result);
-    }
+        @Test
+        void testCheckFileExtensionOrThrow_NullFilename_ThrowsException() {
+            when(multipartFileMock.getOriginalFilename()).thenReturn(null);
 
-    @Test
-    void getLocalDate_rollsToNextDay_inEuropeRome_forLateEveningUTC() {
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
-        OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 23, 30, 0, 0, ZoneOffset.UTC);
+            InvalidInvoiceFormatException exception = assertThrows(
+                    InvalidInvoiceFormatException.class,
+                    () -> Utilities.checkFileExtensionOrThrow(multipartFileMock)
+            );
 
-        LocalDate result = Utilities.getLocalDate(odt);
+            assertEquals("File must be a PDF or XML", exception.getMessage());
+        }
 
-        assertEquals(LocalDate.of(2025, 1, 11), result);
-    }
+        @ParameterizedTest
+        @ValueSource(strings = {"invoice.txt", "doc.docx", "image.png", "invoice_pdf", "xml_file", ""})
+        void testCheckFileExtensionOrThrow_InvalidExtensions_ThrowsException(String filename) {
+            when(multipartFileMock.getOriginalFilename()).thenReturn(filename);
 
-    @Test
-    void getLocalDate_dependsOnSystemTimeZone() {
-        OffsetDateTime odt = OffsetDateTime.of(2025, 1, 10, 23, 30, 0, 0, ZoneOffset.UTC);
+            InvalidInvoiceFormatException exception = assertThrows(
+                    InvalidInvoiceFormatException.class,
+                    () -> Utilities.checkFileExtensionOrThrow(multipartFileMock)
+            );
 
-        TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"));
-        LocalDate ny = Utilities.getLocalDate(odt);
+            assertEquals("File must be a PDF or XML", exception.getMessage());
+        }
 
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Rome"));
-        LocalDate rome = Utilities.getLocalDate(odt);
+        @ParameterizedTest
+        @ValueSource(strings = {
+                "invoice.pdf",
+                "invoice.xml",
+                "DOCUMENT.PDF",
+                "DATA.XML",
+                "Invoice.Pdf",
+                "factura.Xml"
+        })
+        void testCheckFileExtensionOrThrow_ValidExtensions_Success(String filename) {
+            when(multipartFileMock.getOriginalFilename()).thenReturn(filename);
 
-        assertEquals(LocalDate.of(2025, 1, 10), ny);
-        assertEquals(LocalDate.of(2025, 1, 11), rome);
-        assertNotEquals(ny, rome);
+            assertDoesNotThrow(() -> Utilities.checkFileExtensionOrThrow(multipartFileMock));
+        }
     }
 }

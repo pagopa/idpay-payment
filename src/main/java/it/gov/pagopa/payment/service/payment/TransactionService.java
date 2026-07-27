@@ -1,4 +1,4 @@
-package it.gov.pagopa.payment.service;
+package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
@@ -9,6 +9,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface TransactionService {
+
+    void generateTrxCodeAndSave(Transaction trx, String flowName);
 
     List<Transaction> findAll(
             String idTrxIssuer,
@@ -25,5 +27,9 @@ public interface TransactionService {
     Transaction getTransactionByIdAndMerchantId(String transactionId, String merchantId);
 
     Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters, Pageable pageable);
+
+    long findAndUpdateExpiredTransactionsStatus(String initiativeId);
+
+    long sendEventForStaleExpiredTransactions(String initiativeId);
 
 }

@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.payment.barcode.expired;
 
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 
 public interface BarCodeAuthorizationExpiredService {
-    TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String toLowerCase);
+    Transaction findByTrxCodeAndAuthorizationNotExpired(String toLowerCase);
 }

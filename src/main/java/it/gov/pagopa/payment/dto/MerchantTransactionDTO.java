@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.InvoiceData;
@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +45,8 @@ public class MerchantTransactionDTO {
     private LocalDateTime elaborationDateTime;
     private String pointOfSaleId;
 
-    private OffsetDateTime trxChargeDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
+    private LocalDateTime trxChargeDate;
     private Long authorizedAmountCents;
     private InvoiceData invoiceData;
     private RewardBatchTrxStatus rewardBatchTrxStatus;

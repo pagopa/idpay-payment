@@ -1,64 +1,87 @@
 package it.gov.pagopa.payment.service.payment.expired.idpaycode;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
-import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredServiceImpl;
-import it.gov.pagopa.payment.test.fakers.TransactionFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class IdpayCodeAuthorizationExpiredServiceImplTest {
 
-    private final static long EXPIRATION_MINUTES=15;
+    @Mock
+    private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private RewardCalculatorConnector rewardCalculatorConnectorMock;
 
-    @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
-    @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-    @Mock private TransactionRepository transactionRepository;
-    @Mock private TransactionSynchronizer transactionSynchronizer;
+    private IdpayCodeAuthorizationExpiredServiceImpl idpayCodeAuthorizationExpiredService;
 
-    private final AuditUtilities auditUtilities = new AuditUtilities();
-
-    private IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
-
+    private static final long AUTHORIZATION_EXPIRATION_MINUTES = 5L;
+    private static final String TRX_ID = "IDPAY_CODE_TRX_123";
 
     @BeforeEach
     void setUp() {
-        idpayCodeAuthorizationExpiredService = new IdpayCodeAuthorizationExpiredServiceImpl(EXPIRATION_MINUTES,transactionRepository, transactionInProgressRepositoryMock, auditUtilities,rewardCalculatorConnectorMock, transactionSynchronizer);
+        idpayCodeAuthorizationExpiredService = new IdpayCodeAuthorizationExpiredServiceImpl(
+                AUTHORIZATION_EXPIRATION_MINUTES,
+                transactionRepositoryMock,
+                auditUtilitiesMock,
+                rewardCalculatorConnectorMock
+        );
     }
 
     @Test
-    void findByTrxCodeAndAuthorizationNotExpired(){
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findByTrxIdAndAuthorizationNotExpired(anyString(), any())).thenReturn(Optional.of(trx));
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        transaction.setUserId("USERID1");
+    void testFindByTrxIdAndAuthorizationNotExpired_Success() {
+        // Given
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
+        when(transactionRepositoryMock.findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepositoryMock.findByTrxIdAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES))
-                .thenReturn(transaction);
-        idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(transaction.getTrxCode());
+        // When
+        Transaction result = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(TRX_ID);
 
-        verify(transactionInProgressRepositoryMock).findByTrxIdAndAuthorizationNotExpired(transaction.getTrxCode(),EXPIRATION_MINUTES);
+        // Then
+        assertNotNull(result);
+        assertEquals(TRX_ID, result.getId());
+        assertEquals(RewardConstants.TRX_CHANNEL_IDPAYCODE, result.getChannel());
+        verify(transactionRepositoryMock, times(1))
+                .findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class));
+    }
 
+    @Test
+    void testFindByTrxIdAndAuthorizationNotExpired_NotFound_ThrowsException() {
+        // Given
+        when(transactionRepositoryMock.findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(TRX_ID)
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot find voucher with trxId"));
+        verify(transactionRepositoryMock, times(1))
+                .findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class));
     }
 
 }

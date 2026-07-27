@@ -1,131 +1,150 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
-import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.exception.custom.UserNotAllowedException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
-import it.gov.pagopa.payment.service.payment.expired.QRCodeAuthorizationExpiredService;
-import it.gov.pagopa.payment.test.fakers.TransactionFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import it.gov.pagopa.payment.utils.RewardConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeUnrelateServiceImplTest {
-    public static final String TRXCODE = "TRXCODE";
-    public static final String USERID = "USERID";
 
-    @Mock private TransactionRepository transactionRepository;
-    @Mock private TransactionInProgressRepository repositoryMock;
-    @Mock private QRCodeAuthorizationExpiredService qrCodeAuthorizationExpiredServiceMock;
-    @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-    @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock private TransactionSynchronizer transactionSynchronizer;
+    @Mock
+    private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
+    @InjectMocks
+    private QRCodeUnrelateServiceImpl qrCodeUnrelateService;
 
-    private QRCodeUnrelateService service;
-
-    @BeforeEach
-    void init() {
-        service =
-                new QRCodeUnrelateServiceImpl(
-                        transactionRepository,
-                        repositoryMock,
-                        qrCodeAuthorizationExpiredServiceMock,
-                        auditUtilitiesMock,
-                        transactionSynchronizer);
-    }
+    private static final String TRX_ID = "TRX_ID_123";
+    private static final String TRX_CODE = "TRX_CODE_123";
+    private static final String USER_ID = "USER_ID_123";
+    private static final String INITIATIVE_ID = "INITIATIVE_ID_123";
 
     @Test
-    void testTrxNotFound() {
-        when(repositoryMockFindInvocation()).thenReturn(null);
+    void testUnrelateTransaction_Success() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.IDENTIFIED, USER_ID);
+        transaction.setRewardCents(500L);
+        transaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
+        transaction.setRejectionReasons(List.of("REASON_1"));
 
-        TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
-                TransactionNotFoundOrExpiredException.class,
-                this::invokeService
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(transaction));
+        when(transactionRepositoryMock.save(transaction)).thenReturn(transaction);
+
+        // When
+        qrCodeUnrelateService.unrelateTransaction(TRX_CODE, USER_ID);
+
+        // Then
+        ArgumentCaptor<Transaction> transactionCaptor = ArgumentCaptor.forClass(Transaction.class);
+        verify(transactionRepositoryMock, times(1)).save(transactionCaptor.capture());
+
+        Transaction savedTransaction = transactionCaptor.getValue();
+        assertEquals(SyncTrxStatus.CREATED, savedTransaction.getStatus());
+        assertNull(savedTransaction.getUserId());
+        assertNull(savedTransaction.getRewardCents());
+        assertNull(savedTransaction.getRewards());
+        assertNull(savedTransaction.getChannel());
+        assertNull(savedTransaction.getTrxChargeDate());
+        assertEquals(Collections.emptyList(), savedTransaction.getRejectionReasons());
+
+        verify(auditUtilitiesMock, times(1)).logUnrelateTransaction(
+                INITIATIVE_ID, TRX_ID, TRX_CODE, null, 0L, List.of()
         );
-
-        Assertions.assertEquals(ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, exception.getCode());
-        Assertions.assertEquals("Cannot find transaction with trxCode [TRXCODE]", exception.getMessage());
+        verify(auditUtilitiesMock, never()).logErrorUnrelateTransaction(any(), any());
     }
 
     @Test
-    void testUserIdForbidden() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    void testUnrelateTransaction_UserNotAllowed_ThrowsUserNotAllowedException() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.IDENTIFIED, "OTHER_USER_ID");
 
-        when(transactionRepository.findByTrxCodeAndAuthorizationNotExpired(anyString(), any())).thenReturn(Optional.of(transaction));
-        when(repositoryMockFindInvocation())
-                .thenReturn(TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
-                        .userId(USERID + "1")
-                        .build()
-                );
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(transaction));
 
-        UserNotAllowedException exception = Assertions.assertThrows(
+        // When & Then
+        UserNotAllowedException exception = assertThrows(
                 UserNotAllowedException.class,
-                this::invokeService
+                () -> qrCodeUnrelateService.unrelateTransaction(TRX_CODE, USER_ID)
         );
 
-        Assertions.assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, exception.getCode());
-        Assertions.assertEquals("Transaction with trxCode [TRXCODE] is already assigned to another user", exception.getMessage());
+        assertEquals(ExceptionCode.TRX_ALREADY_ASSIGNED, exception.getCode());
+        assertTrue(exception.getMessage().contains("is already assigned to another user"));
+
+        verify(transactionRepositoryMock, never()).save(any());
+        verify(auditUtilitiesMock, times(1)).logErrorUnrelateTransaction(TRX_CODE, USER_ID);
+        verify(auditUtilitiesMock, never()).logUnrelateTransaction(any(), any(), any(), any(), anyLong(), any());
     }
 
     @Test
-    void testExpiredTransaction() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+    void testUnrelateTransaction_StatusNotIdentified_ThrowsOperationNotAllowedException() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CREATED, USER_ID);
 
-        when(transactionRepository.findByTrxCodeAndAuthorizationNotExpired(anyString(), any())).thenReturn(Optional.of(transaction));
-        when(repositoryMockFindInvocation()).thenReturn(
-                TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.AUTHORIZED)
-                        .userId(USERID).build());
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(transaction));
 
-        OperationNotAllowedException exception = Assertions.assertThrows(
+        // When & Then
+        OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                this::invokeService
+                () -> qrCodeUnrelateService.unrelateTransaction(TRX_CODE, USER_ID)
         );
 
-        Assertions.assertEquals(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, exception.getCode());
-        Assertions.assertEquals("Cannot unrelate transaction with transactionId [MOCKEDTRANSACTION_qr-code_0] not in status identified", exception.getMessage());
+        assertEquals(ExceptionCode.TRX_UNRELATE_NOT_ALLOWED, exception.getCode());
+        assertTrue(exception.getMessage().contains("not in status identified"));
+
+        verify(transactionRepositoryMock, never()).save(any());
+        verify(auditUtilitiesMock, times(1)).logErrorUnrelateTransaction(TRX_CODE, USER_ID);
+        verify(auditUtilitiesMock, never()).logUnrelateTransaction(any(), any(), any(), any(), anyLong(), any());
     }
 
     @Test
-    void testSuccessful() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findByTrxCodeAndAuthorizationNotExpired(anyString(),any())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstanceBuilder(0, SyncTrxStatus.IDENTIFIED)
-                .userId(USERID)
-                .build();
-        when(repositoryMockFindInvocation()).thenReturn(trx);
+    void testUnrelateTransaction_TransactionNotFound_ThrowsTransactionNotFoundOrExpiredException() {
+        // Given
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
 
-        invokeService();
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> qrCodeUnrelateService.unrelateTransaction(TRX_CODE, USER_ID)
+        );
 
-        TransactionInProgress expectedTrx = trx.toBuilder().status(SyncTrxStatus.CREATED).userId(null).build();
+        assertTrue(exception.getMessage().contains("Cannot find transaction with trxCode"));
 
-        verify(repositoryMock).save(expectedTrx);
+        verify(transactionRepositoryMock, never()).save(any());
+        verify(auditUtilitiesMock, times(1)).logErrorUnrelateTransaction(TRX_CODE, USER_ID);
+        verify(auditUtilitiesMock, never()).logUnrelateTransaction(any(), any(), any(), any(), anyLong(), any());
     }
 
-    private TransactionInProgress repositoryMockFindInvocation() {
-        return qrCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRXCODE.toLowerCase());
-    }
-
-    private void invokeService() {
-        service.unrelateTransaction(TRXCODE, USERID);
+    private Transaction createDummyTransaction(SyncTrxStatus status, String userId) {
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setTrxCode(TRX_CODE);
+        transaction.setInitiativeId(INITIATIVE_ID);
+        transaction.setUserId(userId);
+        transaction.setStatus(status);
+        return transaction;
     }
 }

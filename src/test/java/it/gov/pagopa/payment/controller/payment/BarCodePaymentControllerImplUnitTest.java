@@ -1,25 +1,22 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
-import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
+import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.pdf.PdfService;
-import java.math.BigDecimal;
-import java.time.OffsetDateTime;
-import java.util.Map;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Map;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,12 +29,8 @@ class BarCodePaymentControllerImplUnitTest {
     @Mock
     private PdfService pdfService;
 
+    @InjectMocks
     private BarCodePaymentControllerImpl controller;
-
-    @BeforeEach
-    void setUp() {
-        controller = new BarCodePaymentControllerImpl(barCodePaymentService, pdfService);
-    }
 
     @Test
     void previewPayment_withoutProductGtin_shouldSkipLegacyProperty() {
@@ -48,7 +41,7 @@ class BarCodePaymentControllerImplUnitTest {
                 .build();
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)
@@ -76,7 +69,7 @@ class BarCodePaymentControllerImplUnitTest {
                 .build();
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)

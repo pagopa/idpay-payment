@@ -1,8 +1,8 @@
 package it.gov.pagopa.payment.service;
 
 import it.gov.pagopa.payment.dto.event.QueueCommandOperationDTO;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,19 +15,19 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 public class ProcessConsumerServiceImpl implements ProcessConsumerService{
-    private final TransactionInProgressRepository transactionInProgressRepository;
+    private final TransactionRepository transactionRepository;
     private final AuditUtilities auditUtilities;
 
     private final int pageSize;
 
     private final long delay;
 
-    public ProcessConsumerServiceImpl(TransactionInProgressRepository transactionInProgressRepository,
+    public ProcessConsumerServiceImpl(TransactionRepository transactionRepository,
                                       AuditUtilities auditUtilities,
                                       @Value("${app.delete.paginationSize}") int pageSize,
                                       @Value("${app.delete.delayTime}") long delay) {
 
-        this.transactionInProgressRepository = transactionInProgressRepository;
+        this.transactionRepository = transactionRepository;
         this.auditUtilities = auditUtilities;
         this.pageSize = pageSize;
         this.delay = delay;
@@ -38,11 +38,11 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
         if (("DELETE_INITIATIVE").equals(queueCommandOperationDTO.getOperationType())) {
             long startTime = System.currentTimeMillis();
 
-            List<TransactionInProgress> deletedTrx = new ArrayList<>();
-            List<TransactionInProgress> fetchedTrx;
+            List<Transaction> deletedTrx = new ArrayList<>();
+            List<Transaction> fetchedTrx;
 
             do {
-                fetchedTrx = transactionInProgressRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize);
+                fetchedTrx = transactionRepository.deletePaged(queueCommandOperationDTO.getEntityId(), pageSize);
                 deletedTrx.addAll(fetchedTrx);
                 try{
                     TimeUnit.MILLISECONDS.sleep(delay);
@@ -52,7 +52,7 @@ public class ProcessConsumerServiceImpl implements ProcessConsumerService{
                 }
             } while (fetchedTrx.size() == pageSize);
 
-            List<String> usersId = deletedTrx.stream().map(TransactionInProgress::getUserId).distinct().toList();
+            List<String> usersId = deletedTrx.stream().map(Transaction::getUserId).distinct().toList();
 
             log.info("[DELETE_INITIATIVE] Deleted initiative {} from collection: transaction_in_progress",
                     queueCommandOperationDTO.getEntityId());

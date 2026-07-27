@@ -6,15 +6,14 @@ import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
 import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -23,8 +22,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
@@ -36,12 +35,11 @@ import static it.gov.pagopa.payment.service.payment.common.CommonCreationService
 public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
     private static final String BAR_CODE_CREATE_TRANSACTION = "BAR_CODE_CREATE_TRANSACTION";
-    private final TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
-    private final TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
+    private final TransactionMapper transactionMapper;
     private final RewardRuleRepository rewardRuleRepository;
     private final WalletConnector walletConnector;
     private final AuditUtilities auditUtilities;
-    private final TransactionInProgressService transactionInProgressService;
+    private final TransactionService transactionService;
 
     private final int authorizationExpirationMinutes;
     private final int extendedAuthorizationExpirationMinutes;
@@ -49,20 +47,17 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
     protected BarCodeCreationServiceImpl(RewardRuleRepository rewardRuleRepository,
                                          AuditUtilities auditUtilities,
-                                         TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper,
-                                         TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper,
+                                         TransactionMapper transactionMapper,
                                          WalletConnector walletConnector,
-                                         TransactionInProgressService transactionInProgressService,
+                                         TransactionService transactionService,
                                          @Value("${app.bar-code.expirations.authorization-minutes}") int authorizationExpirationMinutes,
                                          @Value("${app.bar-code.expirations.extended-authorization-minutes}") int extendedAuthorizationExpirationMinutes
     ) {
-
-        this.transactionBarCodeCreationRequest2TransactionInProgressMapper = transactionBarCodeCreationRequest2TransactionInProgressMapper;
-        this.transactionBarCodeInProgress2TransactionResponseMapper = transactionBarCodeInProgress2TransactionResponseMapper;
+        this.transactionMapper = transactionMapper;
         this.walletConnector = walletConnector;
         this.rewardRuleRepository = rewardRuleRepository;
         this.auditUtilities = auditUtilities;
-        this.transactionInProgressService = transactionInProgressService;
+        this.transactionService = transactionService;
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
         this.extendedAuthorizationExpirationMinutes = extendedAuthorizationExpirationMinutes;
     }
@@ -71,7 +66,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                         String channel,
                                                         String userId) {
 
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -79,11 +74,10 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
             Long residualBudgetCents = checkWallet(trxBarCodeCreationRequest.getInitiativeId(), userId);
 
             trxBarCodeCreationRequest.setVoucherAmountCents(residualBudgetCents);
-            TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, false, initiative);
+            Transaction transaction = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, false, initiative);
+            transaction.setAmountCents(residualBudgetCents);
 
-            trx.setAmountCents(residualBudgetCents);
-            return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
-
+            return transactionMapper.transactionToTransactionBarCodeResponse(transaction);
         } catch (RuntimeException e) {
             logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
             throw e;
@@ -95,30 +89,31 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                                 String channel,
                                                                 String userId) {
 
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
             checkVoucherAmountCents(trxBarCodeCreationRequest.getInitiativeId(), trxBarCodeCreationRequest.getVoucherAmountCents());
-            TransactionInProgress trx = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
-            return transactionBarCodeInProgress2TransactionResponseMapper.apply(trx);
+            trxBarCodeCreationRequest.setVoucherAmountCents(10000L);
+            Transaction transaction = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
 
+            return transactionMapper.transactionToTransactionBarCodeResponse(transaction);
         } catch (RuntimeException e) {
             logErrorCreatedTransaction(trxBarCodeCreationRequest.getInitiativeId(), userId);
             throw e;
         }
     }
 
-    public TransactionInProgress createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
-                                                                     String channel,
-                                                                     String userId,
-                                                                     OffsetDateTime trxEndDate) {
+    public Transaction createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
+                                                           String channel,
+                                                           String userId,
+                                                           LocalDateTime trxEndDate) {
 
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
-            return transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+            return transactionMapper.transactionBarCodeCreationRequestToTransaction(
                     trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), true, trxEndDate);
 
         } catch (RuntimeException e) {
@@ -129,33 +124,31 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
 
     @NotNull
-    private TransactionInProgress generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
-        OffsetDateTime trxEndDate = null;
-        TransactionInProgress trx =
-                transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+    private Transaction generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
+        LocalDateTime trxEndDate = null;
+        Transaction transaction = transactionMapper.transactionBarCodeCreationRequestToTransaction(
                         trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
 
-        trxEndDate = calculateTrxEndDate(trx, initiative);
-        trx.setTrxEndDate(trxEndDate);
-        transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
+        trxEndDate = calculateTrxEndDate(transaction, initiative);
+        transaction.setTrxEndDate(trxEndDate);
+        transactionService.generateTrxCodeAndSave(transaction, getFlow());
 
-        logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), userId);
-        return trx;
+        logCreatedTransaction(transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode(), userId);
+        return transaction;
     }
 
-    public OffsetDateTime calculateTrxEndDate(TransactionInProgress transactionInProgress,  InitiativeConfig initiative) {
-        if (Boolean.FALSE.equals(transactionInProgress.getExtendedAuthorization())){
-            return transactionInProgress.getTrxDate().plusMinutes(authorizationExpirationMinutes);
-
+    public LocalDateTime calculateTrxEndDate(Transaction transaction,  InitiativeConfig initiative) {
+        if (Boolean.FALSE.equals(transaction.getExtendedAuthorization())){
+            return transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes);
         }
 
         LocalDate  localEndDate = LocalDate.MAX;
         if (initiative != null){
             localEndDate = initiative.getEndDate() != null ? initiative.getEndDate() : LocalDate.MAX;
         }
-        OffsetDateTime  offsetEndDate = localEndDate.atStartOfDay().atOffset(ZoneOffset.of("+02:00"));
-        if(!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transactionInProgress.getTrxDate()))){
-            offsetEndDate = transactionInProgress.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes);
+        LocalDateTime  offsetEndDate = localEndDate.atStartOfDay();
+        if(!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transaction.getTrxDate()))){
+            offsetEndDate = transaction.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes);
         }
         return offsetEndDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
     }

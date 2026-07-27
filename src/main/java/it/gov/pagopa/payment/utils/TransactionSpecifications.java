@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import static it.gov.pagopa.payment.dto.TrxFiltersDTO.REWARDED_ALLOWED_STATUSES;
+
 public final class TransactionSpecifications {
 
     private static final String FIELD_USER_ID = "userId";
@@ -30,7 +32,9 @@ public final class TransactionSpecifications {
     private static final String FIELD_TRX_CODE = "trxCode";
     private static final String FIELD_REWARD_BATCH_ID = "rewardBatchId";
     private static final String FIELD_REWARD_BATCH_STATUS_TRX = "rewardBatchStatusTrx";
-
+    private static final String FIELD_PRODUCT_GTIN = "productGtin";
+    private static final String FIELD_MERCHANT_FISCAL_CODE = "merchantFiscalCode";
+    private static final String FIELD_AMOUNT_CENTS = "amountCents";
     private TransactionSpecifications() {
     }
 
@@ -53,7 +57,7 @@ public final class TransactionSpecifications {
             predicates.add(cb.equal(root.get(FIELD_USER_ID), userId));
             predicates.add(cb.between(root.get(FIELD_TRX_DATE), trxDateStart, trxDateEnd));
             if (amountCents != null) {
-                predicates.add(cb.equal(root.get("amountCents"), amountCents));
+                predicates.add(cb.equal(root.get(FIELD_AMOUNT_CENTS), amountCents));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -73,7 +77,7 @@ public final class TransactionSpecifications {
                 predicates.add(cb.equal(root.get(FIELD_USER_ID), userId));
             }
             if (amountCents != null) {
-                predicates.add(cb.equal(root.get("amountCents"), amountCents));
+                predicates.add(cb.equal(root.get(FIELD_AMOUNT_CENTS), amountCents));
             }
             if (trxDateStart != null && trxDateEnd != null) {
                 predicates.add(cb.between(root.get(FIELD_TRX_DATE), trxDateStart, trxDateEnd));
@@ -206,7 +210,7 @@ public final class TransactionSpecifications {
     }
 
     public static Specification<Transaction> hasFiscalCode(String fiscalCode) {
-        return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get("merchantFiscalCode"), fiscalCode) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get(FIELD_MERCHANT_FISCAL_CODE), fiscalCode) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasRewardBatchId(String rewardBatchId) {
@@ -231,7 +235,7 @@ public final class TransactionSpecifications {
                             "jsonb_extract_path_text",
                             String.class,
                             root.get("additionalProperties"),
-                            cb.literal("productGtin")
+                            cb.literal(FIELD_PRODUCT_GTIN)
                     ),
                     productGtin
             );
@@ -247,5 +251,52 @@ public final class TransactionSpecifications {
         if (StringUtils.hasText(value)) {
             predicates.add(cb.equal(root.get(field), value));
         }
+    }
+
+    public static Specification<Transaction> withFilters(
+            String merchantId,
+            String pointOfSaleId,
+            String initiativeId,
+            String userId,
+            String status,
+            String productGtin,
+            String trxCode) {
+
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filtri obbligatori (AND)
+            if (merchantId != null) {
+                predicates.add(cb.equal(root.get(FIELD_MERCHANT_ID), merchantId));
+            }
+            if (initiativeId != null) {
+                predicates.add(cb.equal(root.get(FIELD_INITIATIVE_ID), initiativeId));
+            }
+
+            // Filtri opzionali
+            if (userId != null) {
+                predicates.add(cb.equal(root.get(FIELD_USER_ID), userId));
+            }
+            if (pointOfSaleId != null) {
+                predicates.add(cb.equal(root.get(FIELD_POINT_OF_SALE_ID), pointOfSaleId));
+            }
+
+            // Filtri testo con LIKE / ILIKE (equivalente ai regex in Mongo)
+            if (StringUtils.hasText(productGtin)) {
+                predicates.add(cb.like(cb.lower(root.get(FIELD_PRODUCT_GTIN)), "%" + productGtin.toLowerCase() + "%"));
+            }
+            if (StringUtils.hasText(trxCode)) {
+                predicates.add(cb.like(cb.lower(root.get(FIELD_TRX_CODE)), "%" + trxCode.toLowerCase() + "%"));
+            }
+
+            // Filtro sullo stato
+            if (StringUtils.hasText(status)) {
+                predicates.add(cb.equal(root.get(FIELD_STATUS), status));
+            } else {
+                predicates.add(root.get(FIELD_STATUS).in(REWARDED_ALLOWED_STATUSES));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
     }
 }

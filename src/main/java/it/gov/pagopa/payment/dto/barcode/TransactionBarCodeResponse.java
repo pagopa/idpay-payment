@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -18,10 +18,10 @@ public class TransactionBarCodeResponse {
     private String trxCode;
     private String initiativeId;
     private String initiativeName;
-    private OffsetDateTime trxDate;
+    private LocalDateTime trxDate;
     private SyncTrxStatus status;
     private Long trxExpirationSeconds;
     private Long residualBudgetCents;
-    private OffsetDateTime trxEndDate;
+    private LocalDateTime trxEndDate;
     private Long voucherAmountCents;
 }

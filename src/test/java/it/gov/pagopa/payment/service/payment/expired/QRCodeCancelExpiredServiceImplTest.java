@@ -1,152 +1,120 @@
 package it.gov.pagopa.payment.service.payment.expired;
 
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonConfirmServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodeCancelExpiredServiceImplTest {
 
     @Mock
-    private TransactionRepository transactionRepository;
-
+    private TransactionRepository transactionRepositoryMock;
     @Mock
-    private TransactionInProgressRepository transactionInProgressRepository;
-
+    private AuditUtilities auditUtilitiesMock;
     @Mock
-    private AuditUtilities auditUtilities;
+    private CommonConfirmServiceImpl commonConfirmServiceMock;
 
-    @Mock
-    private CommonConfirmServiceImpl commonConfirmService;
-
-    private QRCodeCancelExpiredServiceImpl service;
+    private QRCodeCancelExpiredServiceImpl qrCodeCancelExpiredService;
 
     private static final long CANCEL_EXPIRATION_MINUTES = 15L;
+    private static final String INITIATIVE_ID = "INITIATIVE_123";
+    private static final String TRX_ID = "TRX_ID_123";
 
     @BeforeEach
     void setUp() {
-        service = new QRCodeCancelExpiredServiceImpl(
+        qrCodeCancelExpiredService = new QRCodeCancelExpiredServiceImpl(
                 CANCEL_EXPIRATION_MINUTES,
-                transactionRepository,
-                transactionInProgressRepository,
-                auditUtilities,
-                commonConfirmService
+                transactionRepositoryMock,
+                auditUtilitiesMock,
+                commonConfirmServiceMock
         );
     }
 
     @Test
-    void shouldReturnConfiguredExpirationMinutes() {
-        assertEquals(
-                CANCEL_EXPIRATION_MINUTES,
-                service.getExpirationMinutes()
-        );
+    void testGetExpirationMinutesAndFlowName() {
+        assertEquals(CANCEL_EXPIRATION_MINUTES, qrCodeCancelExpiredService.getExpirationMinutes());
+        assertEquals("TRANSACTION_CANCEL_EXPIRED", qrCodeCancelExpiredService.getFlowName());
     }
 
     @Test
-    void shouldFindExpiredTransaction() {
+    void testFindExpiredTransaction_Success() {
         // Given
-        String initiativeId = "INITIATIVE_1";
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setStatus(SyncTrxStatus.AUTHORIZED);
 
-        TransactionInProgress expectedTransaction = new TransactionInProgress();
-
-        when(transactionInProgressRepository.findCancelExpiredTransaction(
-                initiativeId,
-                CANCEL_EXPIRATION_MINUTES))
-                .thenReturn(expectedTransaction);
+        when(transactionRepositoryMock.findAndModifyExpiredTransaction(
+                any(LocalDateTime.class),
+                eq(List.of(SyncTrxStatus.AUTHORIZED.name())),
+                eq(INITIATIVE_ID),
+                eq(1000)
+        )).thenReturn(Optional.of(transaction));
 
         // When
-        TransactionInProgress result =
-                service.findExpiredTransaction(
-                        initiativeId,
-                        CANCEL_EXPIRATION_MINUTES);
+        Transaction result = qrCodeCancelExpiredService.findExpiredTransaction(INITIATIVE_ID, CANCEL_EXPIRATION_MINUTES);
 
         // Then
-        assertEquals(expectedTransaction, result);
-
-        verify(transactionRepository).findAndModifyExpiredTransaction(
-                any(OffsetDateTime.class),
+        assertNotNull(result);
+        assertEquals(TRX_ID, result.getId());
+        verify(transactionRepositoryMock, times(1)).findAndModifyExpiredTransaction(
+                any(LocalDateTime.class),
                 eq(List.of(SyncTrxStatus.AUTHORIZED.name())),
-                eq(initiativeId),
+                eq(INITIATIVE_ID),
                 eq(1000)
         );
-
-        verify(transactionInProgressRepository)
-                .findCancelExpiredTransaction(
-                        initiativeId,
-                        CANCEL_EXPIRATION_MINUTES);
     }
 
     @Test
-    void shouldCallConfirmAuthorizedPaymentWhenHandlingExpiredTransaction() {
+    void testFindExpiredTransaction_NotFound_ThrowsException() {
         // Given
-        TransactionInProgress trx = new TransactionInProgress();
+        when(transactionRepositoryMock.findAndModifyExpiredTransaction(
+                any(LocalDateTime.class),
+                eq(List.of(SyncTrxStatus.AUTHORIZED.name())),
+                eq(INITIATIVE_ID),
+                eq(1000)
+        )).thenReturn(Optional.empty());
+
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> qrCodeCancelExpiredService.findExpiredTransaction(INITIATIVE_ID, CANCEL_EXPIRATION_MINUTES)
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot find transaction in findExpiredTransaction with initiativeId"));
+    }
+
+    @Test
+    void testHandleExpiredTransaction_Success() {
+        // Given
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setStatus(SyncTrxStatus.AUTHORIZED);
+
+        doNothing().when(commonConfirmServiceMock).confirmAuthorizedPayment(transaction);
 
         // When
-        TransactionInProgress result =
-                service.handleExpiredTransaction(trx);
+        Transaction result = qrCodeCancelExpiredService.handleExpiredTransaction(transaction);
 
         // Then
-        assertEquals(trx, result);
-
-        verify(commonConfirmService)
-                .confirmAuthorizedPayment(trx);
-    }
-
-    @Test
-    void shouldReturnCorrectFlowName() {
-        assertEquals(
-                "TRANSACTION_CANCEL_EXPIRED",
-                service.getFlowName()
-        );
-    }
-
-    @Test
-    void shouldSearchOnlyAuthorizedTransactions() {
-        // Given
-        String initiativeId = "INITIATIVE";
-
-        when(transactionInProgressRepository.findCancelExpiredTransaction(
-                any(),
-                anyLong()))
-                .thenReturn(null);
-
-        // When
-        service.findExpiredTransaction(
-                initiativeId,
-                CANCEL_EXPIRATION_MINUTES);
-
-        // Then
-        ArgumentCaptor<List<String>> statusCaptor =
-                ArgumentCaptor.forClass(List.class);
-
-        verify(transactionRepository)
-                .findAndModifyExpiredTransaction(
-                        any(OffsetDateTime.class),
-                        statusCaptor.capture(),
-                        eq(initiativeId),
-                        eq(1000)
-                );
-
-        assertEquals(
-                List.of(SyncTrxStatus.AUTHORIZED.name()),
-                statusCaptor.getValue()
-        );
+        assertNotNull(result);
+        assertEquals(TRX_ID, result.getId());
+        verify(commonConfirmServiceMock, times(1)).confirmAuthorizedPayment(transaction);
     }
 }

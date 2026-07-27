@@ -13,8 +13,6 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
@@ -28,7 +26,7 @@ import org.springframework.core.io.ResourceLoader;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -56,15 +54,13 @@ class PdfServiceTest {
     private Resource pariPngResource;
 
     @Mock
-    private TransactionInProgressRepository transactionInProgressRepository;
-    @Mock private TransactionRepository transactionRepository;
+    private TransactionRepository transactionRepository;
 
 
     private PdfServiceImpl newService() {
         return new PdfServiceImpl(
                 barCodePaymentService,        // mock
                 transactionRepository,
-                transactionInProgressRepository,
                 decryptRestConnector,         // mock
                 resourceLoader,               // mock
                 "DejaVuSans.ttf",             // se non presente, PdfUtils fa fallback a Helvetica
@@ -80,7 +76,6 @@ class PdfServiceTest {
         return new PdfServiceImpl(
                 barCodePaymentService,
                 transactionRepository,
-                transactionInProgressRepository,
                 decryptRestConnector,
                 resourceLoader,
                 fontPath,     // simula font inesistente per testare il fallback
@@ -94,8 +89,8 @@ class PdfServiceTest {
 
     @Test
     void create_shouldReturnValidPdfBase64_andCallBarcodeService() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-11-23T10:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-03T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
         when(barCodePaymentService.retriveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
@@ -127,8 +122,8 @@ class PdfServiceTest {
 
     @Test
     void create_shouldContainExpectedTexts() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-11-23T10:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-03T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(25_00L); // €25.00
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -184,8 +179,8 @@ class PdfServiceTest {
 
     @Test
     void create_withMissingFont_shouldFallbackAndGeneratePdf() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-11-23T10:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-03T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("87654321");
         when(trxResp.getVoucherAmountCents()).thenReturn(45_50L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -203,14 +198,14 @@ class PdfServiceTest {
             String text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage()).toUpperCase();
 
             assertTrue(text.contains("MARIO ROSSI"));
-            assertTrue(text.contains("RSSMRA80A01H501Z"));
+            assertTrue(text.contains("RSSMRA80A01H501"));
         }
     }
 
     @Test
     void create_shouldRenderDatesAndAmountReasonably() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-01-02T08:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-31T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-01-02T08:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-31T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("ABCDEF12");
         when(trxResp.getVoucherAmountCents()).thenReturn(123_45L); // 123,45 €
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -254,7 +249,7 @@ class PdfServiceTest {
         PdfServiceImpl svc = newService();
 
         PdfGenerationException ex = assertThrows(PdfGenerationException.class,
-                () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA77A01H501Z"));
+                () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA77A01H501"));
 
         assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
     }
@@ -265,8 +260,8 @@ class PdfServiceTest {
      */
     @Test
     void create_whenPariPngProvided_shouldUseImageAndNotShowFallbackText() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-11-23T10:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-03T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("11223344");
         when(trxResp.getVoucherAmountCents()).thenReturn(1500L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -278,7 +273,6 @@ class PdfServiceTest {
         PdfServiceImpl svc = new PdfServiceImpl(
                 barCodePaymentService,
                 transactionRepository,
-                transactionInProgressRepository,
                 decryptRestConnector,
                 resourceLoader,
                 "DejaVuSans.ttf",
@@ -325,8 +319,8 @@ class PdfServiceTest {
      */
     @Test
     void create_whenPariLogoMissing_shouldShowFallbackTextLabel() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-11-23T10:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-03T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("55667788");
         when(trxResp.getVoucherAmountCents()).thenReturn(2500L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -334,7 +328,7 @@ class PdfServiceTest {
         PdfServiceImpl svc = newService();
 
         ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-                "Mario Rossi", "RSSMRA80A01H501Z");
+                "Mario Rossi", "RSSMRA80A01H501");
 
         byte[] bytes = Base64.getDecoder().decode(report.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
@@ -356,8 +350,8 @@ class PdfServiceTest {
 
     @Test
     void create_whenMimitLogoPngProvided_shouldGeneratePdfNormally() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxDate()).thenReturn(LocalDateTime.parse("2025-11-23T10:00:00"));
+        when(trxResp.getTrxEndDate()).thenReturn(LocalDateTime.parse("2025-12-03T23:59:59"));
         when(trxResp.getTrxCode()).thenReturn("99887766");
         when(trxResp.getVoucherAmountCents()).thenReturn(3500L);
         when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
@@ -369,7 +363,6 @@ class PdfServiceTest {
         PdfServiceImpl svc = new PdfServiceImpl(
                 barCodePaymentService,
                 transactionRepository,
-                transactionInProgressRepository,
                 decryptRestConnector,
                 resourceLoader,
                 "DejaVuSans.ttf",
@@ -401,7 +394,7 @@ class PdfServiceTest {
         String fiscalCode = "MRARSS80A01H501Z";
         String productGtin = "123456789012";
 
-        TransactionInProgress mockTrx = createMockTransactionInProgress(
+        Transaction mockTrx = createMockTransaction(
                 transactionId, trxCode, userId, 3000L, 10000L, "Prodotto Test");
 
         Map<String, String> properties = new HashMap<>(mockTrx.getAdditionalProperties());
@@ -410,7 +403,7 @@ class PdfServiceTest {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
 
         PdfServiceImpl svc = newService();
@@ -425,14 +418,14 @@ class PdfServiceTest {
         String header = new String(pdfBytes, 0, Math.min(5, pdfBytes.length), StandardCharsets.ISO_8859_1);
         assertTrue(header.startsWith("%PDF-"));
 
-        verify(transactionInProgressRepository).findById(transactionId);
+        verify(transactionRepository).findById(transactionId);
         verify(decryptRestConnector).getPiiByToken(userId);
     }
 
     @Test
     void createPreauthPdf_whenTransactionNotFound_shouldThrowException() {
         String transactionId = "NON_EXISTENT_TRX_ID";
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.empty());
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.empty());
 
         PdfServiceImpl svc = newService();
 
@@ -440,7 +433,7 @@ class PdfServiceTest {
                 () -> svc.createPreauthPdf(transactionId));
 
         assertEquals("Cannot find transaction with transactionId [%s]".formatted(transactionId), ex.getMessage());
-        verify(transactionInProgressRepository).findById(transactionId);
+        verify(transactionRepository).findById(transactionId);
         verifyNoInteractions(decryptRestConnector);
     }
 
@@ -453,7 +446,7 @@ class PdfServiceTest {
         String productName = "LAVATRICE SUPER MODELLO X";
         String productGtin = "987654321198";
 
-        TransactionInProgress mockTrx = createMockTransactionInProgress(
+        Transaction mockTrx = createMockTransaction(
                 transactionId, trxCode, userId, 3000L, 10000L, productName);
 
         Map<String, String> properties = new HashMap<>(mockTrx.getAdditionalProperties());
@@ -462,7 +455,7 @@ class PdfServiceTest {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
 
         PdfServiceImpl svc = newService();
@@ -490,12 +483,12 @@ class PdfServiceTest {
     @Test
     void createPreauthPdf_whenPdfGenerationFails_shouldThrowPdfGenerationException() {
         String transactionId = "TRX_ID_FAIL";
-        TransactionInProgress mockTrx = createMockTransactionInProgress(
+        Transaction mockTrx = createMockTransaction(
                 transactionId, "CODE", "USER", 1L, 2L, "Prod");
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(anyString())).thenThrow(new RuntimeException("Connector down"));
 
         PdfServiceImpl svc = newService();
@@ -508,12 +501,12 @@ class PdfServiceTest {
         assertEquals("Connector down", ex.getCause().getMessage());
     }
 
-    private TransactionInProgress createMockTransactionInProgress(String transactionId, String trxCode, String userId, long rewardCents, long effectiveAmountCents, String productName) {
-        TransactionInProgress trx = new TransactionInProgress();
+    private Transaction createMockTransaction(String transactionId, String trxCode, String userId, long rewardCents, long effectiveAmountCents, String productName) {
+        Transaction trx = new Transaction();
         trx.setId(transactionId);
         trx.setTrxCode(trxCode);
         trx.setUserId(userId);
-        trx.setTrxDate(OffsetDateTime.parse("2024-07-15T10:30:00Z"));
+        trx.setTrxDate(LocalDateTime.parse("2024-07-15T10:30:00"));
         trx.setRewardCents(rewardCents);
         trx.setEffectiveAmountCents(effectiveAmountCents);
         trx.setAdditionalProperties(Map.of("productName", productName));

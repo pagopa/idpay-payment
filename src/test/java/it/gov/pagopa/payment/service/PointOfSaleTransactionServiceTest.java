@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

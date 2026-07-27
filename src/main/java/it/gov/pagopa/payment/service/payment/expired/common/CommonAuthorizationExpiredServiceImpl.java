@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.expired.common;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
@@ -9,17 +8,17 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.common.BaseCommonCodeExpiration;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
+
+import static it.gov.pagopa.payment.enums.SyncTrxStatus.IDENTIFIED;
 
 @Slf4j
 @Service
@@ -28,45 +27,41 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     private final long authorizationExpirationMinutes;
 
     private final TransactionRepository transactionRepository;
-    private final TransactionInProgressRepository transactionInProgressRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
-    private final TransactionSynchronizer transactionSynchronizer;
 
     protected CommonAuthorizationExpiredServiceImpl(
             TransactionRepository transactionRepository,
             long authorizationExpirationMinutes,
 
-            TransactionInProgressRepository transactionInProgressRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities,
-            TransactionSynchronizer transactionSynchronizer,
             String channel) {
         super(auditUtilities, channel);
         this.transactionRepository = transactionRepository;
 
-        this.transactionInProgressRepository = transactionInProgressRepository;
         this.rewardCalculatorConnector = rewardCalculatorConnector;
 
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
 
-        this.transactionSynchronizer = transactionSynchronizer;
     }
 
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        transactionRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode, OffsetDateTime.now(ZoneOffset.UTC));
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpired(trxCode);
+    public Transaction findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
+        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode, LocalDateTime.now(ZoneId.of("Europe/Rome")))
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
     }
 
-    public TransactionInProgress findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
-        OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(authorizationExpirationMinutes);
+    public Transaction findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
+        LocalDateTime minTrxDate = LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes);
 
-        transactionRepository.findAndModifyThrottled(trxCode, minTrxDate);
+        Transaction transaction = transactionRepository.findAndModifyThrottled(trxCode, minTrxDate)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
-        if (transactionRepository.existsByTrxCodeAndDateGreaterThan(trxCode, minTrxDate)) {
+        if (transactionRepository.existsByTrxCodeAndTrxDateGreaterThan(trxCode, minTrxDate)) {
             throw new TooManyRequestsException("Too many requests on trx having trCode: " + trxCode);
         }
 
-        return transactionInProgressRepository.findByTrxCodeAndAuthorizationNotExpiredThrottled(trxCode, authorizationExpirationMinutes);
+        return transaction;
     }
 
     @Override
@@ -75,34 +70,30 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     @Override
-    protected TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes) {
-        transactionRepository.findAuthorizationExpiredTransaction(
+    protected Transaction findExpiredTransaction(String initiativeId, long expirationMinutes) {
+        return transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                OffsetDateTime.now(ZoneOffset.UTC).minusMinutes(authorizationExpirationMinutes),
+                LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );
-        return transactionInProgressRepository.findAuthorizationExpiredTransaction(initiativeId, expirationMinutes);
     }
 
     @Override
-    protected TransactionInProgress handleExpiredTransaction(TransactionInProgress trx) {
-        if (trx.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
+    protected Transaction handleExpiredTransaction(Transaction transaction) {
+        if (transaction.getStatus().equals(IDENTIFIED)) {
             try {
-                rewardCalculatorConnector.cancelTransaction(trx);
+                rewardCalculatorConnector.cancelTransaction(transaction);
             } catch (ServiceException e) {
                 if (! (e instanceof TransactionNotFoundOrExpiredException)) {
-                    throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR, "An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(trx.getId()), true, e);
+                    throw new InternalServerErrorException(PaymentConstants.ExceptionCode.GENERIC_ERROR, "An error occurred in the microservice reward-calculator while handling transaction with id %s".formatted(transaction.getId()), true, e);
                 }
             }
         }
-        transactionInProgressRepository.deleteById(trx.getId());
 
-        trx.setStatus(SyncTrxStatus.EXPIRED);
-        Transaction transaction = new Transaction();
-        transactionSynchronizer.sync(trx, transaction);
+        transaction.setStatus(SyncTrxStatus.EXPIRED);
         transactionRepository.save(transaction);
-        return trx;
+        return transaction;
     }
 
     @Override

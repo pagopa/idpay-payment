@@ -3,11 +3,11 @@ package it.gov.pagopa.payment.utils;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.TimeZone;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 public final class Utilities {
@@ -28,9 +28,8 @@ public final class Utilities {
         return value.replace('\r', '_').replace('\n', '_');
     }
 
-    public static LocalDate getLocalDate(OffsetDateTime date) {
-        return date.toInstant()
-                .atZone(TimeZone.getDefault().toZoneId())
+    public static LocalDate getLocalDate(LocalDateTime date) {
+        return date.atZone(TimeZone.getDefault().toZoneId())
                 .toLocalDate();
     }
 
