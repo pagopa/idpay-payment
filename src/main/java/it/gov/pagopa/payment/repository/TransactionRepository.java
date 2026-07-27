@@ -17,6 +17,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     boolean existsByTrxCodeAndTrxDateGreaterThan(String trxCode, LocalDateTime minTrxDate);
     Optional<Transaction> findByIdAndTrxDateGreaterThanEqual(String id, LocalDateTime minTrxDate);
     Optional<Transaction> findByTrxCode(String trxCode);
+    Optional<Transaction> findByTrxCodeAndStatusNot(String trxCode, SyncTrxStatus status);
     Optional<Transaction> findByTrxCodeAndTrxEndDateGreaterThanEqual(String trxCode, LocalDateTime now);
     Optional<Transaction> findByInitiativeIdAndTrxCodeAndUserId(String initiativeId, String trxCode, String userId);
     Optional<Transaction> findByIdAndMerchantIdAndStatusIn(String id, String merchantId, Collection<SyncTrxStatus> statuses);

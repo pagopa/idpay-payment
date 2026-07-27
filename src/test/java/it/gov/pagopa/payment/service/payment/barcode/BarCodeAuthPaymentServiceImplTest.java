@@ -134,7 +134,7 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void previewPayment_ok() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(),any())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
         authPaymentDTO.setRewardCents(100L);
@@ -149,7 +149,7 @@ class BarCodeAuthPaymentServiceImplTest {
     @Test
     void previewPayment_negativeReward() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(),any())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
         authPaymentDTO.setRewardCents(-1L);

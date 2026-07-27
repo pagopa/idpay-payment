@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -36,7 +35,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
     public TransactionBarCodeResponse capturePayment(String trxCode) {
         try {
 
-            Transaction transaction = transactionRepository.findByTrxCode(trxCode.toLowerCase())
+            Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionCode [%s]".formatted(trxCode)));
 
             if(!transaction.getStatus().equals(SyncTrxStatus.AUTHORIZED)){

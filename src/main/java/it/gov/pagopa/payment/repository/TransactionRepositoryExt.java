@@ -6,7 +6,6 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -25,7 +24,7 @@ public interface TransactionRepositoryExt {
           AND "extendedAuthorization" IS FALSE
           AND (
               "elaborationDateTime" IS NULL
-              OR "elaborationDateTime" < CURRENT_TIMESTAMP - (:throttlingMillis || ' milliseconds')::interval
+              OR "elaborationDateTime" < (NOW() AT TIME ZONE 'Europe/Rome') - (:throttlingMillis || ' milliseconds')::interval
           )
           AND (CAST(:initiativeId AS varchar) IS NULL OR "initiativeId" = :initiativeId)
       ORDER BY "trxDate" ASC
@@ -48,7 +47,6 @@ public interface TransactionRepositoryExt {
 
 
   @Modifying
-  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.rewardCents = 0, " +
@@ -57,7 +55,6 @@ public interface TransactionRepositoryExt {
           "t.initiativeRejectionReasons = :initiativeRejectionReasons, " +
           "t.trxChargeDate = :#{#trx.trxChargeDate}, " +
           "t.updateDate = :updateDate, " +
-          // Logica BARCODE usando l'oggetto trx passato
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +
           "t.effectiveAmountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.effectiveAmountCents} ELSE t.effectiveAmountCents END, " +
@@ -78,7 +75,6 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
-  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.userId = :userId, " +
@@ -100,7 +96,6 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
-  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.userId = :#{#trx.userId}, " +
@@ -125,7 +120,6 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
-  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.rewardCents = :#{#dto.rewardCents}, " +
@@ -136,7 +130,6 @@ public interface TransactionRepositoryExt {
           "t.counterVersion = :#{#dto.counters != null ? #dto.counters.version : null}, " +
           "t.familyId = :#{#trx.familyId}, " +
           "t.updateDate = :updateDate, " +
-          // Logica BARCODE
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +
           "t.effectiveAmountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.effectiveAmountCents} ELSE t.effectiveAmountCents END, " +
@@ -157,9 +150,7 @@ public interface TransactionRepositoryExt {
           @Param("currency") String currency
   );
 
-
   @Modifying
-  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :#{#trx.status}, " +
           "t.userId = :#{#trx.userId}, " +
@@ -181,7 +172,6 @@ public interface TransactionRepositoryExt {
   void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") LocalDateTime updateDate);
 
   @Modifying
-  @Transactional
   @Query("DELETE FROM Transaction t WHERE t.id IN :ids")
   void bulkDeleteByIds(@Param("ids") List<String> ids);
 
@@ -227,7 +217,6 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
-  @Transactional
   @Query(value = """
         UPDATE transaction 
         SET status = 'EXPIRED', 
@@ -251,7 +240,6 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
-  @Transactional
   @Query("""
         UPDATE Transaction t
         SET t.status = :newStatus,

@@ -55,7 +55,7 @@ class BarCodeCaptureServiceImplTest {
 
         TransactionBarCodeResponse expectedResponse = new TransactionBarCodeResponse();
 
-        when(transactionRepositoryMock.findByTrxCode(LOWER_TRX_CODE)).thenReturn(Optional.of(transaction));
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED)).thenReturn(Optional.of(transaction));
         when(transactionRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
                 USER_ID, INITIATIVE_ID, SyncTrxStatus.CREATED, false
         )).thenReturn(unusedList);
@@ -71,7 +71,7 @@ class BarCodeCaptureServiceImplTest {
         assertNotNull(transaction.getElaborationDateTime());
         assertNotNull(transaction.getUpdateDate());
 
-        verify(transactionRepositoryMock, times(1)).findByTrxCode(LOWER_TRX_CODE);
+        verify(transactionRepositoryMock, times(1)).findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED);
         verify(transactionRepositoryMock, times(2)).deleteAll(unusedList);
         verify(transactionRepositoryMock, times(1)).save(transaction);
         verify(auditUtilitiesMock, times(1)).logCapturePayment(
@@ -86,7 +86,7 @@ class BarCodeCaptureServiceImplTest {
         Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED);
         TransactionBarCodeResponse expectedResponse = new TransactionBarCodeResponse();
 
-        when(transactionRepositoryMock.findByTrxCode(LOWER_TRX_CODE)).thenReturn(Optional.of(transaction));
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED)).thenReturn(Optional.of(transaction));
         when(transactionRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
                 USER_ID, INITIATIVE_ID, SyncTrxStatus.CREATED, false
         )).thenReturn(Collections.emptyList());
@@ -105,7 +105,7 @@ class BarCodeCaptureServiceImplTest {
     @Test
     void testCapturePayment_NotFound() {
         // Given
-        when(transactionRepositoryMock.findByTrxCode(LOWER_TRX_CODE)).thenReturn(Optional.empty());
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED)).thenReturn(Optional.empty());
 
         // When & Then
         TransactionNotFoundOrExpiredException exception = assertThrows(
@@ -122,7 +122,7 @@ class BarCodeCaptureServiceImplTest {
     void testCapturePayment_InvalidStatus() {
         // Given
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CREATED);
-        when(transactionRepositoryMock.findByTrxCode(LOWER_TRX_CODE)).thenReturn(Optional.of(transaction));
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED)).thenReturn(Optional.of(transaction));
 
         // When & Then
         OperationNotAllowedException exception = assertThrows(
