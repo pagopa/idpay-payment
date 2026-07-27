@@ -8,6 +8,8 @@ import it.gov.pagopa.payment.entity.Transaction;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Map;
@@ -23,13 +25,13 @@ public class RewardCalculatorMapper {
                 .merchantFiscalCode(transaction.getMerchantFiscalCode())
                 .vat(transaction.getVat())
                 .idTrxAcquirer(transaction.getIdTrxAcquirer())
-                .trxDate(transaction.getTrxDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
+                .trxDate(toOffsetDateTime(transaction.getTrxDate()))
                 .amountCents(transaction.getAmountCents())
                 .amountCurrency(transaction.getAmountCurrency())
                 .mcc(transaction.getMcc())
                 .acquirerId(transaction.getAcquirerId())
                 .idTrxIssuer(transaction.getIdTrxIssuer())
-                .trxChargeDate(transaction.getTrxChargeDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
+                .trxChargeDate(toOffsetDateTime(transaction.getTrxChargeDate()))
                 .channel(transaction.getChannel())
                 .voucherAmountCents(transaction.getVoucherAmountCents())
                 .productType(transaction.getProductType())
@@ -43,13 +45,13 @@ public class RewardCalculatorMapper {
                 .merchantFiscalCode(transaction.getMerchantFiscalCode())
                 .vat(transaction.getVat())
                 .idTrxAcquirer(transaction.getIdTrxAcquirer())
-                .trxDate(transaction.getTrxDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
+                .trxDate(toOffsetDateTime(transaction.getTrxDate()))
                 .amountCents(transaction.getAmountCents())
                 .amountCurrency(transaction.getAmountCurrency())
                 .mcc(transaction.getMcc())
                 .acquirerId(transaction.getAcquirerId())
                 .idTrxIssuer(transaction.getIdTrxIssuer())
-                .trxChargeDate(transaction.getTrxChargeDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
+                .trxChargeDate(toOffsetDateTime(transaction.getTrxChargeDate()))
                 .channel(transaction.getChannel())
                 .rewardCents(transaction.getRewardCents())
                 .voucherAmountCents(transaction.getVoucherAmountCents())
@@ -71,7 +73,7 @@ public class RewardCalculatorMapper {
                 .amountCents(responseDTO.getAmountCents())
                 .initiativeName(transaction.getInitiativeName())
                 .businessName(transaction.getBusinessName())
-                .trxDate(transaction.getTrxDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
+                .trxDate(toOffsetDateTime(transaction.getTrxDate()))
                 .counterVersion(responseDTO.getCounterVersion())
                 .additionalProperties(transaction.getAdditionalProperties())
                 .build();
@@ -85,5 +87,13 @@ public class RewardCalculatorMapper {
         }
 
         return out;
+    }
+
+
+    private OffsetDateTime toOffsetDateTime(LocalDateTime localDateTime) {
+        if (localDateTime == null) {
+            return null;
+        }
+        return localDateTime.atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime();
     }
 }
