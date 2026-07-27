@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -137,6 +138,7 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
         authPaymentDTO.setRewardCents(100L);
+        authPaymentDTO.setTrxDate(OffsetDateTime.now());
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
 

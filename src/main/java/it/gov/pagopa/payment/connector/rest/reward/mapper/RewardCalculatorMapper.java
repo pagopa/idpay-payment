@@ -71,7 +71,7 @@ public class RewardCalculatorMapper {
                 .amountCents(responseDTO.getAmountCents())
                 .initiativeName(transaction.getInitiativeName())
                 .businessName(transaction.getBusinessName())
-                .trxDate(transaction.getTrxDate())
+                .trxDate(transaction.getTrxDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
                 .counterVersion(responseDTO.getCounterVersion())
                 .additionalProperties(transaction.getAdditionalProperties())
                 .build();

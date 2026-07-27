@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.stereotype.Service;
 
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -21,7 +22,7 @@ public class AuthPaymentMapper {
             .rejectionReasons(transaction.getRejectionReasons())
             .status(transaction.getStatus())
             .trxCode(transaction.getTrxCode())
-            .trxDate(transaction.getTrxDate())
+            .trxDate(transaction.getTrxDate().atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime())
             .amountCents(transaction.getAmountCents())
             .counters(Optional.ofNullable(transaction.getRewards()).flatMap(r -> r.values().stream().map(Reward::getCounters).filter(Objects::nonNull).findFirst()).orElse(null))
             .rewards(transaction.getRewards())
