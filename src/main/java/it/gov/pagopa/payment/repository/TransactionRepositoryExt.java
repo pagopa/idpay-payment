@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -41,7 +41,7 @@ public interface TransactionRepositoryExt {
           nativeQuery = true)
   Transaction findAuthorizationExpiredTransaction(
           @Param("initiativeId") String initiativeId,
-          @Param("expirationDate") LocalDateTime expirationDate,
+          @Param("expirationDate") OffsetDateTime expirationDate,
           @Param("statusList") List<String> statusList,
           @Param("throttlingMillis") long throttlingMillis
   );
@@ -72,7 +72,7 @@ public interface TransactionRepositoryExt {
           @Param("status") SyncTrxStatus status,
           @Param("rejectionReasons") List<String> rejectionReasons,
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
-          @Param("updateDate") LocalDateTime updateDate,
+          @Param("updateDate") OffsetDateTime updateDate,
           @Param("currency") String currency
   );
 
@@ -95,7 +95,7 @@ public interface TransactionRepositoryExt {
           @Param("rejectionReasons") List<String> rejectionReasons,
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
           @Param("channel") String channel,
-          @Param("updateDate") LocalDateTime updateDate
+          @Param("updateDate") OffsetDateTime updateDate
   );
 
   @Modifying
@@ -120,7 +120,7 @@ public interface TransactionRepositoryExt {
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
           @Param("channel") String channel,
           @Param("status") SyncTrxStatus status,
-          @Param("updateDate") LocalDateTime updateDate
+          @Param("updateDate") OffsetDateTime updateDate
   );
 
   @Modifying
@@ -151,7 +151,7 @@ public interface TransactionRepositoryExt {
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
           @Param("requiredStatus") SyncTrxStatus requiredStatus,
           @Param("status") SyncTrxStatus status,
-          @Param("updateDate") LocalDateTime updateDate,
+          @Param("updateDate") OffsetDateTime updateDate,
           @Param("currency") String currency
   );
 
@@ -175,7 +175,7 @@ public interface TransactionRepositoryExt {
           "t.pointOfSaleType = :#{#trx.pointOfSaleType}, " +
           "t.updateDate = :updateDate " +
           "WHERE t.id = :#{#trx.id}")
-  void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") LocalDateTime updateDate);
+  void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") OffsetDateTime updateDate);
 
   @Modifying
   @Transactional
@@ -193,7 +193,7 @@ public interface TransactionRepositoryExt {
         """, nativeQuery = true)
   Optional<Transaction> findAndModifyThrottled(
           @Param("trxCode") String trxCode,
-          @Param("minTrxDate") LocalDateTime minTrxDate
+          @Param("minTrxDate") OffsetDateTime minTrxDate
   );
 
   @Query(value = """
@@ -217,7 +217,7 @@ public interface TransactionRepositoryExt {
         RETURNING *
         """, nativeQuery = true)
   Optional<Transaction> findAndModifyExpiredTransaction(
-          @Param("maxTrxDate") LocalDateTime maxTrxDate,
+          @Param("maxTrxDate") OffsetDateTime maxTrxDate,
           @Param("statusList") List<String> statusList,
           @Param("initiativeId") String initiativeId,
           @Param("throttlingSeconds") int throttlingSeconds
@@ -244,7 +244,7 @@ public interface TransactionRepositoryExt {
         """, nativeQuery = true)
   int updateStatusForExpiredVoucherTransactions(
           @Param("initiativeId") String initiativeId,
-          @Param("now") LocalDateTime now
+          @Param("now") OffsetDateTime now
   );
 
   @Modifying

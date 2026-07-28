@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 @Service
@@ -31,7 +32,7 @@ public class IdpayCodeAuthorizationExpiredServiceImpl extends CommonAuthCodeExpi
 
     @Override
     public Transaction findByTrxIdAndAuthorizationNotExpired(String trxId) {
-        LocalDateTime minTrxDate = LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes);
+        OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes);
         return transactionRepository.findByIdAndTrxDateGreaterThanEqual(trxId,minTrxDate)
                             .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find voucher with trxId [%s]".formatted(trxId)));
     }

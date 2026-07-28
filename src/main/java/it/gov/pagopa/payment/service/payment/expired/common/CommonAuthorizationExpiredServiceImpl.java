@@ -14,7 +14,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -47,13 +47,13 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public Transaction findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))
+        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
     }
 
     public Transaction findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
-        LocalDateTime minTrxDate = LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes);
+        OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes);
 
         Transaction transaction = transactionRepository.findAndModifyThrottled(trxCode, minTrxDate)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
@@ -74,7 +74,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     protected Transaction findExpiredTransaction(String initiativeId, long expirationMinutes) {
         return transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes),
+                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );

@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -312,7 +313,7 @@ class TransactionServiceImplTest {
     @Test
     @DisplayName("findAndUpdateExpiredTransactionsStatus - Successo")
     void testFindAndUpdateExpiredTransactionsStatus_Success() {
-        when(transactionRepository.updateStatusForExpiredVoucherTransactions(eq(INITIATIVE_ID), any(LocalDateTime.class)))
+        when(transactionRepository.updateStatusForExpiredVoucherTransactions(eq(INITIATIVE_ID), any(OffsetDateTime.class)))
                 .thenReturn(5);
 
         long count = transactionService.findAndUpdateExpiredTransactionsStatus(INITIATIVE_ID);
@@ -343,7 +344,7 @@ class TransactionServiceImplTest {
         when(extendedTransactions.getStaleMinutesThreshold()).thenReturn(30);
         when(extendedTransactions.getSendExpiredSendBatchSize()).thenReturn(10);
         when(transactionRepository.findByInitiativeIdAndStatusAndUpdateDateBeforeAndExtendedAuthorizationIsTrueOrderByIdAsc(
-                eq(INITIATIVE_ID), eq(SyncTrxStatus.EXPIRED), any(LocalDateTime.class), any(Pageable.class)
+                eq(INITIATIVE_ID), eq(SyncTrxStatus.EXPIRED), any(OffsetDateTime.class), any(Pageable.class)
         )).thenReturn(List.of(trx));
 
         when(transactionNotifierService.notify(trx, TRX_ID)).thenReturn(true);
@@ -366,7 +367,7 @@ class TransactionServiceImplTest {
         when(extendedTransactions.getSendExpiredSendBatchSize()).thenReturn(2);
 
         when(transactionRepository.findByInitiativeIdAndStatusAndUpdateDateBeforeAndExtendedAuthorizationIsTrueOrderByIdAsc(
-                eq(INITIATIVE_ID), eq(SyncTrxStatus.EXPIRED), any(LocalDateTime.class), any(Pageable.class)
+                eq(INITIATIVE_ID), eq(SyncTrxStatus.EXPIRED), any(OffsetDateTime.class), any(Pageable.class)
         )).thenReturn(List.of(trx1, trx2)).thenReturn(Collections.emptyList());
 
         when(transactionNotifierService.notify(any(), anyString())).thenReturn(true);
@@ -386,7 +387,7 @@ class TransactionServiceImplTest {
         when(extendedTransactions.getStaleMinutesThreshold()).thenReturn(30);
         when(extendedTransactions.getSendExpiredSendBatchSize()).thenReturn(10);
         when(transactionRepository.findByInitiativeIdAndStatusAndUpdateDateBeforeAndExtendedAuthorizationIsTrueOrderByIdAsc(
-                eq(INITIATIVE_ID), eq(SyncTrxStatus.EXPIRED), any(LocalDateTime.class), any(Pageable.class)
+                eq(INITIATIVE_ID), eq(SyncTrxStatus.EXPIRED), any(OffsetDateTime.class), any(Pageable.class)
         )).thenReturn(List.of(trx));
 
         when(transactionNotifierService.notify(trx, TRX_ID)).thenReturn(false);

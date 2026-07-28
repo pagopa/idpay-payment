@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -75,7 +74,7 @@ public class CommonPreAuthServiceImpl{
                 preview.getRejectionReasons(),
                 CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
-                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME))
+                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME))
         );
 
         log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
@@ -92,7 +91,7 @@ public class CommonPreAuthServiceImpl{
                 CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
                 status,
-                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
       }
 
       Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?

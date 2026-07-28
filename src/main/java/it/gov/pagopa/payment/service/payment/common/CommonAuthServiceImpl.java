@@ -19,7 +19,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -102,7 +101,7 @@ public class CommonAuthServiceImpl {
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
             } else {
 
-                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), "EUR");
+                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), "EUR");
 
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
@@ -138,7 +137,7 @@ public class CommonAuthServiceImpl {
                 initiativeRejectionReasons,
                 SyncTrxStatus.AUTHORIZATION_REQUESTED,
                 SyncTrxStatus.AUTHORIZED,
-                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)),
+                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)),
                 "EUR"
         );
 
@@ -202,7 +201,7 @@ public class CommonAuthServiceImpl {
         } else if(transaction.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             transaction.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
-        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+        transactionRepository.updateTrxWithStatus(transaction, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {

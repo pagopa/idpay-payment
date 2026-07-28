@@ -12,7 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -61,7 +61,7 @@ class QRCodeCancelExpiredServiceImplTest {
         transaction.setStatus(SyncTrxStatus.AUTHORIZED);
 
         when(transactionRepositoryMock.findAndModifyExpiredTransaction(
-                any(LocalDateTime.class),
+                any(OffsetDateTime.class),
                 eq(List.of(SyncTrxStatus.AUTHORIZED.name())),
                 eq(INITIATIVE_ID),
                 eq(1000)
@@ -74,7 +74,7 @@ class QRCodeCancelExpiredServiceImplTest {
         assertNotNull(result);
         assertEquals(TRX_ID, result.getId());
         verify(transactionRepositoryMock, times(1)).findAndModifyExpiredTransaction(
-                any(LocalDateTime.class),
+                any(OffsetDateTime.class),
                 eq(List.of(SyncTrxStatus.AUTHORIZED.name())),
                 eq(INITIATIVE_ID),
                 eq(1000)
@@ -85,7 +85,7 @@ class QRCodeCancelExpiredServiceImplTest {
     void testFindExpiredTransaction_NotFound_ThrowsException() {
         // Given
         when(transactionRepositoryMock.findAndModifyExpiredTransaction(
-                any(LocalDateTime.class),
+                any(OffsetDateTime.class),
                 eq(List.of(SyncTrxStatus.AUTHORIZED.name())),
                 eq(INITIATIVE_ID),
                 eq(1000)

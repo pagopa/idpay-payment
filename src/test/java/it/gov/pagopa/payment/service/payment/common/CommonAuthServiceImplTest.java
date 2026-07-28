@@ -21,7 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -193,7 +193,7 @@ class CommonAuthServiceImplTest {
 
         assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
         assertEquals(100L, trx.getRewardCents());
-        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(OffsetDateTime.class));
     }
 
     @Test
@@ -210,7 +210,7 @@ class CommonAuthServiceImplTest {
         commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
         assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
-        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(OffsetDateTime.class));
     }
 
     @Test
@@ -222,7 +222,7 @@ class CommonAuthServiceImplTest {
         commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
         assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
-        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(OffsetDateTime.class));
         verifyNoInteractions(commonPreAuthService);
     }
 
@@ -247,7 +247,7 @@ class CommonAuthServiceImplTest {
         when(rewardCalculatorConnector.authorizePayment(trx)).thenReturn(authDto);
         when(transactionRepository.updateTrxAuthorized(
                 eq(trx), eq(authDto), anyMap(), eq(SyncTrxStatus.AUTHORIZATION_REQUESTED),
-                eq(SyncTrxStatus.AUTHORIZED), any(LocalDateTime.class), eq("EUR")
+                eq(SyncTrxStatus.AUTHORIZED), any(OffsetDateTime.class), eq("EUR")
         )).thenReturn(1); // 1 riga aggiornata = Successo
 
         AuthPaymentDTO result = commonAuthService.invokeRuleEngine(trx);
@@ -300,7 +300,7 @@ class CommonAuthServiceImplTest {
 
         assertThrows(BudgetExhaustedException.class, () -> commonAuthService.invokeRuleEngine(trx));
 
-        verify(transactionRepository).updateTrxRejected(eq(trx), eq(SyncTrxStatus.REJECTED), anyList(), anyMap(), any(LocalDateTime.class), eq("EUR"));
+        verify(transactionRepository).updateTrxRejected(eq(trx), eq(SyncTrxStatus.REJECTED), anyList(), anyMap(), any(OffsetDateTime.class), eq("EUR"));
         verify(timeoutSchedulerService).cancelScheduledMessage(123L);
     }
 

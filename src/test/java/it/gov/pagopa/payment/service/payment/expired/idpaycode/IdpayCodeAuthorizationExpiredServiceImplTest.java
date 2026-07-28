@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +53,7 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
         transaction.setId(TRX_ID);
         transaction.setChannel(RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
-        when(transactionRepositoryMock.findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
 
         // When
@@ -64,13 +64,13 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
         assertEquals(TRX_ID, result.getId());
         assertEquals(RewardConstants.TRX_CHANNEL_IDPAYCODE, result.getChannel());
         verify(transactionRepositoryMock, times(1))
-                .findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class));
+                .findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(OffsetDateTime.class));
     }
 
     @Test
     void testFindByTrxIdAndAuthorizationNotExpired_NotFound_ThrowsException() {
         // Given
-        when(transactionRepositoryMock.findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(OffsetDateTime.class)))
                 .thenReturn(Optional.empty());
 
         // When & Then
@@ -81,7 +81,7 @@ class IdpayCodeAuthorizationExpiredServiceImplTest {
 
         assertTrue(exception.getMessage().contains("Cannot find voucher with trxId"));
         verify(transactionRepositoryMock, times(1))
-                .findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(LocalDateTime.class));
+                .findByIdAndTrxDateGreaterThanEqual(eq(TRX_ID), any(OffsetDateTime.class));
     }
 
 }

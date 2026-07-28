@@ -20,6 +20,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -190,7 +191,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
         try {
-            LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+            OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
             log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", sanitizeForLog(initiativeId));
             int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
 
@@ -209,7 +210,7 @@ public class TransactionServiceImpl implements TransactionService {
         long numberOfEvents = 0L;
         try {
             while (true) {
-                LocalDateTime threshold = LocalDateTime.now(ZoneId.of("Europe/Rome"))
+                OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of("Europe/Rome"))
                         .minusMinutes(extendedTransactions.getStaleMinutesThreshold());
                 Pageable pageable = Pageable.ofSize(appConfigurationProperties.getSendExpiredSendBatchSize()).withPage(page);
 

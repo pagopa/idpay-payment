@@ -16,7 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,7 +71,7 @@ class CommonAuthorizationExpiredServiceImplTest {
         transaction.setId(TRX_ID);
         transaction.setTrxCode(TRX_CODE);
 
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
 
         // When
@@ -81,13 +81,13 @@ class CommonAuthorizationExpiredServiceImplTest {
         assertNotNull(result);
         assertEquals(TRX_ID, result.getId());
         verify(transactionRepositoryMock, times(1))
-                .findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class));
+                .findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class));
     }
 
     @Test
     void testFindByTrxCodeAndAuthorizationNotExpired_NotFound() {
         // Given
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.empty());
 
         // When & Then
@@ -106,9 +106,9 @@ class CommonAuthorizationExpiredServiceImplTest {
         transaction.setId(TRX_ID);
         transaction.setTrxCode(TRX_CODE);
 
-        when(transactionRepositoryMock.findAndModifyThrottled(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findAndModifyThrottled(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
-        when(transactionRepositoryMock.existsByTrxCodeAndTrxDateGreaterThan(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.existsByTrxCodeAndTrxDateGreaterThan(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(false);
 
         // When
@@ -117,14 +117,14 @@ class CommonAuthorizationExpiredServiceImplTest {
         // Then
         assertNotNull(result);
         assertEquals(TRX_ID, result.getId());
-        verify(transactionRepositoryMock, times(1)).findAndModifyThrottled(eq(TRX_CODE), any(LocalDateTime.class));
-        verify(transactionRepositoryMock, times(1)).existsByTrxCodeAndTrxDateGreaterThan(eq(TRX_CODE), any(LocalDateTime.class));
+        verify(transactionRepositoryMock, times(1)).findAndModifyThrottled(eq(TRX_CODE), any(OffsetDateTime.class));
+        verify(transactionRepositoryMock, times(1)).existsByTrxCodeAndTrxDateGreaterThan(eq(TRX_CODE), any(OffsetDateTime.class));
     }
 
     @Test
     void testFindByTrxCodeAndAuthorizationNotExpiredThrottled_NotFound() {
         // Given
-        when(transactionRepositoryMock.findAndModifyThrottled(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findAndModifyThrottled(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.empty());
 
         // When & Then
@@ -143,9 +143,9 @@ class CommonAuthorizationExpiredServiceImplTest {
         Transaction transaction = new Transaction();
         transaction.setId(TRX_ID);
 
-        when(transactionRepositoryMock.findAndModifyThrottled(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findAndModifyThrottled(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
-        when(transactionRepositoryMock.existsByTrxCodeAndTrxDateGreaterThan(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.existsByTrxCodeAndTrxDateGreaterThan(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(true);
 
         // When & Then

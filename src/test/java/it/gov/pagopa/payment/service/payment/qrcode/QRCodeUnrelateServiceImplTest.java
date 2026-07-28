@@ -16,7 +16,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +50,7 @@ class QRCodeUnrelateServiceImplTest {
         transaction.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         transaction.setRejectionReasons(List.of("REASON_1"));
 
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
         when(transactionRepositoryMock.save(transaction)).thenReturn(transaction);
 
@@ -80,7 +81,7 @@ class QRCodeUnrelateServiceImplTest {
         // Given
         Transaction transaction = createDummyTransaction(SyncTrxStatus.IDENTIFIED, "OTHER_USER_ID");
 
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
 
         // When & Then
@@ -102,7 +103,7 @@ class QRCodeUnrelateServiceImplTest {
         // Given
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CREATED, USER_ID);
 
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.of(transaction));
 
         // When & Then
@@ -122,7 +123,7 @@ class QRCodeUnrelateServiceImplTest {
     @Test
     void testUnrelateTransaction_TransactionNotFound_ThrowsTransactionNotFoundOrExpiredException() {
         // Given
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(LocalDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
                 .thenReturn(Optional.empty());
 
         // When & Then

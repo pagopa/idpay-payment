@@ -28,7 +28,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -180,7 +179,7 @@ public class CommonCancelServiceImpl {
         List<Transaction> transactions;
         int pageSize = 100;
         do {
-            LocalDateTime threshold = LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
+            OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
             Pageable pageable = PageRequest.of(0, pageSize);
             transactions = transactionRepository.findByStatusAndUpdateDateBefore(
                     SyncTrxStatus.AUTHORIZED,

@@ -48,11 +48,11 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "operationType" VARCHAR(32) NOT NULL,
     "operationTypeTranscoded" VARCHAR(32),
     status VARCHAR(32) NOT NULL,
-    "trxDate" TIMESTAMP NOT NULL,
-    "trxChargeDate" TIMESTAMP,
-    "trxEndDate" TIMESTAMP,
-    "elaborationDateTime" TIMESTAMP,
-    "updateDate" TIMESTAMP,
+    "trxDate" TIMESTAMPTZ NOT NULL,
+    "trxChargeDate" TIMESTAMPTZ,
+    "trxEndDate" TIMESTAMPTZ,
+    "elaborationDateTime" TIMESTAMPTZ,
+    "updateDate" TIMESTAMPTZ,
     "userId" VARCHAR(64),
     "merchantId" VARCHAR(64),
     "acquirerId" VARCHAR(64),
@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "invoiceData" JSONB,
     "creditNoteData" JSONB,
     "correlationId" VARCHAR(128),
-    "createdAt" TIMESTAMP,
+    "createdAt" TIMESTAMPTZ,
     "rewardBatchStatusTrx" VARCHAR(64),
     "rewardBatchId" VARCHAR(64),
     "idTrxAcquirer" VARCHAR(64),
@@ -92,12 +92,12 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
 
 -- ALTER PER TRANSACTION (Mancava la virgola prima di ADD COLUMN)
 ALTER TABLE "idpay-pagamenti".transaction
-    ALTER COLUMN "trxDate" TYPE TIMESTAMP USING "trxDate"::TIMESTAMP,
-    ALTER COLUMN "trxChargeDate" TYPE TIMESTAMP USING "trxChargeDate"::TIMESTAMP,
-    ALTER COLUMN "trxEndDate" TYPE TIMESTAMP USING "trxEndDate"::TIMESTAMP,
-    ALTER COLUMN "elaborationDateTime" TYPE TIMESTAMP USING "elaborationDateTime"::TIMESTAMP,
-    ALTER COLUMN "updateDate" TYPE TIMESTAMP USING "updateDate"::TIMESTAMP,
-    ALTER COLUMN "createdAt" TYPE TIMESTAMP USING "createdAt"::TIMESTAMP,
+    ALTER COLUMN "trxDate" TYPE TIMESTAMPTZ USING "trxDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "trxChargeDate" TYPE TIMESTAMPTZ USING "trxChargeDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "trxEndDate" TYPE TIMESTAMPTZ USING "trxEndDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "elaborationDateTime" TYPE TIMESTAMPTZ USING "elaborationDateTime" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "updateDate" TYPE TIMESTAMPTZ USING "updateDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "createdAt" TYPE TIMESTAMPTZ USING "createdAt" AT TIME ZONE 'Europe/Rome',
     ADD COLUMN IF NOT EXISTS "productType" VARCHAR(16);
 
 -- 4. TABELLA TRANSACTION_OUTBOX

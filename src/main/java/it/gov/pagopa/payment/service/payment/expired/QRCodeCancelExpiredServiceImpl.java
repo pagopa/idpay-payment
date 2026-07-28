@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -43,7 +43,7 @@ public class QRCodeCancelExpiredServiceImpl extends BaseCommonCodeExpiration imp
 
     @Override
     protected Transaction findExpiredTransaction(String initiativeId, long expirationMinutes) {
-        LocalDateTime maxTrxDate = LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(cancelExpirationMinutes);
+        OffsetDateTime maxTrxDate = OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(cancelExpirationMinutes);
         List<String> statusList = List.of(SyncTrxStatus.AUTHORIZED.name());
         return transactionRepository.findAndModifyExpiredTransaction(
                 maxTrxDate,
