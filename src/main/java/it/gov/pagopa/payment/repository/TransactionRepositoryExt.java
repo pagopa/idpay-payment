@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -47,6 +48,7 @@ public interface TransactionRepositoryExt {
 
 
   @Modifying
+  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.rewardCents = 0, " +
@@ -75,6 +77,7 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
+  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.userId = :userId, " +
@@ -96,6 +99,7 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
+  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.userId = :#{#trx.userId}, " +
@@ -151,6 +155,7 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
+  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :#{#trx.status}, " +
           "t.userId = :#{#trx.userId}, " +
@@ -172,6 +177,7 @@ public interface TransactionRepositoryExt {
   void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") LocalDateTime updateDate);
 
   @Modifying
+  @Transactional
   @Query("DELETE FROM Transaction t WHERE t.id IN :ids")
   void bulkDeleteByIds(@Param("ids") List<String> ids);
 
@@ -217,6 +223,7 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
+  @Transactional
   @Query(value = """
         UPDATE transaction 
         SET status = 'EXPIRED', 
@@ -240,6 +247,7 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
+  @Transactional
   @Query("""
         UPDATE Transaction t
         SET t.status = :newStatus,
