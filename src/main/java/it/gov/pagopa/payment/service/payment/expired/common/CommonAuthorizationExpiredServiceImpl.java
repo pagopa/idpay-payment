@@ -52,6 +52,12 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
     }
 
+    public Transaction findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(String trxCode) {
+        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), SyncTrxStatus.CANCELLED)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+    }
+
     public Transaction findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
         OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes);
 
