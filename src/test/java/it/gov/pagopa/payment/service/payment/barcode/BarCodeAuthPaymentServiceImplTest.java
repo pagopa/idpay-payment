@@ -102,7 +102,7 @@ class BarCodeAuthPaymentServiceImplTest {
         WalletDTO walletDTO = new WalletDTO();
         walletDTO.setFamilyId("FAMILY");
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(transaction);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1)).thenReturn(transaction);
         when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID)).thenReturn(pointOfSaleDTO);
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transaction.getInitiativeId(), USER_ID)).thenReturn(walletDTO);
         when(commonAuthServiceMock.invokeRuleEngine(transaction)).thenReturn(authPaymentDTO);
@@ -123,7 +123,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void barCodeAuthPayment_trxNotFound() {
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(null);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1)).thenReturn(null);
         doThrow(new TransactionNotFoundOrExpiredException("DUMMY")).when(commonAuthServiceMock).checkAuth(TRX_CODE1, null);
         AuthBarCodePaymentDTO dto = AuthBarCodePaymentDTO.builder().amountCents(1L).build();
 
