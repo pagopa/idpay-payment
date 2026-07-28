@@ -30,7 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.Set;
 
 @Slf4j
@@ -51,7 +51,7 @@ public class AzureBlobClientImpl implements AzureBlobClient {
 
     @Override
     public String getInvoiceFileSignedUrl(String blobPath) {
-        OffsetDateTime expiryTime = OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(sasDurationSeconds);
+        OffsetDateTime expiryTime = OffsetDateTime.now(ZoneId.of("Europe/Rome")).plusSeconds(sasDurationSeconds);
         UserDelegationKey userDelegationKey =
                 blobServiceClient.getUserDelegationKey(null, expiryTime);
 

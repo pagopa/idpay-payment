@@ -16,7 +16,11 @@ import java.util.List;
 public class TrxFiltersDTO {
 
     public static final List<String> PROCESSED_ALLOWED_STATUSES = List.of(
-            "AUTHORIZED", "INVOICED", "REJECTED", "REWARDED", "CAPTURED"
+            "REWARDED", "CANCELLED", "REFUNDED", "INVOICED"
+    );
+
+    public static final List<String> REWARDED_ALLOWED_STATUSES = List.of(
+            "AUTHORIZED", "CAPTURED"
     );
 
     private List<String> statuses;

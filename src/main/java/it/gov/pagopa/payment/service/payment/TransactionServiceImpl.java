@@ -1,12 +1,17 @@
-package it.gov.pagopa.payment.service;
+package it.gov.pagopa.payment.service.payment;
 
+import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
+import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
+import it.gov.pagopa.payment.service.PDVService;
 import it.gov.pagopa.payment.utils.TransactionSpecifications;
+import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -15,11 +20,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTIONS_MISSING_MANDATORY_FILTERS;
 import static it.gov.pagopa.payment.constants.PaymentConstants.buildMissingFiltersMessage;
+import static it.gov.pagopa.payment.utils.Utilities.sanitizeForLog;
 
 @Service
 @Slf4j
@@ -33,12 +41,45 @@ public class TransactionServiceImpl implements TransactionService {
 
     private final TransactionRepository transactionRepository;
     private final PDVService pdvService;
+    private final TrxCodeGenUtil trxCodeGenUtil;
+    private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
+    private final TransactionNotifierService transactionNotifierService;
+    private final AppConfigurationProperties.ExtendedTransactions appConfigurationProperties;
+
+
 
     public TransactionServiceImpl(
             TransactionRepository transactionRepository,
-            PDVService pdvService) {
+            PDVService pdvService,
+            TrxCodeGenUtil trxCodeGenUtil,
+            AppConfigurationProperties.ExtendedTransactions extendedTransactions,
+            TransactionNotifierService transactionNotifierService,
+            AppConfigurationProperties.ExtendedTransactions appConfigurationProperties) {
         this.transactionRepository = transactionRepository;
         this.pdvService = pdvService;
+        this.trxCodeGenUtil = trxCodeGenUtil;
+        this.extendedTransactions = extendedTransactions;
+        this.transactionNotifierService = transactionNotifierService;
+        this.appConfigurationProperties = appConfigurationProperties;
+    }
+
+    @Override
+    public void generateTrxCodeAndSave(Transaction transaction, String flowName) {
+        long retry = 1;
+        String trxCode;
+        while(true){
+            trxCode = trxCodeGenUtil.get();
+            if(!transactionRepository.existsByTrxCode(trxCode)){
+                break;
+            }
+            log.info(
+                    "[{}] [GENERATE_TRX_CODE] Duplicate hit: generating new trxCode [Retry #{}]",
+                    flowName,
+                    retry);
+        }
+        transaction.setTrxCode(trxCode);
+
+        transactionRepository.save(transaction);
     }
 
     @Override
@@ -145,6 +186,74 @@ public class TransactionServiceImpl implements TransactionService {
         String encryptedFiscalCode = encryptFiscalCode(filters.getFiscalCode());
         Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, encryptedFiscalCode);
         return transactionRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
+        try {
+            OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
+            log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", sanitizeForLog(initiativeId));
+            int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
+
+            log.info("[BATCH_EXPIRED_VOUCHER] Updated expired vouchers directly in DB: {}", updatedRows);
+            return updatedRows;
+        } catch (Exception e) {
+            log.error("[UPDATE_EXPIRED_TRANSACTIONS_STATUS] Encountered an error during the update of the existing " +
+                    "transactions for which trx status is expired, with message {}", e.getMessage(), e);
+            throw new ExpirationStatusUpdateException(e.getMessage());
+        }
+    }
+
+    @Override
+    public long sendEventForStaleExpiredTransactions(String initiativeId) {
+        Integer page = 0;
+        long numberOfEvents = 0L;
+        try {
+            while (true) {
+                OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of("Europe/Rome"))
+                        .minusMinutes(extendedTransactions.getStaleMinutesThreshold());
+                Pageable pageable = Pageable.ofSize(appConfigurationProperties.getSendExpiredSendBatchSize()).withPage(page);
+
+                List<Transaction> transactionList = transactionRepository
+                        .findByInitiativeIdAndStatusAndUpdateDateBeforeAndExtendedAuthorizationIsTrueOrderByIdAsc(
+                                initiativeId,
+                                SyncTrxStatus.EXPIRED,
+                                threshold,
+                                pageable
+                        );
+
+                numberOfEvents = numberOfEvents + transactionList.size();
+                transactionList.parallelStream().forEach(
+                        transaction -> {
+                            if (!transactionNotifierService.notify(
+                                    transaction, transaction.getId())) {
+                                log.error("[SEND_EVENT_FOR_STALE_EXPIRED_TRX] Unable to send trx with id {}",
+                                        transaction.getId());
+                                throw new ExpirationStatusUpdateException("Unable to send trx with id " +
+                                        transaction.getId());
+                            }
+                        });
+
+                if (transactionList.isEmpty() ||
+                        transactionList.size() < appConfigurationProperties.getSendExpiredSendBatchSize()) {
+                    log.info(
+                            "[SEND_EVENT_FOR_STALE_EXPIRED_TRX] Successfully sent {} stale transactions in EXPIRED state" +
+                                    "left unprocessed for recovery", numberOfEvents);
+                    return numberOfEvents;
+                }
+
+                page++;
+
+            }
+
+        } catch (ExpirationStatusUpdateException expirationStatusUpdateException) {
+            throw expirationStatusUpdateException;
+        } catch (Exception e) {
+            log.error("[SEND_EVENT_TRANSACTIONS_STATUS] Encountered an error during the process: {}",
+                    e.getMessage(), e);
+            throw new ExpirationStatusUpdateException(e.getMessage());
+        }
+
     }
 
     private List<Transaction> findByIdTrxIssuer(

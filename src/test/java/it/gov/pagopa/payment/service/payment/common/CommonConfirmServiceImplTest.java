@@ -1,161 +1,192 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.constants.PaymentConstants;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.MerchantOrAcquirerNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.test.fakers.TransactionFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonConfirmServiceImplTest {
 
-    @Mock private TransactionInProgressRepository repositoryMock;
-    @Mock private TransactionNotifierService notifierServiceMock;
-    @Mock private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
-    @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock private TransactionRepository transactionRepository;
-    @Mock private TransactionSynchronizer transactionSynchronizer;
+    @Mock
+    private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private TransactionMapper transactionMapperMock;
+    @Mock
+    private TransactionNotifierService notifierServiceMock;
+    @Mock
+    private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
+    @InjectMocks
+    private CommonConfirmServiceImpl commonConfirmService;
+
+    private static final String TRX_ID = "TRX_ID_123";
+    private static final String MERCHANT_ID = "MERCHANT_ID_123";
+    private static final String ACQUIRER_ID = "ACQUIRER_ID_123";
+    private static final String WRONG_MERCHANT_ID = "WRONG_MERCHANT";
+    private static final String INITIATIVE_ID = "INITIATIVE_123";
+    private static final String USER_ID = "USER_123";
 
 
-    private final TransactionInProgress2TransactionResponseMapper mapper = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
+    @Test
+    void testConfirmPayment_Success() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED, MERCHANT_ID, ACQUIRER_ID);
+        TransactionResponse expectedResponse = new TransactionResponse();
 
-    CommonConfirmServiceImpl service;
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(notifierServiceMock.notify(transaction, MERCHANT_ID)).thenReturn(true);
+        when(transactionMapperMock.transactionToTransactionResponse(transaction)).thenReturn(expectedResponse);
 
-    @BeforeEach
-    void init() {
-        service =
-                new CommonConfirmServiceImpl(
-                        transactionRepository,
-                        repositoryMock,
-                        mapper,
-                        notifierServiceMock,
-                        paymentErrorNotifierServiceMock,
-                        auditUtilitiesMock,
-                        transactionSynchronizer);
+        // When
+        TransactionResponse result = commonConfirmService.confirmPayment(TRX_ID, MERCHANT_ID, ACQUIRER_ID);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        assertEquals(SyncTrxStatus.REWARDED, transaction.getStatus());
+        assertNotNull(transaction.getElaborationDateTime());
+
+        verify(transactionRepositoryMock, times(1)).save(transaction);
+        verify(notifierServiceMock, times(1)).notify(transaction, MERCHANT_ID);
+        verify(auditUtilitiesMock, times(1)).logConfirmedPayment(
+                INITIATIVE_ID, TRX_ID, transaction.getTrxCode(), USER_ID, 100L, null, MERCHANT_ID
+        );
+        verify(auditUtilitiesMock, never()).logErrorConfirmedPayment(any(), any());
     }
 
     @Test
-    void testTrxNotFound() {
-        TransactionNotFoundOrExpiredException exception = Assertions.assertThrows(
+    void testConfirmPayment_NotFound() {
+        // Given
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.empty());
+
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
                 TransactionNotFoundOrExpiredException.class,
-                () -> service.confirmPayment("TRXID", "MERCHID", "ACQID")
+                () -> commonConfirmService.confirmPayment(TRX_ID, MERCHANT_ID, ACQUIRER_ID)
         );
 
-        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", exception.getCode());
-        Assertions.assertEquals("Cannot find transaction with transactionId [TRXID]", exception.getMessage());
+        assertEquals("Cannot find transaction with transactionId [%s]".formatted(TRX_ID), exception.getMessage());
+        verify(auditUtilitiesMock, times(1)).logErrorConfirmedPayment(TRX_ID, MERCHANT_ID);
+        verify(transactionRepositoryMock, never()).save(any());
     }
 
     @Test
-    void testMerchantIdNotValid() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+    void testConfirmPayment_InvalidStatus() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CREATED, MERCHANT_ID, ACQUIRER_ID);
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        when(repositoryMock.findById("TRXID"))
-                .thenReturn(Optional.ofNullable(TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED)));
-
-        MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
-                MerchantOrAcquirerNotAllowedException.class,
-                () -> service.confirmPayment("TRXID", "MERCHID", "ACQID")
-        );
-
-        Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
-        Assertions.assertEquals(
-                "The merchant with id [MERCHANTID0] associated to the transaction is not equal to the merchant with id [MERCHID]",
-                exception.getMessage()
-        );
-    }
-
-    @Test
-    void testAcquirerIdNotValid() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
-
-        trx.setMerchantId("MERCHID");
-        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
-
-        MerchantOrAcquirerNotAllowedException exception = Assertions.assertThrows(
-                MerchantOrAcquirerNotAllowedException.class,
-                () -> service.confirmPayment("TRXID", "MERCHID_2", "ACQID")
-        );
-
-        Assertions.assertEquals(ExceptionCode.PAYMENT_MERCHANT_NOT_ALLOWED, exception.getCode());
-        Assertions.assertEquals(
-                "The merchant with id [MERCHID] associated to the transaction is not equal to the merchant with id [MERCHID_2]",
-                exception.getMessage()
-        );
-    }
-
-    @Test
-    void testStatusNotValid() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.CREATED);
-
-        trx.setMerchantId("MERCHID");
-        trx.setAcquirerId("ACQID");
-        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
-
-        OperationNotAllowedException exception = Assertions.assertThrows(
+        // When & Then
+        OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> service.confirmPayment("TRXID", "MERCHID", "ACQID")
+                () -> commonConfirmService.confirmPayment(TRX_ID, MERCHANT_ID, ACQUIRER_ID)
         );
 
-        Assertions.assertEquals(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
-        Assertions.assertEquals("Cannot operate on transaction with transactionId [TRXID] in status CREATED", exception.getMessage());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
+        verify(auditUtilitiesMock, times(1)).logErrorConfirmedPayment(TRX_ID, MERCHANT_ID);
+        verify(transactionRepositoryMock, never()).save(any());
     }
 
     @Test
-    void testSuccess() {
-        testSuccessful(true);
+    void testConfirmPayment_MerchantOrAcquirerNotAllowed() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED, MERCHANT_ID, ACQUIRER_ID);
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then (Wrong Merchant)
+        MerchantOrAcquirerNotAllowedException exception = assertThrows(
+                MerchantOrAcquirerNotAllowedException.class,
+                () -> commonConfirmService.confirmPayment(TRX_ID, WRONG_MERCHANT_ID, ACQUIRER_ID)
+        );
+
+        assertTrue(exception.getMessage().contains("is not equal to the merchant with id"));
+        verify(auditUtilitiesMock, times(1)).logErrorConfirmedPayment(TRX_ID, WRONG_MERCHANT_ID);
+        verify(transactionRepositoryMock, never()).save(any());
     }
 
     @Test
-    void testSuccessNotNotified() {
-        testSuccessful(false);
+    void testConfirmPayment_NotificationReturnsFalse_HandledByErrorNotifier() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED, MERCHANT_ID, ACQUIRER_ID);
+        TransactionResponse expectedResponse = new TransactionResponse();
+        Message<Transaction> dummyMessage = MessageBuilder.withPayload(transaction).build();
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(notifierServiceMock.notify(transaction, MERCHANT_ID)).thenReturn(false);
+        when(notifierServiceMock.buildMessage(transaction, MERCHANT_ID)).thenReturn(dummyMessage);
+        when(paymentErrorNotifierServiceMock.notifyConfirmPayment(eq(dummyMessage), anyString(), eq(true), any()))
+                .thenReturn(true);
+        when(transactionMapperMock.transactionToTransactionResponse(transaction)).thenReturn(expectedResponse);
+
+        // When
+        TransactionResponse result = commonConfirmService.confirmPayment(TRX_ID, MERCHANT_ID, ACQUIRER_ID);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(paymentErrorNotifierServiceMock, times(1))
+                .notifyConfirmPayment(eq(dummyMessage), anyString(), eq(true), any());
+        verify(transactionRepositoryMock, times(1)).save(transaction);
     }
 
-    private void testSuccessful(boolean transactionOutcome) {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        TransactionInProgress trx =
-                TransactionInProgressFaker.mockInstance(0, SyncTrxStatus.AUTHORIZED);
-        trx.setMerchantId("MERCHID");
-        trx.setAcquirerId("ACQID");
-        trx.setRewardCents(1000L);
+    @Test
+    void testConfirmPayment_NotificationThrowsException_ErrorNotifierFails() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED, MERCHANT_ID, ACQUIRER_ID);
+        TransactionResponse expectedResponse = new TransactionResponse();
 
-        when(repositoryMock.findById("TRXID")).thenReturn(Optional.of(trx));
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(notifierServiceMock.notify(transaction, MERCHANT_ID)).thenThrow(new RuntimeException("Kafka error"));
+        when(notifierServiceMock.buildMessage(transaction, MERCHANT_ID)).thenReturn(null);
+        when(paymentErrorNotifierServiceMock.notifyConfirmPayment(any(), anyString(), eq(true), any()))
+                .thenReturn(false);
+        when(transactionMapperMock.transactionToTransactionResponse(transaction)).thenReturn(expectedResponse);
 
-        when(notifierServiceMock.notify(trx, trx.getMerchantId())).thenReturn(transactionOutcome);
+        // When
+        TransactionResponse result = commonConfirmService.confirmPayment(TRX_ID, MERCHANT_ID, ACQUIRER_ID);
 
-        TransactionResponse result = service.confirmPayment("TRXID", "MERCHID", "ACQID");
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
+        verify(paymentErrorNotifierServiceMock, times(1))
+                .notifyConfirmPayment(any(), anyString(), eq(true), any());
+        verify(transactionRepositoryMock, times(1)).save(transaction);
+    }
 
-        Assertions.assertEquals(result, mapper.apply(trx));
-        Assertions.assertEquals(SyncTrxStatus.REWARDED, result.getStatus());
+    private Transaction createDummyTransaction(SyncTrxStatus status, String merchantId, String acquirerId) {
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setTrxCode("TRX_CODE_123");
+        transaction.setInitiativeId(INITIATIVE_ID);
+        transaction.setUserId(USER_ID);
+        transaction.setMerchantId(merchantId);
+        transaction.setAcquirerId(acquirerId);
+        transaction.setStatus(status);
+        transaction.setRewardCents(100L);
+        return transaction;
     }
 }

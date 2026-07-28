@@ -1,42 +1,19 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
-import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.pdf.PdfService;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +29,20 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = {BarCodePaymentControllerImpl.class}, excludeAutoConfiguration = {UserDetailsServiceAutoConfiguration.class, SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
@@ -72,20 +63,12 @@ class BarCodePaymentControllerTest {
 
     @Test
     void captureCommonTransactionByTrxCode() throws Exception {
-        String initiativeId = "INITIATIVE_ID";
-        String trxCode = "trxCode";
-        String merchantId = "MERCHANT_ID";
-        String pointOfSaleId = "POINT_OF_SALE_ID";
-        String acquirerId = "ACQUIRER_ID";
         TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        when(barCodePaymentService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId)).thenReturn(txrResponse);
+        when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-                .put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/capture", initiativeId, trxCode)
-                .header("x-merchant-id", merchantId)
-                .header("x-point-of-sale-id", pointOfSaleId)
-                .header("x-acquirer-id", acquirerId)
+                .put("/idpay/payment/bar-code/{trxCode}/capture", "trxCode")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
         ).andExpect(status().is2xxSuccessful()).andReturn();
@@ -96,7 +79,6 @@ class BarCodePaymentControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(txrResponse.getId(), resultResponse.getId());
-        verify(barCodePaymentService).capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Test
@@ -107,12 +89,12 @@ class BarCodePaymentControllerTest {
         when(barCodePaymentService.createTransaction(trxCreationReq, "USER_ID")).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(
-                post("/idpay/payment/bar-code")
-                        .header("x-user-id", "USER_ID")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(trxCreationReq))
-        ).andExpect(status().isCreated()).andReturn();
+                        post("/idpay/payment/bar-code")
+                                .header("x-user-id", "USER_ID")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .accept(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(trxCreationReq))
+                ).andExpect(status().isCreated()).andReturn();
 
         TransactionBarCodeResponse resultResponse = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
@@ -159,22 +141,20 @@ class BarCodePaymentControllerTest {
 
     @Test
     void authorizeTransaction() throws Exception {
-        String initiativeId = "INITIATIVEID1";
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
                 .amountCents(1000L)
                 .idTrxAcquirer("ACQUIRERID1")
                 .build();
 
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         authPaymentDTO.setRewards(null);
 
-        when(barCodePaymentService.authPayment(initiativeId, trx.getTrxCode(), authBarCodePaymentDTO, "MERCHANTID1", "POINTOFSALEID1", "ACQUIRERID1"))
-                .thenReturn(authPaymentDTO);
+        when(barCodePaymentService.authPayment(trx.getTrxCode(), authBarCodePaymentDTO, "MERCHANTID1", "POINTOFSALEID1", "ACQUIRERID1")).thenReturn(authPaymentDTO);
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/authorize", initiativeId, trx.getTrxCode())
+                        put("/idpay/payment/bar-code/{trxCode}/authorize", trx.getTrxCode())
                                 .header("x-merchant-id", "MERCHANTID1")
                                 .header("x-point-of-sale-id", "POINTOFSALEID1")
                                 .header("x-acquirer-id", "ACQUIRERID1")
@@ -194,7 +174,7 @@ class BarCodePaymentControllerTest {
         List<String> expectedInvalidFields = List.of("amountCents");
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/initiatives/INITIATIVE_ID/bar-code/trxCode/authorize")
+                        put("/idpay/payment/bar-code/trxCode/authorize")
                                 .header("x-merchant-id", "MERCHANT_ID")
                                 .header("x-acquirer-id", "ACQUIRER_ID")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -215,7 +195,7 @@ class BarCodePaymentControllerTest {
                 .build();
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/initiatives/INITIATIVE_ID/bar-code/trxCode/authorize")
+                        put("/idpay/payment/bar-code/trxCode/authorize")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(authBarCodePaymentDTO)))
                 .andExpect(status().isBadRequest())
@@ -230,40 +210,78 @@ class BarCodePaymentControllerTest {
 
     @Test
     void previewPayment_ok() throws Exception {
-        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTO.builder()
-                .amountCents(BigDecimal.valueOf(100))
-                .additionalProperties(Map.of("customField", "customValue"))
-                .build();
-        PreviewPaymentResultDTO previewPaymentResultDTO = buildPreviewPaymentResult(Map.of("customField", "validatedCustomValue"));
+        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
+        PreviewPaymentResultDTO previewPaymentResultDTO = buildPreviewPaymentResult(Map.of("productName", "validatedProduct", "productGtin", "validatedGtin"));
 
-        when(barCodePaymentService.previewPayment(any(), any(), any(), any())).thenReturn(previewPaymentResultDTO);
+        when(barCodePaymentService.previewPayment(any(), any(), any())).thenReturn(previewPaymentResultDTO);
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/preview", "initiativeId", "trxCode")
-                                .header("X-API-Version", "2")
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn();
 
-        PreviewPaymentResponseDTO response = objectMapper.readValue(result.getResponse().getContentAsString(), PreviewPaymentResponseDTO.class);
+        PreviewPaymentDTO response = objectMapper.readValue(result.getResponse().getContentAsString(), PreviewPaymentDTO.class);
+        assertEquals("product", response.getProductName());
+        assertEquals("123456abc", response.getProductGtin());
+        verify(barCodePaymentService).previewPayment("trxCode", Map.of("productName", "product", "productGtin", "123456abc"), 100L);
+    }
+
+    @Test
+    void previewPayment_withoutProductName() throws Exception {
+        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
+        previewPaymentRequestDTO.setProductName(null);
+        PreviewPaymentResultDTO previewPaymentResultDTO = buildPreviewPaymentResult(Map.of("productGtin", "validatedGtin"));
+
+        when(barCodePaymentService.previewPayment(any(), any(), any())).thenReturn(previewPaymentResultDTO);
+        MvcResult result = mockMvc.perform(
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        PreviewPaymentDTO response = objectMapper.readValue(result.getResponse().getContentAsString(), PreviewPaymentDTO.class);
+        assertNull(response.getProductName());
+        assertEquals("123456abc", response.getProductGtin());
+        verify(barCodePaymentService).previewPayment("trxCode", Map.of("productGtin", "123456abc"), 100L);
+    }
+
+    void previewPaymentV2_ok() throws Exception {
+        PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO = PreviewPaymentRequestV2DTO.builder()
+                .amountCents(BigDecimal.valueOf(100))
+                .additionalProperties(Map.of("customField", "customValue"))
+                .build();
+        PreviewPaymentResultDTO previewPaymentResultDTO = buildPreviewPaymentResult(Map.of("customField", "validatedCustomValue"));
+
+        when(barCodePaymentService.previewPayment(any(), any(), any())).thenReturn(previewPaymentResultDTO);
+        MvcResult result = mockMvc.perform(
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
+                                .header("X-API-Version", "2")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestV2DTO)))
+                .andExpect(status().is2xxSuccessful())
+                .andReturn();
+
+        PreviewPaymentResponseV2DTO response = objectMapper.readValue(result.getResponse().getContentAsString(), PreviewPaymentResponseV2DTO.class);
         assertEquals(Map.of("customField", "validatedCustomValue"), response.getAdditionalProperties());
         JsonNode jsonNode = objectMapper.readTree(result.getResponse().getContentAsString());
         assertFalse(jsonNode.has("productName"));
         assertFalse(jsonNode.has("productGtin"));
-        verify(barCodePaymentService).previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L);
+        verify(barCodePaymentService).previewPayment("trxCode", Map.of("customField", "customValue"), 100L);
     }
 
     @Test
-    void previewPayment_missingAmount() throws Exception {
-        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTO.builder()
+    void previewPaymentV2_missingAmount() throws Exception {
+        PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO = PreviewPaymentRequestV2DTO.builder()
                 .additionalProperties(Map.of("customField", "customValue"))
                 .build();
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/preview", "initiativeId", "trxCode")
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
                                 .header("X-API-Version", "2")
                                 .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestV2DTO)))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -273,15 +291,31 @@ class BarCodePaymentControllerTest {
     }
 
     @Test
-    void previewPayment_negativeAmount() throws Exception {
-        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTO.builder()
+    void previewPaymentV2_negativeAmount() throws Exception {
+        PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO = PreviewPaymentRequestV2DTO.builder()
                 .amountCents(BigDecimal.valueOf(-100L))
                 .additionalProperties(Map.of("customField", "customValue"))
                 .build();
 
         MvcResult result = mockMvc.perform(
-                        put("/idpay/payment/initiatives/{initiativeId}/bar-code/{trxCode}/preview", "initiativeId", "trxCode")
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
                                 .header("X-API-Version", "2")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(previewPaymentRequestV2DTO)))
+                .andExpect(status().is5xxServerError())
+                .andReturn();
+
+        assertNotNull(result.getResponse().getContentAsString());
+        verifyNoInteractions(barCodePaymentService);
+    }
+
+    @Test
+    void previewPayment_negativeAmount() throws Exception {
+        PreviewPaymentRequestDTO previewPaymentRequestDTO = PreviewPaymentRequestDTOFaker.mockInstance();
+        previewPaymentRequestDTO.setAmountCents(BigDecimal.valueOf(-100L));
+
+        MvcResult result = mockMvc.perform(
+                        put("/idpay/payment/bar-code/{trxCode}/preview", "trxCode")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(previewPaymentRequestDTO)))
                 .andExpect(status().is5xxServerError())
@@ -414,7 +448,7 @@ class BarCodePaymentControllerTest {
     private static PreviewPaymentResultDTO buildPreviewPaymentResult(Map<String, String> additionalProperties) {
         return PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)

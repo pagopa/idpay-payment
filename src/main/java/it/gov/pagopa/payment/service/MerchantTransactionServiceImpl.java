@@ -7,16 +7,17 @@ import it.gov.pagopa.payment.dto.CFDTO;
 import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
+import it.gov.pagopa.payment.utils.TransactionSpecifications;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,18 +25,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.support.PageableExecutionUtils;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.STATUS_NOT_ALLOWED;
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.STATUS_NOT_ALLOWED_MESSAGE;
-import static it.gov.pagopa.payment.dto.TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES;
 
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService {
@@ -46,25 +45,25 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private static final String MISSING_VALUE_PLACEHOLDER = "-";
 
     private final int authorizationExpirationMinutes;
+    private final TransactionRepository transactionRepository;
     private final DecryptRestConnector decryptRestConnector;
     private final EncryptRestConnector encryptRestConnector;
     private final TransactionService transactionService;
-    private final TransactionInProgressRepository transactionInProgressRepository;
-    private final TransactionInProgress2TransactionResponseMapper transactionInProgressMapper;
+    private final TransactionMapper transactionMapper;
 
     public MerchantTransactionServiceImpl(
             @Value("${app.common.expirations.authorizationMinutes}") int authorizationExpirationMinutes,
+            TransactionRepository transactionRepository,
             DecryptRestConnector decryptRestConnector,
             EncryptRestConnector encryptRestConnector,
             TransactionService transactionService,
-            TransactionInProgressRepository transactionInProgressRepository,
-            TransactionInProgress2TransactionResponseMapper transactionInProgressMapper) {
+            TransactionMapper transactionMapper) {
         this.authorizationExpirationMinutes = authorizationExpirationMinutes;
+        this.transactionRepository = transactionRepository;
         this.decryptRestConnector = decryptRestConnector;
         this.encryptRestConnector = encryptRestConnector;
         this.transactionService = transactionService;
-        this.transactionInProgressRepository = transactionInProgressRepository;
-        this.transactionInProgressMapper = transactionInProgressMapper;
+        this.transactionMapper = transactionMapper;
     }
 
     @Override
@@ -74,22 +73,27 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String fiscalCode,
             String status,
             Pageable pageable) {
-
         String userId = StringUtils.isNotBlank(fiscalCode) ? encryptCF(fiscalCode) : null;
-        Criteria criteria = transactionInProgressRepository.getCriteria(merchantId, null, initiativeId, userId, status, null, null);
 
-        List<TransactionInProgress> transactionInProgressList = transactionInProgressRepository.findByFilter(criteria, pageable);
-        List<MerchantTransactionDTO> merchantTransactions = transactionInProgressList.stream()
+        Specification<Transaction> spec = TransactionSpecifications.withFilters(
+                merchantId,
+                null, // pointOfSaleId
+                initiativeId,
+                userId,
+                status,
+                null, // productGtin
+                null  // trxCode
+        );
+
+        Page<Transaction> entityPage = transactionRepository.findAll(spec, pageable);
+
+        List<MerchantTransactionDTO> merchantTransactions = entityPage.getContent().stream()
                 .map(this::populateMerchantTransactionDTO)
                 .toList();
 
-        long count = transactionInProgressRepository.getCount(criteria);
-        Page<TransactionInProgress> result = PageableExecutionUtils.getPage(
-                transactionInProgressList,
-                CommonUtilities.getPageable(pageable),
-                () -> count
-        );
-        return toMerchantTransactionsListDTO(merchantTransactions, result);
+        Page<MerchantTransactionDTO> dtoPage = entityPage.map(this::populateMerchantTransactionDTO);
+
+        return toMerchantTransactionsListDTO(merchantTransactions, dtoPage);
     }
 
     @Override
@@ -137,11 +141,11 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         }
 
         String upperStatus = status.toUpperCase();
-        if (PROCESSED_ALLOWED_STATUSES.contains(upperStatus)) {
+        if (TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.contains(upperStatus)) {
             return List.of(upperStatus);
         } else {
             throw new TransactionMissingParametersException(STATUS_NOT_ALLOWED,
-                    STATUS_NOT_ALLOWED_MESSAGE.formatted(PROCESSED_ALLOWED_STATUSES.toString()));
+                    STATUS_NOT_ALLOWED_MESSAGE.formatted(TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.toString()));
         }
     }
 
@@ -173,7 +177,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         return role == null || !EXCLUDED_OPERATORS.contains(role.toLowerCase(Locale.ROOT));
     }
 
-    private MerchantTransactionDTO populateMerchantTransactionDTO(TransactionInProgress transaction) {
+    private MerchantTransactionDTO populateMerchantTransactionDTO(Transaction transaction) {
         String[] trxCodeUrls = resolveTrxCodeUrls(transaction.getChannel(), transaction.getTrxCode());
         Pair<Boolean, Long> splitPaymentAndResidualAmount = CommonPaymentUtilities
                 .getSplitPaymentAndResidualAmountCents(transaction.getAmountCents(), transaction.getRewardCents());
@@ -225,16 +229,16 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .map(reward -> Objects.requireNonNullElse(reward.getAccruedRewardCents(), 0L))
                 .orElse(0L);
 
-        LocalDateTime trxDateTime = Optional.ofNullable(transaction.getTrxDate())
-                .map(java.time.OffsetDateTime::toLocalDateTime)
-                .orElse(LocalDateTime.MIN);
+        OffsetDateTime trxDateTime = Optional.ofNullable(transaction.getTrxDate())
+                .map(OffsetDateTime::from)
+                .orElse(OffsetDateTime.MIN);
 
         return MerchantTransactionDTO.builder()
                 .trxId(transaction.getId())
                 .fiscalCode(Objects.requireNonNullElse(fiscalCode, MISSING_VALUE_PLACEHOLDER))
                 .effectiveAmountCents(transaction.getAmountCents())
                 .rewardAmountCents(rewardAmount)
-                .trxDate(trxDateTime)
+                .trxDate(trxDateTime.toLocalDateTime())
                 .elaborationDateTime(transaction.getElaborationDateTime())
                 .status(transaction.getStatus())
                 .channel(transaction.getChannel())
@@ -306,8 +310,8 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private String[] resolveTrxCodeUrls(String channel, String trxCode) {
         if (channel == null || RewardConstants.TRX_CHANNEL_QRCODE.equalsIgnoreCase(channel)) {
             return new String[]{
-                    transactionInProgressMapper.generateTrxCodeImgUrl(trxCode),
-                    transactionInProgressMapper.generateTrxCodeTxtUrl(trxCode)
+                    transactionMapper.generateTrxCodeImgUrl(trxCode),
+                    transactionMapper.generateTrxCodeTxtUrl(trxCode)
             };
         }
         return new String[]{null, null};

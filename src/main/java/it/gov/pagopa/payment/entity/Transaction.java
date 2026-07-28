@@ -129,6 +129,9 @@ public class Transaction {
     @Column(name = "\"pointOfSaleType\"", length = 32)
     private String pointOfSaleType;
 
+    @Column(name = "\"productType\"", length = 16)
+    private String productType;
+
     @Column(name = "\"familyId\"", length = 64)
     private String familyId;
 

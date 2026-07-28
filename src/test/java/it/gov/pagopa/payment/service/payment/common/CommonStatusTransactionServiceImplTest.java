@@ -1,120 +1,90 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2SyncTrxStatusMapperTest;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
-import it.gov.pagopa.payment.test.fakers.TransactionFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.utils.RewardConstants;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonStatusTransactionServiceImplTest {
-    @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
-    private final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapperMock = new TransactionInProgress2TransactionResponseMapper(5, "qrcodeImgBaseUrl", "qrcodeImgBaseUrl");
-    @Mock private TransactionRepository transactionRepository;
 
+    @Mock
+    private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private TransactionMapper transactionMapperMock;
+    @InjectMocks
     private CommonStatusTransactionServiceImpl commonStatusTransactionService;
 
-    @BeforeEach
-    void setUp(){
-        commonStatusTransactionService = new CommonStatusTransactionServiceImpl(
-                transactionRepository,
-                transactionInProgressRepositoryMock,
-                new TransactionInProgress2SyncTrxStatusMapper(transactionInProgress2TransactionResponseMapperMock));
+    private static final String TRANSACTION_ID = "TRX_ID_123";
+    private static final String MERCHANT_ID = "MERCHANT_ID_123";
+    private static final String WRONG_MERCHANT_ID = "WRONG_MERCHANT_ID_999";
+
+    @Test
+    void testGetStatusTransaction_Success() {
+        // Given
+        Transaction transaction = new Transaction();
+        transaction.setId(TRANSACTION_ID);
+        transaction.setMerchantId(MERCHANT_ID);
+
+        SyncTrxStatusDTO expectedStatus = new SyncTrxStatusDTO();
+
+        when(transactionRepositoryMock.findById(TRANSACTION_ID)).thenReturn(Optional.of(transaction));
+        when(transactionMapperMock.transactionToSyncTrxStatus(transaction)).thenReturn(expectedStatus);
+
+        // When
+        SyncTrxStatusDTO result = commonStatusTransactionService.getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedStatus, result);
+        verify(transactionRepositoryMock, times(1)).findById(TRANSACTION_ID);
+        verify(transactionMapperMock, times(1)).transactionToSyncTrxStatus(transaction);
     }
 
     @Test
-    void getStatusTransaction() {
-        //given
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .rewardCents(0L)
-                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                .build();
-        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
-        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
-        //when
-        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId());
-        //then
-        Assertions.assertNotNull(result);
-        TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
+    void testGetStatusTransaction_NotFound() {
+        // Given
+        when(transactionRepositoryMock.findById(TRANSACTION_ID)).thenReturn(Optional.empty());
+
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> commonStatusTransactionService.getStatusTransaction(TRANSACTION_ID, MERCHANT_ID)
+        );
+
+        assertEquals("Cannot find transaction with transactionId [%s]".formatted(TRANSACTION_ID), exception.getMessage());
+        verify(transactionRepositoryMock, times(1)).findById(TRANSACTION_ID);
+        verifyNoInteractions(transactionMapperMock);
     }
 
     @Test
-    void getStatusTransactionQRCode() {
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        //given
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .rewardCents(0L)
-                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                .build();
+    void testGetStatusTransaction_UnauthorizedMerchant() {
+        // Given
+        Transaction transaction = new Transaction();
+        transaction.setId(TRANSACTION_ID);
+        transaction.setMerchantId(MERCHANT_ID);
 
-        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
-        transaction.setChannel("QRCODE");
-        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(transaction.getId());
-        //when
-        SyncTrxStatusDTO result= commonStatusTransactionService.getStatusTransaction(transaction.getId(), transaction.getMerchantId());
-        //then
-        Assertions.assertNotNull(result);
-        Assertions.assertNotNull(result.getQrcodePngUrl());
-        Assertions.assertNotNull(result.getQrcodeTxtUrl());
-        TransactionInProgress2SyncTrxStatusMapperTest.mapperAssertion(transaction,result);
-    }
+        when(transactionRepositoryMock.findById(TRANSACTION_ID)).thenReturn(Optional.of(transaction));
 
-    @Test
-    void getStatusTransactionNotAuthorized() {
-        //given
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstanceBuilder(1, SyncTrxStatus.IDENTIFIED)
-                .rewardCents(0L)
-                .rejectionReasons(List.of(RewardConstants.TRX_REJECTION_REASON_NO_INITIATIVE))
-                .build();
-        transaction.setInitiativeRejectionReasons(Map.of(transaction.getInitiativeId(), transaction.getRejectionReasons()));
-        String trxId = transaction.getId();
-        doReturn(Optional.of(transaction)).when(transactionInProgressRepositoryMock).findById(trxId);
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> commonStatusTransactionService.getStatusTransaction(TRANSACTION_ID, WRONG_MERCHANT_ID)
+        );
 
-        //when
-        TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
-                ()-> commonStatusTransactionService.getStatusTransaction(trxId, "DUMMYMERCHANTID"));
-
-        //then
-        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", clientExceptionNoBody.getCode());
-        Assertions.assertEquals("Cannot find transaction with transactionId [" + trxId + "]", clientExceptionNoBody.getMessage());
-    }
-
-    @Test
-    void getStatusTransaction_NotFoundException(){
-        //given
-        doReturn(Optional.empty()).when(transactionInProgressRepositoryMock)
-                .findById("TRANSACTIONID1");
-        //when
-        //then
-        TransactionNotFoundOrExpiredException clientExceptionNoBody= assertThrows(TransactionNotFoundOrExpiredException.class,
-                ()-> commonStatusTransactionService.getStatusTransaction("TRANSACTIONID1", "MERCHANTID"));
-        Assertions.assertEquals("PAYMENT_NOT_FOUND_OR_EXPIRED", clientExceptionNoBody.getCode());
-        Assertions.assertEquals("Cannot find transaction with transactionId [TRANSACTIONID1]", clientExceptionNoBody.getMessage());
+        assertEquals("Cannot find transaction with transactionId [%s]".formatted(TRANSACTION_ID), exception.getMessage());
+        verify(transactionRepositoryMock, times(1)).findById(TRANSACTION_ID);
+        verifyNoInteractions(transactionMapperMock);
     }
 }

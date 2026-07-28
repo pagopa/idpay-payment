@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLogger;
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,7 +27,7 @@ public abstract class BaseCommonCodeExpiration {
 
     public final Long execute(String initiativeId, long expirationMinutes){
         long count = 0L;
-        TransactionInProgress[] expiredTransaction = new TransactionInProgress[]{null} ;
+        Transaction[] expiredTransaction = new Transaction[]{null} ;
         while((expiredTransaction[0] = findExpiredTransaction(initiativeId, expirationMinutes)) != null ){
             log.info("[{}] [{}] Starting to manage the expired transaction with trxId {}, status {} and trxDate {}",
                     flowName,
@@ -54,10 +54,10 @@ public abstract class BaseCommonCodeExpiration {
     protected abstract long getExpirationMinutes();
 
     /** The invoked function to retrieve lapsed transactions */
-    protected abstract TransactionInProgress findExpiredTransaction(String initiativeId, long expirationMinutes);
+    protected abstract Transaction findExpiredTransaction(String initiativeId, long expirationMinutes);
 
     /** The invoked function to manage lapsed transactions */
-    protected abstract TransactionInProgress handleExpiredTransaction(TransactionInProgress trx);
+    protected abstract Transaction handleExpiredTransaction(Transaction trx);
 
     protected abstract String getFlowName();
 }

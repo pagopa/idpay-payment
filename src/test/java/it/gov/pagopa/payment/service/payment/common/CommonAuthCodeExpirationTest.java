@@ -1,13 +1,11 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +14,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
-import java.util.List;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,13 +31,7 @@ class CommonAuthCodeExpirationTest {
     private TransactionRepository transactionRepository;
 
     @Mock
-    private TransactionInProgressRepository transactionInProgressRepository;
-
-    @Mock
     private RewardCalculatorConnector rewardCalculatorConnector;
-
-    @Mock
-    private TransactionSynchronizer transactionSynchronizer;
 
     private CommonAuthCodeExpiration service;
 
@@ -50,51 +42,39 @@ class CommonAuthCodeExpirationTest {
                 "QRCODE",
                 15L,
                 transactionRepository,
-                transactionInProgressRepository,
-                rewardCalculatorConnector,
-                transactionSynchronizer
+                rewardCalculatorConnector
         ) {};
     }
 
     @Test
-    void shouldDeleteTransactionWhenStatusIsNotIdentified() {
-
-        TransactionInProgress trx = new TransactionInProgress();
+    void shouldSetExpiredWhenStatusIsNotIdentified() {
+        Transaction trx = new Transaction();
         trx.setId("trxId");
         trx.setStatus(SyncTrxStatus.AUTHORIZED);
 
-        TransactionInProgress result = service.handleExpiredTransaction(trx);
+        Transaction result = service.handleExpiredTransaction(trx);
 
-        assertEquals(trx, result);
-
+        assertEquals(SyncTrxStatus.EXPIRED, result.getStatus());
         verifyNoInteractions(rewardCalculatorConnector);
-
-        verify(transactionInProgressRepository)
-                .deleteById("trxId");
+        verify(transactionRepository).save(trx);
     }
 
     @Test
-    void shouldCancelAndDeleteWhenStatusIsIdentified() {
-
-        TransactionInProgress trx = new TransactionInProgress();
+    void shouldCancelAndSetExpiredWhenStatusIsIdentified() {
+        Transaction trx = new Transaction();
         trx.setId("trxId");
         trx.setStatus(SyncTrxStatus.IDENTIFIED);
 
-        TransactionInProgress result = service.handleExpiredTransaction(trx);
+        Transaction result = service.handleExpiredTransaction(trx);
 
-        assertEquals(trx, result);
-
-        verify(rewardCalculatorConnector)
-                .cancelTransaction(trx);
-
-        verify(transactionInProgressRepository)
-                .deleteById("trxId");
+        assertEquals(SyncTrxStatus.EXPIRED, result.getStatus());
+        verify(rewardCalculatorConnector).cancelTransaction(trx);
+        verify(transactionRepository).save(trx);
     }
 
     @Test
-    void shouldDeleteWhenRewardCalculatorReturnsTransactionNotFound() {
-
-        TransactionInProgress trx = new TransactionInProgress();
+    void shouldSetExpiredWhenRewardCalculatorReturnsTransactionNotFound() {
+        Transaction trx = new Transaction();
         trx.setId("trxId");
         trx.setStatus(SyncTrxStatus.IDENTIFIED);
 
@@ -102,86 +82,48 @@ class CommonAuthCodeExpirationTest {
                 .when(rewardCalculatorConnector)
                 .cancelTransaction(trx);
 
-        TransactionInProgress result = service.handleExpiredTransaction(trx);
-
-        assertEquals(trx, result);
-
-        verify(transactionInProgressRepository)
-                .deleteById("trxId");
+        Transaction result = service.handleExpiredTransaction(trx);
+        assertEquals(SyncTrxStatus.EXPIRED, result.getStatus());
+        verify(transactionRepository).save(trx);
     }
 
     @Test
     void shouldThrowInternalServerErrorWhenRewardCalculatorFails() {
-
-        TransactionInProgress trx = new TransactionInProgress();
+        Transaction trx = new Transaction();
         trx.setId("trxId");
         trx.setStatus(SyncTrxStatus.IDENTIFIED);
 
-        doThrow(new ServiceException("code","message"))
+        doThrow(new ServiceException("code", "message"))
                 .when(rewardCalculatorConnector)
                 .cancelTransaction(trx);
 
-        assertThrows(
-                InternalServerErrorException.class,
-                () -> service.handleExpiredTransaction(trx)
-        );
-
-        verify(transactionRepository, never())
-                .deleteById(anyString());
-
-        verify(transactionInProgressRepository, never())
-                .deleteById(anyString());
+        assertThrows(InternalServerErrorException.class, () -> service.handleExpiredTransaction(trx));
+        verify(transactionRepository, never()).save(any());
     }
 
     @Test
     void shouldReturnAuthorizationExpirationFlowName() {
-        assertEquals(
-                "TRANSACTION_AUTHORIZATION_EXPIRED",
-                service.getFlowName()
-        );
+        assertEquals("TRANSACTION_AUTHORIZATION_EXPIRED", service.getFlowName());
     }
 
     @Test
     void shouldReturnConfiguredExpirationMinutes() {
-        assertEquals(
-                15L,
-                service.getExpirationMinutes()
-        );
+        assertEquals(15L, service.getExpirationMinutes());
     }
 
     @Test
     void shouldFindAuthorizationExpiredTransaction() {
-
-        // Given
         String initiativeId = "INITIATIVE_1";
+        Transaction expected = new Transaction();
 
-        TransactionInProgress expected = new TransactionInProgress();
+        when(transactionRepository.findAuthorizationExpiredTransaction(
+                anyString(),
+                any(LocalDateTime.class),
+                any(),
+                anyLong()
+        )).thenReturn(expected);
 
-        when(transactionInProgressRepository.findAuthorizationExpiredTransaction(
-                initiativeId,
-                15L))
-                .thenReturn(expected);
-
-        // When
-        TransactionInProgress result =
-                service.findExpiredTransaction(
-                        initiativeId,
-                        15L);
-
-        // Then
+        Transaction result = service.findExpiredTransaction(initiativeId, 15L);
         assertEquals(expected, result);
-
-        verify(transactionRepository)
-                .findAuthorizationExpiredTransaction(
-                        eq(initiativeId),
-                        any(OffsetDateTime.class),
-                        eq(List.of("IDENTIFIED", "CREATED", "REJECTED")),
-                        eq(1000L)
-                );
-
-        verify(transactionInProgressRepository)
-                .findAuthorizationExpiredTransaction(
-                        initiativeId,
-                        15L);
     }
 }

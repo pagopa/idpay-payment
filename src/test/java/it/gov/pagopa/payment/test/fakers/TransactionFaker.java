@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,11 +38,9 @@ public class TransactionFaker {
       rewards = Collections.emptyMap();
     }
 
-    boolean trxStatus = status.equals(SyncTrxStatus.REJECTED) || status.equals(SyncTrxStatus.REWARDED) || status.equals(SyncTrxStatus.AUTHORIZED);
-
     Map<String, String> additionalProperties = new HashMap<>();
     additionalProperties.put("description", "test 1234");
-    OffsetDateTime now = OffsetDateTime.now();
+    OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
     OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1).truncatedTo(ChronoUnit.MILLIS);
 
     return Transaction.builder()
@@ -55,8 +54,9 @@ public class TransactionFaker {
             .pointOfSaleId("POINTOFSALEID%d".formatted(bias))
             .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
             .vat("VAT%d".formatted(bias))
-            .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-            .trxChargeDate(trxStatus ? OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS) : null)
+            .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+            .trxChargeDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+            .elaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")))
             .amountCents(1000L)
             .effectiveAmountCents(1000L)
             .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
@@ -76,6 +76,6 @@ public class TransactionFaker {
             .additionalProperties(additionalProperties)
             .extendedAuthorization(false)
             .trxEndDate(trxEndDate).voucherAmountCents(100L)
-            .updateDate(LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
+            .updateDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS));
   }
 }

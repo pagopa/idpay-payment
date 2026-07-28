@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.dto.mapper;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.Reward;
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -11,7 +11,7 @@ import java.util.Optional;
 @Service
 public class AuthPaymentMapper {
 
-  public AuthPaymentDTO transactionMapper(TransactionInProgress transaction) {
+  public AuthPaymentDTO transactionMapper(Transaction transaction) {
     return AuthPaymentDTO.builder()
             .id(transaction.getId())
             .rewardCents(transaction.getRewardCents())

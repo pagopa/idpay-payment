@@ -5,11 +5,11 @@ import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentRequestDTO;
 import it.gov.pagopa.payment.connector.rest.reward.dto.AuthPaymentResponseDTO;
 import it.gov.pagopa.payment.connector.rest.reward.mapper.RewardCalculatorMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentResponseDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void authorizePayment_ok(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentRequestDTO authPaymentRequestDTO = new AuthPaymentRequestDTO();
         when(rewardCalculatorRestClient.authorizePayment(
@@ -62,7 +62,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void cancelTransaction_ok(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentRequestDTO authPaymentRequestDTO = new AuthPaymentRequestDTO();
         when(rewardCalculatorRestClient.cancelTransaction(
@@ -74,7 +74,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_ok(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED);
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenReturn(ResponseEntity.ok(authPaymentResponseDTO));
         assertDoesNotThrow(() -> rewardCalculatorConnector.previewTransaction(transaction));
@@ -82,7 +82,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_etagHeaderValueIsNotNull(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.ETAG, "10");
@@ -98,7 +98,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_throwException(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         AuthPaymentResponseDTO authPaymentResponseDTO = AuthPaymentResponseDTOFaker.mockInstance(1,SyncTrxStatus.AUTHORIZED);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.ETAG, "LONG");
@@ -117,7 +117,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_403(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(403,"body"));
 
@@ -126,7 +126,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_429(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(429,"body"));
 
@@ -137,7 +137,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_404(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(404,"body"));
 
@@ -148,7 +148,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_412(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(412,"body"));
 
@@ -159,7 +159,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_423(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(423,"body"));
 
@@ -170,7 +170,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewTransaction_500(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
 
         when(rewardCalculatorRestClient.previewTransaction(anyString(),any())).thenThrow(buildFeignException(500,"body"));
 
@@ -181,7 +181,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewPayment_403_readValueEx() throws Exception {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
         FeignException ex = buildFeignException(403, body);
@@ -198,7 +198,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewPayment_412_readValueEx() throws Exception {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
         FeignException ex = buildFeignException(412, body);
@@ -215,7 +215,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewPayment_412_alreadyAuthorized() throws Exception {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED + "\"}";
         FeignException ex = buildFeignException(412, body);
@@ -234,7 +234,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewPayment_412_alreadyCancelled() throws Exception {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         String body = "{\"code\":\"" + REWARD_CALCULATOR_TRX_ALREADY_CANCELLED + "\"}";
         FeignException ex = buildFeignException(412, body);
@@ -253,7 +253,7 @@ class RewardCalculatorRestClientTest{
 
     @Test
     void previewPayment_412_alreadyRejected() throws Exception {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         String body = "{\"code\":\"" + PAYMENT_CANNOT_GUARANTEE_REWARD + "\"}";
         FeignException ex = buildFeignException(412, body);
