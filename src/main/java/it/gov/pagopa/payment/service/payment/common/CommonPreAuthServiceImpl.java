@@ -75,7 +75,7 @@ public class CommonPreAuthServiceImpl{
                 preview.getRejectionReasons(),
                 CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
-                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME))
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME))
         );
 
         log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
