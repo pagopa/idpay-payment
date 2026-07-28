@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -91,7 +92,7 @@ public class CommonPreAuthServiceImpl{
                 CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
                 status,
-                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
       }
 
       Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?

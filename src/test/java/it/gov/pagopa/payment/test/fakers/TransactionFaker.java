@@ -56,7 +56,7 @@ public class TransactionFaker {
             .vat("VAT%d".formatted(bias))
             .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
             .trxChargeDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
-            .elaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
+            .elaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")))
             .amountCents(1000L)
             .effectiveAmountCents(1000L)
             .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))

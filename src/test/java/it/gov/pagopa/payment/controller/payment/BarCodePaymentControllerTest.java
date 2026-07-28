@@ -32,7 +32,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Base64;
 import java.util.List;
@@ -448,7 +448,7 @@ class BarCodePaymentControllerTest {
     private static PreviewPaymentResultDTO buildPreviewPaymentResult(Map<String, String> additionalProperties) {
         return PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")))
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)

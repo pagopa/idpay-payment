@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -118,7 +118,7 @@ class CommonAuthCodeExpirationTest {
 
         when(transactionRepository.findAuthorizationExpiredTransaction(
                 anyString(),
-                any(OffsetDateTime.class),
+                any(LocalDateTime.class),
                 any(),
                 anyLong()
         )).thenReturn(expected);

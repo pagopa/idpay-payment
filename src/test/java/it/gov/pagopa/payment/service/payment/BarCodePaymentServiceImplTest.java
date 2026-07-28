@@ -23,7 +23,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 
@@ -114,7 +114,7 @@ class BarCodePaymentServiceImplTest {
     void previewPayment_ok() {
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")))
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(500L)
                 .rewardCents(100L)

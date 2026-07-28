@@ -28,6 +28,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -124,7 +125,7 @@ public class CommonCancelServiceImpl {
             transaction.setStatus(SyncTrxStatus.CANCELLED);
             transaction.setRewardCents(refund.getRewardCents());
             transaction.setRewards(refund.getRewards());
-            transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+            transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
             transactionRepository.save(transaction);
 
             if (isReset) {

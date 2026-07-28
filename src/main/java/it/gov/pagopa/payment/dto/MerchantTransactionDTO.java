@@ -29,7 +29,7 @@ public class MerchantTransactionDTO {
     private Long effectiveAmountCents;
     private Long rewardAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime trxDate;
+    private LocalDateTime trxDate;
     private Long trxExpirationSeconds;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime updateDate;
@@ -42,7 +42,7 @@ public class MerchantTransactionDTO {
     private Map<String, String> additionalProperties;
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    private OffsetDateTime elaborationDateTime;
+    private LocalDateTime elaborationDateTime;
     private String pointOfSaleId;
 
     private OffsetDateTime trxChargeDate;

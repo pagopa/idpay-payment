@@ -49,7 +49,7 @@ public class Transaction {
     private OffsetDateTime trxChargeDate;
 
     @Column(name = "\"elaborationDateTime\"")
-    private OffsetDateTime elaborationDateTime;
+    private LocalDateTime elaborationDateTime;
 
     @Column(name = "\"updateDate\"")
     private LocalDateTime updateDate;

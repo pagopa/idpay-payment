@@ -16,7 +16,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Slf4j
@@ -66,7 +66,7 @@ public class CommonConfirmServiceImpl {
 
     public void confirmAuthorizedPayment(Transaction transaction) {
         transaction.setStatus(SyncTrxStatus.REWARDED);
-        transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")));
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", transaction.getId(), transaction.getTrxCode());
         sendConfirmPaymentNotification(transaction);
 

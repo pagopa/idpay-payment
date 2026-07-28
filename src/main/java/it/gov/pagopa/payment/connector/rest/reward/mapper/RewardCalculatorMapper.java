@@ -8,9 +8,6 @@ import it.gov.pagopa.payment.entity.Transaction;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.util.Collections;
 import java.util.Map;
 
@@ -89,11 +86,4 @@ public class RewardCalculatorMapper {
         return out;
     }
 
-
-    private OffsetDateTime toOffsetDateTime(LocalDateTime localDateTime) {
-        if (localDateTime == null) {
-            return null;
-        }
-        return localDateTime.atZone(ZoneId.of("Europe/Rome")).toOffsetDateTime();
-    }
 }

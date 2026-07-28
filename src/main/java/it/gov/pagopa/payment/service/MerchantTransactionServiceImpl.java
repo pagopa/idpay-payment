@@ -188,7 +188,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 transaction.getUserId() != null ? decryptCF(transaction.getUserId()) : null,
                 transaction.getAmountCents(),
                 Objects.requireNonNullElse(transaction.getRewardCents(), 0L),
-                transaction.getTrxDate(),
+                transaction.getTrxDate().toLocalDateTime(),
                 CommonUtilities.minutesToSeconds(authorizationExpirationMinutes),
                 transaction.getUpdateDate(),
                 transaction.getStatus(),
@@ -238,7 +238,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .fiscalCode(Objects.requireNonNullElse(fiscalCode, MISSING_VALUE_PLACEHOLDER))
                 .effectiveAmountCents(transaction.getAmountCents())
                 .rewardAmountCents(rewardAmount)
-                .trxDate(trxDateTime)
+                .trxDate(trxDateTime.toLocalDateTime())
                 .elaborationDateTime(transaction.getElaborationDateTime())
                 .status(transaction.getStatus())
                 .channel(transaction.getChannel())

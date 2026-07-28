@@ -28,9 +28,9 @@ public class PointOfSaleTransactionDTO {
     Long rewardAmountCents;
     Long authorizedAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    OffsetDateTime trxDate;
+    LocalDateTime trxDate;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    OffsetDateTime trxChargeDate;
+    LocalDateTime  trxChargeDate;
     String status;
     String rewardBatchTrxStatus;
     String channel;

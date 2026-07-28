@@ -14,6 +14,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -80,7 +81,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     protected Transaction findExpiredTransaction(String initiativeId, long expirationMinutes) {
         return transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes),
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );

@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 
@@ -41,7 +41,7 @@ class BarCodePaymentControllerImplUnitTest {
                 .build();
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")))
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)
@@ -69,7 +69,7 @@ class BarCodePaymentControllerImplUnitTest {
                 .build();
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")))
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)

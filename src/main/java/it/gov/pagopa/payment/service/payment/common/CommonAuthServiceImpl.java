@@ -19,6 +19,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -101,7 +102,7 @@ public class CommonAuthServiceImpl {
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
             } else {
 
-                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), "EUR");
+                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), "EUR");
 
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
@@ -137,7 +138,7 @@ public class CommonAuthServiceImpl {
                 initiativeRejectionReasons,
                 SyncTrxStatus.AUTHORIZATION_REQUESTED,
                 SyncTrxStatus.AUTHORIZED,
-                OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)),
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)),
                 "EUR"
         );
 

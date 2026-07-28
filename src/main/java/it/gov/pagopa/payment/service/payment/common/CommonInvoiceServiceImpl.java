@@ -23,7 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 @Slf4j
@@ -68,7 +67,7 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && transaction.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(OffsetDateTime.now(ZoneId.of("Europe/Rome")))) {
+            if (minDaysToInvoiceTransaction > 0 && transaction.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneId.of("Europe/Rome")))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(transaction.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 

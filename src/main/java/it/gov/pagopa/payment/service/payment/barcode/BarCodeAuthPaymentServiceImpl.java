@@ -91,7 +91,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
         return PreviewPaymentResultDTO.builder()
                 .trxCode(preview.getTrxCode())
-                .trxDate(preview.getTrxDate().toLocalDateTime())
+                .trxDate(preview.getTrxDate())
                 .status(preview.getStatus())
                 .originalAmountCents(amountCents)
                 .rewardCents(preview.getRewardCents())

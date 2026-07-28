@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class PreviewPaymentDTO {
 
     private String trxCode;
-    private LocalDateTime trxDate;
+    private OffsetDateTime trxDate;
     private SyncTrxStatus status;
     private Long originalAmountCents;
     private Long rewardCents;

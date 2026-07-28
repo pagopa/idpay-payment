@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -213,7 +214,7 @@ class CommonPreAuthServiceImplTest {
                 anyMap(),
                 eq(CHANNEL),
                 eq(SyncTrxStatus.IDENTIFIED),
-                any(OffsetDateTime.class)
+                any(LocalDateTime.class)
         );
     }
 

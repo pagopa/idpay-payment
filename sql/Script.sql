@@ -33,14 +33,6 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     merchant_send_date TIMESTAMP
 );
 
--- ALTER PER REWARD_BATCH (Sulla migrazione di DB esistenti)
-ALTER TABLE "idpay-pagamenti".reward_batch
-    ALTER COLUMN refund_outcome_timestamp TYPE TIMESTAMP USING refund_outcome_timestamp::TIMESTAMP,
-    ALTER COLUMN creation_date TYPE TIMESTAMP USING creation_date::TIMESTAMP,
-    ALTER COLUMN update_date TYPE TIMESTAMP USING update_date::TIMESTAMP,
-    ALTER COLUMN approval_date TYPE TIMESTAMP USING approval_date::TIMESTAMP,
-    ALTER COLUMN merchant_send_date TYPE TIMESTAMP USING merchant_send_date::TIMESTAMP;
-
 -- 3. TABELLA TRANSACTION
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     id VARCHAR(64) PRIMARY KEY,
@@ -51,13 +43,13 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "trxDate" TIMESTAMPTZ NOT NULL,
     "trxChargeDate" TIMESTAMPTZ,
     "trxEndDate" TIMESTAMPTZ,
-    "elaborationDateTime" TIMESTAMPTZ,
-    "updateDate" TIMESTAMPTZ,
+    "elaborationDateTime" TIMESTAMP,
+    "updateDate" TIMESTAMP,
     "userId" VARCHAR(64),
     "merchantId" VARCHAR(64),
     "acquirerId" VARCHAR(64),
     "pointOfSaleId" VARCHAR(64),
-    "amountCents" BIGINT NOT NULL,
+    "amountCents" BIGINT,
     "effectiveAmountCents" BIGINT,
     "voucherAmountCents" BIGINT,
     "amountCurrency" VARCHAR(8),
@@ -70,7 +62,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "invoiceData" JSONB,
     "creditNoteData" JSONB,
     "correlationId" VARCHAR(128),
-    "createdAt" TIMESTAMPTZ,
+    "createdAt" TIMESTAMP,
     "rewardBatchStatusTrx" VARCHAR(64),
     "rewardBatchId" VARCHAR(64),
     "idTrxAcquirer" VARCHAR(64),
@@ -107,14 +99,9 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     user_id VARCHAR(64) NOT NULL,
     event_type VARCHAR(64) NOT NULL,
     payload JSONB NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT clock_timestamp(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     CONSTRAINT uk_transaction_outbox UNIQUE (transaction_id, event_type)
 );
-
--- ALTER PER TRANSACTION_OUTBOX
-ALTER TABLE "idpay-pagamenti".transaction_outbox
-    ALTER COLUMN created_at TYPE TIMESTAMP USING created_at::TIMESTAMP,
-    ALTER COLUMN created_at SET DEFAULT clock_timestamp();
 
 -- 5. FUNZIONE DEL TRIGGER (Popola correttamente user_id prendendolo da "userId" di transaction)
 CREATE OR REPLACE FUNCTION "idpay-pagamenti".fn_transaction_outbox()
@@ -137,7 +124,7 @@ BEGIN
     ON CONFLICT (transaction_id, event_type)
     DO UPDATE SET
         payload = EXCLUDED.payload,
-        created_at = clock_timestamp();
+        created_at = now();
     RETURN NEW;
 END;
 $$;
@@ -156,5 +143,23 @@ WHEN (OLD.status IS DISTINCT FROM NEW.status)
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
 ALTER ROLE idpaydbadmin WITH REPLICATION;
+
+
+ALTER TABLE "idpay-pagamenti".transaction
+    ALTER COLUMN "trxDate" TYPE TIMESTAMPTZ USING "trxDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "trxChargeDate" TYPE TIMESTAMPTZ USING "trxChargeDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "trxEndDate" TYPE TIMESTAMPTZ USING "trxEndDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "elaborationDateTime" TYPE TIMESTAMPTZ USING "elaborationDateTime" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "updateDate" TYPE TIMESTAMPTZ USING "updateDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "createdAt" TYPE TIMESTAMPTZ USING "createdAt" AT TIME ZONE 'Europe/Rome',
+    ADD COLUMN IF NOT EXISTS "productType" VARCHAR(16);
+
+ALTER TABLE "idpay-pagamenti".reward_batch
+    ALTER COLUMN refund_outcome_timestamp TYPE TIMESTAMPTZ USING refund_outcome_timestamp AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN creation_date TYPE TIMESTAMPTZ USING creation_date AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN update_date TYPE TIMESTAMPTZ USING update_date AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN approval_date TYPE TIMESTAMPTZ USING approval_date AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN merchant_send_date TYPE TIMESTAMPTZ USING merchant_send_date AT TIME ZONE 'Europe/Rome';
+
 
 COMMIT;

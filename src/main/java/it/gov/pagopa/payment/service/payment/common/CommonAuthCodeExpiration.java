@@ -10,7 +10,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 
@@ -40,7 +40,7 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
     protected Transaction findExpiredTransaction(String initiativeId, long expirationMinutes) {
         return transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes),
+                LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );

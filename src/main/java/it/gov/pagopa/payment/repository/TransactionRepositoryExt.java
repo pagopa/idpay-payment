@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public interface TransactionRepositoryExt {
           AND "extendedAuthorization" IS FALSE
           AND (
               "elaborationDateTime" IS NULL
-              OR "elaborationDateTime" < (NOW() AT TIME ZONE 'Europe/Rome') - (:throttlingMillis || ' milliseconds')::interval
+              OR "elaborationDateTime" < (NOW()) - (:throttlingMillis || ' milliseconds')::interval
           )
           AND (CAST(:initiativeId AS varchar) IS NULL OR "initiativeId" = :initiativeId)
       ORDER BY "trxDate" ASC
@@ -33,7 +34,7 @@ public interface TransactionRepositoryExt {
       FOR UPDATE SKIP LOCKED
   )
   UPDATE transaction t
-  SET "elaborationDateTime" = (NOW() AT TIME ZONE 'Europe/Rome')
+  SET "elaborationDateTime" = (NOW())
   FROM selected
   WHERE t.id = selected.id
   RETURNING t.*
@@ -41,7 +42,7 @@ public interface TransactionRepositoryExt {
           nativeQuery = true)
   Transaction findAuthorizationExpiredTransaction(
           @Param("initiativeId") String initiativeId,
-          @Param("expirationDate") OffsetDateTime expirationDate,
+          @Param("expirationDate") LocalDateTime expirationDate,
           @Param("statusList") List<String> statusList,
           @Param("throttlingMillis") long throttlingMillis
   );
@@ -72,7 +73,7 @@ public interface TransactionRepositoryExt {
           @Param("status") SyncTrxStatus status,
           @Param("rejectionReasons") List<String> rejectionReasons,
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
-          @Param("updateDate") OffsetDateTime updateDate,
+          @Param("updateDate") LocalDateTime updateDate,
           @Param("currency") String currency
   );
 
@@ -120,7 +121,7 @@ public interface TransactionRepositoryExt {
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
           @Param("channel") String channel,
           @Param("status") SyncTrxStatus status,
-          @Param("updateDate") OffsetDateTime updateDate
+          @Param("updateDate") LocalDateTime updateDate
   );
 
   @Modifying
@@ -151,7 +152,7 @@ public interface TransactionRepositoryExt {
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
           @Param("requiredStatus") SyncTrxStatus requiredStatus,
           @Param("status") SyncTrxStatus status,
-          @Param("updateDate") OffsetDateTime updateDate,
+          @Param("updateDate") LocalDateTime updateDate,
           @Param("currency") String currency
   );
 
@@ -184,11 +185,11 @@ public interface TransactionRepositoryExt {
 
   @Query(value = """
         UPDATE transaction t SET
-            "trxChargeDate" = (NOW() AT TIME ZONE 'Europe/Rome'),
-            "updateDate" = (NOW() AT TIME ZONE 'Europe/Rome')
+            "trxChargeDate" = (NOW()),
+            "updateDate" = (NOW())
         WHERE t."trxCode" = :trxCode
             AND t."trxDate" > :minTrxDate
-            AND (t."trxChargeDate" IS NULL OR t."trxChargeDate" < (NOW() AT TIME ZONE 'Europe/Rome') - INTERVAL '10 second')
+            AND (t."trxChargeDate" IS NULL OR t."trxChargeDate" < (NOW()) - INTERVAL '10 second')
         RETURNING t.*
         """, nativeQuery = true)
   Optional<Transaction> findAndModifyThrottled(
@@ -198,7 +199,7 @@ public interface TransactionRepositoryExt {
 
   @Query(value = """
         UPDATE transaction 
-        SET "elaborationDateTime" = (NOW() AT TIME ZONE 'Europe/Rome')
+        SET "elaborationDateTime" = (NOW())
         WHERE id = (
           SELECT t.id 
           FROM transaction t
@@ -208,7 +209,7 @@ public interface TransactionRepositoryExt {
             AND (CAST(:initiativeId AS varchar) IS NULL OR t."initiativeId" = :initiativeId)
             AND (
                  t."elaborationDateTime" IS NULL
-                 OR t."elaborationDateTime" < ((NOW() AT TIME ZONE 'Europe/Rome') - (:throttlingSeconds || ' second')::interval)
+                 OR t."elaborationDateTime" < ((NOW()) - (:throttlingSeconds || ' second')::interval)
             )
           ORDER BY t."trxDate" ASC
           LIMIT 1
@@ -228,7 +229,7 @@ public interface TransactionRepositoryExt {
   @Query(value = """
         UPDATE transaction 
         SET status = 'EXPIRED', 
-            "updateDate" = (NOW() AT TIME ZONE 'Europe/Rome') 
+            "updateDate" = (NOW()) 
         WHERE "initiativeId" = :initiativeId 
           AND status = 'CREATED' 
           AND "trxEndDate" IS NOT NULL 

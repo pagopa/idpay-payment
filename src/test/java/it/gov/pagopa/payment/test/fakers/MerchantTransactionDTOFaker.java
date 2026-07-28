@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.dto.MerchantTransactionDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -36,7 +35,7 @@ public class MerchantTransactionDTOFaker {
                 .effectiveAmountCents(1000L)
                 .rewardAmountCents(rewardCents != null ? rewardCents : Long.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))
-                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
                 .trxExpirationSeconds(CommonUtilities.minutesToSeconds(4320))
                 .status(status)
                 .channel("CHANNEL%d".formatted(bias))

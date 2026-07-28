@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Data
@@ -16,7 +16,7 @@ import java.util.Map;
 public class PreviewPaymentResponseV2DTO {
 
     private String trxCode;
-    private LocalDateTime trxDate;
+    private OffsetDateTime trxDate;
     private SyncTrxStatus status;
     private Long originalAmountCents;
     private Long rewardCents;

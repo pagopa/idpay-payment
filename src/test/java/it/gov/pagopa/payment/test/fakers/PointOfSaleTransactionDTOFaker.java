@@ -3,7 +3,7 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.dto.PointOfSaleTransactionDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
@@ -29,7 +29,7 @@ public class PointOfSaleTransactionDTOFaker {
                 .effectiveAmountCents(1000L)
                 .rewardAmountCents(rewardCents != null ? rewardCents : Long.valueOf(0))
                 .trxCode("trxcode%d".formatted(bias))
-                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+                .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
                 .status(status.name())
                 .channel("CHANNEL%d".formatted(bias));
     }
