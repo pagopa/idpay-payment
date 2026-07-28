@@ -124,6 +124,7 @@ public interface TransactionRepositoryExt {
   );
 
   @Modifying
+  @Transactional
   @Query("UPDATE Transaction t SET " +
           "t.status = :status, " +
           "t.rewardCents = :#{#dto.rewardCents}, " +
