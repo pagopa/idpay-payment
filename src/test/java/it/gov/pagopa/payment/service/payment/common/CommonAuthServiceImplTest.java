@@ -22,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -194,7 +193,7 @@ class CommonAuthServiceImplTest {
 
         assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
         assertEquals(100L, trx.getRewardCents());
-        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(OffsetDateTime.class));
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
     }
 
     @Test
@@ -211,7 +210,7 @@ class CommonAuthServiceImplTest {
         commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
         assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
-        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(OffsetDateTime.class));
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
     }
 
     @Test
@@ -223,7 +222,7 @@ class CommonAuthServiceImplTest {
         commonAuthService.checkTrxStatusToInvokePreAuth(trx);
 
         assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
-        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(OffsetDateTime.class));
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
         verifyNoInteractions(commonPreAuthService);
     }
 

@@ -2,7 +2,8 @@ package it.gov.pagopa.common.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.*;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 
 public class CommonUtilities {
   private CommonUtilities() {}
@@ -27,18 +28,5 @@ public class CommonUtilities {
       return null;
     }
     return Duration.between(initialDate, endedDate).getSeconds();
-  }
-
-  public static Long secondsBetween(LocalDateTime initialDate, LocalDateTime endedDate) {
-
-    if (initialDate == null || endedDate == null || endedDate.isBefore(initialDate)) {
-      return null;
-    }
-
-    ZoneId romeZone = ZoneId.of("Europe/Rome");
-    ZonedDateTime initialZdt = initialDate.atZone(romeZone);
-    ZonedDateTime endedZdt = endedDate.atZone(romeZone);
-
-    return Duration.between(initialZdt, endedZdt).getSeconds();
   }
 }

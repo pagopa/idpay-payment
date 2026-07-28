@@ -202,7 +202,7 @@ public class CommonAuthServiceImpl {
         } else if(transaction.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             transaction.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
-        transactionRepository.updateTrxWithStatus(transaction, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {

@@ -82,16 +82,6 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "extendedAuthorization" BOOLEAN
 );
 
--- ALTER PER TRANSACTION (Mancava la virgola prima di ADD COLUMN)
-ALTER TABLE "idpay-pagamenti".transaction
-    ALTER COLUMN "trxDate" TYPE TIMESTAMPTZ USING "trxDate" AT TIME ZONE 'Europe/Rome',
-    ALTER COLUMN "trxChargeDate" TYPE TIMESTAMPTZ USING "trxChargeDate" AT TIME ZONE 'Europe/Rome',
-    ALTER COLUMN "trxEndDate" TYPE TIMESTAMPTZ USING "trxEndDate" AT TIME ZONE 'Europe/Rome',
-    ALTER COLUMN "elaborationDateTime" TYPE TIMESTAMPTZ USING "elaborationDateTime" AT TIME ZONE 'Europe/Rome',
-    ALTER COLUMN "updateDate" TYPE TIMESTAMPTZ USING "updateDate" AT TIME ZONE 'Europe/Rome',
-    ALTER COLUMN "createdAt" TYPE TIMESTAMPTZ USING "createdAt" AT TIME ZONE 'Europe/Rome',
-    ADD COLUMN IF NOT EXISTS "productType" VARCHAR(16);
-
 -- 4. TABELLA TRANSACTION_OUTBOX
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

@@ -96,7 +96,7 @@ public interface TransactionRepositoryExt {
           @Param("rejectionReasons") List<String> rejectionReasons,
           @Param("initiativeRejectionReasons") Map<String, List<String>> initiativeRejectionReasons,
           @Param("channel") String channel,
-          @Param("updateDate") OffsetDateTime updateDate
+          @Param("updateDate") LocalDateTime updateDate
   );
 
   @Modifying
@@ -176,7 +176,7 @@ public interface TransactionRepositoryExt {
           "t.pointOfSaleType = :#{#trx.pointOfSaleType}, " +
           "t.updateDate = :updateDate " +
           "WHERE t.id = :#{#trx.id}")
-  void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") OffsetDateTime updateDate);
+  void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") LocalDateTime updateDate);
 
   @Modifying
   @Transactional
