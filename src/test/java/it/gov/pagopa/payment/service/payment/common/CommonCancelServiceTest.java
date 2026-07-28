@@ -251,6 +251,83 @@ class CommonCancelServiceImplTest {
     verify(notifierService, never()).notify(any(), any());
   }
 
+  @Test
+  @DisplayName("cancelTransaction - Acquirer mismatch")
+  void testCancelTransaction_AcquirerMismatch() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+    trx.setAcquirerId("WRONG_ACQUIRER");
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    assertThrows(MerchantOrAcquirerNotAllowedException.class,
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+
+    verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - Merchant ID null or empty should not throw mismatch error")
+  void testCancelTransaction_MerchantIdEmpty() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, "", ACQUIRER_ID, POS_ID);
+
+    assertEquals(SyncTrxStatus.CANCELLED, trx.getStatus());
+    verify(transactionRepository).save(trx);
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - Initiative ID mismatch")
+  void testCancelTransaction_InitiativeIdMismatch() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+    String wrongInitiativeId = "WRONG_INITIATIVE";
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    assertThrows(Exception.class,
+            () -> commonCancelService.cancelTransaction(wrongInitiativeId, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+
+    verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - PointOfSale ID mismatch")
+  void testCancelTransaction_PointOfSaleIdMismatch() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+    String wrongPosId = "WRONG_POS";
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    assertThrows(Exception.class,
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, wrongPosId));
+
+    verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+  }
+
+  @Test
+  @DisplayName("handleExpiredTransactionBulk - Status CREATED (non IDENTIFIED)")
+  void testHandleExpiredTransactionBulk_CreatedStatus() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+
+    boolean result = commonCancelService.handleExpiredTransactionBulk(trx);
+
+    assertTrue(result);
+    verify(rewardCalculatorConnector, never()).cancelTransaction(any());
+  }
+
+  @Test
+  @DisplayName("rejectPendingTransactions - Empty result on first call")
+  void testRejectPendingTransactions_EmptyFromStart() {
+    when(transactionRepository.findByStatusAndUpdateDateBefore(eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class)))
+            .thenReturn(Collections.emptyList());
+
+    commonCancelService.rejectPendingTransactions();
+
+    verify(transactionRepository, times(1)).findByStatusAndUpdateDateBefore(eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class));
+  }
+
   // =========================================================================
   // 2. REJECT PENDING TRANSACTIONS TESTS
   // =========================================================================

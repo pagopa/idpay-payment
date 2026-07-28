@@ -184,6 +184,118 @@ class BarCodeCaptureServiceImplTest {
         verify(auditUtilitiesMock, times(1)).logErrorRetriveVoucher(INITIATIVE_ID, TRX_CODE, USER_ID);
     }
 
+    @Test
+    void testCapturePayment_TrxCodeNull() {
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> barCodeCaptureService.capturePayment(INITIATIVE_ID, null, MERCHANT_ID, POS_ID, ACQUIRER_ID)
+        );
+
+        assertEquals("Cannot find transaction with transactionCode [null]", exception.getMessage());
+        verify(auditUtilitiesMock, times(1)).logErrorCapturePayment(null);
+    }
+
+    @Test
+    void testCapturePayment_InitiativeIdMismatch() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED);
+        String differentInitiativeId = "DIFFERENT_INITIATIVE";
+
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED))
+                .thenReturn(Optional.of(transaction));
+
+        // When & Then
+        assertThrows(
+                Exception.class,
+                () -> barCodeCaptureService.capturePayment(differentInitiativeId, TRX_CODE, MERCHANT_ID, POS_ID, ACQUIRER_ID)
+        );
+
+        verify(auditUtilitiesMock, times(1)).logErrorCapturePayment(TRX_CODE);
+    }
+
+    @Test
+    void testCapturePayment_MerchantIdMismatch() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED);
+
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED))
+                .thenReturn(Optional.of(transaction));
+
+        // When & Then
+        assertThrows(
+                Exception.class,
+                () -> barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, "DIFFERENT_MERCHANT", POS_ID, ACQUIRER_ID)
+        );
+
+        verify(auditUtilitiesMock, times(1)).logErrorCapturePayment(TRX_CODE);
+    }
+
+    @Test
+    void testCapturePayment_AcquirerIdMismatch() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED);
+
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED))
+                .thenReturn(Optional.of(transaction));
+
+        // When & Then
+        assertThrows(
+                Exception.class,
+                () -> barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, POS_ID, "DIFFERENT_ACQUIRER")
+        );
+
+        verify(auditUtilitiesMock, times(1)).logErrorCapturePayment(TRX_CODE);
+    }
+
+    @Test
+    void testCapturePayment_PointOfSaleIdMismatch() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED);
+
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED))
+                .thenReturn(Optional.of(transaction));
+
+        // When & Then
+        assertThrows(
+                Exception.class,
+                () -> barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, "DIFFERENT_POS", ACQUIRER_ID)
+        );
+
+        verify(auditUtilitiesMock, times(1)).logErrorCapturePayment(TRX_CODE);
+    }
+
+    @Test
+    void testCapturePayment_DeleteUnusedVouchersWithExtendedAuthTrue() {
+        // Given
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED);
+        transaction.setExtendedAuthorization(true);  // Set extended auth to true
+
+        Transaction unusedTrx = new Transaction();
+        unusedTrx.setId("UNUSED_TRX_ID");
+        unusedTrx.setExtendedAuthorization(false);
+
+        List<Transaction> unusedList = List.of(unusedTrx);
+
+        TransactionBarCodeResponse expectedResponse = new TransactionBarCodeResponse();
+
+        when(transactionRepositoryMock.findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED))
+                .thenReturn(Optional.of(transaction));
+        when(transactionRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
+                USER_ID, INITIATIVE_ID, SyncTrxStatus.CREATED, true
+        )).thenReturn(unusedList);
+        when(merchantConnector.merchantDetail(MERCHANT_ID, INITIATIVE_ID)).thenReturn(null);
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID, INITIATIVE_ID)).thenReturn(null);
+        when(transactionMapperMock.transactionBarCodeToTransactionResponse(transaction)).thenReturn(expectedResponse);
+
+        // When
+        TransactionBarCodeResponse result = barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, POS_ID, ACQUIRER_ID);
+
+        // Then
+        assertNotNull(result);
+        verify(transactionRepositoryMock, times(1)).deleteAll(unusedList);
+    }
+
     private Transaction createDummyTransaction(SyncTrxStatus status) {
         Transaction transaction = new Transaction();
         transaction.setId(TRX_ID);

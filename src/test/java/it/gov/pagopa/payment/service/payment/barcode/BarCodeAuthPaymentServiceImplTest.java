@@ -159,4 +159,51 @@ class BarCodeAuthPaymentServiceImplTest {
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
         verify(decryptRestConnector, never()).getPiiByToken(any());
     }
+
+    @Test
+    void previewPayment_initiativeIdMismatch() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String differentInitiativeId = "DIFFERENT_INITIATIVE";
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(),any())).thenReturn(Optional.of(trx));
+
+        assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> barCodeAuthPaymentService.previewPayment(differentInitiativeId, "trxCode", Map.of(), 90000L));
+    }
+
+    @Test
+    void previewPayment_negativeResidualAmount() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(),any())).thenReturn(Optional.of(trx));
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setRewardCents(50000L); // more than amountCents
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 1000L));
+    }
+
+    @Test
+    void barCodeAuthPayment_initiativeIdMismatch() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        String differentInitiativeId = "DIFFERENT_INITIATIVE";
+        AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
+                .amountCents(AMOUNT_CENTS)
+                .build();
+
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1))
+                .thenReturn(transaction);
+
+        assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> barCodeAuthPaymentService.authPayment(differentInitiativeId, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+    }
+
+    @Test
+    void barCodeAuthPayment_negativeAmount() {
+        AuthBarCodePaymentDTO dto = AuthBarCodePaymentDTO.builder().amountCents(-1L).build();
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.authPayment("initiativeId", TRX_CODE1, dto, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+        assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, ex.getCode());
+    }
 }
