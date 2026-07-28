@@ -257,7 +257,7 @@ class CommonPreAuthServiceImplTest {
                 eq(previewDTO.getRejectionReasons()),
                 anyMap(),
                 eq(CHANNEL),
-                any(OffsetDateTime.class)
+                any(LocalDateTime.class)
         );
         verify(auditUtilities).logErrorPreviewTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, CHANNEL);
     }
