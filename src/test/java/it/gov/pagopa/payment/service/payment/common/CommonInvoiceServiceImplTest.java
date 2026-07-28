@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
@@ -11,7 +10,6 @@ import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.repository.TransactionRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,10 +35,6 @@ class CommonInvoiceServiceImplTest {
     @Mock
     private TransactionRepository transactionRepositoryMock;
     @Mock
-    private TransactionNotifierService notifierServiceMock;
-    @Mock
-    private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
-    @Mock
     private FileStorageClient fileStorageClientMock;
     @Mock
     private AuditUtilities auditUtilitiesMock;
@@ -62,8 +56,6 @@ class CommonInvoiceServiceImplTest {
         commonInvoiceService = new CommonInvoiceServiceImpl(
                 MIN_DAYS_TO_INVOICE,
                 transactionRepositoryMock,
-                notifierServiceMock,
-                paymentErrorNotifierServiceMock,
                 fileStorageClientMock,
                 auditUtilitiesMock,
                 merchantConnectorMock
@@ -254,41 +246,6 @@ class CommonInvoiceServiceImplTest {
         assertEquals("Error uploading invoice file", exception.getMessage());
         verify(auditUtilitiesMock, times(1)).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
     }
-
-    /*
-    @Test
-    void testSendInvoiceTransactionNotification_Success() {
-        // Given
-        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
-        when(notifierServiceMock.notify(transaction, USER_ID)).thenReturn(true);
-
-        // When & Then
-        assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(
-                commonInvoiceService, "sendInvoiceTransactionNotification", transaction
-        ));
-
-        verify(notifierServiceMock, times(1)).notify(transaction, USER_ID);
-        verifyNoInteractions(paymentErrorNotifierServiceMock);
-    }
-
-    @Test
-    void testSendInvoiceTransactionNotification_Failure_ErrorNotifierFallback() {
-        // Given
-        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
-        when(notifierServiceMock.notify(transaction, USER_ID)).thenReturn(false);
-        when(notifierServiceMock.buildMessage(transaction, USER_ID)).thenReturn(null);
-        when(paymentErrorNotifierServiceMock.notifyInvoicePayment(any(), anyString(), eq(true), any()))
-                .thenReturn(true);
-
-        // When & Then
-        assertDoesNotThrow(() -> ReflectionTestUtils.invokeMethod(
-                commonInvoiceService, "sendInvoiceTransactionNotification", transaction
-        ));
-
-        verify(paymentErrorNotifierServiceMock, times(1))
-                .notifyInvoicePayment(any(), anyString(), eq(true), any());
-    }
-     */
 
     private Transaction createDummyTransaction(SyncTrxStatus status, String merchantId, String pointOfSaleId) {
         Transaction transaction = new Transaction();

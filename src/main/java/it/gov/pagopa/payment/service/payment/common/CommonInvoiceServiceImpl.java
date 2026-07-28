@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
@@ -14,7 +13,6 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.repository.TransactionRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +31,6 @@ public class CommonInvoiceServiceImpl {
 
     private final long minDaysToInvoiceTransaction;
     private final TransactionRepository transactionRepository;
-    private final TransactionNotifierService notifierService;
-    private final PaymentErrorNotifierService paymentErrorNotifierService;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
     private final MerchantConnector merchantConnector;
@@ -42,15 +38,11 @@ public class CommonInvoiceServiceImpl {
     public CommonInvoiceServiceImpl(
             @Value("${app.common.expirations.minDaysToInvoiceTransaction:0}") long minDaysToInvoiceTransaction,
             TransactionRepository transactionRepository,
-            TransactionNotifierService notifierService,
-            PaymentErrorNotifierService paymentErrorNotifierService,
             FileStorageClient fileStorageClient,
             AuditUtilities auditUtilities,
             MerchantConnector merchantConnector) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
         this.transactionRepository = transactionRepository;
-        this.notifierService = notifierService;
-        this.paymentErrorNotifierService = paymentErrorNotifierService;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
         this.merchantConnector = merchantConnector;
@@ -130,23 +122,4 @@ public class CommonInvoiceServiceImpl {
 
     }
 
-    /*
-    private void sendInvoiceTransactionNotification(Transaction transaction) {
-        try {
-            log.info("[INVOICE_TRANSACTION][SEND_NOTIFICATION] Sending Invoice Authorized Payment event to Notification: trxId {} - merchantId {}", transaction.getId(), transaction.getMerchantId());
-            if (!notifierService.notify(transaction, transaction.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while invoicing Authorized Payment notify");
-            }
-        } catch (Exception e) {
-            if (!paymentErrorNotifierService.notifyInvoicePayment(
-                    notifierService.buildMessage(transaction, transaction.getUserId()),
-                    "[INVOICE_TRANSACTION] An error occurred while publishing the invoice authorized result: trxId %s - merchantId %s".formatted(transaction.getId(), transaction.getMerchantId()),
-                    true,
-                    e)
-            ) {
-                log.error("[INVOICE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {}", transaction.getId(), transaction.getUserId(), e);
-            }
-        }
-    }
-     */
 }

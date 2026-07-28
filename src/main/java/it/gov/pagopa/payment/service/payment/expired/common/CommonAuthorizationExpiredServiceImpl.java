@@ -24,6 +24,7 @@ import static it.gov.pagopa.payment.enums.SyncTrxStatus.IDENTIFIED;
 @Service
 public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCodeExpiration {
 
+    private static final String ZONE_EUROPE_ROME = "Europe/Rome";
     private final long authorizationExpirationMinutes;
 
     private final TransactionRepository transactionRepository;
@@ -46,13 +47,13 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public Transaction findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode, LocalDateTime.now(ZoneId.of("Europe/Rome")))
+        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
     }
 
     public Transaction findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
-        LocalDateTime minTrxDate = LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes);
+        LocalDateTime minTrxDate = LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes);
 
         Transaction transaction = transactionRepository.findAndModifyThrottled(trxCode, minTrxDate)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
@@ -73,7 +74,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     protected Transaction findExpiredTransaction(String initiativeId, long expirationMinutes) {
         return transactionRepository.findAuthorizationExpiredTransaction(
                 initiativeId,
-                LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(authorizationExpirationMinutes),
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes),
                 List.of("IDENTIFIED", "CREATED", "REJECTED"),
                 1000
         );

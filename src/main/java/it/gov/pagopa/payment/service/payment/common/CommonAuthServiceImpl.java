@@ -28,6 +28,8 @@ import java.util.Map;
 @Slf4j
 @Service
 public class CommonAuthServiceImpl {
+
+    private static final String ZONE_EUROPE_ROME = "Europe/Rome";
     private final TransactionRepository transactionRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final AuditUtilities auditUtilities;
@@ -53,7 +55,7 @@ public class CommonAuthServiceImpl {
 
     public AuthPaymentDTO previewPayment(Transaction transaction, String userId) {
         checkWalletStatus(transaction.getInitiativeId(), ObjectUtils.firstNonNull(transaction.getUserId(), userId));
-        transaction.setTrxChargeDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        transaction.setTrxChargeDate(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
 
         return rewardCalculatorConnector.previewTransaction(transaction);
     }
@@ -99,7 +101,7 @@ public class CommonAuthServiceImpl {
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
             } else {
 
-                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(ZoneId.of("Europe/Rome")), "EUR");
+                transactionRepository.updateTrxRejected(transaction, SyncTrxStatus.REJECTED,  authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), "EUR");
 
                 timeoutSchedulerService.cancelScheduledMessage(sequenceNumber);
                 log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
@@ -135,7 +137,7 @@ public class CommonAuthServiceImpl {
                 initiativeRejectionReasons,
                 SyncTrxStatus.AUTHORIZATION_REQUESTED,
                 SyncTrxStatus.AUTHORIZED,
-                LocalDateTime.now(ZoneId.of("Europe/Rome")),
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)),
                 "EUR"
         );
 
@@ -199,7 +201,7 @@ public class CommonAuthServiceImpl {
         } else if(transaction.getStatus().equals(SyncTrxStatus.IDENTIFIED)) {
             transaction.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
         }
-        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        transactionRepository.updateTrxWithStatus(transaction, LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
     }
 
     protected void logAuthorizedPayment(String initiativeId, String id, String trxCode, String userId, Long rewardCents, List<String> rejectionReasons) {

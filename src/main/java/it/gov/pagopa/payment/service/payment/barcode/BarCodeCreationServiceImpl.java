@@ -34,6 +34,7 @@ import static it.gov.pagopa.payment.service.payment.common.CommonCreationService
 @Service
 public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
+    private static final String ZONE_EUROPE_ROME = "Europe/Rome";
     private static final String BAR_CODE_CREATE_TRANSACTION = "BAR_CODE_CREATE_TRANSACTION";
     private final TransactionMapper transactionMapper;
     private final RewardRuleRepository rewardRuleRepository;
@@ -66,7 +67,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                         String channel,
                                                         String userId) {
 
-        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate today = LocalDate.now(ZoneId.of(ZONE_EUROPE_ROME));
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -89,7 +90,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                                 String channel,
                                                                 String userId) {
 
-        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate today = LocalDate.now(ZoneId.of(ZONE_EUROPE_ROME));
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
@@ -109,7 +110,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
                                                            String userId,
                                                            LocalDateTime trxEndDate) {
 
-        LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
+        LocalDate today = LocalDate.now(ZoneId.of(ZONE_EUROPE_ROME));
 
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);

@@ -24,6 +24,8 @@ import java.util.Collections;
 @Slf4j
 @Service("commonPreAuth")
 public class CommonPreAuthServiceImpl{
+
+  private static final String ZONE_EUROPE_ROME = "Europe/Rome";
   private final long authorizationExpirationMinutes;
   protected final TransactionRepository transactionRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
@@ -59,7 +61,7 @@ public class CommonPreAuthServiceImpl{
 
   public AuthPaymentDTO previewPayment(Transaction transaction, String channel, SyncTrxStatus status) {
     try {
-      transaction.setTrxChargeDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+      transaction.setTrxChargeDate(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
       transaction.setChannel(channel);
       AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(transaction);
 
@@ -72,7 +74,7 @@ public class CommonPreAuthServiceImpl{
                 preview.getRejectionReasons(),
                 CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
-                LocalDateTime.now(ZoneId.of("Europe/Rome"))
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME))
         );
 
         log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
@@ -89,7 +91,7 @@ public class CommonPreAuthServiceImpl{
                 CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
                 status,
-                LocalDateTime.now(ZoneId.of("Europe/Rome")));
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
       }
 
       Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
@@ -113,7 +115,7 @@ public class CommonPreAuthServiceImpl{
       throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(transaction.getInitiativeId()));
     }
 
-    if (transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(LocalDateTime.now(ZoneId.of("Europe/Rome")))) {
+    if (transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))) {
       throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transaction.getId()));
     }
 

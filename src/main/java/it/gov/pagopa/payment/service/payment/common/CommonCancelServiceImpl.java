@@ -41,6 +41,7 @@ import static it.gov.pagopa.payment.constants.PaymentConstants.*;
 @Service("commonCancel")
 public class CommonCancelServiceImpl {
 
+    private static final String ZONE_EUROPE_ROME = "Europe/Rome";
     private final BarCodeCreationServiceImpl barCodeCreationService;
     private final TransactionRepository transactionRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
@@ -120,13 +121,11 @@ public class CommonCancelServiceImpl {
         boolean isReset = transaction.getExtendedAuthorization();
         AuthPaymentDTO refund = rewardCalculatorConnector.cancelTransaction(transaction);
 
-        //repository.deleteById(transaction.getId());
-
         if (refund != null) {
             transaction.setStatus(SyncTrxStatus.CANCELLED);
             transaction.setRewardCents(refund.getRewardCents());
             transaction.setRewards(refund.getRewards());
-            transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+            transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
             transactionRepository.save(transaction);
 
             if (isReset) {
@@ -181,7 +180,7 @@ public class CommonCancelServiceImpl {
         List<Transaction> transactions;
         int pageSize = 100;
         do {
-            LocalDateTime threshold = LocalDateTime.now(ZoneId.of("Europe/Rome")).minusHours(24);
+            LocalDateTime threshold = LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
             Pageable pageable = PageRequest.of(0, pageSize);
             transactions = transactionRepository.findByStatusAndUpdateDateBefore(
                     SyncTrxStatus.AUTHORIZED,
@@ -264,7 +263,7 @@ public class CommonCancelServiceImpl {
     }
 
     private List<Transaction> fetchLapsedTransaction(String initiativeId) {
-        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME));
         Specification<Transaction> spec = (root, query, cb) -> {
             Predicate statusPredicate = root.get("status").in(
                     SyncTrxStatus.IDENTIFIED.name(),
