@@ -27,7 +27,7 @@ class PointOfSaleTransactionMapperTest {
     void setup() {
         transactionMapper = mock(TransactionMapper.class);
         pdvService = mock(PDVService.class);
-        mapper = new PointOfSaleTransactionMapper(pdvService);
+        mapper = new PointOfSaleTransactionMapper(pdvService,0, qrCodeImgUrl, qrCodeTxtUrl);
     }
 
     @Test

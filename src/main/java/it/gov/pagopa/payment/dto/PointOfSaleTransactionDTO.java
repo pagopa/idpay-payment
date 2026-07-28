@@ -2,9 +2,7 @@ package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.InvoiceData;
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,13 +30,18 @@ public class PointOfSaleTransactionDTO {
     LocalDateTime trxDate;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     LocalDateTime trxChargeDate;
-    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    @JsonProperty("updateDate")
-    LocalDateTime elaborationDateTime;
     String status;
     String rewardBatchTrxStatus;
     String channel;
     Map<String, String> additionalProperties;
     @JsonProperty("invoiceFile")
     InvoiceData invoiceData;
+
+    private Long trxExpirationSeconds;
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+    private LocalDateTime updateDate;
+    private Boolean splitPayment;
+    private Long residualAmountCents;
+    private String qrcodePngUrl;
+    private String qrcodeTxtUrl;
 }
