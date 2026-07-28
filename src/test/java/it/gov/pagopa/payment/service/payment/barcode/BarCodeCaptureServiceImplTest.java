@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.barcode;
 
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
@@ -32,6 +33,8 @@ class BarCodeCaptureServiceImplTest {
     private TransactionMapper transactionMapperMock;
     @Mock
     private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private MerchantConnector merchantConnector;
     @InjectMocks
     private BarCodeCaptureServiceImpl barCodeCaptureService;
 
@@ -41,6 +44,8 @@ class BarCodeCaptureServiceImplTest {
     private static final String USER_ID = "USER_ID";
     private static final String TRX_ID = "TRX_ID";
     private static final String MERCHANT_ID = "MERCHANT_ID";
+    private static final String POS_ID = "POS_ID";
+    private static final String ACQUIRER_ID = "ACQUIRER_ID";
 
     @Test
     void testCapturePayment_Success() {
@@ -59,10 +64,12 @@ class BarCodeCaptureServiceImplTest {
         when(transactionRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
                 USER_ID, INITIATIVE_ID, SyncTrxStatus.CREATED, false
         )).thenReturn(unusedList);
+        when(merchantConnector.merchantDetail(MERCHANT_ID, INITIATIVE_ID)).thenReturn(null);
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID, INITIATIVE_ID)).thenReturn(null);
         when(transactionMapperMock.transactionBarCodeToTransactionResponse(transaction)).thenReturn(expectedResponse);
 
         // When
-        TransactionBarCodeResponse result = barCodeCaptureService.capturePayment(TRX_CODE);
+        TransactionBarCodeResponse result = barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, POS_ID, ACQUIRER_ID);
 
         // Then
         assertNotNull(result);
@@ -72,7 +79,7 @@ class BarCodeCaptureServiceImplTest {
         assertNotNull(transaction.getUpdateDate());
 
         verify(transactionRepositoryMock, times(1)).findByTrxCodeAndStatusNot(LOWER_TRX_CODE, SyncTrxStatus.CANCELLED);
-        verify(transactionRepositoryMock, times(2)).deleteAll(unusedList);
+        verify(transactionRepositoryMock, times(1)).deleteAll(unusedList);
         verify(transactionRepositoryMock, times(1)).save(transaction);
         verify(auditUtilitiesMock, times(1)).logCapturePayment(
                 INITIATIVE_ID, TRX_ID, LOWER_TRX_CODE, USER_ID, 100L, null, MERCHANT_ID
@@ -90,10 +97,12 @@ class BarCodeCaptureServiceImplTest {
         when(transactionRepositoryMock.findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
                 USER_ID, INITIATIVE_ID, SyncTrxStatus.CREATED, false
         )).thenReturn(Collections.emptyList());
+        when(merchantConnector.merchantDetail(MERCHANT_ID, INITIATIVE_ID)).thenReturn(null);
+        when(merchantConnector.getPointOfSale(MERCHANT_ID, POS_ID, INITIATIVE_ID)).thenReturn(null);
         when(transactionMapperMock.transactionBarCodeToTransactionResponse(transaction)).thenReturn(expectedResponse);
 
         // When
-        TransactionBarCodeResponse result = barCodeCaptureService.capturePayment(TRX_CODE);
+        TransactionBarCodeResponse result = barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, POS_ID, ACQUIRER_ID);
 
         // Then
         assertNotNull(result);
@@ -110,7 +119,7 @@ class BarCodeCaptureServiceImplTest {
         // When & Then
         TransactionNotFoundOrExpiredException exception = assertThrows(
                 TransactionNotFoundOrExpiredException.class,
-                () -> barCodeCaptureService.capturePayment(TRX_CODE)
+                () -> barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, POS_ID, ACQUIRER_ID)
         );
 
         assertEquals("Cannot find transaction with transactionCode [%s]".formatted(TRX_CODE), exception.getMessage());
@@ -127,7 +136,7 @@ class BarCodeCaptureServiceImplTest {
         // When & Then
         OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> barCodeCaptureService.capturePayment(TRX_CODE)
+                () -> barCodeCaptureService.capturePayment(INITIATIVE_ID, TRX_CODE, MERCHANT_ID, POS_ID, ACQUIRER_ID)
         );
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
@@ -182,6 +191,8 @@ class BarCodeCaptureServiceImplTest {
         transaction.setInitiativeId(INITIATIVE_ID);
         transaction.setUserId(USER_ID);
         transaction.setMerchantId(MERCHANT_ID);
+        transaction.setPointOfSaleId(POS_ID);
+        transaction.setAcquirerId(ACQUIRER_ID);
         transaction.setStatus(status);
         transaction.setRewardCents(100L);
         transaction.setExtendedAuthorization(false);

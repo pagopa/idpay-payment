@@ -63,6 +63,7 @@ class BarCodePaymentServiceImplTest {
 
     @Test
     void authPayment() {
+        String initiativeId = "INITIATIVE_ID";
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
                 .amountCents(1000L)
                 .idTrxAcquirer("ID_TRX_ACQUIRER")
@@ -74,24 +75,29 @@ class BarCodePaymentServiceImplTest {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-        when(barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
+        when(barCodeAuthPaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
                 .thenReturn(authPaymentDTO);
 
-        AuthPaymentDTO result = barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
+        AuthPaymentDTO result = barCodePaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
 
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
-        verify(barCodeAuthPaymentService, times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
+        verify(barCodeAuthPaymentService, times(1)).authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
         verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
 
     @Test
     void capturePayment_ok() {
+        String initiativeId = "initiativeId";
+        String trxCode = "trxCode";
+        String merchantId = "merchantId";
+        String pointOfSaleId = "pointOfSaleId";
+        String acquirerId = "acquirerId";
         TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        when(barCodeCaptureService.capturePayment(any()))
+        when(barCodeCaptureService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId))
                 .thenReturn(response);
 
-        TransactionBarCodeResponse result = barCodePaymentService.capturePayment("trxCode");
+        TransactionBarCodeResponse result = barCodePaymentService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
 
         Assertions.assertNotNull(result);
     }
@@ -125,13 +131,13 @@ class BarCodePaymentServiceImplTest {
                 .build();
         Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
 
-        when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
+        when(barCodeAuthPaymentService.previewPayment(any(), any(), any(), any()))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("trxCode", additionalProperties, 500L);
+        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
 
         Assertions.assertNotNull(result);
-        verify(barCodeAuthPaymentService).previewPayment("trxCode", additionalProperties, 500L);
+        verify(barCodeAuthPaymentService).previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
     }
 
     @Test
