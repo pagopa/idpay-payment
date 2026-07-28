@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -108,12 +108,12 @@ public class TransactionMapper {
             String initiativeName,
             Map<String, String> additionalProperties,
             boolean extendedAuthorization,
-            LocalDateTime trxEndDate
+            OffsetDateTime trxEndDate
     ) {
         String id =
                 "%s_%s_%d".formatted(UUID.randomUUID().toString(), channel, System.currentTimeMillis());
 
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
 
         return Transaction.builder()
                 .id(id)
@@ -127,7 +127,7 @@ public class TransactionMapper {
                 .operationTypeTranscoded(OperationType.CHARGE)
                 .channel(channel)
                 .userId(userId)
-                .updateDate(now)
+                .updateDate(now.toLocalDateTime())
                 .additionalProperties(additionalProperties)
                 .extendedAuthorization(extendedAuthorization)
                 .trxEndDate(trxEndDate)
@@ -167,7 +167,7 @@ public class TransactionMapper {
         String id =
                 "%s_%d".formatted(UUID.randomUUID().toString(), System.currentTimeMillis());
 
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
 
         return Transaction.builder()
                 .id(id)
@@ -191,7 +191,7 @@ public class TransactionMapper {
                 .merchantId(merchantId)
                 .acquirerId(acquirerId)
                 .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
-                .updateDate(now)
+                .updateDate(now.toLocalDateTime())
                 .counterVersion(0L)
                 .additionalProperties(transactionCreationRequest.getAdditionalProperties())
                 .build();

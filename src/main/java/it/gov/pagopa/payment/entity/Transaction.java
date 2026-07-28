@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.enums.OperationType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
@@ -11,6 +10,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,19 +42,15 @@ public class Transaction {
     @Column(name = "status", nullable = false, length = 32)
     private SyncTrxStatus status;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
     @Column(name = "\"trxDate\"", nullable = false)
-    private LocalDateTime trxDate;
+    private OffsetDateTime trxDate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
     @Column(name = "\"trxChargeDate\"")
-    private LocalDateTime trxChargeDate;
+    private OffsetDateTime trxChargeDate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
     @Column(name = "\"elaborationDateTime\"")
-    private LocalDateTime elaborationDateTime;
+    private OffsetDateTime elaborationDateTime;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
     @Column(name = "\"updateDate\"")
     private LocalDateTime updateDate;
 
@@ -112,7 +108,6 @@ public class Transaction {
     @Column(name = "\"correlationId\"", length = 128)
     private String correlationId;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
     @Column(name = "\"createdAt\"")
     private LocalDateTime createdAt;
 
@@ -170,9 +165,8 @@ public class Transaction {
     @Column(name = "\"idTrxIssuer\"", length = 32)
     private String idTrxIssuer;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "Europe/Rome")
     @Column(name = "\"trxEndDate\"")
-    private LocalDateTime trxEndDate;
+    private OffsetDateTime trxEndDate;
 
     @Column(name = "\"extendedAuthorization\"")
     private Boolean extendedAuthorization;

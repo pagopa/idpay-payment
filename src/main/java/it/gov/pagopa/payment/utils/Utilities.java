@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.TimeZone;
 
 @Slf4j
@@ -28,8 +28,9 @@ public final class Utilities {
         return value.replace('\r', '_').replace('\n', '_');
     }
 
-    public static LocalDate getLocalDate(LocalDateTime date) {
-        return date.atZone(TimeZone.getDefault().toZoneId())
+    public static LocalDate getLocalDate(OffsetDateTime date) {
+        return date.toInstant()
+                .atZone(TimeZone.getDefault().toZoneId())
                 .toLocalDate();
     }
 

@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +127,7 @@ class CommonPreAuthServiceImplTest {
     @DisplayName("checkPreAuth - Transazione Scaduta")
     void testCheckPreAuth_TransactionExpired() {
         Transaction trx = createTransaction(SyncTrxStatus.CREATED);
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(EXPIRATION_MINUTES + 1));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusMinutes(EXPIRATION_MINUTES + 1));
 
         WalletDTO walletDTO = new WalletDTO();
         walletDTO.setStatus("ACTIVE");
@@ -303,7 +304,7 @@ class CommonPreAuthServiceImplTest {
         trx.setInitiativeId(INITIATIVE_ID);
         trx.setUserId(USER_ID);
         trx.setStatus(status);
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         return trx;
     }
 }

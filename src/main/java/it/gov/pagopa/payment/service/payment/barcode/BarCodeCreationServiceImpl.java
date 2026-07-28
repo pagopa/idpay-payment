@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -108,7 +109,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     public Transaction createExtendedTransactionPostDelete(TransactionBarCodeCreationRequest trxBarCodeCreationRequest,
                                                            String channel,
                                                            String userId,
-                                                           LocalDateTime trxEndDate) {
+                                                           OffsetDateTime trxEndDate) {
 
         LocalDate today = LocalDate.now(ZoneId.of(ZONE_EUROPE_ROME));
 
@@ -126,7 +127,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
 
     @NotNull
     private Transaction generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
-        LocalDateTime trxEndDate = null;
+        OffsetDateTime trxEndDate = null;
         Transaction transaction = transactionMapper.transactionBarCodeCreationRequestToTransaction(
                         trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
 
@@ -138,7 +139,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         return transaction;
     }
 
-    public LocalDateTime calculateTrxEndDate(Transaction transaction,  InitiativeConfig initiative) {
+    public OffsetDateTime calculateTrxEndDate(Transaction transaction,  InitiativeConfig initiative) {
         if (Boolean.FALSE.equals(transaction.getExtendedAuthorization())){
             return transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes);
         }
@@ -147,7 +148,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         if (initiative != null){
             localEndDate = initiative.getEndDate() != null ? initiative.getEndDate() : LocalDate.MAX;
         }
-        LocalDateTime  offsetEndDate = localEndDate.atStartOfDay();
+        OffsetDateTime  offsetEndDate = localEndDate.atStartOfDay(ZoneId.of(ZONE_EUROPE_ROME)).toOffsetDateTime();
         if(!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transaction.getTrxDate()))){
             offsetEndDate = transaction.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes);
         }

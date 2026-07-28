@@ -30,7 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.STATUS_NOT_ALLOWED;
@@ -229,9 +229,9 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .map(reward -> Objects.requireNonNullElse(reward.getAccruedRewardCents(), 0L))
                 .orElse(0L);
 
-        LocalDateTime trxDateTime = Optional.ofNullable(transaction.getTrxDate())
-                .map(LocalDateTime::from)
-                .orElse(LocalDateTime.MIN);
+        OffsetDateTime trxDateTime = Optional.ofNullable(transaction.getTrxDate())
+                .map(OffsetDateTime::from)
+                .orElse(OffsetDateTime.MIN);
 
         return MerchantTransactionDTO.builder()
                 .trxId(transaction.getId())

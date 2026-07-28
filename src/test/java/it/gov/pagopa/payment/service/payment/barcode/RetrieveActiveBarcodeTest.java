@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
@@ -76,7 +76,7 @@ class RetrieveActiveBarcodeTest {
     @Test
     void findOldestNoAuthorized_FindWithFewTransaction(){
         // Given
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
         Transaction trx1 = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         trx1.setTrxDate(now.minusMinutes(5L));
         Transaction trx2 = TransactionFaker.mockInstance(2, SyncTrxStatus.CREATED);

@@ -9,7 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -158,7 +158,7 @@ class BaseCommonCodeExpirationTest {
         transaction.setInitiativeId(INITIATIVE_ID);
         transaction.setUserId("USER_ID");
         transaction.setStatus(SyncTrxStatus.CREATED);
-        transaction.setTrxDate(LocalDateTime.now());
+        transaction.setTrxDate(OffsetDateTime.now());
         return transaction;
     }
 }

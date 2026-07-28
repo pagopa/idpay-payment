@@ -27,7 +27,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
@@ -174,7 +174,7 @@ class CommonCancelServiceImplTest {
     trx.setExtendedAuthorization(true);
     trx.setVoucherAmountCents(500L);
     trx.setChannel("CHANNEL_1");
-    trx.setTrxEndDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+    trx.setTrxEndDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
 
     AuthPaymentDTO refund = new AuthPaymentDTO();
     refund.setRewardCents(500L);

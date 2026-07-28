@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
@@ -55,7 +56,7 @@ public class CommonAuthServiceImpl {
 
     public AuthPaymentDTO previewPayment(Transaction transaction, String userId) {
         checkWalletStatus(transaction.getInitiativeId(), ObjectUtils.firstNonNull(transaction.getUserId(), userId));
-        transaction.setTrxChargeDate(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+        transaction.setTrxChargeDate(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
 
         return rewardCalculatorConnector.previewTransaction(transaction);
     }

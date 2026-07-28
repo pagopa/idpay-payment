@@ -20,7 +20,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Optional;
 
@@ -67,7 +67,7 @@ class CommonInvoiceServiceImplTest {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
-        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
 
         PointOfSaleDTO posDTO = new PointOfSaleDTO();
         posDTO.setFranchiseName("Franchise Test");
@@ -102,7 +102,7 @@ class CommonInvoiceServiceImplTest {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
-        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
         transaction.setFranchiseName("Already Existing Franchise");
         transaction.setPointOfSaleType("PHYSICAL");
 
@@ -210,7 +210,7 @@ class CommonInvoiceServiceImplTest {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "content".getBytes());
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
-        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome"))); // Creata adesso, minDaysToInvoice è 2
+        transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome"))); // Creata adesso, minDaysToInvoice è 2
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
@@ -232,7 +232,7 @@ class CommonInvoiceServiceImplTest {
         when(fileMock.getInputStream()).thenThrow(new java.io.IOException("Disk error"));
 
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
-        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 

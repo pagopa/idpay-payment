@@ -125,7 +125,7 @@ public class CommonCancelServiceImpl {
             transaction.setStatus(SyncTrxStatus.CANCELLED);
             transaction.setRewardCents(refund.getRewardCents());
             transaction.setRewards(refund.getRewards());
-            transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+            transaction.setElaborationDateTime(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
             transactionRepository.save(transaction);
 
             if (isReset) {

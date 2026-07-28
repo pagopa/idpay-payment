@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 
@@ -61,7 +62,7 @@ public class CommonPreAuthServiceImpl{
 
   public AuthPaymentDTO previewPayment(Transaction transaction, String channel, SyncTrxStatus status) {
     try {
-      transaction.setTrxChargeDate(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+      transaction.setTrxChargeDate(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
       transaction.setChannel(channel);
       AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(transaction);
 
@@ -115,7 +116,7 @@ public class CommonPreAuthServiceImpl{
       throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(transaction.getInitiativeId()));
     }
 
-    if (transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))) {
+    if (transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))) {
       throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transaction.getId()));
     }
 

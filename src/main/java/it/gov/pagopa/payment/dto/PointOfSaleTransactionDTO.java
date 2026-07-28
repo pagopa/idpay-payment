@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Data
@@ -27,9 +28,9 @@ public class PointOfSaleTransactionDTO {
     Long rewardAmountCents;
     Long authorizedAmountCents;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime trxDate;
+    OffsetDateTime trxDate;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-    LocalDateTime trxChargeDate;
+    OffsetDateTime trxChargeDate;
     String status;
     String rewardBatchTrxStatus;
     String channel;

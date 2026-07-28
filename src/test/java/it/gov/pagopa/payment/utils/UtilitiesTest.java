@@ -11,7 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
@@ -85,7 +86,7 @@ class UtilitiesTest {
 
         @Test
         void testGetLocalDate_ConvertsCorrectly() {
-            LocalDateTime offsetDateTime = LocalDateTime.of(2026, 7, 24, 12, 0, 0);
+            OffsetDateTime offsetDateTime = OffsetDateTime.of(2026, 7, 24, 12, 0, 0, 0, ZoneOffset.ofHours(2));
             LocalDate expectedDate = offsetDateTime.toLocalDate();
 
             LocalDate result = Utilities.getLocalDate(offsetDateTime);

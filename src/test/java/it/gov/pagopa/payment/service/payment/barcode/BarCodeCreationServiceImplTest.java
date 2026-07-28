@@ -34,7 +34,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -391,31 +391,31 @@ class BarCodeCreationServiceImplTest {
     @Test
     void shouldReturnTrxDatePlusAuthorizationMinutesWhenNotExtended() {
         Transaction trx = new Transaction();
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(false);
 
         InitiativeConfig initiative = null;
 
-        LocalDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        LocalDateTime expected = trx.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(authorizationExpirationMinutes);
         Assertions.assertEquals(expected, result);
     }
 
     @Test
     void shouldUseInitiativeEndDateWhenExtendedAndInitiativeEndDateNotNull() {
         Transaction trx = new Transaction();
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(true);
 
         InitiativeConfig initiative = new InitiativeConfig();
         LocalDate initiativeEndDate = LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(1);
         initiative.setEndDate(initiativeEndDate);
 
-        LocalDateTime offsetEndDate = initiativeEndDate.atStartOfDay();
-        LocalDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+        OffsetDateTime offsetEndDate = initiativeEndDate.atStartOfDay(ZoneId.of("Europe/Rome")).toOffsetDateTime();
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        LocalDateTime expected = offsetEndDate
+        OffsetDateTime expected = offsetEndDate
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
         Assertions.assertEquals(expected, result);
@@ -424,16 +424,16 @@ class BarCodeCreationServiceImplTest {
     @Test
     void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNotNull() {
         Transaction trx = new Transaction();
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(true);
 
         InitiativeConfig initiative = new InitiativeConfig();
         LocalDate initiativeEndDate = LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(10);
         initiative.setEndDate(initiativeEndDate);
 
-        LocalDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        LocalDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
         Assertions.assertEquals(expected, result);
@@ -442,14 +442,14 @@ class BarCodeCreationServiceImplTest {
     @Test
     void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeNull() {
         Transaction trx = new Transaction();
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(true);
 
         InitiativeConfig initiative = null;
 
-        LocalDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        LocalDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
         Assertions.assertEquals(expected, result);
@@ -458,14 +458,14 @@ class BarCodeCreationServiceImplTest {
     @Test
     void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNull() {
         Transaction trx = new Transaction();
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(true);
 
         InitiativeConfig initiative = new InitiativeConfig();
 
-        LocalDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        LocalDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
         Assertions.assertEquals(expected, result);

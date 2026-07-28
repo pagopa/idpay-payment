@@ -26,7 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -213,7 +213,7 @@ class MerchantTransactionServiceImplTest {
         trx.setUserId(USER_ID_ENCRYPTED);
         trx.setAmountCents(1000L);
         trx.setRewardCents(200L);
-        trx.setTrxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setStatus(SyncTrxStatus.AUTHORIZED);
         trx.setChannel(RewardConstants.TRX_CHANNEL_QRCODE);
         return trx;

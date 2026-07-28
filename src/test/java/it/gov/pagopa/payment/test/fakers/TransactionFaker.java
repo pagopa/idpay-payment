@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
@@ -39,8 +40,8 @@ public class TransactionFaker {
 
     Map<String, String> additionalProperties = new HashMap<>();
     additionalProperties.put("description", "test 1234");
-    LocalDateTime now = LocalDateTime.now(ZoneId.of("Europe/Rome"));
-    LocalDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1).truncatedTo(ChronoUnit.MILLIS);
+    OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
+    OffsetDateTime trxEndDate = now.plusDays(10).truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1).truncatedTo(ChronoUnit.MILLIS);
 
     return Transaction.builder()
             .id(id)
@@ -53,9 +54,9 @@ public class TransactionFaker {
             .pointOfSaleId("POINTOFSALEID%d".formatted(bias))
             .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
             .vat("VAT%d".formatted(bias))
-            .trxDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
-            .trxChargeDate(LocalDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
-            .elaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")))
+            .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+            .trxChargeDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+            .elaborationDateTime(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
             .amountCents(1000L)
             .effectiveAmountCents(1000L)
             .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
