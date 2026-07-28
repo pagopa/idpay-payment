@@ -1,53 +1,21 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.common.web.dto.ErrorDTO;
 import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
-import it.gov.pagopa.payment.dto.ReportDTO;
+import it.gov.pagopa.payment.dto.*;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.pdf.PdfService;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.PreviewPaymentRequestDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.time.OffsetDateTime;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+import it.gov.pagopa.payment.test.fakers.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -61,6 +29,20 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = {BarCodePaymentControllerImpl.class}, excludeAutoConfiguration = {UserDetailsServiceAutoConfiguration.class, SecurityAutoConfiguration.class})
 @AutoConfigureMockMvc(addFilters = false)
@@ -83,7 +65,7 @@ class BarCodePaymentControllerTest {
     void captureCommonTransactionByTrxCode() throws Exception {
         TransactionBarCodeResponse txrResponse = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
+        when(barCodePaymentService.capturePayment(any())).thenReturn(txrResponse);
 
         MvcResult result = mockMvc.perform(MockMvcRequestBuilders
                 .put("/idpay/payment/bar-code/{trxCode}/capture", "trxCode")
@@ -164,7 +146,7 @@ class BarCodePaymentControllerTest {
                 .idTrxAcquirer("ACQUIRERID1")
                 .build();
 
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         authPaymentDTO.setRewards(null);
@@ -466,7 +448,7 @@ class BarCodePaymentControllerTest {
     private static PreviewPaymentResultDTO buildPreviewPaymentResult(Map<String, String> additionalProperties) {
         return PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(700L)
                 .rewardCents(100L)

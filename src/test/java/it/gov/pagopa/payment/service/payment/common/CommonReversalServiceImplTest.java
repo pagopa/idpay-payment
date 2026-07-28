@@ -1,188 +1,247 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
+import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
+import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
-import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
-import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class CommonReversalServiceImplTest {
-    @Mock
-    private TransactionRepository transactionRepository;
-    @Mock
-    private TransactionInProgressRepository repository;
-    @Mock
-    private TransactionNotifierService notifierService;
-    @Mock
-    private PaymentErrorNotifierService paymentErrorNotifierService;
-    @Mock
-    private FileStorageClient fileStorageClient;
-    @Mock
-    private AuditUtilities auditUtilities;
-    @Mock
-    private MultipartFile file;
-    @Mock private TransactionSynchronizer transactionSynchronizer;
 
+    @Mock
+    private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private TransactionNotifierService notifierServiceMock;
+    @Mock
+    private PaymentErrorNotifierService paymentErrorNotifierServiceMock;
+    @Mock
+    private FileStorageClient fileStorageClientMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
     @InjectMocks
-    private CommonReversalServiceImpl service;
+    private CommonReversalServiceImpl commonReversalService;
 
-    private static final String TRANSACTION_ID = "trxId";
-    private static final String MERCHANT_ID = "merchantId";
-    private static final String POS_ID = "posId";
-    private static final String FILENAME = "creditNote.pdf";
-    public static final String CREDIT_NOTE_NUMBER = "FPR 192/25";
-
-    private TransactionInProgress trx;
-
-    @BeforeEach
-    void setUp() throws IOException {
-        MockitoAnnotations.openMocks(this);
-        when(file.getOriginalFilename()).thenReturn(FILENAME);
-        when(file.getInputStream()).thenReturn(new ByteArrayInputStream("test".getBytes()));
-        when(file.getContentType()).thenReturn("application/pdf");
-
-        trx = TransactionInProgress.builder()
-                .id(TRANSACTION_ID)
-                .merchantId(MERCHANT_ID)
-                .pointOfSaleId(POS_ID)
-                .status(SyncTrxStatus.CAPTURED)
-                .initiativeId("initId")
-                .trxCode("trxCode")
-                .userId("userId")
-                .rewardCents(100L)
-                .build();
-    }
+    private static final String TRX_ID = "TRX_ID_123";
+    private static final String MERCHANT_ID = "MERCHANT_ID_123";
+    private static final String POS_ID = "POS_ID_123";
+    private static final String DOC_NUMBER = "CREDIT_NOTE_12345";
+    private static final String INITIATIVE_ID = "INITIATIVE_123";
+    private static final String USER_ID = "USER_123";
 
     @Test
-    void reversalTransaction_success() {
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
+    void testReversalTransaction_Success(){
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
 
-        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(notifierServiceMock.notify(transaction, USER_ID)).thenReturn(true);
 
-        verify(fileStorageClient).upload(any(), anyString(), anyString());
-        verify(repository).deleteById(TRANSACTION_ID);
-        verify(auditUtilities).logReverseTransaction(any());
-        assertEquals(SyncTrxStatus.REFUNDED, trx.getStatus());
-        assertEquals(FILENAME, trx.getCreditNoteData().getFilename());
-    }
+        // When
+        commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER);
 
-    @Test
-    void reversalTransaction_transactionNotFound() {
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.empty());
-        assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-        verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
-    }
+        // Then
+        assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
+        assertNotNull(transaction.getCreditNoteData());
+        assertEquals("credit_note.pdf", transaction.getCreditNoteData().getFilename());
+        assertEquals(DOC_NUMBER, transaction.getCreditNoteData().getDocNumber());
 
-    @Test
-    void reversalTransaction_merchantMismatch() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        trx.setMerchantId("otherMerchant");
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        assertThrows(TransactionInvalidException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-        verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
-    }
-
-    @Test
-    void reversalTransaction_posMismatch() {
-        trx.setPointOfSaleId("otherPos");
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        assertThrows(TransactionInvalidException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-        verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
-    }
-
-    @Test
-    void reversalTransaction_statusNotCaptured() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        trx.setStatus(SyncTrxStatus.CREATED);
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        assertThrows(OperationNotAllowedException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-        verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
-    }
-
-    @Test
-    void reversalTransaction_runtimeException_shouldLogAndThrow() {
-        when(repository.findById(TRANSACTION_ID)).thenThrow(new RuntimeException("Generic error"));
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-        assertEquals("Generic error", ex.getMessage());
-        verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
-    }
-
-    @Test
-    void reversalTransaction_ioException_shouldLogAndThrow() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        doThrow(new RuntimeException(new IOException("IO error"))).when(fileStorageClient).upload(any(), anyString(), anyString());
-        RuntimeException ex = assertThrows(RuntimeException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-        assertEquals("IO error", ex.getCause().getMessage());
-        verify(auditUtilities).logErrorReversalTransaction(TRANSACTION_ID, MERCHANT_ID);
-    }
-
-    @Test
-    void sendReversedTransactionNotification_notifyReturnsFalse_shouldThrowTransactionNotFoundOrExpiredException() {
-        when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(false);
-        assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER));
-    }
-
-    @Test
-    void reversalTransaction_shouldSetCorrectInvoicePath() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        when(notifierService.notify(any(TransactionInProgress.class), anyString())).thenReturn(true);
-        service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, file, CREDIT_NOTE_NUMBER);
         String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
-                MERCHANT_ID, POS_ID, trx.getId(), FILENAME);
-        verify(fileStorageClient).upload(any(), eq(expectedPath), anyString());
+                MERCHANT_ID, POS_ID, TRX_ID, file.getOriginalFilename());
+        verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
+        verify(notifierServiceMock, times(1)).notify(transaction, USER_ID);
+        verify(auditUtilitiesMock, times(1)).logReverseTransaction(any(RevertTransactionAuditDTO.class));
+        verify(transactionRepositoryMock, times(1)).save(transaction);
+        verify(auditUtilitiesMock, never()).logErrorReversalTransaction(any(), any());
     }
 
     @Test
-    void reversalTransaction_invalidFileFormat_shouldThrowInvalidInvoiceFormatException() {
-        when(repository.findById(TRANSACTION_ID)).thenReturn(Optional.of(trx));
-        MultipartFile invalidFile = mock(MultipartFile.class);
-        when(invalidFile.getOriginalFilename()).thenReturn("document.txt");
-        InvalidInvoiceFormatException ex = assertThrows(InvalidInvoiceFormatException.class,
-                () -> service.reversalTransaction(TRANSACTION_ID, MERCHANT_ID, POS_ID, invalidFile, CREDIT_NOTE_NUMBER));
-        assertEquals("File must be a PDF or XML", ex.getMessage());
+    void testReversalTransaction_InvalidFileExtension() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "invalid_file.exe", "application/octet-stream", "content".getBytes());
+
+        // When & Then
+        InvalidInvoiceFormatException exception = assertThrows(
+                InvalidInvoiceFormatException.class,
+                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+        );
+
+        assertEquals("PAYMENT_GENERIC_ERROR", exception.getCode());
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+        verifyNoInteractions(transactionRepositoryMock, fileStorageClientMock);
     }
 
+    @Test
+    void testReversalTransaction_TransactionNotFound() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.empty());
+
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot find transaction with transactionId"));
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_MerchantMismatch() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, "OTHER_MERCHANT", POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then
+        TransactionInvalidException exception = assertThrows(
+                TransactionInvalidException.class,
+                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+        );
+
+        assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
+        assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the merchant"));
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_PointOfSaleMismatch() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, "OTHER_POS");
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then
+        TransactionInvalidException exception = assertThrows(
+                TransactionInvalidException.class,
+                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+        );
+
+        assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
+        assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the pointOfSaleId"));
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_InvalidStatus() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then
+        OperationNotAllowedException exception = assertThrows(
+                OperationNotAllowedException.class,
+                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+        );
+
+        assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_FileUploadIOException() throws Exception {
+        // Given
+        MultipartFile fileMock = mock(MultipartFile.class);
+        when(fileMock.getOriginalFilename()).thenReturn("credit_note.pdf");
+        when(fileMock.getInputStream()).thenThrow(new java.io.IOException("Disk upload error"));
+
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then
+        InternalServerErrorException exception = assertThrows(
+                InternalServerErrorException.class,
+                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, fileMock, DOC_NUMBER)
+        );
+
+        assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
+        assertEquals("Error uploading credit note file", exception.getMessage());
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_NotificationReturnsFalse_ErrorNotifierFallback() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        Message<Transaction> dummyMessage = MessageBuilder.withPayload(transaction).build();
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(notifierServiceMock.notify(transaction, USER_ID)).thenReturn(false);
+        when(notifierServiceMock.buildMessage(transaction, USER_ID)).thenReturn(dummyMessage);
+        when(paymentErrorNotifierServiceMock.notifyReversalPayment(eq(dummyMessage), anyString(), eq(true), any()))
+                .thenReturn(true);
+
+        // When
+        commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER);
+
+        // Then
+        assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
+        verify(paymentErrorNotifierServiceMock, times(1))
+                .notifyReversalPayment(eq(dummyMessage), anyString(), eq(true), any());
+        verify(transactionRepositoryMock, times(1)).save(transaction);
+    }
+
+    @Test
+    void testReversalTransaction_NotificationThrowsException_ErrorNotifierFails() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(notifierServiceMock.notify(transaction, USER_ID)).thenThrow(new RuntimeException("Kafka error"));
+        when(notifierServiceMock.buildMessage(transaction, USER_ID)).thenReturn(null);
+        when(paymentErrorNotifierServiceMock.notifyReversalPayment(any(), anyString(), eq(true), any()))
+                .thenReturn(false);
+
+        // When
+        commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER);
+
+        // Then
+        assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
+        verify(paymentErrorNotifierServiceMock, times(1))
+                .notifyReversalPayment(any(), anyString(), eq(true), any());
+        verify(transactionRepositoryMock, times(1)).save(transaction);
+    }
+
+    private Transaction createDummyTransaction(SyncTrxStatus status, String merchantId, String pointOfSaleId) {
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setTrxCode("TRX_CODE_123");
+        transaction.setInitiativeId(INITIATIVE_ID);
+        transaction.setUserId(USER_ID);
+        transaction.setMerchantId(merchantId);
+        transaction.setPointOfSaleId(pointOfSaleId);
+        transaction.setStatus(status);
+        transaction.setRewardCents(150L);
+        return transaction;
+    }
 }

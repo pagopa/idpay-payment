@@ -1,13 +1,13 @@
 package it.gov.pagopa.payment.dto.qrcode;
 
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 @Data
 @AllArgsConstructor

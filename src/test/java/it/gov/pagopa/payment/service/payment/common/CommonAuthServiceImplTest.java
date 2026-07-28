@@ -1,8 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import com.mongodb.client.result.UpdateResult;
-import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
@@ -12,400 +9,419 @@ import it.gov.pagopa.payment.dto.Reward;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.model.counters.RewardCounters;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.messagescheduler.AuthorizationTimeoutSchedulerServiceImpl;
-import it.gov.pagopa.payment.test.fakers.*;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonAuthServiceImplTest {
-    private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
-    private static final String USERID = "USERID1";
-    private static final String TRX_CODE = "trxcode1";
-    @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
-    @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-    @Mock private AuditUtilities auditUtilitiesMock;
-    @Mock private WalletConnector walletConnectorMock;
-    @Mock private CommonPreAuthServiceImpl commonPreAuthServiceMock;
-    @Mock private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerServiceMock;
-    @Mock private TransactionRepository transactionRepository;
-    @Mock private TransactionSynchronizer transactionSynchronizer;
+
+    @Mock
+    private TransactionRepository transactionRepository;
+    @Mock
+    private RewardCalculatorConnector rewardCalculatorConnector;
+    @Mock
+    private AuditUtilities auditUtilities;
+    @Mock
+    private WalletConnector walletConnector;
+    @Mock
+    private CommonPreAuthServiceImpl commonPreAuthService;
+    @Mock
+    private AuthorizationTimeoutSchedulerServiceImpl timeoutSchedulerService;
 
     private CommonAuthServiceImpl commonAuthService;
+
+    private static final String INITIATIVE_ID = "INITIATIVE_1";
+    private static final String USER_ID = "USER_1";
+    private static final String TRX_CODE = "TRX_CODE_1";
+    private static final String TRX_ID = "TRX_ID_1";
+
     @BeforeEach
     void setUp() {
         commonAuthService = new CommonAuthServiceImpl(
                 transactionRepository,
-                transactionInProgressRepositoryMock,
-                rewardCalculatorConnectorMock,
-                auditUtilitiesMock,
-                transactionSynchronizer,
-                walletConnectorMock,
-                commonPreAuthServiceMock,
-                timeoutSchedulerServiceMock);
-    }
-
-    @Test
-    void authPayment() {
-        TransactionInProgress transaction = getTransactionInProgress();
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
-        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
-        authPaymentDTO.setRejectionReasons(Collections.emptyList());
-
-        Reward reward = RewardFaker.mockInstance(1);
-        reward.setCounters(new RewardCounters());
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-        when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
-
-        when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
-
-        when(transactionInProgressRepositoryMock.updateTrxAuthorized(transaction, authPaymentDTO,
-                CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of())))
-                .thenReturn(UpdateResult.acknowledged(1, 1L, null));
-
-        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
-
-        //When
-        AuthPaymentDTO result = commonAuthService.authPayment(transaction, USERID, TRX_CODE);
-
-        //Then
-        commonVerifyForAuthPayment(transaction);
-        assertEquals(authPaymentDTO, result);
-        TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-                "residualAmountCents");
-        assertEquals(transaction.getTrxCode(), result.getTrxCode());
-        assertTrue(result.getRejectionReasons().isEmpty());
-        assertEquals(Collections.emptyList(), result.getRejectionReasons());
-    }
-
-    @Test
-    void authPaymentButUpdateTrxFailed() {
-        TransactionInProgress transaction = getTransactionInProgress();
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
-        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
-        authPaymentDTO.setRejectionReasons(Collections.emptyList());
-
-        Reward reward = RewardFaker.mockInstance(1);
-        reward.setCounters(new RewardCounters());
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-
-        when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
-
-        when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
-
-        when(transactionInProgressRepositoryMock.updateTrxAuthorized(transaction, authPaymentDTO,
-                CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), List.of())))
-                .thenReturn(UpdateResult.acknowledged(0, 0L, null));
-
-        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
-
-        AuthPaymentDTO result = commonAuthService.authPayment(transaction, transaction.getUserId(), transaction.getTrxCode());
-
-        commonVerifyForAuthPayment(transaction);
-        assertEquals(transaction.getTrxCode(), result.getTrxCode());
-        assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
-        assertEquals(List.of(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT), result.getRejectionReasons());
-        assertEquals(Collections.emptyMap(), result.getRewards());
-        assertNull(result.getRewardCents());
-        assertNull(result.getCounters());
-    }
-
-
-    @Test
-    void authPaymentWhenRejected() {
-        TransactionInProgress transaction = commonAuthPaymentWhenRejectedGiven("DUMMYREJECTIONREASON");
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        TransactionRejectedException result =
-                assertThrows(TransactionRejectedException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
-
-        commonVerifyForAuthPayment(transaction);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.REJECTED, result.getCode());
-    }
-
-    private void commonVerifyForAuthPayment(TransactionInProgress transaction) {
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
-        verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
-        verify(timeoutSchedulerServiceMock, times(1)).cancelScheduledMessage(1L);
-    }
-
-    @Test
-    void authPaymentWhenRejectedNoBudget() {
-        TransactionInProgress transaction = commonAuthPaymentWhenRejectedGiven(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED);
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.REJECTED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        BudgetExhaustedException result =
-                assertThrows(BudgetExhaustedException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
-
-        commonVerifyForAuthPayment(transaction);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
-    }
-
-    @Test
-    void authPaymentWhenMismatchVersionCounter() {
-        TransactionInProgress transaction = commonAuthPaymentWhenRejectedGiven(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD);
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.REJECTED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-
-        AuthPaymentDTO result = commonAuthService.authPayment(transaction, USERID, TRX_CODE);
-
-        commonVerifyForAuthPayment(transaction);
-        Assertions.assertNotNull(result);
-        Assertions.assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
-        Assertions.assertTrue(result.getRejectionReasons().contains(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
-    }
-
-    private TransactionInProgress commonAuthPaymentWhenRejectedGiven(String DUMMYREJECTIONREASON) {
-        TransactionInProgress transaction = getTransactionInProgress();
-
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
-        authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-        authPaymentDTO.setRejectionReasons(List.of(DUMMYREJECTIONREASON));
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-
-        when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
-
-        when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenReturn(authPaymentDTO);
-
-        Map<String, List<String>> initiativeRejectionReasons = CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), authPaymentDTO.getRejectionReasons());
-
-        Mockito.doAnswer(
-                        invocationOnMock -> {
-                            transaction.setStatus(authPaymentDTO.getStatus());
-                            transaction.setRejectionReasons(authPaymentDTO.getRejectionReasons());
-                            transaction.setInitiativeRejectionReasons(initiativeRejectionReasons);
-                            return transaction;
-                        })
-                .when(transactionInProgressRepositoryMock)
-                .updateTrxRejected(transaction, authPaymentDTO.getRejectionReasons(), initiativeRejectionReasons);
-
-        doNothing().when(timeoutSchedulerServiceMock).cancelScheduledMessage(1L);
-        return transaction;
-    }
-
-    @Test
-    void authPaymentWhenRewardCalculatorReturn404() {
-        TransactionInProgress transaction = getTransactionInProgress();
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-        when(timeoutSchedulerServiceMock.scheduleMessage(transaction.getId())).thenReturn(1L);
-
-        when(rewardCalculatorConnectorMock.authorizePayment(transaction)).thenThrow(new TransactionNotFoundOrExpiredException("Resource not found on reward-calculator"));
-
-        assertThrows(TransactionNotFoundOrExpiredException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
-
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
-        verify(timeoutSchedulerServiceMock, times(1)).scheduleMessage(transaction.getId());
-        verify(timeoutSchedulerServiceMock, times(0)).cancelScheduledMessage(1L);
-    }
-
-    @Test
-    void authPaymentAuthorized() {
-        TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        transaction.setUserId("USERID%d".formatted(1));
-        transaction.setRewardCents(10L);
-        transaction.setRejectionReasons(Collections.emptyList());
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-        TransactionAlreadyAuthorizedException result =
-                assertThrows(TransactionAlreadyAuthorizedException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
-
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, result.getCode());
-    }
-
-    @Test
-    void previewPayment_ok(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, transaction);
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "wallet-status");
-        when(walletConnectorMock.getWallet(any(),any())).thenReturn(walletDTO);
-        when(rewardCalculatorConnectorMock.previewTransaction(any())).thenReturn(authPaymentDTO);
-        assertNotNull(commonAuthService.previewPayment(transaction, USERID));
-    }
-
-    @Test
-    void previewPayment_ko_walletSuspended(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "SUSPENDED");
-
-        when(walletConnectorMock.getWallet(any(),any())).thenReturn(walletDTO);
-
-        UserSuspendedException result =
-                assertThrows(UserSuspendedException.class, () -> commonAuthService.previewPayment(transaction, USERID));
-
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
-
-        Assertions.assertEquals("PAYMENT_USER_SUSPENDED", result.getCode());
-    }
-
-
-    @Test
-    void previewPayment_ko_walletUnsubscribed(){
-        TransactionInProgress transaction = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "UNSUBSCRIBED");
-
-        when(walletConnectorMock.getWallet(any(),any())).thenReturn(walletDTO);
-
-        UserNotOnboardedException result =
-                assertThrows(UserNotOnboardedException.class, () -> commonAuthService.previewPayment(transaction, USERID));
-
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
-
-        Assertions.assertEquals("PAYMENT_USER_UNSUBSCRIBED", result.getCode());
-    }
-
-    @Test
-    void authPaymentStatusKo() {
-        TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(trx));
-        transaction.setUserId(USERID);
-        transaction.setTrxCode(TRX_CODE);
-
-        AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1,transaction);
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-        when(commonPreAuthServiceMock.previewPayment(transaction,transaction.getChannel(),SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(authPaymentDTO);
-
-        OperationNotAllowedException result =
-                assertThrows(OperationNotAllowedException.class, () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE));
-
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
-
-        Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, result.getCode());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"SUSPENDED", "UNSUBSCRIBED"})
-    void authPayment_walletStatusSuspended(String walletStatus) {
-        TransactionInProgress transaction = getTransactionInProgress();
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, walletStatus);
-
-        when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-        RuntimeException exception = Assertions.assertThrows(
-                RuntimeException.class,
-                () -> commonAuthService.authPayment(transaction, USERID, TRX_CODE)
+                rewardCalculatorConnector,
+                auditUtilities,
+                walletConnector,
+                commonPreAuthService,
+                timeoutSchedulerService
         );
-
-        if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)) {
-            assertInstanceOf(UserSuspendedException.class, exception);
-            Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, ((UserSuspendedException) exception).getCode());
-        } else {
-            assertInstanceOf(UserNotOnboardedException.class, exception);
-            Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, ((UserNotOnboardedException) exception).getCode());
-        }
-
-        verify(walletConnectorMock, times(1)).getWallet(transaction.getInitiativeId(), USERID);
     }
 
-    @Test
-    void authPayment_transactionNotFoundOrExpired(){
-        //When
-        TransactionNotFoundOrExpiredException resultException = assertThrows(TransactionNotFoundOrExpiredException.class, () -> commonAuthService.authPayment(null, USERID, TRX_CODE));
-
-        //Then
-        assertNotNull(resultException);
-        assertEquals(PaymentConstants.ExceptionCode.TRX_NOT_FOUND_OR_EXPIRED, resultException.getCode());
-        assertEquals("Cannot find transaction with trxCode [%s]".formatted(TRX_CODE), resultException.getMessage());
-    }
+    // =========================================================================
+    // 1. TEST PREVIEW PAYMENT
+    // =========================================================================
 
     @Test
-    void checkWalletStatusAndReturn_ok() {
-        when(walletConnectorMock.getWallet("INITIATIVE1", "USER1"))
-            .thenReturn(walletWithStatus("REFUNDABLE"));
+    @DisplayName("previewPayment - Successo con userId da transaction")
+    void testPreviewPayment_Success() {
+        Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+        trx.setUserId(USER_ID);
 
-        WalletDTO result = commonAuthService.checkWalletStatusAndReturn("INITIATIVE1", "USER1");
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus("REFUNDABLE");
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
+
+        AuthPaymentDTO expectedDto = new AuthPaymentDTO();
+        when(rewardCalculatorConnector.previewTransaction(trx)).thenReturn(expectedDto);
+
+        AuthPaymentDTO result = commonAuthService.previewPayment(trx, null);
 
         assertNotNull(result);
-        assertEquals("REFUNDABLE", result.getStatus());
-        verify(walletConnectorMock, times(1)).getWallet("INITIATIVE1", "USER1");
-        verifyNoInteractions(auditUtilitiesMock, rewardCalculatorConnectorMock, transactionInProgressRepositoryMock);
+        assertNotNull(trx.getTrxChargeDate());
+        verify(rewardCalculatorConnector).previewTransaction(trx);
+    }
+
+    // =========================================================================
+    // 2. TEST CHECK WALLET STATUS
+    // =========================================================================
+
+    @Test
+    @DisplayName("checkWalletStatus - Utente sospeso (UserSuspendedException)")
+    void testCheckWalletStatus_Suspended() {
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus(PaymentConstants.WALLET_STATUS_SUSPENDED);
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
+
+        assertThrows(UserSuspendedException.class,
+                () -> commonAuthService.checkWalletStatus(INITIATIVE_ID, USER_ID));
     }
 
     @Test
-    void checkWalletStatusAndReturn_suspended() {
-        when(walletConnectorMock.getWallet("INITIATIVE1", "USER1"))
-            .thenReturn(walletWithStatus("SUSPENDED"));
+    @DisplayName("checkWalletStatus - Utente disiscritto (UserNotOnboardedException)")
+    void testCheckWalletStatus_Unsubscribed() {
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus(PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
 
-        UserSuspendedException ex = assertThrows(UserSuspendedException.class,
-            () -> commonAuthService.checkWalletStatusAndReturn("INITIATIVE1", "USER1"));
-
-        assertTrue(ex.getMessage().contains("INITIATIVE1"));
-        verify(walletConnectorMock, times(1)).getWallet("INITIATIVE1", "USER1");
+        assertThrows(UserNotOnboardedException.class,
+                () -> commonAuthService.checkWalletStatus(INITIATIVE_ID, USER_ID));
     }
 
     @Test
-    void checkWalletStatusAndReturn_unsubscribed() {
-        when(walletConnectorMock.getWallet("INITIATIVE1", "USER1"))
-            .thenReturn(walletWithStatus("UNSUBSCRIBED"));
+    @DisplayName("checkWalletStatusAndReturn - Successo e restituzione WalletDTO")
+    void testCheckWalletStatusAndReturn_Success() {
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus("ACTIVE");
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
 
-        UserNotOnboardedException ex = assertThrows(UserNotOnboardedException.class,
-            () -> commonAuthService.checkWalletStatusAndReturn("INITIATIVE1", "USER1"));
+        WalletDTO result = commonAuthService.checkWalletStatusAndReturn(INITIATIVE_ID, USER_ID);
 
-        assertTrue(ex.getMessage().contains("INITIATIVE1"));
-        verify(walletConnectorMock, times(1)).getWallet("INITIATIVE1", "USER1");
+        assertNotNull(result);
+        assertEquals("ACTIVE", result.getStatus());
     }
 
-    private WalletDTO walletWithStatus(String status) {
-        WalletDTO w = new WalletDTO();
-        w.setStatus(status);
-        return w;
+    @Test
+    @DisplayName("checkWalletStatusAndReturn - Sospeso")
+    void testCheckWalletStatusAndReturn_Suspended() {
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus(PaymentConstants.WALLET_STATUS_SUSPENDED);
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
+
+        assertThrows(UserSuspendedException.class,
+                () -> commonAuthService.checkWalletStatusAndReturn(INITIATIVE_ID, USER_ID));
     }
 
-    private static TransactionInProgress getTransactionInProgress() {
-        TransactionInProgress transaction =
-                TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-        transaction.setUserId(USERID);
-        transaction.setTrxCode(TRX_CODE);
-        return transaction;
+    @Test
+    @DisplayName("checkWalletStatusAndReturn - Disiscritto")
+    void testCheckWalletStatusAndReturn_Unsubscribed() {
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus(PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
+
+        assertThrows(UserNotOnboardedException.class,
+                () -> commonAuthService.checkWalletStatusAndReturn(INITIATIVE_ID, USER_ID));
+    }
+
+    // =========================================================================
+    // 3. TEST CHECK AUTH
+    // =========================================================================
+
+    @Test
+    @DisplayName("checkAuth - Transazione Null (TransactionNotFoundOrExpiredException)")
+    void testCheckAuth_TransactionNull() {
+        assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> commonAuthService.checkAuth(TRX_CODE, null));
+    }
+
+    @Test
+    @DisplayName("checkAuth - Transazione in stato CAPTURED (OperationNotAllowedException)")
+    void testCheckAuth_CapturedStatus() {
+        Transaction trx = createTransaction(SyncTrxStatus.CAPTURED);
+        assertThrows(OperationNotAllowedException.class,
+                () -> commonAuthService.checkAuth(TRX_CODE, trx));
+    }
+
+    // =========================================================================
+    // 4. TEST CHECK TRX STATUS TO INVOKE PRE AUTH
+    // =========================================================================
+
+    @Test
+    @DisplayName("checkTrxStatusToInvokePreAuth - Stato CREATED con userId")
+    void testCheckTrxStatusToInvokePreAuth_CreatedWithUserId() {
+        Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+        trx.setUserId(USER_ID);
+        trx.setChannel("APP");
+
+        AuthPaymentDTO preAuth = new AuthPaymentDTO();
+        preAuth.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+        preAuth.setRewardCents(100L);
+        preAuth.setRewards(Map.of(INITIATIVE_ID, new Reward()));
+        preAuth.setRejectionReasons(Collections.emptyList());
+        preAuth.setCounterVersion(1L);
+
+        when(commonPreAuthService.previewPayment(trx, "APP", SyncTrxStatus.AUTHORIZATION_REQUESTED)).thenReturn(preAuth);
+
+        commonAuthService.checkTrxStatusToInvokePreAuth(trx);
+
+        assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
+        assertEquals(100L, trx.getRewardCents());
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("checkTrxStatusToInvokePreAuth - Stato IDENTIFIED con rewardCents null")
+    void testCheckTrxStatusToInvokePreAuth_IdentifiedNullReward() {
+        Transaction trx = createTransaction(SyncTrxStatus.IDENTIFIED);
+        trx.setRewardCents(null);
+
+        AuthPaymentDTO preAuth = new AuthPaymentDTO();
+        preAuth.setStatus(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        when(commonPreAuthService.previewPayment(eq(trx), any(), eq(SyncTrxStatus.AUTHORIZATION_REQUESTED))).thenReturn(preAuth);
+
+        commonAuthService.checkTrxStatusToInvokePreAuth(trx);
+
+        assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
+    }
+
+    @Test
+    @DisplayName("checkTrxStatusToInvokePreAuth - Stato IDENTIFIED con rewardCents valorizzato")
+    void testCheckTrxStatusToInvokePreAuth_IdentifiedWithReward() {
+        Transaction trx = createTransaction(SyncTrxStatus.IDENTIFIED);
+        trx.setRewardCents(500L);
+
+        commonAuthService.checkTrxStatusToInvokePreAuth(trx);
+
+        assertEquals(SyncTrxStatus.AUTHORIZATION_REQUESTED, trx.getStatus());
+        verify(transactionRepository).updateTrxWithStatus(eq(trx), any(LocalDateTime.class));
+        verifyNoInteractions(commonPreAuthService);
+    }
+
+    // =========================================================================
+    // 5. TEST INVOKE RULE ENGINE & UPDATE TRX AUTHORIZED
+    // =========================================================================
+
+    @Test
+    @DisplayName("invokeRuleEngine - Successo REWARDED e updateTrxAuthorized OK")
+    void testInvokeRuleEngine_Rewarded_UpdateAuthorizedSuccess() {
+        Transaction trx = createTransaction(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        AuthPaymentDTO authDto = new AuthPaymentDTO();
+        authDto.setStatus(SyncTrxStatus.REWARDED);
+        authDto.setInitiativeId(INITIATIVE_ID);
+        authDto.setRejectionReasons(Collections.emptyList());
+        RewardCounters counters = new RewardCounters();
+        counters.setVersion(2L);
+        authDto.setCounters(counters);
+
+        when(timeoutSchedulerService.scheduleMessage(TRX_ID)).thenReturn(123L);
+        when(rewardCalculatorConnector.authorizePayment(trx)).thenReturn(authDto);
+        when(transactionRepository.updateTrxAuthorized(
+                eq(trx), eq(authDto), anyMap(), eq(SyncTrxStatus.AUTHORIZATION_REQUESTED),
+                eq(SyncTrxStatus.AUTHORIZED), any(LocalDateTime.class), eq("EUR")
+        )).thenReturn(1); // 1 riga aggiornata = Successo
+
+        AuthPaymentDTO result = commonAuthService.invokeRuleEngine(trx);
+
+        assertEquals(SyncTrxStatus.AUTHORIZED, result.getStatus());
+        assertEquals(2L, trx.getCounterVersion());
+        verify(timeoutSchedulerService).cancelScheduledMessage(123L);
+    }
+
+    @Test
+    @DisplayName("invokeRuleEngine - REWARDED ma updateTrxAuthorized fallisce (Timeout/0 righe)")
+    void testInvokeRuleEngine_Rewarded_UpdateAuthorizedTimeout() {
+        Transaction trx = createTransaction(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        AuthPaymentDTO authDto = new AuthPaymentDTO();
+        authDto.setStatus(SyncTrxStatus.REWARDED);
+        authDto.setInitiativeId(INITIATIVE_ID);
+        RewardCounters rewardCounters = new RewardCounters();
+        rewardCounters.setVersion(1L);
+        rewardCounters.setInitiativeBudgetCents(1000L);
+        authDto.setCounters(rewardCounters);
+
+        when(timeoutSchedulerService.scheduleMessage(TRX_ID)).thenReturn(123L);
+        when(rewardCalculatorConnector.authorizePayment(trx)).thenReturn(authDto);
+        when(transactionRepository.updateTrxAuthorized(
+                any(), any(), any(), any(), any(), any(), any()
+        )).thenReturn(0); // 0 righe aggiornate = Timeout
+
+        AuthPaymentDTO result = commonAuthService.invokeRuleEngine(trx);
+
+        assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
+        assertTrue(result.getRejectionReasons().contains(PaymentConstants.PAYMENT_AUTHORIZATION_TIMEOUT));
+        assertEquals(0L, result.getCounterVersion());
+        assertNull(result.getRewardCents());
+        verify(timeoutSchedulerService).cancelScheduledMessage(123L);
+    }
+
+    @Test
+    @DisplayName("invokeRuleEngine - Rifiutata per Budget Esaurito (BudgetExhaustedException)")
+    void testInvokeRuleEngine_Rejected_BudgetExhausted() {
+        Transaction trx = createTransaction(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        AuthPaymentDTO authDto = new AuthPaymentDTO();
+        authDto.setStatus(SyncTrxStatus.REJECTED);
+        authDto.setInitiativeId(INITIATIVE_ID);
+        authDto.setRejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
+
+        when(timeoutSchedulerService.scheduleMessage(TRX_ID)).thenReturn(123L);
+        when(rewardCalculatorConnector.authorizePayment(trx)).thenReturn(authDto);
+
+        assertThrows(BudgetExhaustedException.class, () -> commonAuthService.invokeRuleEngine(trx));
+
+        verify(transactionRepository).updateTrxRejected(eq(trx), eq(SyncTrxStatus.REJECTED), anyList(), anyMap(), any(LocalDateTime.class), eq("EUR"));
+        verify(timeoutSchedulerService).cancelScheduledMessage(123L);
+    }
+
+    @Test
+    @DisplayName("invokeRuleEngine - Rifiutata per PAYMENT_CANNOT_GUARANTEE_REWARD (Ritorna AuthPaymentDTO)")
+    void testInvokeRuleEngine_Rejected_CannotGuaranteeReward() {
+        Transaction trx = createTransaction(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        AuthPaymentDTO authDto = new AuthPaymentDTO();
+        authDto.setStatus(SyncTrxStatus.REJECTED);
+        authDto.setInitiativeId(INITIATIVE_ID);
+        authDto.setRejectionReasons(List.of(PaymentConstants.ExceptionCode.PAYMENT_CANNOT_GUARANTEE_REWARD));
+
+        when(timeoutSchedulerService.scheduleMessage(TRX_ID)).thenReturn(123L);
+        when(rewardCalculatorConnector.authorizePayment(trx)).thenReturn(authDto);
+
+        AuthPaymentDTO result = commonAuthService.invokeRuleEngine(trx);
+
+        assertNotNull(result);
+        assertEquals(SyncTrxStatus.REJECTED, result.getStatus());
+        verify(timeoutSchedulerService).cancelScheduledMessage(123L);
+    }
+
+    @Test
+    @DisplayName("invokeRuleEngine - Rifiutata generica (TransactionRejectedException)")
+    void testInvokeRuleEngine_Rejected_Generic() {
+        Transaction trx = createTransaction(SyncTrxStatus.AUTHORIZATION_REQUESTED);
+
+        AuthPaymentDTO authDto = new AuthPaymentDTO();
+        authDto.setStatus(SyncTrxStatus.REJECTED);
+        authDto.setInitiativeId(INITIATIVE_ID);
+        authDto.setRejectionReasons(List.of("GENERIC_REASON"));
+
+        when(timeoutSchedulerService.scheduleMessage(TRX_ID)).thenReturn(123L);
+        when(rewardCalculatorConnector.authorizePayment(trx)).thenReturn(authDto);
+
+        assertThrows(TransactionRejectedException.class, () -> commonAuthService.invokeRuleEngine(trx));
+
+        verify(timeoutSchedulerService).cancelScheduledMessage(123L);
+    }
+
+    @Test
+    @DisplayName("invokeRuleEngine - Transazione già autorizzata (TransactionAlreadyAuthorizedException)")
+    void testInvokeRuleEngine_AlreadyAuthorized() {
+        Transaction trx = createTransaction(SyncTrxStatus.AUTHORIZED);
+
+        assertThrows(TransactionAlreadyAuthorizedException.class,
+                () -> commonAuthService.invokeRuleEngine(trx));
+    }
+
+    @Test
+    @DisplayName("invokeRuleEngine - Stato non gestito (OperationNotAllowedException)")
+    void testInvokeRuleEngine_OperationNotAllowed() {
+        Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+
+        assertThrows(OperationNotAllowedException.class,
+                () -> commonAuthService.invokeRuleEngine(trx));
+    }
+
+    // =========================================================================
+    // 6. TEST AUTH PAYMENT (ORCHESTRAZIONE)
+    // =========================================================================
+
+    @Test
+    @DisplayName("authPayment - Flusso completo con successo e calcolo residuo budget")
+    void testAuthPayment_Success() {
+        Transaction trx = createTransaction(SyncTrxStatus.IDENTIFIED);
+        trx.setRewardCents(100L);
+
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus("ACTIVE");
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
+
+        AuthPaymentDTO authDto = new AuthPaymentDTO();
+        authDto.setStatus(SyncTrxStatus.REWARDED);
+        authDto.setInitiativeId(INITIATIVE_ID);
+        authDto.setId(TRX_ID);
+        authDto.setRewardCents(50L);
+        authDto.setRejectionReasons(Collections.emptyList());
+        RewardCounters counters = new RewardCounters();
+        counters.setVersion(1L);
+        authDto.setCounters(counters);
+
+        Reward reward = new Reward();
+        RewardCounters rewardCounters = new RewardCounters();
+        rewardCounters.setVersion(1L);
+        rewardCounters.setInitiativeBudgetCents(1000L);
+        reward.setCounters(rewardCounters);
+        authDto.setRewards(Map.of(INITIATIVE_ID, reward));
+
+        when(timeoutSchedulerService.scheduleMessage(TRX_ID)).thenReturn(123L);
+        when(rewardCalculatorConnector.authorizePayment(any())).thenReturn(authDto);
+        when(transactionRepository.updateTrxAuthorized(any(), any(), any(), any(), any(), any(), any())).thenReturn(1);
+
+        AuthPaymentDTO result = commonAuthService.authPayment(trx, USER_ID, TRX_CODE);
+
+        assertNotNull(result);
+        verify(auditUtilities).logAuthorizedPayment(INITIATIVE_ID, TRX_ID, TRX_CODE, USER_ID, 50L, Collections.emptyList());
+    }
+
+    @Test
+    @DisplayName("authPayment - Gestione eccezione e logErrorAuthorizedPayment")
+    void testAuthPayment_ExceptionThrown() {
+        Transaction trx = createTransaction(SyncTrxStatus.CAPTURED); // Provoca OperationNotAllowedException in checkAuth
+
+        assertThrows(OperationNotAllowedException.class,
+                () -> commonAuthService.authPayment(trx, USER_ID, TRX_CODE));
+
+        verify(auditUtilities).logErrorAuthorizedPayment(TRX_CODE, USER_ID);
+    }
+
+    // =========================================================================
+    // HELPER METHODS
+    // =========================================================================
+
+    private Transaction createTransaction(SyncTrxStatus status) {
+        Transaction trx = new Transaction();
+        trx.setId(TRX_ID);
+        trx.setTrxCode(TRX_CODE);
+        trx.setInitiativeId(INITIATIVE_ID);
+        trx.setStatus(status);
+        return trx;
     }
 }

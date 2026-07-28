@@ -1,6 +1,5 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
@@ -10,8 +9,6 @@ import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
@@ -22,59 +19,52 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.Collections;
 
 @Slf4j
 @Service("commonPreAuth")
 public class CommonPreAuthServiceImpl{
+
+  private static final String ZONE_EUROPE_ROME = "Europe/Rome";
   private final long authorizationExpirationMinutes;
-  protected final TransactionInProgressRepository transactionInProgressRepository;
   protected final TransactionRepository transactionRepository;
   private final RewardCalculatorConnector rewardCalculatorConnector;
   protected final AuditUtilities auditUtilities;
-  private final TransactionSynchronizer transactionSynchronizer;
   private final WalletConnector walletConnector;
 
   public CommonPreAuthServiceImpl(
           @Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
-          TransactionInProgressRepository transactionInProgressRepository,
           TransactionRepository transactionRepository,
           RewardCalculatorConnector rewardCalculatorConnector,
           AuditUtilities auditUtilities,
-          TransactionSynchronizer transactionSynchronizer,
           WalletConnector walletConnector) {
     this.authorizationExpirationMinutes = authorizationExpirationMinutes;
-    this.transactionInProgressRepository = transactionInProgressRepository;
     this.transactionRepository = transactionRepository;
     this.rewardCalculatorConnector = rewardCalculatorConnector;
     this.auditUtilities = auditUtilities;
-    this.transactionSynchronizer = transactionSynchronizer;
     this.walletConnector = walletConnector;
   }
 
-  public TransactionInProgress relateUser(TransactionInProgress trx, String userId) {
+  public Transaction relateUser(Transaction transaction, String userId) {
     try {
-      checkPreAuth(userId, trx);
+      checkPreAuth(userId, transaction);
 
-      trx.setUserId(userId);
+      transaction.setUserId(userId);
 
-      return trx;
+      return transaction;
 
     } catch (ServiceException e) {
-      auditUtilities.logErrorRelatedUserToTransaction(trx.getTrxCode(), userId);
+      auditUtilities.logErrorRelatedUserToTransaction(transaction.getTrxCode(), userId);
       throw e;
     }
   }
 
-  public AuthPaymentDTO previewPayment(TransactionInProgress trx, String channel, SyncTrxStatus status) {
+  public AuthPaymentDTO previewPayment(Transaction transaction, String channel, SyncTrxStatus status) {
     try {
-      trx.setTrxChargeDate(OffsetDateTime.now(ZoneOffset.UTC));
-      trx.setChannel(channel);
-      AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(trx);
-      Transaction transaction = transactionRepository.findById(trx.getId())
-              .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trx.getId())));
-      transactionSynchronizer.sync(trx,transaction);
+      transaction.setTrxChargeDate(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+      transaction.setChannel(channel);
+      AuthPaymentDTO preview = rewardCalculatorConnector.previewTransaction(transaction);
 
       if (preview.getStatus().equals(SyncTrxStatus.REJECTED)) {
 
@@ -83,38 +73,26 @@ public class CommonPreAuthServiceImpl{
                 transaction.getUserId(),
                 SyncTrxStatus.REJECTED,
                 preview.getRejectionReasons(),
-                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
+                CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
-                LocalDateTime.now(ZoneOffset.UTC)
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME))
         );
 
-        transactionInProgressRepository.updateTrxRejected(
-                trx.getId(),
-                trx.getUserId(),
-                preview.getRejectionReasons(),
-                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
-                channel);
-        log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",trx.getId(), trx.getTrxCode());
+        log.info("[TRX_STATUS][REJECTED] The transaction with trxId {} trxCode {}, has been rejected ",transaction.getId(), transaction.getTrxCode());
         if (preview.getRejectionReasons().contains(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED)) {
-          throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(trx.getInitiativeId()));
+          throw new BudgetExhaustedException("Budget exhausted for the current user and initiative [%s]".formatted(transaction.getInitiativeId()));
         }
-        throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(trx.getId()));
+        throw new TransactionRejectedException("Transaction with transactionId [%s] is rejected".formatted(transaction.getId()));
       } else {
         preview.setRejectionReasons(Collections.emptyList());
         preview.setStatus(status);
 
         transactionRepository.updateTrxWithStatusForPreview(transaction,
                 preview,
-                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
+                CommonPaymentUtilities.getInitiativeRejectionReason(transaction.getInitiativeId(), preview.getRejectionReasons()),
                 channel,
                 status,
-                LocalDateTime.now(ZoneOffset.UTC));
-
-        transactionInProgressRepository.updateTrxWithStatusForPreview(trx,
-                preview,
-                CommonPaymentUtilities.getInitiativeRejectionReason(trx.getInitiativeId(), preview.getRejectionReasons()),
-                channel,
-                status);
+                LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
       }
 
       Long residualBudget = CommonPaymentUtilities.calculateResidualBudget(preview.getRewards()) != null ?
@@ -123,39 +101,39 @@ public class CommonPreAuthServiceImpl{
 
       return preview;
     } catch (RuntimeException e) {
-      auditUtilities.logErrorPreviewTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), channel);
+      auditUtilities.logErrorPreviewTransaction(transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode(), transaction.getUserId(), channel);
       throw e;
     }
   }
 
-  public void checkPreAuth(String userId, TransactionInProgress trx) {
-    String walletStatus = walletConnector.getWallet(trx.getInitiativeId(), userId).getStatus();
+  public void checkPreAuth(String userId, Transaction transaction) {
+    String walletStatus = walletConnector.getWallet(transaction.getInitiativeId(), userId).getStatus();
     if (PaymentConstants.WALLET_STATUS_SUSPENDED.equals(walletStatus)){
-      throw new UserSuspendedException("The user has been suspended for initiative [%s]".formatted(trx.getInitiativeId()));
+      throw new UserSuspendedException("The user has been suspended for initiative [%s]".formatted(transaction.getInitiativeId()));
     }
 
     if (PaymentConstants.WALLET_STATUS_UNSUBSCRIBED.equals(walletStatus)){
-      throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(trx.getInitiativeId()));
+      throw new UserNotOnboardedException(ExceptionCode.USER_UNSUBSCRIBED, "The user has unsubscribed from initiative [%s]".formatted(transaction.getInitiativeId()));
     }
 
-    if (trx.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) {
-      throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(trx.getId()));
+    if (transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes).isBefore(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))) {
+      throw new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transaction.getId()));
     }
 
-    if (trx.getUserId() != null && !userId.equals(trx.getUserId())) {
-      throw new UserNotAllowedException(ExceptionCode.TRX_ALREADY_ASSIGNED, "Transaction with transactionId [%s] is already assigned to another user".formatted(trx.getId()));
+    if (transaction.getUserId() != null && !userId.equals(transaction.getUserId())) {
+      throw new UserNotAllowedException(ExceptionCode.TRX_ALREADY_ASSIGNED, "Transaction with transactionId [%s] is already assigned to another user".formatted(transaction.getId()));
     }
 
-    if(SyncTrxStatus.AUTHORIZED.equals(trx.getStatus())){
-      throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(trx.getId()));
+    if(SyncTrxStatus.AUTHORIZED.equals(transaction.getStatus())){
+      throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(transaction.getId()));
     }
 
-    if(!SyncTrxStatus.CREATED.equals(trx.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(trx.getStatus())){
-      throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(), trx.getStatus()));
+    if(!SyncTrxStatus.CREATED.equals(transaction.getStatus()) && !SyncTrxStatus.IDENTIFIED.equals(transaction.getStatus())){
+      throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED, "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(), transaction.getStatus()));
     }
   }
 
-  public void auditLogRelateUser(TransactionInProgress trx, String channel){
-    auditUtilities.logRelatedUserToTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), trx.getUserId(), channel);
+  public void auditLogRelateUser(Transaction transaction, String channel){
+    auditUtilities.logRelatedUserToTransaction(transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode(), transaction.getUserId(), channel);
   }
 }

@@ -1,6 +1,5 @@
 CREATE DATABASE "idpay-database";
 
-
 BEGIN;
 
 -- 1. CREAZIONE DELLO SCHEMA
@@ -70,6 +69,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "merchantFiscalCode" VARCHAR(64),
     vat VARCHAR(32),
     "pointOfSaleType" VARCHAR(32),
+    "productType" VARCHAR(16),
     "familyId" VARCHAR(64),
     "rewardCents" BIGINT,
     "counterVersion" BIGINT,
@@ -119,13 +119,13 @@ BEGIN
 END;
 $$;
 
--- 7. TRIGGER PER GLI INSERT (Scatta sempre all'inserimento della transazione)
+DROP TRIGGER IF EXISTS trg_transaction_outbox_insert ON "idpay-pagamenti".transaction;
 CREATE TRIGGER trg_transaction_outbox_insert
 AFTER INSERT ON "idpay-pagamenti".transaction
 FOR EACH ROW
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
--- 8. TRIGGER PER GLI UPDATE (Scatta SOLO se lo status è effettivamente cambiato rispetto a prima)
+DROP TRIGGER IF EXISTS trg_transaction_outbox_update ON "idpay-pagamenti".transaction;
 CREATE TRIGGER trg_transaction_outbox_update
 AFTER UPDATE ON "idpay-pagamenti".transaction
 FOR EACH ROW
@@ -133,5 +133,23 @@ WHEN (OLD.status IS DISTINCT FROM NEW.status)
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
 ALTER ROLE idpaydbadmin WITH REPLICATION;
+
+
+ALTER TABLE "idpay-pagamenti".transaction
+    ALTER COLUMN "trxDate" TYPE TIMESTAMPTZ USING "trxDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "trxChargeDate" TYPE TIMESTAMPTZ USING "trxChargeDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "trxEndDate" TYPE TIMESTAMPTZ USING "trxEndDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "elaborationDateTime" TYPE TIMESTAMPTZ USING "elaborationDateTime" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "updateDate" TYPE TIMESTAMPTZ USING "updateDate" AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN "createdAt" TYPE TIMESTAMPTZ USING "createdAt" AT TIME ZONE 'Europe/Rome',
+    ADD COLUMN IF NOT EXISTS "productType" VARCHAR(16);
+
+ALTER TABLE "idpay-pagamenti".reward_batch
+    ALTER COLUMN refund_outcome_timestamp TYPE TIMESTAMPTZ USING refund_outcome_timestamp AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN creation_date TYPE TIMESTAMPTZ USING creation_date AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN update_date TYPE TIMESTAMPTZ USING update_date AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN approval_date TYPE TIMESTAMPTZ USING approval_date AT TIME ZONE 'Europe/Rome',
+    ALTER COLUMN merchant_send_date TYPE TIMESTAMPTZ USING merchant_send_date AT TIME ZONE 'Europe/Rome';
+
 
 COMMIT;

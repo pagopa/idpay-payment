@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public class PreviewPaymentDTOFaker {
 
@@ -19,6 +20,6 @@ public class PreviewPaymentDTOFaker {
             .originalAmountCents(700L)
             .rewardCents(100L)
             .residualAmountCents(600L)
-            .trxDate(OffsetDateTime.now());
+            .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
   }
 }

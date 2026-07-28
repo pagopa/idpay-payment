@@ -6,13 +6,12 @@ import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.idpaycode.RelateUserResponse;
 import it.gov.pagopa.payment.dto.mapper.idpaycode.RelateUserResponseMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -27,6 +26,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,12 +66,12 @@ class IdPayCodePaymentControllerTest {
   @Test
   void relateUser() throws Exception {
 
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+    Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
     RelateUserResponseMapper mapper = new RelateUserResponseMapper();
 
     RelateUserResponse resultUserResponse = mapper.transactionMapper(trx);
 
-    Mockito.when(idpayCodePaymentServiceMock.relateUser(trx.getId(),trx.getMerchantFiscalCode())).thenReturn(resultUserResponse);
+    when(idpayCodePaymentServiceMock.relateUser(trx.getId(),trx.getMerchantFiscalCode())).thenReturn(resultUserResponse);
     MvcResult result = mockMvc.perform(
                     put("/idpay/payment/idpay-code/{transactionId}/relate-user",
                             trx.getId())
