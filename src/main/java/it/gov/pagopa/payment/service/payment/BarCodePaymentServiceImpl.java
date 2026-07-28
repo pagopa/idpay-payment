@@ -50,10 +50,6 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
         return barCodeAuthPaymentService.previewPayment(initiativeId, trxCode, additionalProperties, amountCents);
     }
 
-    @Override
-    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
-        return barCodeAuthPaymentService.previewPayment(trxCode, additionalProperties, amountCents);
-    }
 
     @Override
     public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {

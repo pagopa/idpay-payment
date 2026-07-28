@@ -1,10 +1,8 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
@@ -67,38 +65,10 @@ class BarCodePaymentControllerImplUnitTest {
         verify(barCodePaymentService).authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
     }
 
+
     @Test
-    void previewPayment_withoutProductGtin_shouldSkipLegacyProperty() {
+    void previewPayment_shouldMapResponse() {
         PreviewPaymentRequestDTO request = PreviewPaymentRequestDTO.builder()
-                .productName("product")
-                .productGtin(null)
-                .amountCents(BigDecimal.valueOf(100))
-                .build();
-        PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
-                .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
-                .status(SyncTrxStatus.AUTHORIZED)
-                .originalAmountCents(700L)
-                .rewardCents(100L)
-                .residualAmountCents(600L)
-                .userId("userId")
-                .additionalProperties(Map.of("productName", "validatedProduct"))
-                .extendedAuthorization(false)
-                .build();
-
-        when(barCodePaymentService.previewPayment("trxCode", Map.of("productName", "product"), 100L))
-                .thenReturn(previewPaymentResultDTO);
-
-        PreviewPaymentDTO result = controller.previewPayment("trxCode", request);
-
-        Assertions.assertEquals("product", result.getProductName());
-        Assertions.assertNull(result.getProductGtin());
-        verify(barCodePaymentService).previewPayment("trxCode", Map.of("productName", "product"), 100L);
-    }
-
-    @Test
-    void previewPaymentV2_shouldMapResponse() {
-        PreviewPaymentRequestV2DTO request = PreviewPaymentRequestV2DTO.builder()
                 .amountCents(BigDecimal.valueOf(100))
                 .additionalProperties(Map.of("customField", "customValue"))
                 .build();
@@ -117,7 +87,7 @@ class BarCodePaymentControllerImplUnitTest {
         when(barCodePaymentService.previewPayment("initiativeId", "trxCode", Map.of("customField", "customValue"), 100L))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResponseV2DTO result = controller.previewPaymentV2("initiativeId", "trxCode", request);
+        PreviewPaymentResponseDTO result = controller.previewPayment("initiativeId", "trxCode", request);
 
         Assertions.assertEquals("trxCode", result.getTrxCode());
         Assertions.assertEquals(Map.of("customField", "validatedValue"), result.getAdditionalProperties());

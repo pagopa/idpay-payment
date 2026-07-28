@@ -15,8 +15,6 @@ public interface BarCodePaymentService {
 
     PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents);
 
-    PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents);
-
     TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId);
 
     TransactionBarCodeResponse capturePayment(String initiativeId, String trxCode, String merchantId, String pointOfSaleId, String acquirerId);

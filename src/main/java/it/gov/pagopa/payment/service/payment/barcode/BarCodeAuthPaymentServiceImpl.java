@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -62,18 +63,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents) {
-        return previewPayment(initiativeId, trxCode, additionalProperties, amountCents, true);
-    }
-
-    @Override
-    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
-        return previewPayment(null, trxCode, additionalProperties, amountCents, false);
-    }
-
-    private PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode,
+    public PreviewPaymentResultDTO previewPayment(String initiativeId,
+                                                   String trxCode,
                                                    Map<String, String> additionalProperties,
-                                                   Long amountCents, boolean validateInitiative) {
+                                                   Long amountCents) {
 
         final TransactionInProgress transactionInProgress =
                 transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
@@ -83,7 +76,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
 
-        if (validateInitiative && !transactionInProgress.getInitiativeId().equals(initiativeId)) {
+        if (!transactionInProgress.getInitiativeId().equals(initiativeId)) {
             throw new TransactionNotFoundOrExpiredException(
                     "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
                             trxCode.toLowerCase(), initiativeId));
@@ -179,10 +172,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(trx.getInitiativeId())
                 .validateAndEnrich(additionalProperties, operation, trx.getInitiativeId());
-        if (validatedAdditionalProperties == null) {
-            return Collections.emptyMap();
-        }
-        return validatedAdditionalProperties;
+        return Objects.requireNonNullElse(validatedAdditionalProperties, Collections.emptyMap());
     }
 
     private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {

@@ -10,6 +10,4 @@ public interface BarCodeAuthPaymentService {
     AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId);
 
     PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents);
-
-    PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents);
 }

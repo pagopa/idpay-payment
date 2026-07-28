@@ -247,6 +247,7 @@ public class TransactionInProgressRepositoryExtImpl implements TransactionInProg
         .set(Fields.trxChargeDate, trx.getTrxChargeDate())
         .set(Fields.counterVersion, authPaymentDTO.getCounters().getVersion())
         .set(Fields.familyId,trx.getFamilyId())
+        .set(Fields.additionalProperties, trx.getAdditionalProperties())
         .currentDate(Fields.updateDate);
 
     if (RewardConstants.TRX_CHANNEL_BARCODE.equals(trx.getChannel())) {
