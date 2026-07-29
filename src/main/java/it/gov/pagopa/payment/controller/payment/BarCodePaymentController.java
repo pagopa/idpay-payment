@@ -35,7 +35,7 @@ public interface BarCodePaymentController {
     );
 
 
-    @PutMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/preview", headers = "X-API-Version=2")
+    @PutMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/preview")
     @ResponseStatus(code = HttpStatus.OK)
     PreviewPaymentResponseDTO previewPayment(
             @PathVariable("initiativeId") String initiativeId,
