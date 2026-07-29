@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.time.ZoneId;
+
 import static reactor.netty.http.HttpConnectionLiveness.log;
 
 @Component
@@ -77,8 +79,8 @@ public class PointOfSaleTransactionMapper {
                 .effectiveAmountCents(trx.getAmountCents())
                 .rewardAmountCents(rewardAmount)
                 .authorizedAmountCents(authorizedAmount)
-                .trxDate(trx.getTrxDate().toLocalDateTime())
-                .trxChargeDate(trx.getTrxChargeDate().toLocalDateTime())
+                .trxDate(trx.getTrxDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime())
+                .trxChargeDate(trx.getTrxChargeDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime())
                 .status(String.valueOf(trx.getStatus()))
                 .rewardBatchTrxStatus(trx.getRewardBatchStatusTrx() != null ? trx.getRewardBatchStatusTrx() : null)
                 .channel(trx.getChannel())
