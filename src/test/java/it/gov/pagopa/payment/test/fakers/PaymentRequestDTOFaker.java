@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.test.fakers;
 import it.gov.pagopa.payment.connector.rest.reward.dto.PaymentRequestDTO;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 public class PaymentRequestDTOFaker {
@@ -16,8 +17,8 @@ public class PaymentRequestDTOFaker {
           .merchantId("MERCHANTID%d".formatted(bias))
           .merchantFiscalCode("MERCHANTFISCALCODE%d".formatted(bias))
           .vat("VAT%d".formatted(bias))
-          .trxDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
-          .trxChargeDate(OffsetDateTime.now().truncatedTo(ChronoUnit.MILLIS))
+          .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
+          .trxChargeDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")).truncatedTo(ChronoUnit.MILLIS))
           .amountCents(10L)
           .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
           .mcc("MCC%d".formatted(bias))

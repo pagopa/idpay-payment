@@ -1,13 +1,11 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.common.CommonPreAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
@@ -20,26 +18,22 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class QRCodePreAuthServiceImpl extends CommonPreAuthServiceImpl implements QRCodePreAuthService {
   public QRCodePreAuthServiceImpl(@Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
-                                  TransactionInProgressRepository transactionInProgressRepository,
                                   TransactionRepository transactionRepository,
                                   RewardCalculatorConnector rewardCalculatorConnector,
                                   AuditUtilities auditUtilities,
-                                  WalletConnector walletConnector,
-                                  TransactionSynchronizer transactionSynchronizer) {
-    super(authorizationExpirationMinutes, transactionInProgressRepository, transactionRepository, rewardCalculatorConnector, auditUtilities, transactionSynchronizer, walletConnector);
+                                  WalletConnector walletConnector) {
+    super(authorizationExpirationMinutes, transactionRepository, rewardCalculatorConnector, auditUtilities, walletConnector);
   }
 
   @Override
   public AuthPaymentDTO relateUser(String trxCode, String userId) {
-    TransactionInProgress trx = transactionInProgressRepository.findByTrxCode(trxCode.toLowerCase())
-            .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
-    transactionRepository.findByTrxCode(trxCode.toLowerCase())
+    Transaction transaction = transactionRepository.findByTrxCode(trxCode.toLowerCase())
             .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
 
-    relateUser(trx, userId);
-    AuthPaymentDTO authPaymentDTO = previewPayment(trx, RewardConstants.TRX_CHANNEL_QRCODE, SyncTrxStatus.IDENTIFIED);
+    relateUser(transaction, userId);
+    AuthPaymentDTO authPaymentDTO = previewPayment(transaction, RewardConstants.TRX_CHANNEL_QRCODE, SyncTrxStatus.IDENTIFIED);
 
-    auditLogRelateUser(trx, RewardConstants.TRX_CHANNEL_QRCODE);
+    auditLogRelateUser(transaction, RewardConstants.TRX_CHANNEL_QRCODE);
     return authPaymentDTO;
 
   }

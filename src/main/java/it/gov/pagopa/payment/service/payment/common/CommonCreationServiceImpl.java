@@ -4,26 +4,25 @@ import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 
 @Slf4j
 @Service("commonCreate")
@@ -31,26 +30,23 @@ public class CommonCreationServiceImpl {
 
   static final String CREATE_TRANSACTION = "CREATE_TRANSACTION";
 
-  protected final TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
-  protected final TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper;
   protected final RewardRuleRepository rewardRuleRepository;
   protected final AuditUtilities auditUtilities;
   private final MerchantConnector merchantConnector;
-  private final TransactionInProgressService transactionInProgressService;
+  private final TransactionService transactionService;
+  private final TransactionMapper transactionMapper;
 
   public CommonCreationServiceImpl(
-          TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper,
-          TransactionCreationRequest2TransactionInProgressMapper transactionCreationRequest2TransactionInProgressMapper,
           RewardRuleRepository rewardRuleRepository,
           AuditUtilities auditUtilities,
           MerchantConnector merchantConnector,
-          TransactionInProgressService transactionInProgressService) {
-    this.transactionInProgress2TransactionResponseMapper = transactionInProgress2TransactionResponseMapper;
-    this.transactionCreationRequest2TransactionInProgressMapper = transactionCreationRequest2TransactionInProgressMapper;
+          TransactionService transactionService,
+          TransactionMapper transactionMapper) {
     this.rewardRuleRepository = rewardRuleRepository;
     this.auditUtilities = auditUtilities;
     this.merchantConnector = merchantConnector;
-    this.transactionInProgressService = transactionInProgressService;
+    this.transactionService = transactionService;
+    this.transactionMapper = transactionMapper;
   }
 
   public TransactionResponse createTransaction(
@@ -60,7 +56,7 @@ public class CommonCreationServiceImpl {
           String acquirerId,
           String idTrxIssuer) {
 
-    LocalDate today = LocalDate.now(ZoneOffset.UTC);
+    LocalDate today = LocalDate.now(ZoneId.of("Europe/Rome"));
     try {
       if (trxCreationRequest.getAmountCents() <= 0L) {
         log.info("[{}] Cannot create transaction with invalid amount: [{}]", getFlow(), trxCreationRequest.getAmountCents());
@@ -77,14 +73,14 @@ public class CommonCreationServiceImpl {
 
       MerchantDetailDTO merchantDetail = merchantConnector.merchantDetail(merchantId, trxCreationRequest.getInitiativeId());
 
-      TransactionInProgress trx =
-              transactionCreationRequest2TransactionInProgressMapper.apply(
+      Transaction transaction = transactionMapper.
+              transactionCreationRequestToTransaction(
                       trxCreationRequest, channel, merchantId, acquirerId, merchantDetail, idTrxIssuer);
-      transactionInProgressService.generateTrxCodeAndSave(trx, getFlow());
+      transactionService.generateTrxCodeAndSave(transaction, getFlow());
 
-      logCreatedTransaction(trx.getInitiativeId(), trx.getId(), trx.getTrxCode(), merchantId);
+      logCreatedTransaction(transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode(), merchantId);
 
-      return transactionInProgress2TransactionResponseMapper.apply(trx);
+      return transactionMapper.transactionToTransactionResponse(transaction);
     } catch (RuntimeException e) {
       logErrorCreatedTransaction(trxCreationRequest.getInitiativeId(), merchantId);
       throw e;

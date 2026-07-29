@@ -17,32 +17,32 @@ import java.util.Optional;
 public interface TransactionRepositoryExt {
 
   @Query(value = """
-    WITH selected AS (
-        SELECT id
-        FROM Transaction
-        WHERE
-            trx_date < :expirationDate
-            AND status = ANY(:statusList)
-            AND extended_authorization IS FALSE
-            AND (
-                elaboration_date_time IS NULL
-                OR elaboration_date_time < CURRENT_TIMESTAMP - (:throttlingMillis || ' milliseconds')::interval
-            )
-            AND (:initiativeId IS NULL OR initiative_id = :initiativeId)
-        ORDER BY trx_date
-        LIMIT 1
-        FOR UPDATE SKIP LOCKED
-    )
-    UPDATE Transaction t
-    SET elaboration_date_time = NOW()
-    FROM selected
-    WHERE t.id = selected.id
-    RETURNING t
-    """,
+  WITH selected AS (
+      SELECT id
+      FROM transaction
+      WHERE
+          "trxDate" < :expirationDate
+          AND status IN (:statusList)
+          AND "extendedAuthorization" IS FALSE
+          AND (
+              "elaborationDateTime" IS NULL
+              OR "elaborationDateTime" < (NOW()) - (:throttlingMillis || ' milliseconds')::interval
+          )
+          AND (CAST(:initiativeId AS varchar) IS NULL OR "initiativeId" = :initiativeId)
+      ORDER BY "trxDate" ASC
+      LIMIT 1
+      FOR UPDATE SKIP LOCKED
+  )
+  UPDATE transaction t
+  SET "elaborationDateTime" = (NOW())
+  FROM selected
+  WHERE t.id = selected.id
+  RETURNING t.*
+  """,
           nativeQuery = true)
   Transaction findAuthorizationExpiredTransaction(
           @Param("initiativeId") String initiativeId,
-          @Param("expirationDate") OffsetDateTime expirationDate,
+          @Param("expirationDate") LocalDateTime expirationDate,
           @Param("statusList") List<String> statusList,
           @Param("throttlingMillis") long throttlingMillis
   );
@@ -58,7 +58,6 @@ public interface TransactionRepositoryExt {
           "t.initiativeRejectionReasons = :initiativeRejectionReasons, " +
           "t.trxChargeDate = :#{#trx.trxChargeDate}, " +
           "t.updateDate = :updateDate, " +
-          // Logica BARCODE usando l'oggetto trx passato
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +
           "t.effectiveAmountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.effectiveAmountCents} ELSE t.effectiveAmountCents END, " +
@@ -136,8 +135,8 @@ public interface TransactionRepositoryExt {
           "t.trxChargeDate = :#{#trx.trxChargeDate}, " +
           "t.counterVersion = :#{#dto.counters != null ? #dto.counters.version : null}, " +
           "t.familyId = :#{#trx.familyId}, " +
+          "t.additionalProperties = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.additionalProperties} ELSE t.additionalProperties END, " +
           "t.updateDate = :updateDate, " +
-          // Logica BARCODE
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +
           "t.effectiveAmountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.effectiveAmountCents} ELSE t.effectiveAmountCents END, " +
@@ -157,7 +156,6 @@ public interface TransactionRepositoryExt {
           @Param("updateDate") LocalDateTime updateDate,
           @Param("currency") String currency
   );
-
 
   @Modifying
   @Transactional
@@ -186,47 +184,40 @@ public interface TransactionRepositoryExt {
   @Query("DELETE FROM Transaction t WHERE t.id IN :ids")
   void bulkDeleteByIds(@Param("ids") List<String> ids);
 
-  @Query("SELECT t FROM Transaction t WHERE t.trxCode = :trxCode AND t.trxEndDate >= :now")
-  Optional<Transaction> findByTrxCodeAndAuthorizationNotExpired(
-          @Param("trxCode") String trxCode,
-          @Param("now") OffsetDateTime now
-  );
-
-  @Query(value = "UPDATE transaction t SET " +
-          "  trx_charge_date = NOW(), " +
-          "  update_date = NOW() " +
-          "WHERE t.trx_code = :trxCode " +
-          "  AND t.trx_date > :minTrxDate " +
-          "  AND (t.trx_charge_date IS NULL OR t.trx_charge_date < NOW() - INTERVAL '10 second') " +
-          "RETURNING *", nativeQuery = true)
+  @Query(value = """
+        UPDATE transaction t SET
+            "trxChargeDate" = (NOW()),
+            "updateDate" = (NOW())
+        WHERE t."trxCode" = :trxCode
+            AND t."trxDate" > :minTrxDate
+            AND (t."trxChargeDate" IS NULL OR t."trxChargeDate" < (NOW()) - INTERVAL '10 second')
+        RETURNING t.*
+        """, nativeQuery = true)
   Optional<Transaction> findAndModifyThrottled(
           @Param("trxCode") String trxCode,
           @Param("minTrxDate") OffsetDateTime minTrxDate
   );
 
-  @Query("SELECT COUNT(t) > 0 FROM Transaction t WHERE t.trxCode = :trxCode AND t.trxDate > :minTrxDate")
-  boolean existsByTrxCodeAndDateGreaterThan(
-          @Param("trxCode") String trxCode,
-          @Param("minTrxDate") OffsetDateTime minTrxDate
-  );
-
-  @Query(value =
-          "UPDATE transaction SET elaboration_date = NOW() " +
-                  "WHERE id = (" +
-                  "  SELECT t.id FROM transaction t " +
-                  "  WHERE t.trx_date < :maxTrxDate " +
-                  "    AND t.status IN (:statusList) " +
-                  "    AND (t.extended_authorization IS NOT TRUE) " +
-                  "    AND (:initiativeId IS NULL OR t.initiative_id = :initiativeId) " +
-                  "    AND ( " +
-                  "         t.elaboration_date IS NULL " +
-                  "         OR t.elaboration_date < (NOW() - CAST(:throttlingSeconds || ' second' AS INTERVAL)) " +
-                  "    ) " +
-                  "  ORDER BY t.trx_date ASC " +
-                  "  LIMIT 1 " +
-                  "  FOR UPDATE SKIP LOCKED" +
-                  ") RETURNING *",
-          nativeQuery = true)
+  @Query(value = """
+        UPDATE transaction 
+        SET "elaborationDateTime" = (NOW())
+        WHERE id = (
+          SELECT t.id 
+          FROM transaction t
+          WHERE t."trxDate" < :maxTrxDate
+            AND t.status IN (:statusList)
+            AND (t."extendedAuthorization" IS NOT TRUE)
+            AND (CAST(:initiativeId AS varchar) IS NULL OR t."initiativeId" = :initiativeId)
+            AND (
+                 t."elaborationDateTime" IS NULL
+                 OR t."elaborationDateTime" < ((NOW()) - (:throttlingSeconds || ' second')::interval)
+            )
+          ORDER BY t."trxDate" ASC
+          LIMIT 1
+          FOR UPDATE SKIP LOCKED
+        ) 
+        RETURNING *
+        """, nativeQuery = true)
   Optional<Transaction> findAndModifyExpiredTransaction(
           @Param("maxTrxDate") OffsetDateTime maxTrxDate,
           @Param("statusList") List<String> statusList,
@@ -234,32 +225,60 @@ public interface TransactionRepositoryExt {
           @Param("throttlingSeconds") int throttlingSeconds
   );
 
-  @Query("SELECT t FROM Transaction t WHERE t.id = :trxId AND t.trxDate >= :minTrxDate")
-  Optional<Transaction> findByTrxIdAndAuthorizationNotExpired(
-          @Param("trxId") String trxId,
-          @Param("minTrxDate") OffsetDateTime minTrxDate
+  @Modifying
+  @Transactional
+  @Query(value = """
+        UPDATE transaction 
+        SET status = 'EXPIRED', 
+            "updateDate" = (NOW()) 
+        WHERE "initiativeId" = :initiativeId 
+          AND status = 'CREATED' 
+          AND "trxEndDate" IS NOT NULL 
+          AND "extendedAuthorization" = TRUE 
+          AND ("trxEndDate" < :now OR "initiativeName" IS NOT NULL) 
+          AND ("userId" IS NULL OR "userId" NOT IN (
+              SELECT DISTINCT t2."userId" 
+              FROM transaction t2 
+              WHERE t2."initiativeId" = :initiativeId 
+                AND t2.status = 'AUTHORIZED' 
+                AND t2."userId" IS NOT NULL
+          ))
+        """, nativeQuery = true)
+  int updateStatusForExpiredVoucherTransactions(
+          @Param("initiativeId") String initiativeId,
+          @Param("now") OffsetDateTime now
   );
 
   @Modifying
   @Transactional
-  @Query(value =
-          "UPDATE transaction " +
-                  "SET status = 'EXPIRED', update_date = NOW() " +
-                  "WHERE initiative_id = :initiativeId " +
-                  "  AND status = 'CREATED' " +
-                  "  AND trx_end_date IS NOT NULL " +
-                  "  AND extended_authorization = TRUE " +
-                  "  AND (trx_end_date < :now OR initiative_name IS NOT NULL) " + // Nota sotto per initiative_end_date
-                  "  AND (user_id IS NULL OR user_id NOT IN (" +
-                  "      SELECT DISTINCT t2.user_id " +
-                  "      FROM transaction t2 " +
-                  "      WHERE t2.initiative_id = :initiativeId " +
-                  "        AND t2.status = 'AUTHORIZED' " +
-                  "        AND t2.user_id IS NOT NULL" +
-                  "  ))",
-          nativeQuery = true)
-  int updateStatusForExpiredVoucherTransactions(
+  @Query("""
+        UPDATE Transaction t
+        SET t.status = :newStatus,
+            t.rejectionReasons = :rejectionReasons,
+            t.updateDate = CURRENT_TIMESTAMP
+        WHERE t.id = :trxId 
+          AND t.status = :expectedStatus
+    """)
+  int updateTrxPostTimeout(
+          @Param("trxId") String trxId,
+          @Param("expectedStatus") SyncTrxStatus expectedStatus,
+          @Param("newStatus") SyncTrxStatus newStatus,
+          @Param("rejectionReasons") List<String> rejectionReasons
+  );
+
+  @Query(value = """
+      DELETE FROM transaction
+      WHERE id IN (
+          SELECT id 
+          FROM transaction
+          WHERE "initiativeId" = :initiativeId
+          LIMIT :pageSize
+          FOR UPDATE SKIP LOCKED
+      )
+      RETURNING *
+      """, nativeQuery = true)
+  List<Transaction> deletePaged(
           @Param("initiativeId") String initiativeId,
-          @Param("now") OffsetDateTime now
+          @Param("pageSize") int pageSize
   );
 }

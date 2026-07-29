@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;

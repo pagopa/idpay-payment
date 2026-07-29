@@ -4,10 +4,9 @@ import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.ExpiredTransactionsProcessedDTO;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
-import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -20,7 +19,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,11 +38,11 @@ public class ExpiredTransactionsControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private TransactionInProgressService transactionInProgressServiceMock;
+    private TransactionService transactionService;
 
     @Test
     void shouldReturnUpdatedTransactionNumberOnValidRequest() throws Exception {
-        Mockito.when(transactionInProgressServiceMock.findAndUpdateExpiredTransactionsStatus(eq(INITIATIVE_ID)))
+        when(transactionService.findAndUpdateExpiredTransactionsStatus(INITIATIVE_ID))
                 .thenReturn(1L);
         MvcResult result = mockMvc.perform(
                 post("/idpay/transactions/expired/initiatives/{initiativeId}/update-status",
@@ -54,24 +54,24 @@ public class ExpiredTransactionsControllerTest {
         );
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(1, actual.getProcessedTransactions());
-        Mockito.verify(transactionInProgressServiceMock).findAndUpdateExpiredTransactionsStatus(any());
+        verify(transactionService).findAndUpdateExpiredTransactionsStatus(any());
     }
 
     @Test
     void shouldReturnUErrorOnUpdateExpiredTransactionKO() throws Exception {
-        Mockito.when(transactionInProgressServiceMock.findAndUpdateExpiredTransactionsStatus(eq(INITIATIVE_ID)))
+        when(transactionService.findAndUpdateExpiredTransactionsStatus(INITIATIVE_ID))
                 .thenThrow(new ExpirationStatusUpdateException("Error"));
         mockMvc.perform(
                 post("/idpay/transactions/expired/initiatives/{initiativeId}/update-status",
                         INITIATIVE_ID)
         ).andExpect(status().isInternalServerError());
-        Mockito.verify(transactionInProgressServiceMock).findAndUpdateExpiredTransactionsStatus(any());
+        verify(transactionService).findAndUpdateExpiredTransactionsStatus(any());
     }
 
 
     @Test
     void shouldReturnResentTransactionNumberOnValidRequest() throws Exception {
-        Mockito.when(transactionInProgressServiceMock.sendEventForStaleExpiredTransactions(eq(INITIATIVE_ID)))
+        when(transactionService.sendEventForStaleExpiredTransactions(INITIATIVE_ID))
                 .thenReturn(1L);
         MvcResult result = mockMvc.perform(
                 post("/idpay/transactions/expired/initiatives/{initiativeId}/resend",
@@ -83,18 +83,18 @@ public class ExpiredTransactionsControllerTest {
         );
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(1, actual.getProcessedTransactions());
-        Mockito.verify(transactionInProgressServiceMock).sendEventForStaleExpiredTransactions(any());
+        verify(transactionService).sendEventForStaleExpiredTransactions(any());
     }
 
     @Test
     void shouldReturnErrorOnResendExpiredTransactionKO() throws Exception {
-        Mockito.when(transactionInProgressServiceMock.sendEventForStaleExpiredTransactions(eq(INITIATIVE_ID)))
+        when(transactionService.sendEventForStaleExpiredTransactions(INITIATIVE_ID))
                 .thenThrow(new ExpirationStatusUpdateException("Error"));
         mockMvc.perform(
                 post("/idpay/transactions/expired/initiatives/{initiativeId}/resend",
                         INITIATIVE_ID)
         ).andExpect(status().isInternalServerError());
-        Mockito.verify(transactionInProgressServiceMock).sendEventForStaleExpiredTransactions(any());
+        verify(transactionService).sendEventForStaleExpiredTransactions(any());
     }
 
 

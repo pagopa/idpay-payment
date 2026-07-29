@@ -7,14 +7,13 @@ import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.PinBlockDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.IdpayCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.PinBlockDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
@@ -30,6 +29,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,11 +51,11 @@ class IdPayCodePaymentMilControllerTest {
 
   @Test
   void previewPayment() throws Exception {
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentDTO authPaymentDTO =  AuthPaymentDTOFaker.mockInstance(1,trx);
     authPaymentDTO.setRewards(null);
 
-    Mockito.when(idpayCodePaymentServiceMock.previewPayment(trx.getId(),trx.getMerchantId())).thenReturn(authPaymentDTO);
+    when(idpayCodePaymentServiceMock.previewPayment(trx.getId(),trx.getMerchantId())).thenReturn(authPaymentDTO);
 
 
     MvcResult result = mockMvc.perform(
@@ -95,11 +95,11 @@ class IdPayCodePaymentMilControllerTest {
   @Test
   void authorization() throws Exception {
     PinBlockDTO pinBlockDTO = PinBlockDTOFaker.mockInstance();
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+    Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
     AuthPaymentDTO authPaymentDTO =  AuthPaymentDTOFaker.mockInstance(1,trx);
     authPaymentDTO.setRewards(null);
 
-    Mockito.when(idpayCodePaymentServiceMock.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO)).thenReturn(authPaymentDTO);
+    when(idpayCodePaymentServiceMock.authPayment(trx.getId(),trx.getMerchantId(),pinBlockDTO)).thenReturn(authPaymentDTO);
 
     MvcResult result = mockMvc.perform(
                     put("/idpay/mil/payment/idpay-code/{transactionId}/authorize",trx.getId())

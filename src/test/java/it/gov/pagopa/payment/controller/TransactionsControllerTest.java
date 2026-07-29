@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.service.TransactionService;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,8 +37,8 @@ class TransactionsControllerImplTest {
     @Test
     void findAll_shouldSanitizeInputsAndReturnTransactions() {
         // Given
-        LocalDateTime start = LocalDateTime.now().minusDays(1);
-        LocalDateTime end = LocalDateTime.now();
+        LocalDateTime start = LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(1);
+        LocalDateTime end = LocalDateTime.now(ZoneId.of("Europe/Rome"));
         Long amount = 1000L;
         Pageable pageable = PageRequest.of(0, 10);
         List<Transaction> expectedTransactions = List.of(new Transaction());

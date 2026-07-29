@@ -2,7 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.service.TransactionService;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;

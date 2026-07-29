@@ -5,8 +5,8 @@ import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionBarCodeInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.BudgetExhaustedException;
@@ -15,11 +15,10 @@ import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.UserNotOnboardedException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -34,10 +33,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -47,15 +45,17 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodeCreationServiceImplTest {
-    public static final LocalDate TODAY = LocalDate.now();
-    @Mock private RewardRuleRepository rewardRuleRepository;
-    @Mock private AuditUtilities auditUtilitiesMock;
+    public static final LocalDate TODAY = LocalDate.now(ZoneId.of("Europe/Rome"));
     @Mock
-    private TransactionBarCodeCreationRequest2TransactionInProgressMapper transactionBarCodeCreationRequest2TransactionInProgressMapper;
+    private RewardRuleRepository rewardRuleRepository;
     @Mock
-    private TransactionBarCodeInProgress2TransactionResponseMapper transactionBarCodeInProgress2TransactionResponseMapper;
-    @Mock private WalletConnector walletConnector;
-    @Mock private TransactionInProgressService transactionInProgressServiceMock;
+    private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private TransactionMapper transactionMapper;
+    @Mock
+    private WalletConnector walletConnector;
+    @Mock
+    private TransactionService transactionServiceMock;
 
     private static final String INITIATIVE_NAME = "INITIATIVE_NAME";
 
@@ -66,44 +66,41 @@ class BarCodeCreationServiceImplTest {
 
     @BeforeEach
     void setUp() {
-
         barCodeCreationService =
                 new BarCodeCreationServiceImpl(
                         rewardRuleRepository,
                         auditUtilitiesMock,
-                        transactionBarCodeCreationRequest2TransactionInProgressMapper,
-                        transactionBarCodeInProgress2TransactionResponseMapper,
+                        transactionMapper,
                         walletConnector,
-                        transactionInProgressServiceMock,
+                        transactionServiceMock,
                         authorizationExpirationMinutes,
                         extendedAuthorizationExpirationMinutes);
     }
 
-    //region Create Transaction
     @Test
     void createTransaction() {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
         TransactionBarCodeResponse trxCreated = TransactionBarCodeResponseFaker.mockInstance(1);
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmountCents(1000L);
+        walletDTO.setInitialAmountCents(1000L);
 
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+        when(transactionMapper.transactionBarCodeCreationRequestToTransaction(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
                 anyString(),
                 anyString(),
-                any(),
+                anyMap(),
                 eq(false),
-                any()))
+                isNull()))
                 .thenReturn(trx);
-        when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
+        when(transactionMapper.transactionToTransactionBarCodeResponse(any(Transaction.class)))
                 .thenReturn(trxCreated);
 
         TransactionBarCodeResponse result =
@@ -115,6 +112,7 @@ class BarCodeCreationServiceImplTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trxCreated, result);
     }
+
     private RewardRule buildRule(String initiativeid, InitiativeRewardType initiativeRewardType) {
         return RewardRule.builder().id(initiativeid)
                 .initiativeConfig(InitiativeConfig.builder()
@@ -129,19 +127,15 @@ class BarCodeCreationServiceImplTest {
 
     @Test
     void createTransaction_InitiativeNotFound() {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmountCents(1000L);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.empty());
 
         InitiativeNotfoundException result =
                 Assertions.assertThrows(
-                    InitiativeNotfoundException.class,
+                        InitiativeNotfoundException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
@@ -153,7 +147,6 @@ class BarCodeCreationServiceImplTest {
 
     @Test
     void createTransaction_InitiativeNotDiscount() {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
@@ -162,7 +155,7 @@ class BarCodeCreationServiceImplTest {
 
         InitiativeNotfoundException result =
                 Assertions.assertThrows(
-                    InitiativeNotfoundException.class,
+                        InitiativeNotfoundException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
@@ -175,20 +168,20 @@ class BarCodeCreationServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {-100, 0})
     void createTransaction_UserBudgetExhausted(long budgetAmount) {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
         walletDTO.setAmountCents(budgetAmount);
+        walletDTO.setInitialAmountCents(1000L);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
         BudgetExhaustedException result =
                 Assertions.assertThrows(
-                    BudgetExhaustedException.class,
+                        BudgetExhaustedException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
@@ -200,48 +193,41 @@ class BarCodeCreationServiceImplTest {
 
     @Test
     void createTransaction_walletStatusUnsubscribed() {
-        // Given
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
 
         WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, PaymentConstants.WALLET_STATUS_UNSUBSCRIBED);
         walletDTO.setAmountCents(1000L);
+        walletDTO.setInitialAmountCents(1000L);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
         when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenReturn(walletDTO);
 
-        // When
         UserNotOnboardedException result = Assertions.assertThrows(UserNotOnboardedException.class,
                 () -> barCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
 
-        // Then
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_UNSUBSCRIBED, result.getCode());
     }
 
     @Test
     void createTransaction_UserNotOnboarded() {
-        // Given
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
 
-
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenThrow(new UserNotOnboardedException(String.format("The current user is not onboarded on initiative [%s]", "INITIATIVEID"),true,null));
+        when(walletConnector.getWallet("INITIATIVEID", "USERID")).thenThrow(new UserNotOnboardedException(String.format("The current user is not onboarded on initiative [%s]", "INITIATIVEID"), true, null));
 
-        // When
         UserNotOnboardedException result = Assertions.assertThrows(UserNotOnboardedException.class,
                 () -> barCodeCreationService.createTransaction(trxCreationReq, RewardConstants.TRX_CHANNEL_BARCODE, "USERID"));
 
-        // Then
         Assertions.assertEquals(PaymentConstants.ExceptionCode.USER_NOT_ONBOARDED, result.getCode());
     }
 
     @ParameterizedTest
     @MethodSource("dateArguments")
     void createTransaction_InvalidDate(LocalDate invalidDate) {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
@@ -252,7 +238,7 @@ class BarCodeCreationServiceImplTest {
 
         InitiativeInvalidException result =
                 Assertions.assertThrows(
-                    InitiativeInvalidException.class,
+                        InitiativeInvalidException.class,
                         () ->
                                 barCodeCreationService.createTransaction(
                                         trxCreationReq,
@@ -283,34 +269,28 @@ class BarCodeCreationServiceImplTest {
         return rule;
     }
 
-    //endregion
-
-    //region Create extended transaction
     @Test
     void createExtendedTransaction() {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
+                .voucherAmountCents(1000L)
                 .build();
 
-
         TransactionBarCodeResponse trxCreated = TransactionBarCodeResponseFaker.mockInstance(1);
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmountCents(1000L);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        trx.setExtendedAuthorization(true);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT)));
-        when(transactionBarCodeCreationRequest2TransactionInProgressMapper.apply(
+        when(transactionMapper.transactionBarCodeCreationRequestToTransaction(
                 any(TransactionBarCodeCreationRequest.class),
                 eq(RewardConstants.TRX_CHANNEL_BARCODE),
                 anyString(),
                 anyString(),
-                any(),
+                anyMap(),
                 eq(true),
-                any()))
+                isNull()))
                 .thenReturn(trx);
-        when(transactionBarCodeInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
+        when(transactionMapper.transactionToTransactionBarCodeResponse(any(Transaction.class)))
                 .thenReturn(trxCreated);
 
         TransactionBarCodeResponse result =
@@ -325,13 +305,9 @@ class BarCodeCreationServiceImplTest {
 
     @Test
     void createExtendedTransaction_InitiativeNotFound() {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
-
-        WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, "REFUNDABLE");
-        walletDTO.setAmountCents(1000L);
 
         when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.empty());
 
@@ -349,7 +325,6 @@ class BarCodeCreationServiceImplTest {
 
     @Test
     void createExtendedTransaction_InitiativeNotDiscount() {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
@@ -371,7 +346,6 @@ class BarCodeCreationServiceImplTest {
     @ParameterizedTest
     @MethodSource("dateArguments")
     void createExtendedTransaction_InvalidDate(LocalDate invalidDate) {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .build();
@@ -395,7 +369,6 @@ class BarCodeCreationServiceImplTest {
     @ParameterizedTest
     @ValueSource(longs = {-100, -1})
     void createExtendedTransaction_UserBudgetExhausted(long voucherAmountCents) {
-
         TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
                 .initiativeId("INITIATIVEID")
                 .voucherAmountCents(voucherAmountCents)
@@ -412,88 +385,88 @@ class BarCodeCreationServiceImplTest {
                                         RewardConstants.TRX_CHANNEL_BARCODE,
                                         "USERID"));
 
-        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage()); }
+        Assertions.assertEquals(String.format("Budget exhausted for the current user and initiative [%s]", trxCreationReq.getInitiativeId()), result.getMessage());
+    }
+
     @Test
-    void shouldReturnTrxDatePlusAuthorizationMinutesWhenNotExtended()  {
-        TransactionInProgress  trx =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+    void shouldReturnTrxDatePlusAuthorizationMinutesWhenNotExtended() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(false);
 
-        InitiativeConfig  initiative  = null;
+        InitiativeConfig initiative = null;
 
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime  expected = trx.getTrxDate().plusMinutes(authorizationExpirationMinutes);
-        Assertions.assertEquals(expected, result);
-
-    }
-
-    @Test
-    void  shouldUseInitiativeEndDateWhenExtendedAndInitiativeEndDateNotNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
-        trx.setExtendedAuthorization(true);
-
-        InitiativeConfig  initiative =  new  InitiativeConfig();
-        LocalDate initiativeEndDate = LocalDate.now().plusDays(1);
-        initiative.setEndDate(initiativeEndDate);  //  giorno dopo
-
-        OffsetDateTime  offsetEndDate = initiativeEndDate.atStartOfDay().atOffset(ZoneOffset.of("+02:00"));
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
-
-        OffsetDateTime  expected  = offsetEndDate
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(authorizationExpirationMinutes);
         Assertions.assertEquals(expected, result);
     }
 
     @Test
-    void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNotNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+    void shouldUseInitiativeEndDateWhenExtendedAndInitiativeEndDateNotNull() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(true);
 
-        InitiativeConfig  initiative =  new  InitiativeConfig();
-        LocalDate initiativeEndDate = LocalDate.now().plusDays(10);
-        initiative.setEndDate(initiativeEndDate);  //10 giorni dopo
+        InitiativeConfig initiative = new InitiativeConfig();
+        LocalDate initiativeEndDate = LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(1);
+        initiative.setEndDate(initiativeEndDate);
 
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        OffsetDateTime offsetEndDate = initiativeEndDate.atStartOfDay(ZoneId.of("Europe/Rome")).toOffsetDateTime();
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime  expected  = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+        OffsetDateTime expected = offsetEndDate
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
-
-        Assertions.assertEquals(expected.toLocalDateTime(), result.toLocalDateTime());
-    }
-    @Test
-    void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
-        trx.setExtendedAuthorization(true);
-
-        InitiativeConfig  initiative =  null;
-
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
-
-        OffsetDateTime  expected  = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
-
 
         Assertions.assertEquals(expected, result);
     }
 
-    void  shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNull()  {
-        TransactionInProgress trx  =  new  TransactionInProgress();
-        trx.setTrxDate(OffsetDateTime.now());
+    @Test
+    void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNotNull() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
         trx.setExtendedAuthorization(true);
 
-        InitiativeConfig  initiative =  new  InitiativeConfig();
+        InitiativeConfig initiative = new InitiativeConfig();
+        LocalDate initiativeEndDate = LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(10);
+        initiative.setEndDate(initiativeEndDate);
 
-        OffsetDateTime  result =  barCodeCreationService.calculateTrxEndDate(trx,  initiative);
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime  expected  = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
                 .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeNull() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(true);
+
+        InitiativeConfig initiative = null;
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void shouldReturnTrxDatePlusExtendedAuthorizationMinutesWhenExtendedAndInitiativeEndDateNull() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(true);
+
+        InitiativeConfig initiative = new InitiativeConfig();
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
 
         Assertions.assertEquals(expected, result);
     }

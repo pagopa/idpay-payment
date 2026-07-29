@@ -1,7 +1,5 @@
 package it.gov.pagopa.payment.constants;
 
-import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE;
-
 public class PaymentConstants {
 
   public static final String OPERATION_TYPE_CHARGE = "00";
@@ -66,7 +64,7 @@ public class PaymentConstants {
     public static final String PAYMENT_TRANSACTION_VERSION_PENDING = "PAYMENT_TRANSACTION_VERSION_PENDING";
     public static final String REWARD_NOT_VALID = "REWARD_NOT_VALID";
     public static final String PDF_GENERIC_EXCEPTION = "PDF_GENERIC_EXCEPTION";
-    public static final String ERROR_ON_GET_FILE_URL_REQUEST = "Error occurred while attempting to get file url";
+    public static final String INVALID_PRODUCT_CATEGORY = "INVALID_PRODUCT_CATEGORY";
   }
 
   public static final class ExceptionMessage {
@@ -81,6 +79,6 @@ public class PaymentConstants {
       return "Missing mandatory filters";
     }
     String joinedFields = String.join(", ", missingFields);
-    return TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE.formatted(joinedFields);
+    return ExceptionMessage.TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE.formatted(joinedFields);
   }
 }

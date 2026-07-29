@@ -50,13 +50,23 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
             String trxCode,
             Pageable pageable) {
 
+        String sanitizedStatus = sanitize(status);
+        List<String> processedStatuses;
+
+        if (StringUtils.hasText(sanitizedStatus) &&
+                TrxFiltersDTO.REWARDED_ALLOWED_STATUSES.contains(sanitizedStatus.toUpperCase())) {
+            processedStatuses = List.of(sanitizedStatus.toUpperCase());
+        } else {
+            processedStatuses = TrxFiltersDTO.REWARDED_ALLOWED_STATUSES;
+        }
+
         TrxFiltersDTO filters = buildSanitizedFilters(
                 merchantId,
                 initiativeId,
                 pointOfSaleId,
                 productGtin,
                 fiscalCode,
-                status != null ? List.of(sanitize(status)) : null,
+                processedStatuses,
                 trxCode
         );
 
@@ -79,8 +89,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         String sanitizedStatus = sanitize(status);
         List<String> processedStatuses;
 
-        if (StringUtils.hasText(sanitizedStatus) &&
-                TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.contains(sanitizedStatus.toUpperCase())) {
+        if (StringUtils.hasText(sanitizedStatus)) {
             processedStatuses = List.of(sanitizedStatus.toUpperCase());
         } else {
             processedStatuses = TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES;

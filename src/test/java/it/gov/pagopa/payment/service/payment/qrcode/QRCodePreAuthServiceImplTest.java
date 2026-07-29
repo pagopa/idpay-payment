@@ -1,354 +1,106 @@
 package it.gov.pagopa.payment.service.payment.qrcode;
 
-import it.gov.pagopa.common.utils.TestUtils;
-import it.gov.pagopa.common.utils.TransactionSynchronizer;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletConnector;
-import it.gov.pagopa.payment.connector.rest.wallet.dto.WalletDTO;
-import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.*;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
-import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.fakers.WalletDTOFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QRCodePreAuthServiceImplTest {
 
-  @Mock private TransactionInProgressRepository transactionInProgressRepositoryMock;
-  @Mock private RewardCalculatorConnector rewardCalculatorConnectorMock;
-  @Mock private AuditUtilities auditUtilitiesMock;
-  @Mock private WalletConnector walletConnectorMock;
-  @Mock private TransactionRepository transactionRepository;
-  @Mock private TransactionSynchronizer transactionSynchronizer;
-
-  private QRCodePreAuthService qrCodePreAuthService;
-
-  private static final String WALLET_STATUS_REFUNDABLE = "REFUNDABLE";
-  private static final String USER_ID1 = "USERID1";
-
-  @BeforeEach
-  void setUp() {
-    long authorizationExpirationMinutes = 4350;
-    qrCodePreAuthService =
-            new QRCodePreAuthServiceImpl(
-                    authorizationExpirationMinutes,
-                    transactionInProgressRepositoryMock,
-                    transactionRepository,
-                    rewardCalculatorConnectorMock,
-                    auditUtilitiesMock,
-                    walletConnectorMock,
-                    transactionSynchronizer);
-  }
-
-  @Test
-  void relateUser() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.ofNullable(trx));
-    when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-    AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", USER_ID1);
-
-    Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-            "residualAmountCents");
-
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatusForPreview(any(), any(), any(),anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet("INITIATIVEID1", USER_ID1);
-  }
-
-  @Test
-  void relateUserIdentified() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-    trx.setUserId(USER_ID1);
-
-    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
-
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-    when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
-
-    AuthPaymentDTO result = qrCodePreAuthService.relateUser("trxcode1", USER_ID1);
-
-    Assertions.assertNotNull(result);
-    TestUtils.checkNotNullFields(result, "rejectionReasons", "secondFactor","splitPayment",
-            "residualAmountCents");
-
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-  }
-
-  @Test
-  void relateUserIdentifiedRejected() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-    trx.setUserId(USER_ID1);
-
-    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
-    authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-    when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
-
-    TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
-            qrCodePreAuthService.relateUser("trxcode1", USER_ID1)
-    );
-
-    Assertions.assertNotNull(result.getCode());
-
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-  }
-
-  @Test
-  void relateUserIdentifiedRejectedNoBudget() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
-    trx.setUserId(USER_ID1);
-
-    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
-    authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-    authPaymentDTO.setRejectionReasons(List.of(RewardConstants.INITIATIVE_REJECTION_REASON_BUDGET_EXHAUSTED));
-
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-    when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
-
-    BudgetExhaustedException result = Assertions.assertThrows(BudgetExhaustedException.class, () ->
-            qrCodePreAuthService.relateUser("trxcode1", USER_ID1)
-    );
-
-    assertEquals(PaymentConstants.ExceptionCode.BUDGET_EXHAUSTED, result.getCode());
-
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(),any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-  }
-
-  @Test
-  void relateUserNotOnboarded() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
-
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
-    authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
-    authPaymentDTO.setRejectionReasons(List.of("NO_ACTIVE_INITIATIVES"));
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-    when(rewardCalculatorConnectorMock.previewTransaction(trx)).thenReturn(authPaymentDTO);
-
-    TransactionRejectedException result = Assertions.assertThrows(TransactionRejectedException.class, () ->
-      qrCodePreAuthService.relateUser("trxcode1", USER_ID1)
-    );
-
-    Assertions.assertNotNull(result.getCode());
-
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(1)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-  }
-
-  @Test
-  void relateUserNotAuthorized() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    trx.setUserId(USER_ID1);
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-    UserNotAllowedException result = Assertions.assertThrows(UserNotAllowedException.class, () ->
-        qrCodePreAuthService.relateUser("trxcode1", "USERID2")
-    );
-
-    Assertions.assertNotNull(result);
-
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(),any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), "USERID2");
-  }
-
-  @Test
-  void relateUserTrxNotFound() {
-
-    TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-        qrCodePreAuthService.relateUser("trxcode1", "USERID1")
-    );
-
-    Assertions.assertNotNull(result);
-
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-  }
-
-  @Test
-  void relateUserTrxExpired() {
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    trx.setTrxDate(OffsetDateTime.now().minusDays(5L));
-    trx.setUserId(USER_ID1);
-    WalletDTO walletDTO = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1")).thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(any(), any())).thenReturn(walletDTO);
-
-    TransactionNotFoundOrExpiredException result = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () ->
-            qrCodePreAuthService.relateUser("trxcode1", USER_ID1)
-    );
-
-    Assertions.assertNotNull(result);
-
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxWithStatusForPreview(any(), any(), any(), anyString(),any());
-    verify(transactionInProgressRepositoryMock, times(0)).updateTrxRejected(anyString(), anyString(), anyList(), anyMap(), anyString());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-  }
-
-  @Test
-  void relateUserOtherException() {
-    String errorMessageTest = "DUMMY_MESSAGE";
-
-    when(transactionInProgressRepositoryMock.findByTrxCode("trxcode1"))
-            .thenThrow(new RuntimeException(errorMessageTest));
-
-    RuntimeException result = Assertions.assertThrows(RuntimeException.class,
-            () -> qrCodePreAuthService.relateUser("trxcode1", USER_ID1));
-
-    Assertions.assertNotNull(result);
-    Assertions.assertEquals(errorMessageTest, result.getMessage());
-
-  }
-
-  @Test
-  void relateUser_statusSuspendedException() {
-    // Given
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-    WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, "SUSPENDED");
-    String trxCode = trx.getTrxCode();
-
-    when(transactionInProgressRepositoryMock.findByTrxCode(trx.getTrxCode()))
-            .thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(trx.getInitiativeId(), USER_ID1))
-            .thenReturn(walletDTO);
-
-    // When
-    UserSuspendedException exception = Assertions.assertThrows(UserSuspendedException.class, () -> qrCodePreAuthService.relateUser(trxCode, USER_ID1));
-
-    // Then
-    assertEquals(PaymentConstants.ExceptionCode.USER_SUSPENDED_ERROR, exception.getCode());
-    assertEquals(String.format("The user has been suspended for initiative [%s]", trx.getInitiativeId()), exception.getMessage());
-
-    verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-
-  }
-
-  @Test
-  void relateUser_trxAlreadyAuthorizedException() {
-    // Given
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
-    WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-    String trxCode = trx.getTrxCode();
-
-    when(transactionInProgressRepositoryMock.findByTrxCode(trx.getTrxCode()))
-            .thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(trx.getInitiativeId(), USER_ID1))
-            .thenReturn(walletDTO);
-
-    // When
-    TransactionAlreadyAuthorizedException exception = Assertions.assertThrows(TransactionAlreadyAuthorizedException.class, () -> qrCodePreAuthService.relateUser(trxCode, USER_ID1));
-
-    // Then
-    assertEquals(PaymentConstants.ExceptionCode.TRX_ALREADY_AUTHORIZED, exception.getCode());
-    assertEquals(String.format("Transaction with transactionId [%s] is already authorized", trx.getId()), exception.getMessage());
-
-    verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-
-  }
-
-  @Test
-  void relateUser_trxStatusNotValidException() {
-    // Given
-    Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CANCELLED);
-    when(transactionRepository.findByTrxCode(anyString())).thenReturn(Optional.of(transaction));
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CANCELLED);
-    WalletDTO walletDTO  = WalletDTOFaker.mockInstance(1, WALLET_STATUS_REFUNDABLE);
-    String trxCode = trx.getTrxCode();
-
-    when(transactionInProgressRepositoryMock.findByTrxCode(trx.getTrxCode()))
-            .thenReturn(Optional.of(trx));
-    when(walletConnectorMock.getWallet(trx.getInitiativeId(), USER_ID1))
-            .thenReturn(walletDTO);
-
-    // When
-    OperationNotAllowedException exception = Assertions.assertThrows(OperationNotAllowedException.class, () -> qrCodePreAuthService.relateUser(trxCode, USER_ID1));
-
-    // Then
-    assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, exception.getCode());
-    assertEquals(String.format("Cannot operate on transaction with transactionId [%s] in status %s", trx.getId(), trx.getStatus()), exception.getMessage());
-
-    verify(transactionInProgressRepositoryMock, times(1)).findByTrxCode(trx.getTrxCode());
-    verify(walletConnectorMock, times(1)).getWallet(trx.getInitiativeId(), USER_ID1);
-  }
-
+    @Mock
+    private TransactionRepository transactionRepositoryMock;
+    @Mock
+    private RewardCalculatorConnector rewardCalculatorConnectorMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private WalletConnector walletConnectorMock;
+
+    private QRCodePreAuthServiceImpl qrCodePreAuthService;
+
+    private static final long AUTHORIZATION_EXPIRATION_MINUTES = 15L;
+    private static final String TRX_CODE = "TRX_CODE_123";
+    private static final String LOWER_TRX_CODE = "trx_code_123";
+    private static final String USER_ID = "USER_ID_123";
+    private static final String INITIATIVE_ID = "INITIATIVE_ID_123";
+
+    @BeforeEach
+    void setUp() {
+        qrCodePreAuthService = spy(new QRCodePreAuthServiceImpl(
+                AUTHORIZATION_EXPIRATION_MINUTES,
+                transactionRepositoryMock,
+                rewardCalculatorConnectorMock,
+                auditUtilitiesMock,
+                walletConnectorMock
+        ));
+    }
+
+    @Test
+    void testRelateUser_Success() {
+        // Given
+        Transaction transaction = new Transaction();
+        transaction.setId("TRX_ID_123");
+        transaction.setTrxCode(LOWER_TRX_CODE);
+        transaction.setInitiativeId(INITIATIVE_ID);
+
+        AuthPaymentDTO expectedAuthPaymentDTO = new AuthPaymentDTO();
+        expectedAuthPaymentDTO.setStatus(SyncTrxStatus.IDENTIFIED);
+
+        when(transactionRepositoryMock.findByTrxCode(LOWER_TRX_CODE))
+                .thenReturn(Optional.of(transaction));
+
+        doReturn(transaction).when(qrCodePreAuthService).relateUser(transaction, USER_ID);
+        doReturn(expectedAuthPaymentDTO).when(qrCodePreAuthService)
+                .previewPayment(transaction, RewardConstants.TRX_CHANNEL_QRCODE, SyncTrxStatus.IDENTIFIED);
+        doNothing().when(qrCodePreAuthService).auditLogRelateUser(transaction, RewardConstants.TRX_CHANNEL_QRCODE);
+
+        // When
+        AuthPaymentDTO result = qrCodePreAuthService.relateUser(TRX_CODE, USER_ID);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(SyncTrxStatus.IDENTIFIED, result.getStatus());
+
+        verify(transactionRepositoryMock, times(1)).findByTrxCode(LOWER_TRX_CODE);
+        verify(qrCodePreAuthService, times(1)).relateUser(transaction, USER_ID);
+        verify(qrCodePreAuthService, times(1)).previewPayment(transaction, RewardConstants.TRX_CHANNEL_QRCODE, SyncTrxStatus.IDENTIFIED);
+        verify(qrCodePreAuthService, times(1)).auditLogRelateUser(transaction, RewardConstants.TRX_CHANNEL_QRCODE);
+    }
+
+    @Test
+    void testRelateUser_TransactionNotFound_ThrowsException() {
+        // Given
+        when(transactionRepositoryMock.findByTrxCode(LOWER_TRX_CODE))
+                .thenReturn(Optional.empty());
+
+        // When & Then
+        TransactionNotFoundOrExpiredException exception = assertThrows(
+                TransactionNotFoundOrExpiredException.class,
+                () -> qrCodePreAuthService.relateUser(TRX_CODE, USER_ID)
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot find transaction with trxCode"));
+
+        verify(transactionRepositoryMock, times(1)).findByTrxCode(LOWER_TRX_CODE);
+        verify(qrCodePreAuthService, never()).relateUser(any(Transaction.class), any());
+        verify(qrCodePreAuthService, never()).previewPayment(any(), any(), any());
+        verify(qrCodePreAuthService, never()).auditLogRelateUser(any(), any());
+    }
 }

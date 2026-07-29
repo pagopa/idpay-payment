@@ -1,7 +1,6 @@
 package it.gov.pagopa.payment.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.model.InvoiceData;

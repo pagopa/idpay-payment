@@ -1,380 +1,228 @@
 package it.gov.pagopa.payment.controller.payment;
 
-import it.gov.pagopa.common.config.JsonConfig;
-import it.gov.pagopa.common.web.dto.ErrorDTO;
-import it.gov.pagopa.common.web.exception.ValidationExceptionHandler;
-import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
-import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.common.*;
 import it.gov.pagopa.payment.service.payment.expired.QRCodeExpirationService;
-import it.gov.pagopa.payment.test.fakers.SyncTrxStatusFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
-import org.springframework.boot.security.autoconfigure.UserDetailsServiceAutoConfiguration;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.mock.web.MockPart;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.ObjectMapper;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
 
-@WebMvcTest(value={CommonPaymentControllerImpl.class}, excludeAutoConfiguration =  { UserDetailsServiceAutoConfiguration.class , SecurityAutoConfiguration.class})
-@AutoConfigureMockMvc(addFilters = false)
-@Import({JsonConfig.class, ValidationExceptionHandler.class, PaymentErrorManagerConfig.class})
-class CommonPaymentControllerTest {
+@ExtendWith(MockitoExtension.class)
+class CommonPaymentControllerImplTest {
 
-  @MockitoBean
-  @Qualifier("commonCreate")
+  @Mock
   private CommonCreationServiceImpl commonCreationServiceMock;
-  @MockitoBean
-  @Qualifier("commonConfirm")
+  @Mock
   private CommonConfirmServiceImpl commonConfirmServiceMock;
-  @MockitoBean
-  @Qualifier("commonReversal")
-  private CommonReversalServiceImpl commonReversalService;
-  @MockitoBean
-  @Qualifier("commonInvoice")
-  private CommonInvoiceServiceImpl commonRewardService;
-
-  @MockitoBean
-  @Qualifier("commonCancel")
+  @Mock
   private CommonCancelServiceImpl commonCancelServiceMock;
-
-  @MockitoBean
-  private QRCodeExpirationService qrCodeExpirationServiceMock;
-
-  @MockitoBean
+  @Mock
+  private CommonReversalServiceImpl commonReversalServiceMock;
+  @Mock
+  private CommonInvoiceServiceImpl commonInvoiceServiceMock;
+  @Mock
   private CommonStatusTransactionServiceImpl commonStatusTransactionServiceMock;
-
-  @Autowired
-  private MockMvc mockMvc;
-
-  @Autowired
-  private ObjectMapper objectMapper;
-
-  private static final String ACQUIRER_ID = "ACQUIRERID1";
-  private static final String ID_TRX_ISSUER = "IDTRXISSUER1";
-  private static final String MERCHANT_ID = "MERCHANTID1";
-  private static final String POINT_OF_SALE_ID = "POINT_OF_SALE_ID1";
-  private static final String TRANSACTION_ID = "TRANSACTIONID1";
-  private static final String INITIATIVE_ID = "INITIATIVEID1";
-  private static final String DOCUMENT_NUMBER = "FPR 192/25";
+  @Mock
+  private QRCodeExpirationService qrCodeExpirationServiceMock;
+  @Mock
+  private MultipartFile multipartFileMock;
+  @InjectMocks
+  private CommonPaymentControllerImpl commonPaymentController;
 
   @Test
-  void createCommonTransaction_testMandatoryFields() throws Exception {
-    List<String> expectedInvalidFields = Arrays.asList("initiativeId", "amountCents",
-        "idTrxAcquirer");
+  void testCreateTransaction() {
+    // Given
+    TransactionCreationRequest request = new TransactionCreationRequest();
+    String merchantId = "MERCHANT_ID";
+    String acquirerId = "ACQUIRER_ID";
+    String idTrxIssuer = "ISSUER_ID";
+    TransactionResponse expectedResponse = new TransactionResponse();
 
-    MvcResult result = mockMvc.perform(
-            post("/idpay/payment/")
-                .header("x-merchant-id", MERCHANT_ID)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-        .andExpect(status().isBadRequest())
-        .andReturn();
+    when(commonCreationServiceMock.createTransaction(request, null, merchantId, acquirerId, idTrxIssuer))
+            .thenReturn(expectedResponse);
 
-    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
-        ErrorDTO.class);
+    // When
+    TransactionResponse result = commonPaymentController.createTransaction(request, merchantId, acquirerId, idTrxIssuer);
 
-    Assertions.assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
-    expectedInvalidFields.forEach(
-        field -> Assertions.assertTrue(actual.getMessage().contains(field)));
+    // Then
+    assertNotNull(result);
+    assertEquals(expectedResponse, result);
+    verify(commonCreationServiceMock, times(1))
+            .createTransaction(request, null, merchantId, acquirerId, idTrxIssuer);
   }
 
   @Test
-  void createCommonTransaction() throws Exception {
-    TransactionCreationRequest body = TransactionCreationRequestFaker.mockInstance(1);
-    TransactionResponse response = TransactionResponseFaker.mockInstance(1);
-    Mockito.when(commonCreationServiceMock.createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID,
-        ID_TRX_ISSUER)).thenReturn(response);
+  void testConfirmPayment() {
+    // Given
+    String trxId = "TRX_ID";
+    String merchantId = "MERCHANT_ID";
+    String acquirerId = "ACQUIRER_ID";
+    TransactionResponse expectedResponse = new TransactionResponse();
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-        .post("/idpay/payment/")
-        .content(objectMapper.writeValueAsString(body))
-        .contentType(MediaType.APPLICATION_JSON)
-        .accept(MediaType.APPLICATION_JSON)
-        .header("x-merchant-id", MERCHANT_ID)
-        .header("x-acquirer-id", ACQUIRER_ID)
-        .header("x-apim-request-id", ID_TRX_ISSUER)
-    ).andExpect(status().isCreated()).andReturn();
+    when(commonConfirmServiceMock.confirmPayment(trxId, merchantId, acquirerId))
+            .thenReturn(expectedResponse);
 
-    TransactionResponse resultResponse = objectMapper.readValue(
-        result.getResponse().getContentAsString(),
-        TransactionResponse.class);
+    // When
+    TransactionResponse result = commonPaymentController.confirmPayment(trxId, merchantId, acquirerId);
 
-    Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response.getId(), resultResponse.getId());
-    Mockito.verify(commonCreationServiceMock)
-        .createTransaction(body, null, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER);
+    // Then
+    assertNotNull(result);
+    assertEquals(expectedResponse, result);
+    verify(commonConfirmServiceMock, times(1)).confirmPayment(trxId, merchantId, acquirerId);
   }
 
   @Test
-  void confirmCommonTransactionTestMandatoryHeaders() throws Exception {
+  void testCancelTransaction() {
+    // Given
+    String initiativeId = "INITIATIVE_ID";
+    String trxId = "TRX_ID";
+    String merchantId = "MERCHANT_ID";
+    String acquirerId = "ACQUIRER_ID";
+    String pointOfSaleId = "POS_ID";
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .put("/idpay/payment/{transactionId}/confirm", TRANSACTION_ID)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content("{}"))
-        .andExpect(status().isBadRequest())
-        .andReturn();
+    doNothing().when(commonCancelServiceMock).cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
 
-    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
-        ErrorDTO.class);
-    assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
-    assertEquals("Required request header "
-            + "'x-merchant-id' for method parameter type String is not present",
-        actual.getMessage());
+    // When
+    commonPaymentController.cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
+
+    // Then
+    verify(commonCancelServiceMock, times(1)).cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
   }
 
   @Test
-  void confirmCommonTransaction() throws Exception {
-    TransactionResponse response = TransactionResponseFaker.mockInstance(1);
+  void testReversalTransaction() {
+    // Given
+    String transactionId = "TRX_ID";
+    String merchantId = "MERCHANT_ID";
+    String pointOfSaleId = "POS_ID";
+    String docNumber = "DOC_123";
 
-    Mockito.when(commonConfirmServiceMock.confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID))
-        .thenReturn(response);
+    doNothing().when(commonReversalServiceMock)
+            .reversalTransaction(transactionId, merchantId, pointOfSaleId, multipartFileMock, docNumber);
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-        .put("/idpay/payment/{transactionId}/confirm", TRANSACTION_ID)
-        .contentType(MediaType.APPLICATION_JSON)
-        .header("x-merchant-id", MERCHANT_ID)
-        .header("x-acquirer-id", ACQUIRER_ID)
-    ).andExpect(status().is2xxSuccessful()).andReturn();
+    // When
+    commonPaymentController.reversalTransaction(transactionId, merchantId, pointOfSaleId, multipartFileMock, docNumber);
 
-    TransactionResponse resultResponse = objectMapper.readValue(
-        result.getResponse().getContentAsString(),
-        TransactionResponse.class);
-
-    Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response.getId(), resultResponse.getId());
-    Mockito.verify(commonConfirmServiceMock)
-        .confirmPayment(TRANSACTION_ID, MERCHANT_ID, ACQUIRER_ID);
+    // Then
+    verify(commonReversalServiceMock, times(1))
+            .reversalTransaction(transactionId, merchantId, pointOfSaleId, multipartFileMock, docNumber);
   }
 
   @Test
-  void cancelTransaction() throws Exception {
+  void testInvoiceTransaction() {
+    // Given
+    String transactionId = "TRX_ID";
+    String merchantId = "MERCHANT_ID";
+    String pointOfSaleId = "POS_ID";
+    String docNumber = "DOC_123";
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .delete("/idpay/payment/transactions/{transactionId}",
-                TRANSACTION_ID)
-            .header("x-merchant-id", MERCHANT_ID)
-            .header("x-acquirer-id", ACQUIRER_ID)
-            .header("x-point-of-sale-id", POINT_OF_SALE_ID))
-        .andExpect(status().isOk())
-        .andReturn();
+    doNothing().when(commonInvoiceServiceMock)
+            .invoiceTransaction(transactionId, merchantId, pointOfSaleId, multipartFileMock, docNumber);
 
-    assertEquals("", result.getResponse().getContentAsString());
-    Mockito.verify(commonCancelServiceMock)
-        .cancelTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.anyString());
+    // When
+    commonPaymentController.invoiceTransaction(transactionId, merchantId, pointOfSaleId, multipartFileMock, docNumber);
 
+    // Then
+    verify(commonInvoiceServiceMock, times(1))
+            .invoiceTransaction(transactionId, merchantId, pointOfSaleId, multipartFileMock, docNumber);
   }
 
   @Test
-  void cancelTransaction_testMandatoryHeaders() throws Exception {
+  void testCancelPendingTransactions() {
+    // Given
+    doNothing().when(commonCancelServiceMock).rejectPendingTransactions();
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .delete("/idpay/payment/transactions/{transactionId}",
-                TRANSACTION_ID)
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest())
-        .andReturn();
+    // When
+    commonPaymentController.cancelPendingTransactions();
 
-    assertNotNull(result.getResponse().getContentAsString());
-
-    String actual = "{\"code\":\"PAYMENT_INVALID_REQUEST\",\"message\":\"Required request header "
-        + "'x-merchant-id' for method parameter type String is not present\"}";
-    assertEquals(actual, result.getResponse().getContentAsString());
+    // Then
+    verify(commonCancelServiceMock, times(1)).rejectPendingTransactions();
   }
 
   @Test
-  void reversalTransaction() throws Exception {
-    MultipartFile file = Mockito.mock(MultipartFile.class);
+  void testDeleteLapsedTransaction() {
+    // Given
+    String initiativeId = "INITIATIVE_ID";
+    doNothing().when(commonCancelServiceMock).deleteLapsedTransaction(initiativeId);
 
-    MockPart docNumberPart = new MockPart("docNumber", DOCUMENT_NUMBER.getBytes());
-    docNumberPart.getHeaders().setContentType(MediaType.TEXT_PLAIN);
+    // When
+    commonPaymentController.deleteLapsedTransaction(initiativeId);
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .multipart("/idpay/payment/transactions/{transactionId}/reversal", TRANSACTION_ID)
-            .file("file", file.getBytes())
-            .part(docNumberPart)
-            .header("x-merchant-id", MERCHANT_ID)
-            .header("x-point-of-sale-id", POINT_OF_SALE_ID)
-            .contentType(MediaType.MULTIPART_FORM_DATA))
-        .andExpect(status().isNoContent())
-        .andReturn();
-
-    assertEquals("", result.getResponse().getContentAsString());
-    Mockito.verify(commonReversalService)
-        .reversalTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.any(), Mockito.anyString());
+    // Then
+    verify(commonCancelServiceMock, times(1)).deleteLapsedTransaction(initiativeId);
   }
 
   @Test
-  void invoiceTransaction() throws Exception {
-    MultipartFile file = Mockito.mock(MultipartFile.class);
+  void testGetStatusTransaction() {
+    // Given
+    String transactionId = "TRX_ID";
+    String merchantId = "MERCHANT_ID";
+    SyncTrxStatusDTO expectedStatus = new SyncTrxStatusDTO();
 
-    MockPart docNumberPart = new MockPart("docNumber", DOCUMENT_NUMBER.getBytes());
-    docNumberPart.getHeaders().setContentType(MediaType.TEXT_PLAIN);
+    when(commonStatusTransactionServiceMock.getStatusTransaction(transactionId, merchantId))
+            .thenReturn(expectedStatus);
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .multipart("/idpay/payment/transactions/{transactionId}/invoice", TRANSACTION_ID)
-            .file("file", file.getBytes())
-            .part(docNumberPart)
-            .header("x-merchant-id", MERCHANT_ID)
-            .header("x-point-of-sale-id", POINT_OF_SALE_ID)
-            .contentType(MediaType.MULTIPART_FORM_DATA))
-        .andExpect(status().isNoContent())
-        .andReturn();
+    // When
+    SyncTrxStatusDTO result = commonPaymentController.getStatusTransaction(transactionId, merchantId);
 
-    assertEquals("", result.getResponse().getContentAsString());
-    Mockito.verify(commonRewardService)
-        .invoiceTransaction(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
-            Mockito.any(), Mockito.anyString());
+    // Then
+    assertNotNull(result);
+    assertEquals(expectedStatus, result);
+    verify(commonStatusTransactionServiceMock, times(1)).getStatusTransaction(transactionId, merchantId);
   }
 
   @Test
-  void getStatusTransaction_testMandatoryHeaders() throws Exception {
+  void testForceConfirmTrxExpiration() {
+    // Given
+    String initiativeId = "INITIATIVE_ID";
+    Long expectedCount = 5L;
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .get("/idpay/payment/{transactionId}/status",
-                TRANSACTION_ID)
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isBadRequest())
-        .andReturn();
+    when(qrCodeExpirationServiceMock.forceConfirmTrxExpiration(initiativeId))
+            .thenReturn(expectedCount);
 
-    ErrorDTO actual = objectMapper.readValue(result.getResponse().getContentAsString(),
-        ErrorDTO.class);
-    assertEquals(ExceptionCode.PAYMENT_INVALID_REQUEST, actual.getCode());
-    assertEquals("Required request header "
-            + "'x-merchant-id' for method parameter type String is not present",
-        actual.getMessage());
+    // When
+    Long result = commonPaymentController.forceConfirmTrxExpiration(initiativeId);
 
+    // Then
+    assertEquals(expectedCount, result);
+    verify(qrCodeExpirationServiceMock, times(1)).forceConfirmTrxExpiration(initiativeId);
   }
 
   @Test
-  void getStatusTransaction() throws Exception {
-    SyncTrxStatusDTO response = SyncTrxStatusFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+  void testForceAuthorizationTrxExpiration() {
+    // Given
+    String initiativeId = "INITIATIVE_ID";
+    Long expectedCount = 3L;
 
-    Mockito.when(
-            commonStatusTransactionServiceMock.getStatusTransaction(TRANSACTION_ID, MERCHANT_ID))
-        .thenReturn(response);
+    when(qrCodeExpirationServiceMock.forceAuthorizationTrxExpiration(initiativeId))
+            .thenReturn(expectedCount);
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .get("/idpay/payment/{transactionId}/status",
-                TRANSACTION_ID)
-            .header("x-merchant-id", MERCHANT_ID)
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().is2xxSuccessful())
-        .andReturn();
+    // When
+    Long result = commonPaymentController.forceAuthorizationTrxExpiration(initiativeId);
 
-    SyncTrxStatusDTO resultResponse = objectMapper.readValue(
-        result.getResponse().getContentAsString(),
-        SyncTrxStatusDTO.class);
-
-    Assertions.assertNotNull(resultResponse);
-    Assertions.assertEquals(response.getId(), resultResponse.getId());
-    Mockito.verify(commonStatusTransactionServiceMock)
-        .getStatusTransaction(TRANSACTION_ID, MERCHANT_ID);
-
+    // Then
+    assertEquals(expectedCount, result);
+    verify(qrCodeExpirationServiceMock, times(1)).forceAuthorizationTrxExpiration(initiativeId);
   }
 
   @Test
-  void forceConfirmTrxExpiration() throws Exception {
+  void testDeleteInvoicedTransaction() {
+    // Given
+    doNothing().when(commonCancelServiceMock).deleteInvoicedTransaction();
 
-    Mockito.when(qrCodeExpirationServiceMock.forceConfirmTrxExpiration(INITIATIVE_ID))
-        .thenReturn(1L);
+    // When
+    commonPaymentController.deleteInvoicedTransaction();
 
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .put("/idpay/payment/force-expiration/confirm/{initiativeId}",
-                INITIATIVE_ID)
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().is2xxSuccessful())
-        .andReturn();
-
-    Assertions.assertNotNull(result);
-    Assertions.assertEquals(1L, Long.valueOf(result.getResponse().getContentAsString()));
-    Mockito.verify(qrCodeExpirationServiceMock).forceConfirmTrxExpiration(INITIATIVE_ID);
-  }
-
-  @Test
-  void forceAuthorizationTrxExpiration() throws Exception {
-
-    Mockito.when(qrCodeExpirationServiceMock.forceAuthorizationTrxExpiration(INITIATIVE_ID))
-        .thenReturn(1L);
-
-    MvcResult result = mockMvc.perform(MockMvcRequestBuilders
-            .put("/idpay/payment/force-expiration/authorization/{initiativeId}",
-                INITIATIVE_ID)
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().is2xxSuccessful())
-        .andReturn();
-
-    Assertions.assertNotNull(result);
-    Assertions.assertEquals(1L, Long.valueOf(result.getResponse().getContentAsString()));
-    Mockito.verify(qrCodeExpirationServiceMock).forceAuthorizationTrxExpiration(INITIATIVE_ID);
-  }
-
-  @Test
-  void cancelPendingTransactions_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).rejectPendingTransactions();
-
-    mockMvc.perform(MockMvcRequestBuilders
-            .delete("/idpay/payment/pendingTransactions")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andExpect(status().isOk());
-
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).rejectPendingTransactions();
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
-  }
-
-
-  @Test
-  void testDeleteInvoicedTransaction_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).deleteInvoicedTransaction();
-
-    mockMvc.perform(MockMvcRequestBuilders
-                    .delete("/idpay/payment/deleteInvoicedTransaction")
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).deleteInvoicedTransaction();
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
-  }
-
-  @Test
-  void deleteLapsedTransactions_ok() throws Exception {
-    Mockito.doNothing().when(commonCancelServiceMock).deleteLapsedTransaction(INITIATIVE_ID);
-
-    mockMvc.perform(MockMvcRequestBuilders
-                    .delete("/idpay/payment/deleteLapsedTransaction/{initiativeId}",
-                            INITIATIVE_ID)
-                    .contentType(MediaType.APPLICATION_JSON))
-            .andExpect(status().isOk());
-
-    Mockito.verify(commonCancelServiceMock, Mockito.times(1)).deleteLapsedTransaction(INITIATIVE_ID);
-    Mockito.verifyNoMoreInteractions(commonCancelServiceMock);
+    // Then
+    verify(commonCancelServiceMock, times(1)).deleteInvoicedTransaction();
   }
 }

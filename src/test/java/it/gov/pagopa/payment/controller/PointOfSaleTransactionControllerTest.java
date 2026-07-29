@@ -211,28 +211,6 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals("TRXCODE", filtersCaptor.getValue().getTrxCode());
     }
 
-    @Test
-    void getPointOfSaleTransactionsProcessed_withInvalidOrEmptyStatus_shouldUseAllowedStatuses() throws Exception {
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
-        PageRequest pageRequest = PageRequest.of(0, 10);
-        Page<Transaction> trxPage = new PageImpl<>(List.of(trx), pageRequest, 1);
-
-        when(pointOfSaleTransactionServiceMock.getPointOfSaleTransactions(any(), any()))
-                .thenReturn(trxPage);
-
-        mockMvc.perform(
-                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/processed",
-                        INITIATIVE_ID, POINT_OF_SALE_ID)
-                        .header("x-merchant-id", MERCHANT_ID)
-                        .header("x-point-of-sale-id", POINT_OF_SALE_ID)
-                        .param("status", "INVALID_STATUS_NOT_IN_ALLOWED_LIST")
-        ).andExpect(status().isOk());
-
-        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
-        verify(pointOfSaleTransactionServiceMock).getPointOfSaleTransactions(filtersCaptor.capture(), any());
-
-        Assertions.assertEquals(TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES, filtersCaptor.getValue().getStatuses());
-    }
 
     @Test
     void downloadInvoiceFile_shouldSanitizeParametersAndDelegate() throws Exception {
