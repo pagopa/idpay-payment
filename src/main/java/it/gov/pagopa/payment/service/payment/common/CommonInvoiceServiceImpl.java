@@ -93,8 +93,6 @@ public class CommonInvoiceServiceImpl {
                 transaction.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
             }
 
-            // sending the transaction invoice notification (to store it in transaction db collection)
-            //sendInvoiceTransactionNotification(transaction);
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
