@@ -135,6 +135,7 @@ public interface TransactionRepositoryExt {
           "t.trxChargeDate = :#{#trx.trxChargeDate}, " +
           "t.counterVersion = :#{#dto.counters != null ? #dto.counters.version : null}, " +
           "t.familyId = :#{#trx.familyId}, " +
+          "t.additionalProperties = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.additionalProperties} ELSE t.additionalProperties END, " +
           "t.updateDate = :updateDate, " +
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +

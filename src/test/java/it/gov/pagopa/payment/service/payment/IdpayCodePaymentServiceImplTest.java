@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 class IdpayCodePaymentServiceImplTest {
     private static final String MERCHANTID = "MERCHANTID";
     private static final String FISCALCODE = "FISCALCODE";
-
     @Mock private IdpayCodeRelateUserService idpayCodeRelateUserServiceMock;
     @Mock private IdpayCodePreviewService idpayCodePreviewServiceMock;
     @Mock private IdpayCodeAuthPaymentService idpayCodeAuthPaymentServiceMock;
@@ -71,16 +70,13 @@ class IdpayCodePaymentServiceImplTest {
         authPaymentDTO.setStatus(SyncTrxStatus.AUTHORIZED);
         PinBlockDTO pinBlockDTO = PinBlockDTOFaker.mockInstance();
 
-        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID,pinBlockDTO))
+        when(idpayCodeAuthPaymentServiceMock.authPayment(trx.getId(), MERCHANTID, pinBlockDTO))
                 .thenReturn(authPaymentDTO);
         //When
-        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID,pinBlockDTO);
+        AuthPaymentDTO result = idpayCodePaymentService.authPayment(trx.getId(), MERCHANTID, pinBlockDTO);
 
         //Then
         Assertions.assertNotNull(result);
         Assertions.assertEquals(authPaymentDTO, result);
     }
-
-
-
 }

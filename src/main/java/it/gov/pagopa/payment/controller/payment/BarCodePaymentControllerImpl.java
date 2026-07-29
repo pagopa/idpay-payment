@@ -3,10 +3,8 @@ package it.gov.pagopa.payment.controller.payment;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
@@ -17,14 +15,11 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.service.pdf.PdfService;
 import it.gov.pagopa.payment.service.performancelogger.AuthPaymentDTOPerfLoggerPayloadBuilder;
-import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentDTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.service.performancelogger.TransactionBarCodeResponsePerfLoggerPayloadBuilder;
 import it.gov.pagopa.payment.utils.Utilities;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.CacheControl;
 import org.springframework.http.ContentDisposition;
@@ -38,9 +33,6 @@ import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 @Slf4j
 @RestController
 public class BarCodePaymentControllerImpl implements BarCodePaymentController {
-
-    private static final String PRODUCT_NAME_KEY = "productName";
-    private static final String PRODUCT_GTIN_KEY = "productGtin";
 
     private final BarCodePaymentService barCodePaymentService;
     private final PdfService pdfService;
@@ -63,36 +55,22 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_AUTHORIZE_TRANSACTION",
             payloadBuilderBeanClass = AuthPaymentDTOPerfLoggerPayloadBuilder.class)
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
+    public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         log.info("[BAR_CODE_AUTHORIZE_TRANSACTION] The merchant {} is authorizing the transaction having trxCode {}",
                 Utilities.sanitizeString(merchantId), Utilities.sanitizeString(trxCode));
-        return barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
-    }
-
-    @Override
-    @PerformanceLog(
-            value = "BAR_CODE_PREVIEW_PAYMENT",
-            payloadBuilderBeanClass = PreviewPaymentDTOPerfLoggerPayloadBuilder.class)
-    public PreviewPaymentDTO previewPayment(String trxCode, PreviewPaymentRequestDTO previewPaymentRequestDTO) {
-        final String sanitizedTrxCode = sanitizeString(trxCode);
-        final String sanitizedProductName = sanitizeString(previewPaymentRequestDTO.getProductName());
-        final String sanitizedProductGtin = sanitizeString(previewPaymentRequestDTO.getProductGtin());
-        final long amountCents = validatePreviewAmount(previewPaymentRequestDTO.getAmountCents());
-
-        final PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService
-                .previewPayment(sanitizedTrxCode, buildLegacyPreviewAdditionalProperties(sanitizedProductName, sanitizedProductGtin), amountCents);
-
-        return mapPreviewPaymentV1(previewPaymentResult, sanitizedProductName, sanitizedProductGtin);
+        return barCodePaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Override
     @PerformanceLog(
             value = "BAR_CODE_PREVIEW_PAYMENT",
             payloadBuilderBeanClass = PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder.class)
-    public PreviewPaymentResponseV2DTO previewPaymentV2(String trxCode, PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO) {
+    public PreviewPaymentResponseDTO previewPayment(String initiativeId, String trxCode, PreviewPaymentRequestDTO previewPaymentRequestDTO) {
+        final String sanitizedInitiativeId = sanitizeString(initiativeId);
         final String sanitizedTrxCode = sanitizeString(trxCode);
-        final long amountCents = validatePreviewAmount(previewPaymentRequestV2DTO.getAmountCents());
-        PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService.previewPayment(sanitizedTrxCode, previewPaymentRequestV2DTO.getAdditionalProperties(), amountCents);
+        final long amountCents = validatePreviewAmount(previewPaymentRequestDTO.getAmountCents());
+        PreviewPaymentResultDTO previewPaymentResult = barCodePaymentService.previewPayment(
+                sanitizedInitiativeId, sanitizedTrxCode, previewPaymentRequestDTO.getAdditionalProperties(), amountCents);
         return mapPreviewPaymentV2(previewPaymentResult);
     }
 
@@ -108,8 +86,16 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
     @PerformanceLog(
             value = "BAR_CODE_CAPTURE_PAYMENT",
             payloadBuilderBeanClass = TransactionBarCodeResponsePerfLoggerPayloadBuilder.class)
-    public TransactionBarCodeResponse capturePayment(String trxCode) {
-        return barCodePaymentService.capturePayment(trxCode);
+    public TransactionBarCodeResponse capturePayment(String initiativeId, String trxCode, String merchantId, String pointOfSaleId, String acquirerId) {
+        log.info(
+                "[CAPTURE_PAYMENT] The merchant {} through acquirer {} is capture the transaction {} at POS {} for initiative {}",
+                Utilities.sanitizeString(merchantId),
+                Utilities.sanitizeString(acquirerId),
+                Utilities.sanitizeString(trxCode),
+                Utilities.sanitizeString(pointOfSaleId),
+                Utilities.sanitizeString(initiativeId)
+        );
+        return barCodePaymentService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
     }
 
     @PerformanceLog(
@@ -175,34 +161,9 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
         return previewAmountCents;
     }
 
-    private Map<String, String> buildLegacyPreviewAdditionalProperties(String productName, String productGtin) {
-        Map<String, String> additionalProperties = new HashMap<>();
-        if (productName != null) {
-            additionalProperties.put(PRODUCT_NAME_KEY, productName);
-        }
-        if (productGtin != null) {
-            additionalProperties.put(PRODUCT_GTIN_KEY, productGtin);
-        }
-        return additionalProperties;
-    }
 
-    private PreviewPaymentDTO mapPreviewPaymentV1(PreviewPaymentResultDTO previewPaymentResult, String productName, String productGtin) {
-        return PreviewPaymentDTO.builder()
-                .trxCode(previewPaymentResult.getTrxCode())
-                .trxDate(previewPaymentResult.getTrxDate())
-                .status(previewPaymentResult.getStatus())
-                .originalAmountCents(previewPaymentResult.getOriginalAmountCents())
-                .rewardCents(previewPaymentResult.getRewardCents())
-                .residualAmountCents(previewPaymentResult.getResidualAmountCents())
-                .userId(previewPaymentResult.getUserId())
-                .productName(productName)
-                .productGtin(productGtin)
-                .extendedAuthorization(previewPaymentResult.isExtendedAuthorization())
-                .build();
-    }
-
-    private PreviewPaymentResponseV2DTO mapPreviewPaymentV2(PreviewPaymentResultDTO previewPaymentResult) {
-        return PreviewPaymentResponseV2DTO.builder()
+    private PreviewPaymentResponseDTO mapPreviewPaymentV2(PreviewPaymentResultDTO previewPaymentResult) {
+        return PreviewPaymentResponseDTO.builder()
                 .trxCode(previewPaymentResult.getTrxCode())
                 .trxDate(previewPaymentResult.getTrxDate())
                 .status(previewPaymentResult.getStatus())

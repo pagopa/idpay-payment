@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -59,11 +60,20 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+    public PreviewPaymentResultDTO previewPayment(String initiativeId,
+                                                   String trxCode,
+                                                   Map<String, String> additionalProperties,
+                                                   Long amountCents) {
 
         final Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+
+        if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
+            throw new TransactionNotFoundOrExpiredException(
+                    "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
+                            trxCode.toLowerCase(), initiativeId));
+        }
 
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -103,7 +113,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
+    public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         try {
             if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
                 log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
@@ -111,6 +121,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             }
 
             Transaction transaction = barCodeAuthorizationExpiredService.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode.toLowerCase());
+
+            if (transaction == null || !Objects.equals(transaction.getInitiativeId(), initiativeId)) {
+                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(trxCode, initiativeId));
+            }
             commonAuthService.checkAuth(trxCode, transaction);
 
             transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -119,7 +133,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     BarCodeAdditionalPropertiesOperation.AUTHORIZE));
             transaction.setProductType(transaction.getAdditionalProperties().get(PRODUCT_TYPE_KEY));
 
-            PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
+            PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(
+                    merchantId, pointOfSaleId, transaction.getInitiativeId());
 
             WalletDTO walletDTO = commonAuthService.checkWalletStatusAndReturn(transaction.getInitiativeId(), transaction.getUserId());
 
@@ -135,6 +150,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             Pair<Boolean, Long> splitPaymentAndResidualAmountCents = CommonPaymentUtilities.getSplitPaymentAndResidualAmountCents(authBarCodePaymentDTO.getAmountCents(), authPaymentDTO.getRewardCents());
             authPaymentDTO.setSplitPayment(splitPaymentAndResidualAmountCents.getKey());
             authPaymentDTO.setResidualAmountCents(splitPaymentAndResidualAmountCents.getValue());
+
             return authPaymentDTO;
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);
@@ -148,10 +164,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         Map<String, String> validatedAdditionalProperties = additionalPropertiesValidationResolver
                 .resolve(transaction.getInitiativeId())
                 .validateAndEnrich(additionalProperties, operation, transaction.getInitiativeId());
-        if (validatedAdditionalProperties == null) {
-            return Collections.emptyMap();
-        }
-        return validatedAdditionalProperties;
+        return Objects.requireNonNullElse(validatedAdditionalProperties, Collections.emptyMap());
     }
 
     private void logAuthorizedPayment(String initiativeId, String id, String trxCode, String merchantId, Long rewardCents, List<String> rejectionReasons) {

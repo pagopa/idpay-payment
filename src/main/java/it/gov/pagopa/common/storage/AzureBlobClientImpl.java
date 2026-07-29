@@ -33,13 +33,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.Set;
 
-import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.ERROR_ON_GET_FILE_URL_REQUEST;
-
 @Slf4j
 @Component
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class AzureBlobClientImpl implements AzureBlobClient {
 
+    private static final String ERROR_ON_GET_FILE_URL_REQUEST = "Error on get file url request";
     private final BlobContainerClient blobContainerClient;
     private final BlobServiceClient blobServiceClient;
     protected final Integer sasDurationSeconds;

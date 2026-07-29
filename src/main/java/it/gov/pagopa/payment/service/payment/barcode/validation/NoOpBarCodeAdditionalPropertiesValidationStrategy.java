@@ -14,6 +14,6 @@ public class NoOpBarCodeAdditionalPropertiesValidationStrategy implements BarCod
 
     @Override
     public Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation, String initiativeId) {
-        return Collections.emptyMap();
+        return additionalProperties != null ? additionalProperties : Collections.emptyMap();
     }
 }

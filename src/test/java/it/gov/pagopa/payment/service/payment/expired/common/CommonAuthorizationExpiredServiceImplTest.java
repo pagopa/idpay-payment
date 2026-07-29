@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.TooManyRequestsException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -71,7 +72,7 @@ class CommonAuthorizationExpiredServiceImplTest {
         transaction.setId(TRX_ID);
         transaction.setTrxCode(TRX_CODE);
 
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(eq(TRX_CODE), any(OffsetDateTime.class), eq(SyncTrxStatus.CANCELLED)))
                 .thenReturn(Optional.of(transaction));
 
         // When
@@ -81,13 +82,13 @@ class CommonAuthorizationExpiredServiceImplTest {
         assertNotNull(result);
         assertEquals(TRX_ID, result.getId());
         verify(transactionRepositoryMock, times(1))
-                .findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class));
+                .findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(eq(TRX_CODE), any(OffsetDateTime.class), eq(SyncTrxStatus.CANCELLED));
     }
 
     @Test
     void testFindByTrxCodeAndAuthorizationNotExpired_NotFound() {
         // Given
-        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqual(eq(TRX_CODE), any(OffsetDateTime.class)))
+        when(transactionRepositoryMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(eq(TRX_CODE), any(OffsetDateTime.class), eq(SyncTrxStatus.CANCELLED)))
                 .thenReturn(Optional.empty());
 
         // When & Then

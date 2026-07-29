@@ -1,10 +1,8 @@
 package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentDTO;
 import it.gov.pagopa.payment.dto.PreviewPaymentRequestDTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentRequestV2DTO;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResponseDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
@@ -25,9 +23,10 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
-    @PutMapping("/bar-code/{trxCode}/authorize")
+    @PutMapping("/initiatives/{initiativeId}/bar-code/{trxCode}/authorize")
     @ResponseStatus(code = HttpStatus.OK)
     AuthPaymentDTO authPayment(
+            @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid AuthBarCodePaymentDTO authBarCodePaymentDTO,
             @RequestHeader("x-merchant-id") String merchantId,
@@ -35,18 +34,13 @@ public interface BarCodePaymentController {
             @RequestHeader("x-acquirer-id") String acquirerId
     );
 
-    @PutMapping("/bar-code/{trxCode}/preview")
+
+    @PutMapping(value = "/initiatives/{initiativeId}/bar-code/{trxCode}/preview")
     @ResponseStatus(code = HttpStatus.OK)
-    PreviewPaymentDTO previewPayment(
+    PreviewPaymentResponseDTO previewPayment(
+            @PathVariable("initiativeId") String initiativeId,
             @PathVariable("trxCode") String trxCode,
             @RequestBody @Valid PreviewPaymentRequestDTO previewPaymentRequestDTO
-    );
-
-    @PutMapping(value = "/bar-code/{trxCode}/preview", headers = "X-API-Version=2")
-    @ResponseStatus(code = HttpStatus.OK)
-    PreviewPaymentResponseV2DTO previewPaymentV2(
-            @PathVariable("trxCode") String trxCode,
-            @RequestBody @Valid PreviewPaymentRequestV2DTO previewPaymentRequestV2DTO
     );
 
     @GetMapping("/initiatives/{initiativeId}/bar-code")
@@ -56,9 +50,13 @@ public interface BarCodePaymentController {
             @RequestHeader("x-user-id") String userId
     );
 
-    @PutMapping("/bar-code/{trxCode}/capture")
+    @PutMapping("/initiatives/{initiativeId}/bar-code/{trxCode}/capture")
     TransactionBarCodeResponse capturePayment(
-            @PathVariable("trxCode") String trxCode);
+            @PathVariable("initiativeId") String initiativeId,
+            @PathVariable("trxCode") String trxCode,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+            @RequestHeader("x-acquirer-id") String acquirerId);
 
     @PostMapping("/bar-code/extended")
     @ResponseStatus(code = HttpStatus.CREATED)

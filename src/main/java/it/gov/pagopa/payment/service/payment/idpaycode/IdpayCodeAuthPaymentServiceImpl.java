@@ -11,18 +11,21 @@ import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.service.payment.idpaycode.expired.IdpayCodeAuthorizationExpiredService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
 @Slf4j
 @Service
 public class IdpayCodeAuthPaymentServiceImpl implements IdpayCodeAuthPaymentService {
     private final IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService;
     private final PaymentInstrumentConnectorImpl paymentInstrumentConnector;
     private final CommonAuthServiceImpl commonAuthService;
+
     protected IdpayCodeAuthPaymentServiceImpl(IdpayCodeAuthorizationExpiredService idpayCodeAuthorizationExpiredService,
                                               PaymentInstrumentConnectorImpl paymentInstrumentConnector, CommonAuthServiceImpl commonAuthService) {
         this.idpayCodeAuthorizationExpiredService = idpayCodeAuthorizationExpiredService;
         this.paymentInstrumentConnector = paymentInstrumentConnector;
         this.commonAuthService = commonAuthService;
     }
+
     @Override
     public AuthPaymentDTO authPayment(String trxId, String merchantId, PinBlockDTO pinBlockBody) {
         Transaction transaction = idpayCodeAuthorizationExpiredService.findByTrxIdAndAuthorizationNotExpired(trxId);
@@ -38,7 +41,6 @@ public class IdpayCodeAuthPaymentServiceImpl implements IdpayCodeAuthPaymentServ
         if (!merchantId.equals(transaction.getMerchantId())){
             throw new MerchantOrAcquirerNotAllowedException("The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(),merchantId));
         }
-        return commonAuthService.authPayment(transaction,transaction.getUserId(),transaction.getTrxCode());
-
+        return commonAuthService.authPayment(transaction, transaction.getUserId(), transaction.getTrxCode());
     }
 }

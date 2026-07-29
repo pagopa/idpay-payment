@@ -13,7 +13,7 @@ import java.util.Map;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @With
-public class PreviewPaymentResponseV2DTO {
+public class PreviewPaymentResponseDTO {
 
     private String trxCode;
     private OffsetDateTime trxDate;

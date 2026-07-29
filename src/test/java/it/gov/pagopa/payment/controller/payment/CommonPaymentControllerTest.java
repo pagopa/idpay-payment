@@ -83,18 +83,19 @@ class CommonPaymentControllerImplTest {
   @Test
   void testCancelTransaction() {
     // Given
+    String initiativeId = "INITIATIVE_ID";
     String trxId = "TRX_ID";
     String merchantId = "MERCHANT_ID";
     String acquirerId = "ACQUIRER_ID";
     String pointOfSaleId = "POS_ID";
 
-    doNothing().when(commonCancelServiceMock).cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
+    doNothing().when(commonCancelServiceMock).cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
 
     // When
-    commonPaymentController.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
+    commonPaymentController.cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
 
     // Then
-    verify(commonCancelServiceMock, times(1)).cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
+    verify(commonCancelServiceMock, times(1)).cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
   }
 
   @Test

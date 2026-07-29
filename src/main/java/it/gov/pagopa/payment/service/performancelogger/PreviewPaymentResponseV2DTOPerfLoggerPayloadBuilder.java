@@ -1,13 +1,13 @@
 package it.gov.pagopa.payment.service.performancelogger;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLoggerPayloadBuilder;
-import it.gov.pagopa.payment.dto.PreviewPaymentResponseV2DTO;
+import it.gov.pagopa.payment.dto.PreviewPaymentResponseDTO;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder implements PerformanceLoggerPayloadBuilder<PreviewPaymentResponseV2DTO> {
+public class PreviewPaymentResponseV2DTOPerfLoggerPayloadBuilder implements PerformanceLoggerPayloadBuilder<PreviewPaymentResponseDTO> {
     @Override
-    public String apply(PreviewPaymentResponseV2DTO previewPaymentResponseV2DTO) {
-        return "TrxCode %s status %s".formatted(previewPaymentResponseV2DTO.getTrxCode(), previewPaymentResponseV2DTO.getStatus());
+    public String apply(PreviewPaymentResponseDTO previewPaymentResponseDTO) {
+        return "TrxCode %s status %s".formatted(previewPaymentResponseDTO.getTrxCode(), previewPaymentResponseDTO.getStatus());
     }
 }

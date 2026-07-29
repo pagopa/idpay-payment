@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.common.web.exception.ServiceException;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.CancelTransactionAuditDTO;
@@ -17,6 +18,7 @@ import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,6 +54,8 @@ class CommonCancelServiceImplTest {
   private AuditUtilities auditUtilities;
   @Mock
   private BarCodeCreationServiceImpl barCodeCreationService;
+  @Mock
+  private MerchantConnector merchantConnector;
   @InjectMocks
   private CommonCancelServiceImpl commonCancelService;
 
@@ -61,6 +65,12 @@ class CommonCancelServiceImplTest {
   private static final String POS_ID = "POS_1";
   private static final String INITIATIVE_ID = "INITIATIVE_1";
   private static final String USER_ID = "USER_1";
+
+  @BeforeEach
+  void setup() {
+    lenient().when(merchantConnector.merchantDetail(anyString(), anyString())).thenReturn(null);
+    lenient().when(merchantConnector.getPointOfSale(anyString(), anyString(), anyString())).thenReturn(null);
+  }
 
 
   // =========================================================================
@@ -73,7 +83,7 @@ class CommonCancelServiceImplTest {
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.empty());
 
     assertThrows(TransactionNotFoundOrExpiredException.class,
-            () -> commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
 
     verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
   }
@@ -87,7 +97,7 @@ class CommonCancelServiceImplTest {
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
 
     assertThrows(MerchantOrAcquirerNotAllowedException.class,
-            () -> commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
 
     verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
   }
@@ -99,7 +109,7 @@ class CommonCancelServiceImplTest {
 
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     assertEquals(SyncTrxStatus.CANCELLED, trx.getStatus());
     verify(transactionRepository).save(trx);
@@ -113,7 +123,7 @@ class CommonCancelServiceImplTest {
 
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     assertEquals(SyncTrxStatus.CANCELLED, trx.getStatus());
     verify(transactionRepository).save(trx);
@@ -126,7 +136,7 @@ class CommonCancelServiceImplTest {
 
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     assertEquals(SyncTrxStatus.INVOICED, trx.getStatus());
   }
@@ -139,7 +149,7 @@ class CommonCancelServiceImplTest {
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
 
     assertThrows(OperationNotAllowedException.class,
-            () -> commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
 
     verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
   }
@@ -157,7 +167,7 @@ class CommonCancelServiceImplTest {
     when(rewardCalculatorConnector.cancelTransaction(trx)).thenReturn(refund);
     when(notifierService.notify(trx, USER_ID)).thenReturn(true);
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     assertEquals(SyncTrxStatus.CANCELLED, trx.getStatus());
     assertEquals(100L, trx.getRewardCents());
@@ -188,7 +198,7 @@ class CommonCancelServiceImplTest {
             .thenReturn(newTrx);
     when(notifierService.notify(trx, USER_ID)).thenReturn(true);
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     verify(barCodeCreationService).createExtendedTransactionPostDelete(any(), eq("CHANNEL_1"), eq(USER_ID), any());
     verify(transactionRepository, times(2)).save(any(Transaction.class));
@@ -206,7 +216,7 @@ class CommonCancelServiceImplTest {
     when(notifierService.notify(trx, USER_ID)).thenReturn(false); // Notifica fallisce
     when(paymentErrorNotifierService.notifyCancelPayment(any(), anyString(), eq(true), any())).thenReturn(true);
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     verify(paymentErrorNotifierService).notifyCancelPayment(any(), anyString(), eq(true), any(InternalServerErrorException.class));
   }
@@ -222,7 +232,7 @@ class CommonCancelServiceImplTest {
     when(notifierService.notify(trx, USER_ID)).thenThrow(new RuntimeException("Kafka error"));
     when(paymentErrorNotifierService.notifyCancelPayment(any(), anyString(), eq(true), any())).thenReturn(false);
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     verify(paymentErrorNotifierService).notifyCancelPayment(any(), anyString(), eq(true), any(RuntimeException.class));
   }
@@ -235,10 +245,87 @@ class CommonCancelServiceImplTest {
     when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
     when(rewardCalculatorConnector.cancelTransaction(trx)).thenReturn(null);
 
-    commonCancelService.cancelTransaction(TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID);
 
     verify(transactionRepository, never()).save(any());
     verify(notifierService, never()).notify(any(), any());
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - Acquirer mismatch")
+  void testCancelTransaction_AcquirerMismatch() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+    trx.setAcquirerId("WRONG_ACQUIRER");
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    assertThrows(MerchantOrAcquirerNotAllowedException.class,
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+
+    verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - Merchant ID null or empty should not throw mismatch error")
+  void testCancelTransaction_MerchantIdEmpty() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, "", ACQUIRER_ID, POS_ID);
+
+    assertEquals(SyncTrxStatus.CANCELLED, trx.getStatus());
+    verify(transactionRepository).save(trx);
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - Initiative ID mismatch")
+  void testCancelTransaction_InitiativeIdMismatch() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+    String wrongInitiativeId = "WRONG_INITIATIVE";
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    assertThrows(Exception.class,
+            () -> commonCancelService.cancelTransaction(wrongInitiativeId, TRX_ID, MERCHANT_ID, ACQUIRER_ID, POS_ID));
+
+    verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+  }
+
+  @Test
+  @DisplayName("cancelTransaction - PointOfSale ID mismatch")
+  void testCancelTransaction_PointOfSaleIdMismatch() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+    String wrongPosId = "WRONG_POS";
+
+    when(transactionRepository.findById(TRX_ID)).thenReturn(Optional.of(trx));
+
+    assertThrows(Exception.class,
+            () -> commonCancelService.cancelTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, ACQUIRER_ID, wrongPosId));
+
+    verify(auditUtilities).logErrorCancelTransaction(TRX_ID, MERCHANT_ID);
+  }
+
+  @Test
+  @DisplayName("handleExpiredTransactionBulk - Status CREATED (non IDENTIFIED)")
+  void testHandleExpiredTransactionBulk_CreatedStatus() {
+    Transaction trx = createTransaction(SyncTrxStatus.CREATED);
+
+    boolean result = commonCancelService.handleExpiredTransactionBulk(trx);
+
+    assertTrue(result);
+    verify(rewardCalculatorConnector, never()).cancelTransaction(any());
+  }
+
+  @Test
+  @DisplayName("rejectPendingTransactions - Empty result on first call")
+  void testRejectPendingTransactions_EmptyFromStart() {
+    when(transactionRepository.findByStatusAndUpdateDateBefore(eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class)))
+            .thenReturn(Collections.emptyList());
+
+    commonCancelService.rejectPendingTransactions();
+
+    verify(transactionRepository, times(1)).findByStatusAndUpdateDateBefore(eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class));
   }
 
   // =========================================================================
