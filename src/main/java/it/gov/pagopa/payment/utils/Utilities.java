@@ -41,8 +41,9 @@ public final class Utilities {
 
         String filename = file.getOriginalFilename();
         if (filename == null ||
-            (!filename.toLowerCase().endsWith(".pdf") && !filename.toLowerCase().endsWith(".xml"))) {
+                (!filename.toLowerCase().endsWith(".pdf") && !filename.toLowerCase().endsWith(".xml"))) {
             throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
         }
     }
+
 }

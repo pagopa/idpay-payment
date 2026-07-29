@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/idpay")
 public interface PointOfSaleTransactionController {
@@ -50,4 +51,25 @@ public interface PointOfSaleTransactionController {
             @PathVariable("transactionId") String transactionId
     );
 
+    @PostMapping("/transactions/{transactionId}/reversal-invoiced")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    void reversalTransactionInvoiced(
+            @PathVariable("transactionId") String transactionId,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart(value = "docNumber", required = false) String docNumber
+    );
+
+    @PutMapping(path = "/transactions/{transactionId}/invoice/update")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    void updateInvoiceFile(
+            @PathVariable("transactionId") String transactionId,
+            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+            @RequestPart("file") MultipartFile file,
+            @RequestPart(value = "docNumber", required = false) String docNumber
+    );
+
 }
+

@@ -9,10 +9,14 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.service.payment.TransactionService;
+import it.gov.pagopa.payment.service.payment.common.CommonInvoiceServiceImpl;
+import it.gov.pagopa.payment.service.payment.common.CommonReversalServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTIONS_MISSING_MANDATORY_FILTERS;
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTION_INVALID_REQUEST;
@@ -20,19 +24,26 @@ import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.
 import static it.gov.pagopa.payment.constants.PaymentConstants.buildMissingFiltersMessage;
 
 @Service
+@Slf4j
 public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransactionService {
 
     private static final String INVOICE_FOLDER = "invoice";
     private static final String CREDIT_NOTE_FOLDER = "creditNote";
 
+    private final CommonInvoiceServiceImpl commonInvoiceService;
+    private final CommonReversalServiceImpl commonReversalService;
     private final TransactionService transactionService;
     private final FileStorageClient fileStorageClient;
 
     public PointOfSaleTransactionServiceImpl(
             TransactionService transactionService,
+            CommonInvoiceServiceImpl commonInvoiceService,
+            CommonReversalServiceImpl commonReversalService,
             FileStorageClient fileStorageClient) {
         this.transactionService = transactionService;
         this.fileStorageClient = fileStorageClient;
+        this.commonInvoiceService = commonInvoiceService;
+        this.commonReversalService = commonReversalService;
     }
 
     @Override
@@ -70,6 +81,28 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
                 .invoiceUrl(fileStorageClient.getInvoiceFileSignedUrl(blobPath))
                 .build();
     }
+
+    @Override
+    public void updateInvoiceTransaction(String transactionId,
+                                         String merchantId,
+                                         String pointOfSaleId,
+                                         MultipartFile file,
+                                         String docNumber) {
+
+        log.info("[UPDATE_INVOICE_FILE_SERVICE] - [updateInvoiceTransaction] - start | trxId={} merchantId={} docNumber={} filename={}", transactionId, merchantId, docNumber, file.getOriginalFilename());
+
+        commonInvoiceService.invoiceTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
+
+    }
+
+    @Override
+    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber){
+        log.info("[REVERSAL_INVOICE_FILE_SERVICE] - [reversalTransaction] - start | trxId={} merchantId={} docNumber={} filename={}", transactionId, merchantId, docNumber, file.getOriginalFilename());
+
+        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
+    }
+
+
 
     private InvoiceDocument resolveInvoiceDocument(Transaction transaction) {
         SyncTrxStatus status = transaction.getStatus();
