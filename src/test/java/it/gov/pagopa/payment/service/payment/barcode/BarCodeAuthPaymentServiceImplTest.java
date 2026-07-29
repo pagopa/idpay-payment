@@ -78,10 +78,11 @@ class BarCodeAuthPaymentServiceImplTest {
         Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         transaction.setUserId(USER_ID);
         String initiativeId = transaction.getInitiativeId();
+        Map<String, String> additionalProperties = Map.of("customField", "customValue", "productType", "DIGITAL");
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
                 .amountCents(AMOUNT_CENTS)
                 .idTrxAcquirer("ID_TRX_ACQUIRER")
-                .additionalProperties(Map.of())
+                .additionalProperties(additionalProperties)
                 .build();
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setId(transaction.getId());
@@ -101,7 +102,7 @@ class BarCodeAuthPaymentServiceImplTest {
         WalletDTO walletDTO = new WalletDTO();
         walletDTO.setFamilyId("FAMILY");
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(transaction);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1)).thenReturn(transaction);
         when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID, initiativeId)).thenReturn(pointOfSaleDTO);
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transaction.getInitiativeId(), USER_ID)).thenReturn(walletDTO);
         when(commonAuthServiceMock.invokeRuleEngine(transaction)).thenReturn(authPaymentDTO);
@@ -109,6 +110,7 @@ class BarCodeAuthPaymentServiceImplTest {
         AuthPaymentDTO result = barCodeAuthPaymentService.authPayment(initiativeId, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID);
 
         assertNotNull(result);
+        assertEquals(additionalProperties, transaction.getAdditionalProperties());
         verify(commonAuthServiceMock).checkTrxStatusToInvokePreAuth(transaction);
     }
 
@@ -122,7 +124,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void barCodeAuthPayment_trxNotFound() {
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1)).thenReturn(null);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1))
+                .thenThrow(new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(TRX_CODE1)));
         AuthBarCodePaymentDTO dto = AuthBarCodePaymentDTO.builder().amountCents(1L).build();
 
         assertThrows(TransactionNotFoundOrExpiredException.class,
@@ -133,6 +136,7 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_ok() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         String initiativeId = trx.getInitiativeId();
+        Map<String, String> additionalProperties = Map.of("customField", "customValue", "productType", "DIGITAL");
         when(transactionRepository.findByTrxCodeAndStatusNot(anyString(),any())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
@@ -141,8 +145,9 @@ class BarCodeAuthPaymentServiceImplTest {
         when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
         when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
 
-        PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L);
+        PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 90000L);
         assertNotNull(result);
+        assertEquals(additionalProperties, result.getAdditionalProperties());
     }
 
     @Test
@@ -192,7 +197,7 @@ class BarCodeAuthPaymentServiceImplTest {
                 .amountCents(AMOUNT_CENTS)
                 .build();
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndAuthorizationNotExpired(TRX_CODE1))
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1))
                 .thenReturn(transaction);
 
         assertThrows(TransactionNotFoundOrExpiredException.class,

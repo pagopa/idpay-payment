@@ -26,6 +26,7 @@ import static it.gov.pagopa.payment.enums.SyncTrxStatus.IDENTIFIED;
 public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCodeExpiration {
 
     private static final String ZONE_EUROPE_ROME = "Europe/Rome";
+    public static final String CANNOT_FIND_TRANSACTION_WITH_TRX_CODE_S = "Cannot find transaction with trxCode [%s]";
     private final long authorizationExpirationMinutes;
 
     private final TransactionRepository transactionRepository;
@@ -48,22 +49,23 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
     }
 
     public Transaction findByTrxCodeAndAuthorizationNotExpired(String trxCode) {
-        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqual(trxCode, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)))
+        return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(
+                        trxCode, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+                        CANNOT_FIND_TRANSACTION_WITH_TRX_CODE_S.formatted(trxCode.toLowerCase())));
     }
 
     public Transaction findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(String trxCode) {
         return transactionRepository.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode, OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)), SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+                        CANNOT_FIND_TRANSACTION_WITH_TRX_CODE_S.formatted(trxCode.toLowerCase())));
     }
 
     public Transaction findByTrxCodeAndAuthorizationNotExpiredThrottled(String trxCode) {
         OffsetDateTime minTrxDate = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusMinutes(authorizationExpirationMinutes);
 
         Transaction transaction = transactionRepository.findAndModifyThrottled(trxCode, minTrxDate)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode)));
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(CANNOT_FIND_TRANSACTION_WITH_TRX_CODE_S.formatted(trxCode.toLowerCase())));
 
         if (transactionRepository.existsByTrxCodeAndTrxDateGreaterThan(trxCode, minTrxDate)) {
             throw new TooManyRequestsException("Too many requests on trx having trCode: " + trxCode);

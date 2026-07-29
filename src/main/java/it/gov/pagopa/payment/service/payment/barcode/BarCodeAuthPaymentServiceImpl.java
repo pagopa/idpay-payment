@@ -120,7 +120,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
             }
 
-            Transaction transaction = barCodeAuthorizationExpiredService.findByTrxCodeAndAuthorizationNotExpired(trxCode.toLowerCase());
+            Transaction transaction = barCodeAuthorizationExpiredService.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode.toLowerCase());
 
             if (transaction == null || !Objects.equals(transaction.getInitiativeId(), initiativeId)) {
                 throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(trxCode, initiativeId));
