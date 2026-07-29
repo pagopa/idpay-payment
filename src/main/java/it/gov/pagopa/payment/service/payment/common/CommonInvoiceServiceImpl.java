@@ -48,7 +48,7 @@ public class CommonInvoiceServiceImpl {
         this.merchantConnector = merchantConnector;
     }
 
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
+    public void invoiceTransaction(String transactionId, String merchantId, MultipartFile file, String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
@@ -60,14 +60,11 @@ public class CommonInvoiceServiceImpl {
             if (!transaction.getMerchantId().equals(merchantId)) {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(), merchantId));
             }
-            if (!transaction.getPointOfSaleId().equals(pointOfSaleId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]".formatted(transaction.getPointOfSaleId(), pointOfSaleId));
-            }
             if(!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus()) || (SyncTrxStatus.INVOICED.equals(transaction.getStatus()) && transaction.getInvoiceData() != null))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
             }
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && transaction.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneId.of("Europe/Rome")))) {
+            if (transaction.getInvoiceData() == null && (minDaysToInvoiceTransaction > 0 && transaction.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneId.of("Europe/Rome"))))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(transaction.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
@@ -76,13 +73,13 @@ public class CommonInvoiceServiceImpl {
                 String oldFilename = oldDocumentData.getFilename();
                 String oldBlobPath = String.format(
                         "invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                        merchantId, pointOfSaleId, transactionId, oldFilename);
+                        merchantId, transaction.getPointOfSaleId(), transactionId, oldFilename);
                 fileStorageClient.deleteFile(oldBlobPath);
             }
 
             // Uploading invoice to storage
             String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                    merchantId, pointOfSaleId, transaction.getId(), file.getOriginalFilename());
+                    merchantId, transaction.getPointOfSaleId(), transaction.getId(), file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
             // updating the transaction status to invoiced
@@ -94,16 +91,13 @@ public class CommonInvoiceServiceImpl {
                     .build());
 
             if (oldDocumentData == null && (transaction.getFranchiseName() == null || transaction.getPointOfSaleType() == null)) {
-                PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
+                PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, transaction.getPointOfSaleId());
 
                 transaction.setFranchiseName(pointOfSaleDTO.getFranchiseName());
                 transaction.setPointOfSaleType(pointOfSaleDTO.getType().name());
                 transaction.setBusinessName(pointOfSaleDTO.getBusinessName());
                 transaction.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
             }
-
-            // sending the transaction invoice notification (to store it in transaction db collection)
-            //sendInvoiceTransactionNotification(transaction);
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
@@ -115,7 +109,7 @@ public class CommonInvoiceServiceImpl {
                     path,
                     docNumber,
                     merchantId,
-                    pointOfSaleId
+                    transaction.getPointOfSaleId()
             );
             auditUtilities.logInvoiceTransaction(auditDTO);
 

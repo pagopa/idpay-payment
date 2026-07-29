@@ -15,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -135,47 +134,6 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         );
     }
 
-
-
-    @Override
-    @PerformanceLog("UPDATE_INVOICE_FILE")
-    public void updateInvoiceFile(String transactionId,
-                                  String merchantId,
-                                  String pointOfSaleId,
-                                  MultipartFile file,
-                                  String docNumber) {
-        final String sanitizeTransactionId = transactionId == null ? null : Utilities.sanitizeString(transactionId);
-        final String sanitizePointOfSaleId = pointOfSaleId == null ? null : Utilities.sanitizeString(pointOfSaleId);
-        final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
-        final String sanitizedTrxCode = transactionId == null ? null : Utilities.sanitizeString(transactionId);
-
-        log.info(
-                "[UPDATE_INVOICE_TRANSACTION] The merchant {} is requesting a invoice update for the transactionId {}",
-                sanitizedMerchantId, sanitizedTrxCode
-        );
-
-        pointOfSaleTransactionService.updateInvoiceTransaction(sanitizeTransactionId, sanitizedMerchantId, sanitizePointOfSaleId, file, docNumber);
-    }
-
-    @Override
-    @PerformanceLog("REVERSAL_TRANSACTION_INVOICED")
-    public void reversalTransactionInvoiced(String transactionId,
-                                            String merchantId,
-                                            String pointOfSaleId,
-                                            MultipartFile file,
-                                            String docNumber) {
-        final String sanitizeTransactionId = transactionId == null ? null : Utilities.sanitizeString(transactionId);
-        final String sanitizePointOfSaleId = pointOfSaleId == null ? null : Utilities.sanitizeString(pointOfSaleId);
-        final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
-        final String sanitizedTrxCode = transactionId == null ? null : Utilities.sanitizeString(transactionId);
-
-        log.info(
-                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {}",
-                sanitizedMerchantId, sanitizedTrxCode
-        );
-
-        pointOfSaleTransactionService.reversalTransaction(sanitizeTransactionId, sanitizedMerchantId, sanitizePointOfSaleId, file, docNumber);
-    }
 
     private PointOfSaleTransactionsListDTO executeGetTransactions(
             TrxFiltersDTO filters,

@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface PointOfSaleTransactionService {
 
@@ -17,9 +16,5 @@ public interface PointOfSaleTransactionService {
             String pointOfSaleId,
             String transactionId
     );
-
-    void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber);
-
-    void updateInvoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber);
 
 }
