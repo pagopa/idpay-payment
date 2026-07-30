@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +61,31 @@ class CommonInvoiceServiceImplTest {
                 auditUtilitiesMock,
                 merchantConnectorMock
         );
+    }
+
+    @Test
+    void testInvoiceUpdateTransaction(){
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        transaction.setInvoiceData(InvoiceData.builder().filename("filename").docNumber("123").build());
+        PointOfSaleDTO posDTO = new PointOfSaleDTO();
+        posDTO.setFranchiseName("Franchise Test");
+        posDTO.setType(PointOfSaleTypeEnum.PHYSICAL);
+        posDTO.setBusinessName("Business Test");
+        posDTO.setFiscalCode("FISCAL_CODE_123");
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When
+        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+
+        // Then
+        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
+        assertNotNull(transaction.getInvoiceData());
+        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
+        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
     }
 
     @Test
