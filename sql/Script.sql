@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "effectiveAmountCents" BIGINT,
     "voucherAmountCents" BIGINT,
     "amountCurrency" VARCHAR(8),
-    channel VARCHAR(32),
+    channel VARCHAR(64),
     "initiativeId" VARCHAR(64),
     "initiativeName" VARCHAR(255),
     initiatives JSONB,
