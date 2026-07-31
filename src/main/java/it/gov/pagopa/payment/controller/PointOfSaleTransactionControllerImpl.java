@@ -134,6 +134,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         );
     }
 
+
     private PointOfSaleTransactionsListDTO executeGetTransactions(
             TrxFiltersDTO filters,
             String tokenPointOfSaleId,

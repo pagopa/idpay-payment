@@ -46,7 +46,6 @@ public interface CommonPaymentController {
     void reversalTransaction(
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
-        @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );
@@ -56,7 +55,6 @@ public interface CommonPaymentController {
     void invoiceTransaction(
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
-        @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );

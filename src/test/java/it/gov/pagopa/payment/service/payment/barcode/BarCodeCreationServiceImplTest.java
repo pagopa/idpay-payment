@@ -34,9 +34,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -416,7 +416,7 @@ class BarCodeCreationServiceImplTest {
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
         OffsetDateTime expected = offsetEndDate
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+                .with(LocalTime.of(23, 59, 59));
 
         Assertions.assertEquals(expected, result);
     }
@@ -434,7 +434,7 @@ class BarCodeCreationServiceImplTest {
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
         OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+                        .with(LocalTime.of(23, 59, 59));
 
         Assertions.assertEquals(expected, result);
     }
@@ -450,7 +450,7 @@ class BarCodeCreationServiceImplTest {
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
         OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+                .with(LocalTime.of(23, 59, 59));
 
         Assertions.assertEquals(expected, result);
     }
@@ -466,7 +466,7 @@ class BarCodeCreationServiceImplTest {
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
         OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+                .with(LocalTime.of(23, 59, 59));
 
         Assertions.assertEquals(expected, result);
     }
