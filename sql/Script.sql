@@ -138,8 +138,4 @@ EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
 
 ALTER ROLE idpaydbadmin WITH REPLICATION;
 
-ALTER TABLE "idpay-pagamenti"."transaction" ALTER COLUMN "updateDate" TYPE timestamp USING "updateDate"::timestamp;
-ALTER TABLE "idpay-pagamenti"."transaction" ALTER COLUMN "elaborationDateTime" TYPE timestamp USING "elaborationDateTime"::timestamp;
-ALTER TABLE "idpay-pagamenti"."transaction" ALTER COLUMN "createdAt" TYPE timestamp USING "createdAt"::timestamp;
-
 COMMIT;
