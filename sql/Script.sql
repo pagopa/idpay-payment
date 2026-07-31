@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "merchantFiscalCode" VARCHAR(64),
     vat VARCHAR(32),
     "pointOfSaleType" VARCHAR(32),
-    "productType" VARCHAR(16),
+    "productType" VARCHAR(64),
     "familyId" VARCHAR(64),
     "rewardCents" BIGINT,
     "counterVersion" BIGINT,
