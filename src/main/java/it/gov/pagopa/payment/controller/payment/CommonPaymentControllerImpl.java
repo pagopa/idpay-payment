@@ -83,32 +83,30 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
+    public void reversalTransaction(String transactionId, String merchantId, MultipartFile file, String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
-        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
 
         log.info(
-                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} at POS {}",
-                sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
+                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {}",
+                sanitizedMerchantId, sanitizedTrxCode
         );
-        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
+        commonReversalService.reversalTransaction(transactionId, merchantId, file, docNumber);
     }
 
     @Override
     @PerformanceLog(value = "INVOICE_TRANSACTION")
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
+    public void invoiceTransaction(String transactionId, String merchantId, MultipartFile file, String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
-        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
 
         log.info(
-            "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} at POS {}",
-            sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
+            "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {}",
+            sanitizedMerchantId, sanitizedTrxCode
         );
-        commonInvoiceService.invoiceTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
+        commonInvoiceService.invoiceTransaction(transactionId, merchantId, file, docNumber);
     }
 
     @Override

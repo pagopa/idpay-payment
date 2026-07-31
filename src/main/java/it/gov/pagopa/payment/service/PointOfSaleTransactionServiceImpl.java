@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.service.payment.TransactionService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.
 import static it.gov.pagopa.payment.constants.PaymentConstants.buildMissingFiltersMessage;
 
 @Service
+@Slf4j
 public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransactionService {
 
     private static final String INVOICE_FOLDER = "invoice";
@@ -70,6 +72,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
                 .invoiceUrl(fileStorageClient.getInvoiceFileSignedUrl(blobPath))
                 .build();
     }
+
 
     private InvoiceDocument resolveInvoiceDocument(Transaction transaction) {
         SyncTrxStatus status = transaction.getStatus();

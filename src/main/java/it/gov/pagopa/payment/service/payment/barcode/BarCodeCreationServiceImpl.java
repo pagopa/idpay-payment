@@ -22,10 +22,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 import static it.gov.pagopa.payment.service.payment.common.CommonCreationServiceImpl.checkInitiativeType;
@@ -96,7 +95,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         try {
             InitiativeConfig initiative = checkInitiative(trxBarCodeCreationRequest, today);
             checkVoucherAmountCents(trxBarCodeCreationRequest.getInitiativeId(), trxBarCodeCreationRequest.getVoucherAmountCents());
-            trxBarCodeCreationRequest.setVoucherAmountCents(10000L);
+            trxBarCodeCreationRequest.setVoucherAmountCents(trxBarCodeCreationRequest.getVoucherAmountCents());
             Transaction transaction = generateAndSaveTransaction(trxBarCodeCreationRequest, channel, userId, true, initiative);
 
             return transactionMapper.transactionToTransactionBarCodeResponse(transaction);
@@ -129,7 +128,7 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
     private Transaction generateAndSaveTransaction(TransactionBarCodeCreationRequest trxBarCodeCreationRequest, String channel, String userId, boolean extendedAuthorization, InitiativeConfig initiative) {
         OffsetDateTime trxEndDate = null;
         Transaction transaction = transactionMapper.transactionBarCodeCreationRequestToTransaction(
-                        trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
+                trxBarCodeCreationRequest, channel, userId, initiative != null ? initiative.getInitiativeName() : null, new HashMap<>(), extendedAuthorization, trxEndDate);
 
         trxEndDate = calculateTrxEndDate(transaction, initiative);
         transaction.setTrxEndDate(trxEndDate);
@@ -144,15 +143,15 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
             return transaction.getTrxDate().plusMinutes(authorizationExpirationMinutes);
         }
 
-        LocalDate  localEndDate = LocalDate.MAX;
-        if (initiative != null){
-            localEndDate = initiative.getEndDate() != null ? initiative.getEndDate() : LocalDate.MAX;
+        LocalDate localEndDate = LocalDate.MAX;
+        if (initiative != null && initiative.getEndDate() != null){
+            localEndDate = initiative.getEndDate();
         }
-        OffsetDateTime  offsetEndDate = localEndDate.atStartOfDay(ZoneId.of(ZONE_EUROPE_ROME)).toOffsetDateTime();
-        if(!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transaction.getTrxDate()))){
+        OffsetDateTime offsetEndDate = localEndDate.atStartOfDay(ZoneId.of(ZONE_EUROPE_ROME)).toOffsetDateTime();
+        if (!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transaction.getTrxDate()))) {
             offsetEndDate = transaction.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes);
         }
-        return offsetEndDate.truncatedTo(ChronoUnit.DAYS).plusDays(1).minusNanos(1);
+        return offsetEndDate.with(LocalTime.of(23, 59, 59));
     }
 
 

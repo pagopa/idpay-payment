@@ -9,6 +9,7 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,31 @@ class CommonInvoiceServiceImplTest {
     }
 
     @Test
+    void testInvoiceUpdateTransaction(){
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        transaction.setInvoiceData(InvoiceData.builder().filename("filename").docNumber("123").build());
+        PointOfSaleDTO posDTO = new PointOfSaleDTO();
+        posDTO.setFranchiseName("Franchise Test");
+        posDTO.setType(PointOfSaleTypeEnum.PHYSICAL);
+        posDTO.setBusinessName("Business Test");
+        posDTO.setFiscalCode("FISCAL_CODE_123");
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When
+        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+
+        // Then
+        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
+        assertNotNull(transaction.getInvoiceData());
+        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
+        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
+    }
+
+    @Test
     void testInvoiceTransaction_Success_WithPosFetch(){
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
@@ -79,7 +105,7 @@ class CommonInvoiceServiceImplTest {
         when(merchantConnectorMock.getPointOfSale(MERCHANT_ID, POS_ID)).thenReturn(posDTO);
 
         // When
-        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER);
+        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
@@ -109,7 +135,7 @@ class CommonInvoiceServiceImplTest {
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
         // When
-        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER);
+        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
@@ -125,7 +151,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         InvalidInvoiceFormatException exception = assertThrows(
                 InvalidInvoiceFormatException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals("PAYMENT_GENERIC_ERROR", exception.getCode());
@@ -142,7 +168,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         TransactionNotFoundOrExpiredException exception = assertThrows(
                 TransactionNotFoundOrExpiredException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertTrue(exception.getMessage().contains("Cannot find transaction with transactionId"));
@@ -160,7 +186,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         TransactionInvalidException exception = assertThrows(
                 TransactionInvalidException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
@@ -169,22 +195,30 @@ class CommonInvoiceServiceImplTest {
     }
 
     @Test
-    void testInvoiceTransaction_PointOfSaleMismatch() {
+    void testInvoiceTransaction_UsesPointOfSaleFromTransaction() {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "content".getBytes());
-        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, "OTHER_POS");
+        String transactionPosId = "OTHER_POS";
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, transactionPosId);
+        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        PointOfSaleDTO posDTO = new PointOfSaleDTO();
+        posDTO.setFranchiseName("Franchise Test");
+        posDTO.setType(PointOfSaleTypeEnum.PHYSICAL);
+        posDTO.setBusinessName("Business Test");
+        posDTO.setFiscalCode("FISCAL_CODE_123");
+        when(merchantConnectorMock.getPointOfSale(MERCHANT_ID, transactionPosId)).thenReturn(posDTO);
 
-        // When & Then
-        TransactionInvalidException exception = assertThrows(
-                TransactionInvalidException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
-        );
+        // When
+        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
-        assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
-        assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the pointOfSaleId"));
-        verify(auditUtilitiesMock, times(1)).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
+        // Then
+        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
+                MERCHANT_ID, transactionPosId, TRX_ID, file.getOriginalFilename());
+        verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
+        verify(transactionRepositoryMock, times(1)).save(transaction);
+        verify(auditUtilitiesMock, never()).logErrorInvoiceTransaction(any(), any());
     }
 
     @Test
@@ -198,7 +232,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
@@ -217,7 +251,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.TRX_TOO_RECENT, exception.getCode());
@@ -239,7 +273,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         InternalServerErrorException exception = assertThrows(
                 InternalServerErrorException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, POS_ID, fileMock, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, fileMock, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
