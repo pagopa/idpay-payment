@@ -392,7 +392,7 @@ class TransactionSpecificationsTest {
     void hasFiscalCode_validAndEmpty() {
         Specification<Transaction> spec = TransactionSpecifications.hasFiscalCode("FC123");
         spec.toPredicate(root, query, cb);
-        verify(root).get("merchantFiscalCode");
+        verify(root).get("userId");
         verify(cb).equal(path, "FC123");
 
         reset(cb);
