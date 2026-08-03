@@ -210,7 +210,7 @@ public final class TransactionSpecifications {
     }
 
     public static Specification<Transaction> hasFiscalCode(String fiscalCode) {
-        return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get(FIELD_MERCHANT_FISCAL_CODE), fiscalCode) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get(FIELD_USER_ID), fiscalCode) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasRewardBatchId(String rewardBatchId) {
