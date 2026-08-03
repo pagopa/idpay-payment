@@ -33,7 +33,6 @@ public final class TransactionSpecifications {
     private static final String FIELD_REWARD_BATCH_ID = "rewardBatchId";
     private static final String FIELD_REWARD_BATCH_STATUS_TRX = "rewardBatchStatusTrx";
     private static final String FIELD_PRODUCT_GTIN = "productGtin";
-    private static final String FIELD_MERCHANT_FISCAL_CODE = "merchantFiscalCode";
     private static final String FIELD_AMOUNT_CENTS = "amountCents";
     private TransactionSpecifications() {
     }
