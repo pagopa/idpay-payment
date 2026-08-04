@@ -101,37 +101,39 @@ class CommonPaymentControllerImplTest {
   @Test
   void testReversalTransaction() {
     // Given
+    String initiativeId = "INITIATIVE_ID";
     String transactionId = "TRX_ID";
     String merchantId = "MERCHANT_ID";
     String docNumber = "DOC_123";
 
     doNothing().when(commonReversalServiceMock)
-            .reversalTransaction(transactionId, merchantId, multipartFileMock, docNumber);
+            .reversalTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
 
     // When
-    commonPaymentController.reversalTransaction(transactionId, merchantId, multipartFileMock, docNumber);
+    commonPaymentController.reversalTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
 
     // Then
     verify(commonReversalServiceMock, times(1))
-            .reversalTransaction(transactionId, merchantId, multipartFileMock, docNumber);
+            .reversalTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
   }
 
   @Test
   void testInvoiceTransaction() {
     // Given
+    String initiativeId = "INITIATIVE_ID";
     String transactionId = "TRX_ID";
     String merchantId = "MERCHANT_ID";
     String docNumber = "DOC_123";
 
     doNothing().when(commonInvoiceServiceMock)
-            .invoiceTransaction(transactionId, merchantId, multipartFileMock, docNumber);
+            .invoiceTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
 
     // When
-    commonPaymentController.invoiceTransaction(transactionId, merchantId, multipartFileMock, docNumber);
+    commonPaymentController.invoiceTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
 
     // Then
     verify(commonInvoiceServiceMock, times(1))
-            .invoiceTransaction(transactionId, merchantId, multipartFileMock, docNumber);
+            .invoiceTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
   }
 
   @Test

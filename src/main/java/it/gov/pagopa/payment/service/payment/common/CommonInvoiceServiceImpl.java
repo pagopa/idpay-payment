@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
@@ -14,6 +15,7 @@ import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredExcept
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.StoragePathUtils;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 
 @Slf4j
 @Service("commonInvoice")
@@ -48,7 +51,7 @@ public class CommonInvoiceServiceImpl {
         this.merchantConnector = merchantConnector;
     }
 
-    public void invoiceTransaction(String transactionId, String merchantId, MultipartFile file, String docNumber) {
+    public void invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
@@ -57,12 +60,20 @@ public class CommonInvoiceServiceImpl {
             Transaction transaction = transactionRepository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 
+            if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
+                throw new InitiativeNotfoundException(
+                        "The initiative with id [%s] associated to the transaction is not equal to the initiative with id [%s]"
+                                .formatted(transaction.getInitiativeId(), initiativeId));
+            }
+
             if (!transaction.getMerchantId().equals(merchantId)) {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(), merchantId));
             }
+
             if(!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus()) || (SyncTrxStatus.INVOICED.equals(transaction.getStatus()) && transaction.getInvoiceData() != null))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
             }
+
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
             if (transaction.getInvoiceData() == null && (minDaysToInvoiceTransaction > 0 && transaction.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneId.of("Europe/Rome"))))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(transaction.getElaborationDateTime(), minDaysToInvoiceTransaction));
@@ -71,15 +82,12 @@ public class CommonInvoiceServiceImpl {
             InvoiceData oldDocumentData = transaction.getInvoiceData();
             if(oldDocumentData!=null){
                 String oldFilename = oldDocumentData.getFilename();
-                String oldBlobPath = String.format(
-                        "invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                        merchantId, transaction.getPointOfSaleId(), transactionId, oldFilename);
+                String oldBlobPath = StoragePathUtils.buildInvoicePath(transaction, oldFilename);
                 fileStorageClient.deleteFile(oldBlobPath);
             }
 
             // Uploading invoice to storage
-            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                    merchantId, transaction.getPointOfSaleId(), transaction.getId(), file.getOriginalFilename());
+            String path = StoragePathUtils.buildInvoicePath(transaction, file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
             // updating the transaction status to invoiced

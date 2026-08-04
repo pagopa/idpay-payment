@@ -79,7 +79,7 @@ class CommonInvoiceServiceImplTest {
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
         // When
-        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
@@ -105,7 +105,7 @@ class CommonInvoiceServiceImplTest {
         when(merchantConnectorMock.getPointOfSale(MERCHANT_ID, POS_ID)).thenReturn(posDTO);
 
         // When
-        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
@@ -115,7 +115,7 @@ class CommonInvoiceServiceImplTest {
         assertEquals("Franchise Test", transaction.getFranchiseName());
         assertEquals("PHYSICAL", transaction.getPointOfSaleType());
 
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
+        String expectedPath = String.format("invoices/elettrodomestici/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                 MERCHANT_ID, POS_ID, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(auditUtilitiesMock, times(1)).logInvoiceTransaction(any(TransactionAuditDTO.class));
@@ -135,7 +135,7 @@ class CommonInvoiceServiceImplTest {
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
         // When
-        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
@@ -151,7 +151,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         InvalidInvoiceFormatException exception = assertThrows(
                 InvalidInvoiceFormatException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals("PAYMENT_GENERIC_ERROR", exception.getCode());
@@ -168,7 +168,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         TransactionNotFoundOrExpiredException exception = assertThrows(
                 TransactionNotFoundOrExpiredException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertTrue(exception.getMessage().contains("Cannot find transaction with transactionId"));
@@ -186,11 +186,29 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         TransactionInvalidException exception = assertThrows(
                 TransactionInvalidException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
         assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the merchant"));
+        verify(auditUtilitiesMock, times(1)).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testInvoiceTransaction_InitiativeMismatch() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then
+        InitiativeNotfoundException exception = assertThrows(
+                InitiativeNotfoundException.class,
+                () -> commonInvoiceService.invoiceTransaction("OTHER_INITIATIVE", TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+        );
+
+        assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the initiative"));
         verify(auditUtilitiesMock, times(1)).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
     }
 
@@ -211,10 +229,10 @@ class CommonInvoiceServiceImplTest {
         when(merchantConnectorMock.getPointOfSale(MERCHANT_ID, transactionPosId)).thenReturn(posDTO);
 
         // When
-        commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
+        String expectedPath = String.format("invoices/elettrodomestici/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                 MERCHANT_ID, transactionPosId, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(transactionRepositoryMock, times(1)).save(transaction);
@@ -232,7 +250,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
@@ -251,7 +269,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.TRX_TOO_RECENT, exception.getCode());
@@ -273,7 +291,7 @@ class CommonInvoiceServiceImplTest {
         // When & Then
         InternalServerErrorException exception = assertThrows(
                 InternalServerErrorException.class,
-                () -> commonInvoiceService.invoiceTransaction(TRX_ID, MERCHANT_ID, fileMock, DOC_NUMBER)
+                () -> commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, fileMock, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());

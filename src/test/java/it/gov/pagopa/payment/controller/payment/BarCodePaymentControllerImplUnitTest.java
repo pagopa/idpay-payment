@@ -99,9 +99,9 @@ class BarCodePaymentControllerImplUnitTest {
                 .trxCode("TRXCODE")
                 .data("base64-content")
                 .build();
-        when(pdfService.createPreauthPdf("transactionId")).thenReturn(report);
+        when(pdfService.createPreauthPdf("initiativeId", "transactionId")).thenReturn(report);
 
-        ResponseEntity<ReportDTOWithTrxCode> result = controller.downloadPreviewBarcode("transactionId");
+        ResponseEntity<ReportDTOWithTrxCode> result = controller.downloadPreviewBarcode("initiativeId", "transactionId");
 
         Assertions.assertEquals(200, result.getStatusCode().value());
         Assertions.assertEquals(MediaType.APPLICATION_JSON, result.getHeaders().getContentType());
@@ -110,6 +110,6 @@ class BarCodePaymentControllerImplUnitTest {
         Assertions.assertNotNull(contentDisposition);
         Assertions.assertTrue(contentDisposition.contains("TRXCODE_preautorizzazione.pdf"));
         Assertions.assertSame(report, result.getBody());
-        verify(pdfService).createPreauthPdf("transactionId");
+        verify(pdfService).createPreauthPdf("initiativeId", "transactionId");
     }
 }

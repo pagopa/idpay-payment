@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
@@ -65,10 +66,10 @@ class PointOfSaleTransactionServiceTest {
         transaction.setInvoiceData(new InvoiceData("invoice.pdf", "DOC001"));
         when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
                 .thenReturn(transaction);
-        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/merchant/MERCHANT1/pos/POS1/transaction/TRX1/invoice/invoice.pdf"))
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/elettrodomestici/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/invoice/invoice.pdf"))
                 .thenReturn("https://signed-url/invoice");
 
-        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1");
 
         assertNotNull(response);
         assertEquals("https://signed-url/invoice", response.getInvoiceUrl());
@@ -80,10 +81,10 @@ class PointOfSaleTransactionServiceTest {
         transaction.setCreditNoteData(new InvoiceData("credit-note.pdf", "DOC002"));
         when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
                 .thenReturn(transaction);
-        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/merchant/MERCHANT1/pos/POS1/transaction/TRX1/creditNote/credit-note.pdf"))
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/elettrodomestici/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/creditNote/credit-note.pdf"))
                 .thenReturn("https://signed-url/credit-note");
 
-        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1");
 
         assertNotNull(response);
         assertEquals("https://signed-url/credit-note", response.getInvoiceUrl());
@@ -101,7 +102,7 @@ class PointOfSaleTransactionServiceTest {
 
         assertThrows(
                 TransactionMissingParametersException.class,
-                () -> pointOfSaleTransactionService.downloadTransactionInvoice(merchantId, pointOfSaleId, transactionId)
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", merchantId, pointOfSaleId, transactionId)
         );
         verifyNoInteractions(transactionService, fileStorageClient);
     }
@@ -114,7 +115,7 @@ class PointOfSaleTransactionServiceTest {
 
         assertThrows(
                 TransactionInvalidException.class,
-                () -> pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1")
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1")
         );
         verifyNoInteractions(fileStorageClient);
     }
@@ -127,7 +128,21 @@ class PointOfSaleTransactionServiceTest {
 
         assertThrows(
                 TransactionInvalidException.class,
-                () -> pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1")
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1")
+        );
+        verifyNoInteractions(fileStorageClient);
+    }
+
+    @Test
+    void downloadTransactionInvoice_shouldThrowWhenInitiativeMismatch() {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.INVOICED);
+        transaction.setInvoiceData(new InvoiceData("invoice.pdf", "DOC001"));
+        when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
+                .thenReturn(transaction);
+
+        assertThrows(
+                InitiativeNotfoundException.class,
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("OTHER_INITIATIVE", "MERCHANT1", "POS1", "TRX1")
         );
         verifyNoInteractions(fileStorageClient);
     }
@@ -141,7 +156,7 @@ class PointOfSaleTransactionServiceTest {
 
         assertThrows(
                 TransactionInvalidException.class,
-                () -> pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1")
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1")
         );
         verifyNoInteractions(fileStorageClient);
     }
@@ -155,7 +170,7 @@ class PointOfSaleTransactionServiceTest {
 
         assertThrows(
                 TransactionInvalidException.class,
-                () -> pointOfSaleTransactionService.downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1")
+                () -> pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1")
         );
         verifyNoInteractions(fileStorageClient);
     }
