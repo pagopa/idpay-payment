@@ -33,7 +33,6 @@ public final class TransactionSpecifications {
     private static final String FIELD_REWARD_BATCH_ID = "rewardBatchId";
     private static final String FIELD_REWARD_BATCH_STATUS_TRX = "rewardBatchStatusTrx";
     private static final String FIELD_PRODUCT_GTIN = "productGtin";
-    private static final String FIELD_MERCHANT_FISCAL_CODE = "merchantFiscalCode";
     private static final String FIELD_AMOUNT_CENTS = "amountCents";
     private TransactionSpecifications() {
     }
@@ -210,7 +209,7 @@ public final class TransactionSpecifications {
     }
 
     public static Specification<Transaction> hasFiscalCode(String fiscalCode) {
-        return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get(FIELD_MERCHANT_FISCAL_CODE), fiscalCode) : cb.conjunction();
+        return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get(FIELD_USER_ID), fiscalCode) : cb.conjunction();
     }
 
     public static Specification<Transaction> hasRewardBatchId(String rewardBatchId) {
