@@ -266,4 +266,32 @@ class RetrieveActiveBarcodeTest {
         Assertions.assertNotNull(result);
         Assertions.assertEquals(trxExpected, result);
     }
+
+    @Test
+    void findOldestNoAuthorized_FindWithoutAuthTrxCountLimits(){
+        // Given
+        InitiativeTrxConditions conditionRule = InitiativeTrxConditions.builder().build();
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder().initiativeId(INITIATIVE_ID).trxRule(conditionRule).build();
+        RewardRule rewardRule = RewardRule.builder().initiativeConfig(initiativeConfig).build();
+        when(rewardRuleRepository.findById(INITIATIVE_ID)).thenReturn(Optional.of(rewardRule));
+
+
+        Transaction trxAuth1 = TransactionFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
+        Transaction trxAuth2 = TransactionFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
+        Transaction trxCreated = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+
+        when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+                .thenReturn(List.of(trxAuth1, trxAuth2, trxCreated));
+
+        TransactionBarCodeResponse trxExpected = transactionMapper.transactionToTransactionBarCodeResponse(trxCreated);
+        trxExpected.setResidualBudgetCents(trxExpected.getVoucherAmountCents());
+
+        //When
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(trxExpected, result);
+    }
 }
