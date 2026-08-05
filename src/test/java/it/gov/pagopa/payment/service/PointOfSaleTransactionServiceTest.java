@@ -66,7 +66,7 @@ class PointOfSaleTransactionServiceTest {
         transaction.setInvoiceData(new InvoiceData("invoice.pdf", "DOC001"));
         when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
                 .thenReturn(transaction);
-        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/elettrodomestici/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/invoice/invoice.pdf"))
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/INITIATIVEID1/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/invoice/invoice.pdf"))
                 .thenReturn("https://signed-url/invoice");
 
         DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1");
@@ -81,7 +81,7 @@ class PointOfSaleTransactionServiceTest {
         transaction.setCreditNoteData(new InvoiceData("credit-note.pdf", "DOC002"));
         when(transactionService.getTransactionByIdAndMerchantId("TRX1", "MERCHANT1"))
                 .thenReturn(transaction);
-        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/elettrodomestici/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/creditNote/credit-note.pdf"))
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/INITIATIVEID1/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/creditNote/credit-note.pdf"))
                 .thenReturn("https://signed-url/credit-note");
 
         DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", "MERCHANT1", "POS1", "TRX1");

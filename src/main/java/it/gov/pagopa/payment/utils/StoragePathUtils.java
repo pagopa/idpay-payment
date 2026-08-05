@@ -4,7 +4,6 @@ import it.gov.pagopa.payment.entity.Transaction;
 
 public final class StoragePathUtils {
 
-    private static final String STORAGE_INITIATIVE_ID_ELETTRODOMESTICI = "elettrodomestici";
     private static final String INVOICE_FOLDER = "invoice";
     private static final String CREDIT_NOTE_FOLDER = "creditNote";
 
@@ -22,7 +21,7 @@ public final class StoragePathUtils {
     private static String buildPath(Transaction transaction, String folderName, String filename) {
         return String.format(
                 "invoices/%s/merchant/%s/pos/%s/transaction/%s/%s/%s",
-                STORAGE_INITIATIVE_ID_ELETTRODOMESTICI,
+                transaction.getInitiativeId(),
                 transaction.getMerchantId(),
                 transaction.getPointOfSaleId(),
                 transaction.getId(),
