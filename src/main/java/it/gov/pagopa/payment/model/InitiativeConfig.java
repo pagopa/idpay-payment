@@ -20,5 +20,6 @@ public class InitiativeConfig {
     private LocalDate startDate;
     private LocalDate endDate;
     private InitiativeRewardType initiativeRewardType;
+    private InitiativeTrxConditions trxRule;
 
 }
