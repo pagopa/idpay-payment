@@ -213,9 +213,9 @@ class RetrieveActiveBarcodeTest {
         // Given
         mockInitiativeConfig(false, INITIATIVE_ID);
         Transaction trxCancelled = TransactionFaker.mockInstance(1, SyncTrxStatus.CANCELLED);
-        Transaction trxRejexted = TransactionFaker.mockInstance(2, SyncTrxStatus.REJECTED);
+        Transaction trxRejected = TransactionFaker.mockInstance(2, SyncTrxStatus.REJECTED);
         when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
-                .thenReturn(List.of(trxCancelled, trxRejexted));
+                .thenReturn(List.of(trxCancelled, trxRejected));
 
         //When
         TransactionNotFoundOrExpiredException errorResult = Assertions.assertThrows(TransactionNotFoundOrExpiredException.class, () -> retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID));
@@ -228,7 +228,7 @@ class RetrieveActiveBarcodeTest {
     @Test
     void findOldestNoAuthorized_initiativeNotFound(){
         // Given
-        when(rewardRuleRepository.findById(INITIATIVE_ID)).thenReturn(Optional.ofNullable(null));
+        when(rewardRuleRepository.findById(INITIATIVE_ID)).thenReturn(Optional.empty());
 
         //When
         InitiativeNotfoundException errorResult = Assertions.assertThrows(InitiativeNotfoundException.class, () -> retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID));
@@ -236,5 +236,34 @@ class RetrieveActiveBarcodeTest {
         //Then
         Assertions.assertNotNull(errorResult);
         Assertions.assertEquals("Cannot find initiative with id [%s]".formatted(INITIATIVE_ID), errorResult.getMessage());
+    }
+
+    @Test
+    void findOldestNoAuthorized_FindWithoutAuthTrxUnderLimitLimits(){
+        // Given
+        TrxCountDTO trxCountRule = TrxCountDTO.builder().from(1L).fromIncluded(true).build();
+        InitiativeTrxConditions conditionRule = InitiativeTrxConditions.builder().trxCount(trxCountRule).build();
+        InitiativeConfig initiativeConfig = InitiativeConfig.builder().initiativeId(INITIATIVE_ID).trxRule(conditionRule).build();
+        RewardRule rewardRule = RewardRule.builder().initiativeConfig(initiativeConfig).build();
+        when(rewardRuleRepository.findById(INITIATIVE_ID)).thenReturn(Optional.of(rewardRule));
+
+
+        Transaction trxAuth1 = TransactionFaker.mockInstance(2, SyncTrxStatus.AUTHORIZED);
+        Transaction trxAuth2 = TransactionFaker.mockInstance(3, SyncTrxStatus.AUTHORIZED);
+        Transaction trxCreated = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+
+
+        when(transactionRepository.findByUserIdAndInitiativeIdAndChannel(USER_ID, INITIATIVE_ID, TRX_CHANNEL_BARCODE))
+                .thenReturn(List.of(trxAuth1, trxAuth2, trxCreated));
+
+        TransactionBarCodeResponse trxExpected = transactionMapper.transactionToTransactionBarCodeResponse(trxCreated);
+        trxExpected.setResidualBudgetCents(trxExpected.getVoucherAmountCents());
+
+        //When
+        TransactionBarCodeResponse result = retrieveActiveBarcode.findOldestNotAuthorized(USER_ID, INITIATIVE_ID);
+
+        //Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(trxExpected, result);
     }
 }
