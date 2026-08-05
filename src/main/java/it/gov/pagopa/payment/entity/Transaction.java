@@ -170,4 +170,7 @@ public class Transaction {
 
     @Column(name = "\"extendedAuthorization\"")
     private Boolean extendedAuthorization;
+
+    @org.hibernate.annotations.Formula("\"additionalProperties\" ->> 'productName'")
+    private String productName;
 }
