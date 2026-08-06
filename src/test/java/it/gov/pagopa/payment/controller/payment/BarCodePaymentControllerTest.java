@@ -444,6 +444,28 @@ class BarCodePaymentControllerTest {
         ).andExpect(status().isBadRequest());
     }
 
+    @Test
+    void downloadPreviewBarcode_ok() throws Exception {
+        String initiativeId = "INITIATIVE_ID";
+        String transactionId = "TRX_ID";
+
+        ReportDTOWithTrxCode reportDTO = ReportDTOWithTrxCode.builder()
+                .trxCode("TRX_CODE")
+                .data(Base64.getEncoder().encodeToString(new byte[]{1, 2, 3}))
+                .build();
+
+        when(pdfService.createPreauthPdf(initiativeId, transactionId)).thenReturn(reportDTO);
+
+        MvcResult result = mockMvc.perform(
+                get("/idpay/payment/initiatives/{initiativeId}/transactions/{transactionId}/preview-pdf", initiativeId, transactionId)
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk()).andReturn();
+
+        ReportDTOWithTrxCode actual = objectMapper.readValue(result.getResponse().getContentAsString(), ReportDTOWithTrxCode.class);
+        assertEquals("TRX_CODE", actual.getTrxCode());
+        verify(pdfService).createPreauthPdf(initiativeId, transactionId);
+    }
+
     private static PreviewPaymentResultDTO buildPreviewPaymentResult(Map<String, String> additionalProperties) {
         return PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")

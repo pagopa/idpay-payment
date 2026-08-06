@@ -41,18 +41,20 @@ public interface CommonPaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     void deleteLapsedTransaction(@PathVariable("initiativeId")String initiativeId);
 
-    @PostMapping("/transactions/{transactionId}/reversal")
+    @PostMapping("/initiatives/{initiativeId}/transactions/{transactionId}/reversal")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     void reversalTransaction(
+        @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );
 
-    @PostMapping("/transactions/{transactionId}/invoice")
+    @PostMapping("/initiatives/{initiativeId}/transactions/{transactionId}/invoice")
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     void invoiceTransaction(
+        @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
         @RequestPart("file") MultipartFile file,

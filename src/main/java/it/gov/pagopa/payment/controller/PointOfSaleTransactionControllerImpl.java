@@ -113,11 +113,13 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
     public DownloadInvoiceResponseDTO downloadInvoiceFile(
             String merchantId,
             String tokenPointOfSaleId,
+            String initiativeId,
             String pointOfSaleId,
             String transactionId) {
 
         String sanitizedMerchantId = sanitize(merchantId);
         String sanitizedTokenPointOfSaleId = sanitize(tokenPointOfSaleId);
+        String sanitizedInitiativeId = sanitize(initiativeId);
         String sanitizedPointOfSaleId = sanitize(pointOfSaleId);
         String sanitizedTransactionId = sanitize(transactionId);
 
@@ -128,6 +130,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         validatePointOfSaleAccess(sanitizedTokenPointOfSaleId, sanitizedPointOfSaleId);
 
         return pointOfSaleTransactionService.downloadTransactionInvoice(
+                sanitizedInitiativeId,
                 sanitizedMerchantId,
                 sanitizedPointOfSaleId,
                 sanitizedTransactionId

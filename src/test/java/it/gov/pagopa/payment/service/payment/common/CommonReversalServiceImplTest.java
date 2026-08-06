@@ -51,7 +51,7 @@ class CommonReversalServiceImplTest {
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
         // When
-        commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
         assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
@@ -59,7 +59,7 @@ class CommonReversalServiceImplTest {
         assertEquals("credit_note.pdf", transaction.getCreditNoteData().getFilename());
         assertEquals(DOC_NUMBER, transaction.getCreditNoteData().getDocNumber());
 
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
+        String expectedPath = String.format("invoices/elettrodomestici/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
                 MERCHANT_ID, POS_ID, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(auditUtilitiesMock, times(1)).logReverseTransaction(any(RevertTransactionAuditDTO.class));
@@ -75,7 +75,7 @@ class CommonReversalServiceImplTest {
         // When & Then
         InvalidInvoiceFormatException exception = assertThrows(
                 InvalidInvoiceFormatException.class,
-                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals("PAYMENT_GENERIC_ERROR", exception.getCode());
@@ -92,7 +92,7 @@ class CommonReversalServiceImplTest {
         // When & Then
         TransactionNotFoundOrExpiredException exception = assertThrows(
                 TransactionNotFoundOrExpiredException.class,
-                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertTrue(exception.getMessage().contains("Cannot find transaction with transactionId"));
@@ -110,11 +110,29 @@ class CommonReversalServiceImplTest {
         // When & Then
         TransactionInvalidException exception = assertThrows(
                 TransactionInvalidException.class,
-                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
         assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the merchant"));
+        verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_InitiativeMismatch() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        // When & Then
+        InitiativeNotfoundException exception = assertThrows(
+                InitiativeNotfoundException.class,
+                () -> commonReversalService.reversalTransaction("OTHER_INITIATIVE", TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+        );
+
+        assertTrue(exception.getMessage().contains("associated to the transaction is not equal to the initiative"));
         verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
     }
 
@@ -128,10 +146,10 @@ class CommonReversalServiceImplTest {
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
         // When
-        commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
-        String expectedPath = String.format("invoices/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
+        String expectedPath = String.format("invoices/elettrodomestici/merchant/%s/pos/%s/transaction/%s/creditNote/%s",
                 MERCHANT_ID, transactionPosId, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(transactionRepositoryMock, times(1)).save(transaction);
@@ -149,7 +167,7 @@ class CommonReversalServiceImplTest {
         // When & Then
         OperationNotAllowedException exception = assertThrows(
                 OperationNotAllowedException.class,
-                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
+                () -> commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
@@ -169,7 +187,7 @@ class CommonReversalServiceImplTest {
         // When & Then
         InternalServerErrorException exception = assertThrows(
                 InternalServerErrorException.class,
-                () -> commonReversalService.reversalTransaction(TRX_ID, MERCHANT_ID, fileMock, DOC_NUMBER)
+                () -> commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, fileMock, DOC_NUMBER)
         );
 
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());

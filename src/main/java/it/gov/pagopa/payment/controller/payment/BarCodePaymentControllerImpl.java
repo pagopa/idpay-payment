@@ -135,9 +135,10 @@ public class BarCodePaymentControllerImpl implements BarCodePaymentController {
             value = "BAR_CODE_PREVIEW_PDF")
     @Override
     public ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
+            String initiativeId,
             String transactionId) {
 
-        ReportDTOWithTrxCode reportDTO = pdfService.createPreauthPdf(transactionId);
+        ReportDTOWithTrxCode reportDTO = pdfService.createPreauthPdf(initiativeId, transactionId);
 
         ContentDisposition cd = ContentDisposition
                 .inline()

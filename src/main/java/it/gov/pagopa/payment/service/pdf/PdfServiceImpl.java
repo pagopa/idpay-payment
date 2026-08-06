@@ -19,6 +19,7 @@ import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -150,7 +152,7 @@ public class PdfServiceImpl implements PdfService {
     }
 
     @Override
-    public ReportDTOWithTrxCode createPreauthPdf(String transactionId) {
+    public ReportDTOWithTrxCode createPreauthPdf(String initiativeId, String transactionId) {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         String trxCode;
         try (PdfWriter writer = new PdfWriter(baos);
@@ -184,6 +186,12 @@ public class PdfServiceImpl implements PdfService {
             }
 
             transaction = optionalTransaction.get();
+
+            if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
+                throw new InitiativeNotfoundException(
+                        "The initiative with id [%s] associated to the transaction is not equal to the initiative with id [%s]"
+                                .formatted(transaction.getInitiativeId(), initiativeId));
+            }
 
             LocalDate createdDate = Utilities.getLocalDate(transaction.getTrxDate());
             BigDecimal discount     = CommonUtilities.centsToEuro(transaction.getRewardCents());
@@ -232,13 +240,13 @@ public class PdfServiceImpl implements PdfService {
 
         } catch (IOException | RuntimeException e) {
 
-            if (e instanceof TransactionNotFoundOrExpiredException) {
+            if (e instanceof TransactionNotFoundOrExpiredException || e instanceof InitiativeNotfoundException) {
 
                 log.error("Errore durante la generazione del PDF (trxId={})",
                         Utilities.sanitizeString(transactionId), e);
                 try {
                     throw e;
-                } catch (IOException ex) {
+                } catch (IOException _) {
                     throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
                 }
             }

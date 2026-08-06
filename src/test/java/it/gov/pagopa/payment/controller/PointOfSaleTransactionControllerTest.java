@@ -219,13 +219,14 @@ class PointOfSaleTransactionControllerTest {
                 .build();
 
         when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(
+                INITIATIVE_ID,
                 "MERCHANT1",
                 "POS1",
                 "TRX1"))
                 .thenReturn(response);
 
         MvcResult result = mockMvc.perform(
-                get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", "POS!@#1", "TRX*1")
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/{transactionId}/download", INITIATIVE_ID, "POS!@#1", "TRX*1")
                         .header("x-merchant-id", "MERCHANT\r\n1")
                         .header("x-point-of-sale-id", "POS!@#1")
         ).andExpect(status().isOk()).andReturn();
@@ -238,13 +239,13 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertNotNull(actual);
         Assertions.assertEquals("https://signed-url", actual.getInvoiceUrl());
         verify(pointOfSaleTransactionServiceMock)
-                .downloadTransactionInvoice("MERCHANT1", "POS1", "TRX1");
+                .downloadTransactionInvoice(INITIATIVE_ID, "MERCHANT1", "POS1", "TRX1");
     }
 
     @Test
     void downloadInvoiceFile_unauthorizedPointOfSale_shouldReturn403() throws Exception {
         MvcResult result = mockMvc.perform(
-                get("/idpay/{pointOfSaleId}/transactions/{transactionId}/download", POINT_OF_SALE_ID, TRX_CODE)
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/{transactionId}/download", INITIATIVE_ID, POINT_OF_SALE_ID, TRX_CODE)
                         .header("x-merchant-id", MERCHANT_ID)
                         .header("x-point-of-sale-id", "DIFFERENT_POS_ID")
         ).andExpect(status().isForbidden()).andReturn();
