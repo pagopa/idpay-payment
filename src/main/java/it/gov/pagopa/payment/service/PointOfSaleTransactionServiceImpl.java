@@ -5,15 +5,19 @@ import it.gov.pagopa.payment.dto.DownloadInvoiceResponseDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.service.payment.TransactionService;
+import it.gov.pagopa.payment.utils.StoragePathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import java.util.Objects;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTIONS_MISSING_MANDATORY_FILTERS;
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTION_INVALID_REQUEST;
@@ -44,29 +48,34 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
 
     @Override
     public DownloadInvoiceResponseDTO downloadTransactionInvoice(
+            String initiativeId,
             String merchantId,
             String pointOfSaleId,
             String transactionId) {
 
-        if (!StringUtils.hasText(merchantId) ||
+        if (!StringUtils.hasText(initiativeId) ||
+                !StringUtils.hasText(merchantId) ||
                 !StringUtils.hasText(pointOfSaleId) ||
                 !StringUtils.hasText(transactionId)) {
             throw new TransactionMissingParametersException(
                     TRANSACTIONS_MISSING_MANDATORY_FILTERS,
-                    buildMissingFiltersMessage("merchantId", "pointOfSaleId", "transactionId")
+                    buildMissingFiltersMessage("initiativeId", "merchantId", "pointOfSaleId", "transactionId")
             );
         }
 
         Transaction transaction = transactionService.getTransactionByIdAndMerchantId(transactionId, merchantId);
+
+        if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
+            throw new InitiativeNotfoundException(
+                    "The initiative with id [%s] associated to the transaction is not equal to the initiative with id [%s]"
+                            .formatted(transaction.getInitiativeId(), initiativeId));
+        }
+
         InvoiceDocument invoiceDocument = resolveInvoiceDocument(transaction);
 
-        String blobPath = buildBlobPath(
-                merchantId,
-                pointOfSaleId,
-                transactionId,
-                invoiceDocument.folderName(),
-                invoiceDocument.invoiceData().getFilename()
-        );
+        String blobPath = INVOICE_FOLDER.equals(invoiceDocument.folderName())
+                ? StoragePathUtils.buildInvoicePath(transaction, invoiceDocument.invoiceData().getFilename())
+                : StoragePathUtils.buildCreditNotePath(transaction, invoiceDocument.invoiceData().getFilename());
 
         return DownloadInvoiceResponseDTO.builder()
                 .invoiceUrl(fileStorageClient.getInvoiceFileSignedUrl(blobPath))
@@ -96,21 +105,6 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
         }
     }
 
-    private String buildBlobPath(
-            String merchantId,
-            String pointOfSaleId,
-            String transactionId,
-            String folderName,
-            String filename) {
-        return String.format(
-                "invoices/merchant/%s/pos/%s/transaction/%s/%s/%s",
-                merchantId,
-                pointOfSaleId,
-                transactionId,
-                folderName,
-                filename
-        );
-    }
 
     private TransactionInvalidException buildMissingInvoiceException() {
         return new TransactionInvalidException(

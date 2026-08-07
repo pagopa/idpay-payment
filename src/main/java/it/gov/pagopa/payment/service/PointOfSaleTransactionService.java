@@ -12,6 +12,7 @@ public interface PointOfSaleTransactionService {
                                                  Pageable pageable);
 
     DownloadInvoiceResponseDTO downloadTransactionInvoice(
+            String initiativeId,
             String merchantId,
             String pointOfSaleId,
             String transactionId
