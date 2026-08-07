@@ -132,6 +132,7 @@ public class TransactionMapper {
                 .extendedAuthorization(extendedAuthorization)
                 .trxEndDate(trxEndDate)
                 .voucherAmountCents(transactionBarCodeCreationRequest.getVoucherAmountCents())
+                .transactionRevision(0L)
                 .build();
     }
 
@@ -193,6 +194,7 @@ public class TransactionMapper {
                 .idTrxAcquirer(transactionCreationRequest.getIdTrxAcquirer())
                 .updateDate(now.toLocalDateTime())
                 .counterVersion(0L)
+                .transactionRevision(0L)
                 .additionalProperties(transactionCreationRequest.getAdditionalProperties())
                 .build();
     }

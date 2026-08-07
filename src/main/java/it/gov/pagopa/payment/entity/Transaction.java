@@ -141,6 +141,9 @@ public class Transaction {
     @Column(name = "\"counterVersion\"")
     private Long counterVersion;
 
+    @Column(name = "\"transactionRevision\"", nullable = false)
+    private Long transactionRevision;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "rewards", columnDefinition = "jsonb")
     private Map<String, Reward> rewards;
