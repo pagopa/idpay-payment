@@ -75,9 +75,10 @@ public interface BarCodePaymentController {
             @RequestHeader("X-Fiscal-Code") String fiscalCode
     );
 
-    @GetMapping(value = "/transactions/{transactionId}/preview-pdf")
+    @GetMapping(value = "/initiatives/{initiativeId}/transactions/{transactionId}/preview-pdf")
     @ResponseStatus(code = HttpStatus.OK)
     ResponseEntity<ReportDTOWithTrxCode> downloadPreviewBarcode(
+        @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId
     );
 }

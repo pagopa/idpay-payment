@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -388,6 +389,7 @@ class PdfServiceTest {
 
     @Test
     void createPreauthPdf_happyPath_shouldGeneratePdfAndReturnDto() {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "PREAUTH_TRX_ID_001";
         String trxCode = "PREAUTHCODE001";
         String userId = "USER_ID_FOR_DECRYPT";
@@ -407,7 +409,7 @@ class PdfServiceTest {
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
 
         PdfServiceImpl svc = newService();
-        ReportDTOWithTrxCode result = svc.createPreauthPdf(transactionId);
+        ReportDTOWithTrxCode result = svc.createPreauthPdf(initiativeId, transactionId);
 
         assertNotNull(result);
         assertEquals(trxCode, result.getTrxCode());
@@ -424,13 +426,14 @@ class PdfServiceTest {
 
     @Test
     void createPreauthPdf_whenTransactionNotFound_shouldThrowException() {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "NON_EXISTENT_TRX_ID";
         when(transactionRepository.findById(transactionId)).thenReturn(Optional.empty());
 
         PdfServiceImpl svc = newService();
 
         TransactionNotFoundOrExpiredException ex = assertThrows(TransactionNotFoundOrExpiredException.class,
-                () -> svc.createPreauthPdf(transactionId));
+                () -> svc.createPreauthPdf(initiativeId, transactionId));
 
         assertEquals("Cannot find transaction with transactionId [%s]".formatted(transactionId), ex.getMessage());
         verify(transactionRepository).findById(transactionId);
@@ -438,7 +441,23 @@ class PdfServiceTest {
     }
 
     @Test
+    void createPreauthPdf_whenInitiativeMismatch_shouldThrowException() {
+        String transactionId = "PREAUTH_TRX_ID_MISMATCH";
+        Transaction mockTrx = createMockTransactionInProgress(
+                transactionId, "TRXCODE", "USER_ID", 1000L, 2000L, "Prodotto Test");
+        mockTrx.setInitiativeId("OTHER_INITIATIVE");
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+
+        PdfServiceImpl svc = newService();
+
+        assertThrows(InitiativeNotfoundException.class,
+                () -> svc.createPreauthPdf("INITIATIVEID1", transactionId));
+        verifyNoInteractions(decryptRestConnector);
+    }
+
+    @Test
     void createPreauthPdf_shouldContainExpectedTexts() throws Exception {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "PREAUTHTRXID123";
         String trxCode = "PREAUTHCODE";
         String userId = "USER_FOR_DECRYPT";
@@ -459,7 +478,7 @@ class PdfServiceTest {
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
 
         PdfServiceImpl svc = newService();
-        ReportDTOWithTrxCode result = svc.createPreauthPdf(transactionId);
+        ReportDTOWithTrxCode result = svc.createPreauthPdf(initiativeId, transactionId);
 
         byte[] bytes = Base64.getDecoder().decode(result.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
@@ -482,6 +501,7 @@ class PdfServiceTest {
 
     @Test
     void createPreauthPdf_whenPdfGenerationFails_shouldThrowPdfGenerationException() {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "TRX_ID_FAIL";
         Transaction mockTrx = createMockTransactionInProgress(
                 transactionId, "CODE", "USER", 1L, 2L, "Prod");
@@ -494,7 +514,7 @@ class PdfServiceTest {
         PdfServiceImpl svc = newService();
 
         PdfGenerationException ex = assertThrows(PdfGenerationException.class,
-                () -> svc.createPreauthPdf(transactionId));
+                () -> svc.createPreauthPdf(initiativeId, transactionId));
 
         assertEquals("Errore durante la generazione del PDF", ex.getMessage());
         assertNotNull(ex.getCause());
@@ -504,6 +524,7 @@ class PdfServiceTest {
     private Transaction createMockTransactionInProgress(String transactionId, String trxCode, String userId, long rewardCents, long effectiveAmountCents, String productName) {
         Transaction trx = new Transaction();
         trx.setId(transactionId);
+        trx.setInitiativeId("INITIATIVEID1");
         trx.setTrxCode(trxCode);
         trx.setUserId(userId);
         trx.setTrxDate(OffsetDateTime.parse("2024-07-15T10:30:00Z"));
