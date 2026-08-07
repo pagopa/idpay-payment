@@ -19,9 +19,13 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     private String binder;
 
     private final StreamBridge streamBridge;
+    private final RewardTransactionMapper rewardTransactionMapper;
 
-    public TransactionNotifierServiceImpl(StreamBridge streamBridge,@Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.binder}") String binder ) {
+    public TransactionNotifierServiceImpl(StreamBridge streamBridge,
+                                          RewardTransactionMapper rewardTransactionMapper,
+                                          @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.binder}") String binder) {
         this.streamBridge = streamBridge;
+        this.rewardTransactionMapper = rewardTransactionMapper;
         this.binder=binder;
     }
 
@@ -39,8 +43,8 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     }
 
     @Override
-    public Message<Transaction> buildMessage(Transaction trx, String key) {
-        return MessageBuilder.withPayload(trx)
+    public Message<RewardTransactionDTO> buildMessage(Transaction trx, String key) {
+        return MessageBuilder.withPayload(rewardTransactionMapper.transactionToRewardTransaction(trx))
                 .setHeader(KafkaHeaders.KEY, key)
                 .build();
     }

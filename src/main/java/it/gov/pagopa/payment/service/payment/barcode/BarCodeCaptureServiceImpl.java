@@ -83,6 +83,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
             transaction.setStatus(SyncTrxStatus.CAPTURED);
             transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")));
             transaction.setUpdateDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+            transaction.incrementTransactionRevision();
             transactionRepository.save(transaction);
 
             auditUtilities.logCapturePayment(transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode(), transaction.getUserId(), transaction.getRewardCents(), transaction.getRejectionReasons(), transaction.getMerchantId());

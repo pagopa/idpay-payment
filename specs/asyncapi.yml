@@ -96,7 +96,7 @@ components:
             description: "merchant id"
             example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     TransactionInProgressCancelled:
       contentType: application/json
       description: >-
@@ -110,7 +110,7 @@ components:
             description: "user id"
             example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     TransactionInProgressConfirmError:
       contentType: application/json
       description: >-
@@ -166,7 +166,7 @@ components:
             example: "Something gone wrong while Confirm Payment notify"
 
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     TransactionInProgressCancelledError:
       contentType: application/json
       description: >-
@@ -220,7 +220,7 @@ components:
             description: Message of the error.
             example: "Something gone wrong while cancelling Authorized Payment notify"
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     DeleteInitiative:
       contentType: application/json
       description: >-
@@ -367,7 +367,7 @@ components:
           description: sequence operation number
           example: 1
 
-    TransactionInProgress:
+    RewardTransactionDTO:
       type: object
       properties:
         id:
@@ -470,6 +470,11 @@ components:
           format: int64
           description: counter version
           example: 1
+        transactionRevision:
+          type: integer
+          format: int64
+          description: Lifecycle revision of the canonical payment transaction snapshot
+          example: 1
         rejectionReasons:
           type: array
           description: array of rejection Reasons
@@ -524,3 +529,44 @@ components:
           type: object
           description: inititative rejection reasons
           format: string
+        pointOfSaleId:
+          type: string
+          description: Point of sale identifier
+        franchiseName:
+          type: string
+          description: Merchant franchise name
+        invoiceData:
+          $ref: "#/components/schemas/InvoiceData"
+        creditNoteData:
+          $ref: "#/components/schemas/InvoiceData"
+        createdAt:
+          type: string
+          format: date-time
+          description: Transaction creation time
+        pointOfSaleType:
+          type: string
+          description: Point of sale type
+        familyId:
+          type: string
+          description: Initiative family identifier
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: string
+        trxEndDate:
+          type: string
+          format: date-time
+          description: Transaction expiration time
+        extendedAuthorization:
+          type: boolean
+          description: Whether the transaction is an extended authorization
+        productName:
+          type: string
+          description: Product name derived from additional properties
+    InvoiceData:
+      type: object
+      properties:
+        filename:
+          type: string
+        docNumber:
+          type: string

@@ -90,6 +90,7 @@ public class CommonCancelServiceImpl {
             if (isDeletableImmediately(transaction)) {
                 if (!SyncTrxStatus.INVOICED.equals(transaction.getStatus())) {
                     transaction.setStatus(SyncTrxStatus.CANCELLED);
+                    transaction.incrementTransactionRevision();
                     transactionRepository.save(transaction);
                 }
             } else if (SyncTrxStatus.AUTHORIZED.equals(transaction.getStatus())) {
@@ -159,6 +160,7 @@ public class CommonCancelServiceImpl {
             transaction.setRewardCents(refund.getRewardCents());
             transaction.setRewards(refund.getRewards());
             transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+            transaction.incrementTransactionRevision();
             transactionRepository.save(transaction);
 
             if (isReset) {
