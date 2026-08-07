@@ -118,10 +118,12 @@ Before changing invoice/reversal state, payment must obtain the current
 reward-batch facts through the narrow read-only operation:
 
 ```text
-findEligibility(merchantId, transactionId)
+GET /idpay/transactions/{transactionId}/reward-batch/eligibility?merchantId={merchantId}
 ```
 
-When a local membership exists, it returns:
+Payment forwards the caller's `Authorization` header to this operation and
+uses the Feign client's default timeouts. When a local membership exists, a
+`200 OK` response returns:
 
 ```text
 transactionId
@@ -133,11 +135,28 @@ batchStatus
 batchTransactionStatus
 ```
 
-The HTTP/client shape and payment policy using this result are still an
-integration PR decision. The query does not authorize the payment command,
-does not reserve membership, and does not create write coupling. Its result
-must not be copied into the impact event as a membership precondition because
-the membership may change before event delivery.
+A `204 No Content` response means no local membership; payment proceeds with
+its existing command validation. When a membership exists, payment derives the
+caller policy from the `Authorization` header:
+
+- `transaction:invoicelifecycle:basic` permits only
+  `transactionStatus=INVOICED` and `batchStatus` of `CREATED`, `EVALUATING`,
+  or `APPROVED`.
+- `transaction:invoicelifecycle:full` permits `transactionStatus` of
+  `INVOICED` or `REWARDED`, `batchStatus` of `CREATED`, `EVALUATING`,
+  `APPROVED`, `PENDING_REFUND`, `REFUNDED`, or `NOT_REFUNDED`, and
+  `batchTransactionStatus` of `CONSULTABLE`, `TO_CHECK`, `SUSPENDED`, or
+  `REJECTED`.
+- If both scopes are present, the full policy takes precedence. Missing or
+  unsupported scopes reject the command.
+
+When eligibility is enabled, any inability to verify it (including timeout,
+authentication/authorization failure, `429`, any non-`204` client error, or
+server error) rejects the command before blob or transaction mutation. The
+query does not authorize the payment command, does not reserve membership, and
+does not create write coupling. Its result must not be copied into the impact
+event as a membership precondition because the membership may change before
+event delivery.
 
 ## Effects applied by idpay-transactions
 
