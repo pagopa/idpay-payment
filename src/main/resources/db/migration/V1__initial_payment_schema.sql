@@ -1,11 +1,7 @@
-CREATE DATABASE "idpay-database";
-
-BEGIN;
-
--- 1. CREAZIONE DELLO SCHEMA
+-- Database and role provisioning are infrastructure responsibilities.
+-- The schema is created here so V1 also initializes a new environment.
 CREATE SCHEMA IF NOT EXISTS "idpay-pagamenti";
 
--- 2. TABELLA REWARD_BATCH
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     merchant_id VARCHAR(64) NOT NULL,
@@ -33,7 +29,6 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".reward_batch (
     merchant_send_date TIMESTAMP
 );
 
--- 3. TABELLA TRANSACTION
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     id VARCHAR(64) PRIMARY KEY,
     "trxCode" VARCHAR(64) NOT NULL,
@@ -82,7 +77,6 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction (
     "extendedAuthorization" BOOLEAN
 );
 
--- 4. TABELLA TRANSACTION_OUTBOX
 CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     transaction_id VARCHAR(64) NOT NULL,
@@ -93,7 +87,6 @@ CREATE TABLE IF NOT EXISTS "idpay-pagamenti".transaction_outbox (
     CONSTRAINT uk_transaction_outbox UNIQUE (transaction_id, event_type)
 );
 
--- 5. FUNZIONE DEL TRIGGER (Popola correttamente user_id prendendolo da "userId" di transaction)
 CREATE OR REPLACE FUNCTION "idpay-pagamenti".fn_transaction_outbox()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -135,7 +128,3 @@ WHEN (
     (OLD.status = 'INVOICED' AND NEW.status = 'INVOICED')
     )
 EXECUTE FUNCTION "idpay-pagamenti".fn_transaction_outbox();
-
-ALTER ROLE idpaydbadmin WITH REPLICATION;
-
-COMMIT;
