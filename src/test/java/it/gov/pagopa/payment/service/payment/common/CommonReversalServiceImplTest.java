@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -33,6 +34,8 @@ class CommonReversalServiceImplTest {
     private FileStorageClient fileStorageClientMock;
     @Mock
     private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightServiceMock;
     @InjectMocks
     private CommonReversalServiceImpl commonReversalService;
 
@@ -196,6 +199,29 @@ class CommonReversalServiceImplTest {
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
         assertEquals("Error uploading credit note file", exception.getMessage());
         verify(auditUtilitiesMock, times(1)).logErrorReversalTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testReversalTransaction_EligibilityFailureDoesNotMutateBlobOrTransaction() {
+        MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        String authorization = "Bearer token";
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        doThrow(new RewardBatchEligibilityNotAllowedException("Not allowed"))
+                .when(rewardBatchEligibilityPreflightServiceMock)
+                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> commonReversalService.reversalTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, authorization, file, DOC_NUMBER));
+
+        InOrder inOrder = inOrder(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
+        inOrder.verify(rewardBatchEligibilityPreflightServiceMock)
+                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+        verifyNoInteractions(fileStorageClientMock);
+        verify(transactionRepositoryMock, never()).save(any());
     }
 
 

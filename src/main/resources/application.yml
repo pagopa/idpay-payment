@@ -182,6 +182,8 @@ rest-client:
     baseUrl: ${IDPAY_PAYMENT_INSTRUMENT:http://idpay-payment-instrument}
   register:
     baseUrl: ${IDPAY_REGISTER:http://idpay-register}
+  reward-batch:
+    baseUrl: ${IDPAY_TRANSACTIONS:http://idpay-transactions}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
@@ -232,6 +234,9 @@ app:
     staleMinutesThreshold: ${STALE_MINUTES_THRESHOLD:120}
     sendExpiredSendBatchSize: ${EXPIRY_SEND_BATCH_SIZE:1000}
     updateBatchSize: ${EXPIRY_UPDATE_BATCH_SIZE:10000}
+  reward-batch-impact:
+    eligibility:
+      enabled: ${REWARD_BATCH_IMPACT_ELIGIBILITY_ENABLED:false}
 
 pdf:
   devPortalLink: ${DEV_PORTAL_LINK:https://developer.pagopa.it/pari/overview}

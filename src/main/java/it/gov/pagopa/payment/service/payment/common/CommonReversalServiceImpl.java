@@ -30,17 +30,26 @@ public class CommonReversalServiceImpl {
     private final TransactionRepository transactionRepository;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
+    private final RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService;
 
     public CommonReversalServiceImpl(
             TransactionRepository transactionRepository,
             FileStorageClient fileStorageClient,
-            AuditUtilities auditUtilities) {
+            AuditUtilities auditUtilities,
+            RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService) {
         this.transactionRepository = transactionRepository;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
+        this.rewardBatchEligibilityPreflightService = rewardBatchEligibilityPreflightService;
     }
 
-    public void reversalTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+    public void reversalTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
@@ -61,6 +70,8 @@ public class CommonReversalServiceImpl {
             if(!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus()) || (SyncTrxStatus.INVOICED.equals(transaction.getStatus()) && transaction.getInvoiceData() != null))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
             }
+
+            rewardBatchEligibilityPreflightService.verifyEligibility(transaction, merchantId, authorization);
 
             // Uploading invoice to storage
             String path = StoragePathUtils.buildCreditNotePath(transaction, file.getOriginalFilename());
@@ -98,6 +109,10 @@ public class CommonReversalServiceImpl {
             throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Error uploading credit note file", false, e);
         }
 
+    }
+
+    public void reversalTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+        reversalTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
     }
 
 }
