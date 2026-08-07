@@ -102,6 +102,7 @@ public abstract class CommonAuthorizationExpiredServiceImpl extends BaseCommonCo
         }
 
         transaction.setStatus(SyncTrxStatus.EXPIRED);
+        transaction.incrementTransactionRevision();
         transactionRepository.save(transaction);
         return transaction;
     }

@@ -144,6 +144,10 @@ public class Transaction {
     @Column(name = "\"transactionRevision\"", nullable = false)
     private Long transactionRevision;
 
+    public void incrementTransactionRevision() {
+        transactionRevision = Math.addExact(transactionRevision == null ? 0L : transactionRevision, 1L);
+    }
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "rewards", columnDefinition = "jsonb")
     private Map<String, Reward> rewards;

@@ -67,6 +67,7 @@ public class CommonConfirmServiceImpl {
     public void confirmAuthorizedPayment(Transaction transaction) {
         transaction.setStatus(SyncTrxStatus.REWARDED);
         transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        transaction.incrementTransactionRevision();
         log.info("[TRX_STATUS][REWARDED] The transaction with trxId {} trxCode {}, has been rewarded", transaction.getId(), transaction.getTrxCode());
         sendConfirmPaymentNotification(transaction);
 

@@ -72,6 +72,7 @@ public class CommonReversalServiceImpl {
                     .filename(file.getOriginalFilename())
                     .docNumber(docNumber)
                     .build());
+            transaction.incrementTransactionRevision();
 
             // logging operation
             RevertTransactionAuditDTO auditDTO = new RevertTransactionAuditDTO(

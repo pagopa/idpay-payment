@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
+import it.gov.pagopa.payment.connector.event.trx.RewardTransactionDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -69,6 +70,7 @@ class CommonConfirmServiceImplTest {
         assertEquals(expectedResponse, result);
         assertEquals(SyncTrxStatus.REWARDED, transaction.getStatus());
         assertNotNull(transaction.getElaborationDateTime());
+        assertEquals(1L, transaction.getTransactionRevision());
 
         verify(transactionRepositoryMock, times(1)).save(transaction);
         verify(notifierServiceMock, times(1)).notify(transaction, MERCHANT_ID);
@@ -133,7 +135,7 @@ class CommonConfirmServiceImplTest {
         // Given
         Transaction transaction = createDummyTransaction(SyncTrxStatus.AUTHORIZED, MERCHANT_ID, ACQUIRER_ID);
         TransactionResponse expectedResponse = new TransactionResponse();
-        Message<Transaction> dummyMessage = MessageBuilder.withPayload(transaction).build();
+        Message<RewardTransactionDTO> dummyMessage = MessageBuilder.withPayload(new RewardTransactionDTO()).build();
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
         when(notifierServiceMock.notify(transaction, MERCHANT_ID)).thenReturn(false);

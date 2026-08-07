@@ -43,6 +43,7 @@ public class QRCodeUnrelateServiceImpl implements QRCodeUnrelateService{
                 }
 
                 revertTrxToCreatedStatus(transaction);
+                transaction.incrementTransactionRevision();
                 transactionRepository.save(transaction);
 
                 log.info("[TRX_STATUS][UNRELATED] The transaction with trxId {} trxCode {}, has been cancelled", transaction.getId(), transaction.getTrxCode());

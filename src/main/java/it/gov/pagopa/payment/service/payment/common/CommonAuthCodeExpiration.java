@@ -60,6 +60,7 @@ public class CommonAuthCodeExpiration extends BaseCommonCodeExpiration{
         }
 
         transaction.setStatus(SyncTrxStatus.EXPIRED);
+        transaction.incrementTransactionRevision();
         transactionRepository.save(transaction);
         return transaction;
     }

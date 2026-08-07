@@ -42,9 +42,9 @@ public class IdpayCodeRelateUserServiceImpl implements IdpayCodeRelateUserServic
 
         Transaction trxInProgress = commonPreAuthService.relateUser(transaction, userId);
 
-        transactionRepository.save(transaction);
-
         transaction.setStatus(SyncTrxStatus.IDENTIFIED);
+        transaction.incrementTransactionRevision();
+        transactionRepository.save(transaction);
 
         commonPreAuthService.auditLogRelateUser(trxInProgress, RewardConstants.TRX_CHANNEL_IDPAYCODE);
 
