@@ -228,22 +228,22 @@ public interface TransactionRepositoryExt {
   @Modifying
   @Transactional
   @Query(value = """
-        UPDATE transaction 
-        SET status = 'EXPIRED', 
-            "updateDate" = (NOW()) 
-        WHERE "initiativeId" = :initiativeId 
-          AND status = 'CREATED' 
-          AND "trxEndDate" IS NOT NULL 
-          AND "extendedAuthorization" = TRUE 
-          AND ("trxEndDate" < :now OR "initiativeName" IS NOT NULL) 
-          AND ("userId" IS NULL OR "userId" NOT IN (
-              SELECT DISTINCT t2."userId" 
-              FROM transaction t2 
-              WHERE t2."initiativeId" = :initiativeId 
-                AND t2.status = 'AUTHORIZED' 
-                AND t2."userId" IS NOT NULL
-          ))
-        """, nativeQuery = true)
+      UPDATE transaction 
+      SET status = 'EXPIRED', 
+          "updateDate" = NOW() 
+      WHERE "initiativeId" = :initiativeId 
+        AND status = 'CREATED' 
+        AND "trxEndDate" IS NOT NULL 
+        AND "extendedAuthorization" = TRUE 
+        AND ("trxEndDate" < :now) 
+        AND ("userId" IS NULL OR "userId" NOT IN (
+            SELECT DISTINCT t2."userId" 
+            FROM transaction t2 
+            WHERE t2."initiativeId" = :initiativeId 
+              AND t2.status = 'AUTHORIZED' 
+              AND t2."userId" IS NOT NULL
+        ))
+      """, nativeQuery = true)
   int updateStatusForExpiredVoucherTransactions(
           @Param("initiativeId") String initiativeId,
           @Param("now") OffsetDateTime now
