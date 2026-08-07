@@ -115,8 +115,9 @@ class CommonInvoiceServiceImplTest {
         assertEquals("Franchise Test", transaction.getFranchiseName());
         assertEquals("PHYSICAL", transaction.getPointOfSaleType());
 
-        String expectedPath = String.format("invoices/elettrodomestici/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                MERCHANT_ID, POS_ID, TRX_ID, file.getOriginalFilename());
+        // MODIFICA: il path dello storage ora usa l'initiativeId invece del nome categoria "elettrodomestici".
+        String expectedPath = String.format("invoices/%s/merchant/%s/pos/%s/transaction/%s/invoice/%s",
+                INITIATIVE_ID, MERCHANT_ID, POS_ID, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(auditUtilitiesMock, times(1)).logInvoiceTransaction(any(TransactionAuditDTO.class));
         verify(transactionRepositoryMock, times(1)).save(transaction);
@@ -232,8 +233,10 @@ class CommonInvoiceServiceImplTest {
         commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
-        String expectedPath = String.format("invoices/elettrodomestici/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                MERCHANT_ID, transactionPosId, TRX_ID, file.getOriginalFilename());
+        // MODIFICA: il path dello storage ora usa l'initiativeId invece del nome categoria "elettrodomestici".
+        // Il codice di produzione (StoragePathUtils.buildInvoicePath) costruisce il path con transaction.getInitiativeId().
+        String expectedPath = String.format("invoices/%s/merchant/%s/pos/%s/transaction/%s/invoice/%s",
+                INITIATIVE_ID, MERCHANT_ID, transactionPosId, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(transactionRepositoryMock, times(1)).save(transaction);
         verify(auditUtilitiesMock, never()).logErrorInvoiceTransaction(any(), any());
