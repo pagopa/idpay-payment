@@ -5,5 +5,5 @@ import org.springframework.messaging.Message;
 
 public interface TransactionNotifierService {
     boolean notify(Transaction trx, String key);
-    Message<Transaction> buildMessage(Transaction transaction, String key);
+    Message<RewardTransactionDTO> buildMessage(Transaction transaction, String key);
 }

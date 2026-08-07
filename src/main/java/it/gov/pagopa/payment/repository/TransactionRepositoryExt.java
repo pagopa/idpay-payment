@@ -58,6 +58,7 @@ public interface TransactionRepositoryExt {
           "t.initiativeRejectionReasons = :initiativeRejectionReasons, " +
           "t.trxChargeDate = :#{#trx.trxChargeDate}, " +
           "t.updateDate = :updateDate, " +
+          "t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1, " +
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +
           "t.effectiveAmountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.effectiveAmountCents} ELSE t.effectiveAmountCents END, " +
@@ -87,7 +88,8 @@ public interface TransactionRepositoryExt {
           "t.rejectionReasons = :rejectionReasons, " +
           "t.initiativeRejectionReasons = :initiativeRejectionReasons, " +
           "t.channel = :channel, " +
-          "t.updateDate = :updateDate " +
+          "t.updateDate = :updateDate, " +
+          "t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1 " +
           "WHERE t.id = :id")
   void updateTrxRejected(
           @Param("id") String id,
@@ -113,7 +115,8 @@ public interface TransactionRepositoryExt {
           "t.trxChargeDate = :#{#trx.trxChargeDate}, " +
           "t.amountCents = :#{#trx.amountCents}, " +
           "t.merchantId = :#{#trx.merchantId}, " +
-          "t.updateDate = :updateDate " +
+          "t.updateDate = :updateDate, " +
+          "t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1 " +
           "WHERE t.id = :#{#trx.id}")
   void updateTrxWithStatusForPreview(
           @Param("trx") Transaction trx,
@@ -137,6 +140,7 @@ public interface TransactionRepositoryExt {
           "t.familyId = :#{#trx.familyId}, " +
           "t.additionalProperties = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.additionalProperties} ELSE t.additionalProperties END, " +
           "t.updateDate = :updateDate, " +
+          "t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1, " +
           "t.amountCurrency = CASE WHEN t.channel = 'BARCODE' THEN :currency ELSE t.amountCurrency END, " +
           "t.amountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.amountCents} ELSE t.amountCents END, " +
           "t.effectiveAmountCents = CASE WHEN t.channel = 'BARCODE' THEN :#{#trx.effectiveAmountCents} ELSE t.effectiveAmountCents END, " +
@@ -175,7 +179,8 @@ public interface TransactionRepositoryExt {
           "t.pointOfSaleId = :#{#trx.pointOfSaleId}, " +
           "t.franchiseName = :#{#trx.franchiseName}, " +
           "t.pointOfSaleType = :#{#trx.pointOfSaleType}, " +
-          "t.updateDate = :updateDate " +
+          "t.updateDate = :updateDate, " +
+          "t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1 " +
           "WHERE t.id = :#{#trx.id}")
   void updateTrxWithStatus(@Param("trx") Transaction trx, @Param("updateDate") LocalDateTime updateDate);
 
@@ -230,7 +235,8 @@ public interface TransactionRepositoryExt {
   @Query(value = """
       UPDATE transaction 
       SET status = 'EXPIRED', 
-          "updateDate" = NOW() 
+          "updateDate" = NOW(),
+          "transactionRevision" = COALESCE("transactionRevision", 0) + 1
       WHERE "initiativeId" = :initiativeId 
         AND status = 'CREATED' 
         AND "trxEndDate" IS NOT NULL 
@@ -255,7 +261,8 @@ public interface TransactionRepositoryExt {
         UPDATE Transaction t
         SET t.status = :newStatus,
             t.rejectionReasons = :rejectionReasons,
-            t.updateDate = CURRENT_TIMESTAMP
+            t.updateDate = CURRENT_TIMESTAMP,
+            t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1
         WHERE t.id = :trxId 
           AND t.status = :expectedStatus
     """)

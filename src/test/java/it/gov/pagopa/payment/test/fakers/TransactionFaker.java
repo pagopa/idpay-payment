@@ -72,6 +72,7 @@ public class TransactionFaker {
             .channel("CHANNEL%d".formatted(bias))
             .rewardCents(rewardCents)
             .counterVersion(0L)
+            .transactionRevision(0L)
             .rewards(rewards)
             .additionalProperties(additionalProperties)
             .extendedAuthorization(false)

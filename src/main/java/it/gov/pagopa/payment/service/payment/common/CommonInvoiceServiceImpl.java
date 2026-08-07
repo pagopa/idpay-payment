@@ -106,6 +106,7 @@ public class CommonInvoiceServiceImpl {
                 transaction.setBusinessName(pointOfSaleDTO.getBusinessName());
                 transaction.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
             }
+            transaction.incrementTransactionRevision();
 
             // logging operation
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
