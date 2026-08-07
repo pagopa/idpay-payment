@@ -54,28 +54,44 @@ boundary instead of exposing the JPA entity.
 | Database delivery | `src/main/resources/db/migration/` | Flyway creates the schema and applies forward-only migrations automatically. Existing DEV and UAT databases baseline at version `1`; fresh databases run `V1`. |
 | Existing outbox trigger | `src/main/resources/db/migration/V1__initial_payment_schema.sql`, `transaction_outbox` | Do not repurpose it for impacts: its status-based identity and `(transaction_id,event_type)` uniqueness cannot represent repeated invoice replacements safely, and its raw entity payload can leak local fields. |
 
-## 3. Decisions required before implementation
+## 3. Cross-service decisions and gates
 
-These values are cross-service contract decisions, not implementation guesses.
-They must be recorded in the PR or linked integration decision before
-Iteration 3:
+The eligibility decisions required for Iteration 3 are resolved:
 
-1. The exact `findEligibility(merchantId, transactionId)` HTTP method, path,
-   authentication/forwarded headers, timeout, and response for "no local
-   membership".
-2. The eligibility policy:
-   - recommended: a successful response, including no membership, preserves the
-     current payment command;
-   - a documented transport/5xx failure blocks the command when the eligibility
-     flag is enabled, before blob or transaction mutation;
-   - no broad fallback or silent default is allowed.
-3. The dedicated Kafka topic, binder, binding name, consumer group/auto-start
+1. `findEligibility` is
+   `GET /idpay/transactions/{transactionId}/reward-batch/eligibility` with
+   `merchantId` as a required query parameter. Payment forwards the request's
+   `Authorization` header to `idpay-transactions` and uses the Feign client's
+   default timeouts.
+2. A `200 OK` response contains `transactionId`, `initiativeId`, `merchantId`,
+   `rewardBatchId`, `transactionStatus`, `batchStatus`, and
+   `batchTransactionStatus`. A `204 No Content` response means no local
+   membership and preserves the existing payment command behavior.
+3. Payment adds `Authorization` to its invoice and reversal controller
+   contracts and derives the caller policy from its scopes. If both scopes are
+   present, `transaction:invoicelifecycle:full` takes precedence over
+   `transaction:invoicelifecycle:basic`; missing or unsupported scopes reject
+   the command.
+   - The basic policy permits only `transactionStatus=INVOICED` and
+     `batchStatus` of `CREATED`, `EVALUATING`, or `APPROVED`.
+   - The full policy permits `transactionStatus` of `INVOICED` or `REWARDED`,
+     `batchStatus` of `CREATED`, `EVALUATING`, `APPROVED`, `PENDING_REFUND`,
+     `REFUNDED`, or `NOT_REFUNDED`, and `batchTransactionStatus` of
+     `CONSULTABLE`, `TO_CHECK`, `SUSPENDED`, or `REJECTED`.
+4. When the eligibility flag is enabled, any failure to verify eligibility
+   (including timeout, authentication/authorization failure, `429`, any
+   non-`204` client error, or server error) rejects the command before blob or
+   transaction mutation. No fallback or silent default is allowed.
+
+The following decisions remain required before their respective iterations:
+
+1. The dedicated Kafka topic, binder, binding name, consumer group/auto-start
    policy, and environment variable names.
-4. The exact payment-owned fields in the shared `RewardTransactionDTO`, the
+2. The exact payment-owned fields in the shared `RewardTransactionDTO`, the
    Jackson null/unknown-field policy, and the compatibility behavior of the
    existing generic snapshot consumer.
-Until the remaining decisions are closed, an agent must not invent an endpoint or
-enable a remote call in a payment command.
+Until the remaining decisions are closed, an agent must not invent a Kafka
+binding or change the generic snapshot contract.
 
 ## 4. Rules for coding-agent handoff
 
@@ -211,29 +227,39 @@ the invoice/reversal commands call it only when explicitly enabled.
    pattern, for example:
    `connector/rest/rewardbatch/RewardBatchConnector.java` and
    `RewardBatchConnectorImpl.java`.
-2. Add the agreed Feign client, response DTO, and configuration property for
-   the `idpay-transactions` base URL. Keep the response limited to:
+2. Add the Feign client, response DTO, and configuration property for the
+   `idpay-transactions` base URL. It must issue
+   `GET /idpay/transactions/{transactionId}/reward-batch/eligibility` with
+   `merchantId` as a query parameter and forward `Authorization`. Use the
+   client's default timeouts. Keep the response limited to:
    `transactionId`, `initiativeId`, `merchantId`, `rewardBatchId`,
    `transactionStatus`, `batchStatus`, and `batchTransactionStatus`.
-3. Map only documented "no membership" responses to an empty result. Surface
-   all other client, timeout, authentication, and server errors through the
-   repository's normal exception handling.
+3. Map `204 No Content` to an empty result. Surface every other client,
+   timeout, authentication, rate-limit, and server error through the
+   repository's normal exception handling; it must reject the command when
+   eligibility is enabled.
 4. Add `eligibility.enabled=false` under a dedicated
    `app.reward-batch-impact` configuration section.
 5. When enabled, call `findEligibility(merchantId, transactionId)` after
    payment validation has loaded the authoritative transaction and before
-   invoice/reversal state or blob mutation. Revalidate the transaction inside
-   the eventual database transaction to protect against races.
+   invoice/reversal state or blob mutation. Add `Authorization` to both
+   payment controller contracts, derive the basic/full lifecycle policy from
+   its scopes, and validate a membership response against that policy. A
+   no-membership response preserves the existing command behavior. Revalidate
+   the transaction inside the eventual database transaction to protect against
+   races.
 6. Keep eligibility data out of all generic and impact event payloads. It is
    only an input to the agreed payment policy.
 
 **Tests**
 
-- Connector unit/WireMock tests cover the agreed success, no-membership,
-  validation-error, timeout, and server-error responses.
+- Connector unit/WireMock tests cover the `200` response, `204` no-membership,
+  forwarded authorization header, validation-error, timeout, and server-error
+  responses.
 - `CommonInvoiceServiceImplTest` and `CommonReversalServiceImplTest` verify:
-  call order, disabled-flag behavior, successful preflight, and no blob/save
-  when a required preflight error is returned.
+  call order, disabled-flag behavior, no-membership behavior, the basic and
+  full scope policies (including full precedence), successful preflight, and
+  no blob/save when eligibility cannot be verified or rejects the response.
 - Tests verify that eligibility fields never appear in an event payload.
 - Configuration tests verify the safe default is disabled.
 
