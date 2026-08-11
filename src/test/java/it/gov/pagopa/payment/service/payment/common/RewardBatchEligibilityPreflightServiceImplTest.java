@@ -73,12 +73,13 @@ class RewardBatchEligibilityPreflightServiceImplTest {
     void rejectsBasicPolicyOutsideAllowedStatuses() {
         enableEligibility();
         String authorization = authorization("transaction:invoicelifecycle:basic");
+        Transaction transaction = transaction();
         when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
                 .thenReturn(Optional.of(eligibility("REWARDED", "APPROVED", "CONSULTABLE")));
 
         assertThrows(
                 RewardBatchEligibilityNotAllowedException.class,
-                () -> preflightService.verifyEligibility(transaction(), MERCHANT_ID, authorization));
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
     }
 
     @Test
@@ -96,12 +97,90 @@ class RewardBatchEligibilityPreflightServiceImplTest {
     void rejectsMissingLifecycleScope() {
         enableEligibility();
         String authorization = authorization("other:scope");
+        Transaction transaction = transaction();
         when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
                 .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
 
         assertThrows(
                 RewardBatchEligibilityNotAllowedException.class,
-                () -> preflightService.verifyEligibility(transaction(), MERCHANT_ID, authorization));
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
+    }
+
+    @Test
+    void rejectsEligibilityForAnotherTransaction() {
+        enableEligibility();
+        String authorization = authorization("transaction:invoicelifecycle:basic");
+        Transaction transaction = transaction();
+        RewardBatchEligibilityDTO eligibility = eligibility("INVOICED", "APPROVED", "CONSULTABLE");
+        eligibility.setTransactionId("another-transaction");
+        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
+                .thenReturn(Optional.of(eligibility));
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
+    }
+
+    @Test
+    void rejectsFullPolicyOutsideAllowedStatuses() {
+        enableEligibility();
+        String authorization = authorization("transaction:invoicelifecycle:full");
+        Transaction transaction = transaction();
+        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
+                .thenReturn(Optional.of(eligibility("CREATED", "APPROVED", "CONSULTABLE")));
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
+    }
+
+    @Test
+    void rejectsMalformedBearerToken() {
+        enableEligibility();
+        String authorization = "Bearer malformed-token";
+        Transaction transaction = transaction();
+        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
+                .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
+    }
+
+    @Test
+    void rejectsAuthorizationWithoutBearerToken() {
+        enableEligibility();
+        String authorization = "Basic token";
+        Transaction transaction = transaction();
+        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
+                .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
+    }
+
+    @Test
+    void rejectsBearerTokenWithUnreadablePayload() {
+        enableEligibility();
+        String authorization = "Bearer header.%.signature";
+        Transaction transaction = transaction();
+        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
+                .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
+    }
+
+    @Test
+    void appliesFullPolicyForArrayScopeClaim() {
+        enableEligibility();
+        String authorization = authorizationPayload("{\"scp\":[\"transaction:invoicelifecycle:full\"]}");
+        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
+                .thenReturn(Optional.of(eligibility("REWARDED", "NOT_REFUNDED", "REJECTED")));
+
+        assertDoesNotThrow(() -> preflightService.verifyEligibility(transaction(), MERCHANT_ID, authorization));
     }
 
     private void enableEligibility() {
@@ -128,7 +207,10 @@ class RewardBatchEligibilityPreflightServiceImplTest {
     }
 
     private String authorization(String scope) {
-        String payload = "{\"scope\":\"" + scope + "\"}";
+        return authorizationPayload("{\"scope\":\"" + scope + "\"}");
+    }
+
+    private String authorizationPayload(String payload) {
         return "Bearer header."
                 + Base64.getUrlEncoder().withoutPadding()
                         .encodeToString(payload.getBytes(StandardCharsets.UTF_8))

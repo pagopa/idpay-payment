@@ -111,7 +111,7 @@ public class RewardBatchEligibilityPreflightServiceImpl implements RewardBatchEl
             addScopes(scopes, payload.get("scope"));
             addScopes(scopes, payload.get("scp"));
             return scopes;
-        } catch (IllegalArgumentException | JacksonException e) {
+        } catch (IllegalArgumentException | JacksonException _) {
             throw new RewardBatchEligibilityNotAllowedException("The bearer token scopes cannot be read");
         }
     }
