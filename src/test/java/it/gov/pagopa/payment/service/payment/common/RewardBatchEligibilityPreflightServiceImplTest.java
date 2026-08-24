@@ -8,6 +8,8 @@ import it.gov.pagopa.payment.exception.custom.RewardBatchEligibilityNotAllowedEx
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import tools.jackson.databind.json.JsonMapper;
@@ -203,23 +205,14 @@ class RewardBatchEligibilityPreflightServiceImplTest {
                 () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
     }
 
-    @Test
-    void rejectsMalformedBearerToken() {
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "Bearer malformed-token",
+            "Basic token",
+            "Bearer header.%.signature"
+    })
+    void rejectsInvalidAuthorization(String authorization) {
         enableEligibility();
-        String authorization = "Bearer malformed-token";
-        Transaction transaction = transaction();
-        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
-                .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
-
-        assertThrows(
-                RewardBatchEligibilityNotAllowedException.class,
-                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
-    }
-
-    @Test
-    void rejectsAuthorizationWithoutBearerToken() {
-        enableEligibility();
-        String authorization = "Basic token";
         Transaction transaction = transaction();
         when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
                 .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
@@ -239,19 +232,6 @@ class RewardBatchEligibilityPreflightServiceImplTest {
         assertThrows(
                 RewardBatchEligibilityNotAllowedException.class,
                 () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, null));
-    }
-
-    @Test
-    void rejectsBearerTokenWithUnreadablePayload() {
-        enableEligibility();
-        String authorization = "Bearer header.%.signature";
-        Transaction transaction = transaction();
-        when(rewardBatchConnector.findEligibility(MERCHANT_ID, TRANSACTION_ID, authorization))
-                .thenReturn(Optional.of(eligibility("INVOICED", "APPROVED", "CONSULTABLE")));
-
-        assertThrows(
-                RewardBatchEligibilityNotAllowedException.class,
-                () -> preflightService.verifyEligibility(transaction, MERCHANT_ID, authorization));
     }
 
     @Test
