@@ -104,17 +104,18 @@ class CommonPaymentControllerImplTest {
     String initiativeId = "INITIATIVE_ID";
     String transactionId = "TRX_ID";
     String merchantId = "MERCHANT_ID";
+    String authorization = "Bearer token";
     String docNumber = "DOC_123";
 
     doNothing().when(commonReversalServiceMock)
-            .reversalTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
+            .reversalTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
 
     // When
-    commonPaymentController.reversalTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
+    commonPaymentController.reversalTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
 
     // Then
     verify(commonReversalServiceMock, times(1))
-            .reversalTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
+            .reversalTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
   }
 
   @Test
@@ -123,17 +124,18 @@ class CommonPaymentControllerImplTest {
     String initiativeId = "INITIATIVE_ID";
     String transactionId = "TRX_ID";
     String merchantId = "MERCHANT_ID";
+    String authorization = "Bearer token";
     String docNumber = "DOC_123";
 
     doNothing().when(commonInvoiceServiceMock)
-            .invoiceTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
+            .invoiceTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
 
     // When
-    commonPaymentController.invoiceTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
+    commonPaymentController.invoiceTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
 
     // Then
     verify(commonInvoiceServiceMock, times(1))
-            .invoiceTransaction(initiativeId, transactionId, merchantId, multipartFileMock, docNumber);
+            .invoiceTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
   }
 
   @Test

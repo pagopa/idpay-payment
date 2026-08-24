@@ -15,6 +15,7 @@ import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
@@ -41,6 +42,8 @@ class CommonInvoiceServiceImplTest {
     private AuditUtilities auditUtilitiesMock;
     @Mock
     private MerchantConnector merchantConnectorMock;
+    @Mock
+    private RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightServiceMock;
 
     private CommonInvoiceServiceImpl commonInvoiceService;
 
@@ -59,7 +62,8 @@ class CommonInvoiceServiceImplTest {
                 transactionRepositoryMock,
                 fileStorageClientMock,
                 auditUtilitiesMock,
-                merchantConnectorMock
+                merchantConnectorMock,
+                rewardBatchEligibilityPreflightServiceMock
         );
     }
 
@@ -300,6 +304,30 @@ class CommonInvoiceServiceImplTest {
         assertEquals(ExceptionCode.GENERIC_ERROR, exception.getCode());
         assertEquals("Error uploading invoice file", exception.getMessage());
         verify(auditUtilitiesMock, times(1)).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testInvoiceTransaction_EligibilityFailureDoesNotMutateBlobOrTransaction() {
+        MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        String authorization = "Bearer token";
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        doThrow(new RewardBatchEligibilityNotAllowedException("Not allowed"))
+                .when(rewardBatchEligibilityPreflightServiceMock)
+                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+
+        assertThrows(
+                RewardBatchEligibilityNotAllowedException.class,
+                () -> commonInvoiceService.invoiceTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, authorization, file, DOC_NUMBER));
+
+        InOrder inOrder = inOrder(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
+        inOrder.verify(rewardBatchEligibilityPreflightServiceMock)
+                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+        verifyNoInteractions(fileStorageClientMock, merchantConnectorMock);
+        verify(transactionRepositoryMock, never()).save(any());
     }
 
     private Transaction createDummyTransaction(SyncTrxStatus status, String merchantId, String pointOfSaleId) {

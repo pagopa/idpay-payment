@@ -47,6 +47,7 @@ public interface CommonPaymentController {
         @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
+        @RequestHeader("Authorization") String authorization,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );
@@ -57,6 +58,7 @@ public interface CommonPaymentController {
         @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
+        @RequestHeader("Authorization") String authorization,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );

@@ -83,7 +83,13 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+    public void reversalTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
@@ -93,12 +99,18 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} and initiativeId {}",
                 sanitizedMerchantId, sanitizedTrxCode, sanitizedInitiativeId
         );
-        commonReversalService.reversalTransaction(initiativeId, transactionId, merchantId, file, docNumber);
+        commonReversalService.reversalTransaction(initiativeId, transactionId, merchantId, authorization, file, docNumber);
     }
 
     @Override
     @PerformanceLog(value = "INVOICE_TRANSACTION")
-    public void invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+    public void invoiceTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
@@ -108,7 +120,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
             "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} and initiativeId {}",
             sanitizedMerchantId, sanitizedTrxCode, sanitizedInitiativeId
         );
-        commonInvoiceService.invoiceTransaction(initiativeId, transactionId, merchantId, file, docNumber);
+        commonInvoiceService.invoiceTransaction(initiativeId, transactionId, merchantId, authorization, file, docNumber);
     }
 
     @Override
