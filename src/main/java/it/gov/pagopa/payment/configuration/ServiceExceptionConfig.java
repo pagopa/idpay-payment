@@ -36,6 +36,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(UserNotOnboardedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(UserSuspendedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(PointOfSaleNotAllowedException.class, HttpStatus.FORBIDDEN);
+    exceptionMap.put(RewardBatchEligibilityNotAllowedException.class, HttpStatus.FORBIDDEN);
 
     // NotFound
     exceptionMap.put(IdpaycodeNotFoundException.class, HttpStatus.NOT_FOUND);
@@ -50,6 +51,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(RewardCalculatorInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
     exceptionMap.put(WalletInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
     exceptionMap.put(ProductInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
+    exceptionMap.put(RewardBatchInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
 
     // TooManyRequests
     exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);

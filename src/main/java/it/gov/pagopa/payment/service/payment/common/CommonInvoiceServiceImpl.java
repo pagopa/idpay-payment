@@ -37,21 +37,30 @@ public class CommonInvoiceServiceImpl {
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
     private final MerchantConnector merchantConnector;
+    private final RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService;
 
     public CommonInvoiceServiceImpl(
             @Value("${app.common.expirations.minDaysToInvoiceTransaction:0}") long minDaysToInvoiceTransaction,
             TransactionRepository transactionRepository,
             FileStorageClient fileStorageClient,
             AuditUtilities auditUtilities,
-            MerchantConnector merchantConnector) {
+            MerchantConnector merchantConnector,
+            RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
         this.transactionRepository = transactionRepository;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
         this.merchantConnector = merchantConnector;
+        this.rewardBatchEligibilityPreflightService = rewardBatchEligibilityPreflightService;
     }
 
-    public void invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+    public void invoiceTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
@@ -78,6 +87,8 @@ public class CommonInvoiceServiceImpl {
             if (transaction.getInvoiceData() == null && (minDaysToInvoiceTransaction > 0 && transaction.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now(ZoneId.of("Europe/Rome"))))) {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(transaction.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
+
+            rewardBatchEligibilityPreflightService.verifyEligibility(transaction, merchantId, authorization);
 
             InvoiceData oldDocumentData = transaction.getInvoiceData();
             if(oldDocumentData!=null){
@@ -132,6 +143,10 @@ public class CommonInvoiceServiceImpl {
             throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Error uploading invoice file", false, e);
         }
 
+    }
+
+    public void invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+        invoiceTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
     }
 
 }
