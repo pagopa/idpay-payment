@@ -6,6 +6,7 @@ import it.gov.pagopa.payment.connector.rest.merchant.MerchantRestClient;
 import it.gov.pagopa.payment.connector.rest.paymentinstrument.PaymentInstrumentRestClient;
 import it.gov.pagopa.payment.connector.rest.register.RegisterRestClient;
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorRestClient;
+import it.gov.pagopa.payment.connector.rest.rewardbatch.RewardBatchRestClient;
 import it.gov.pagopa.payment.connector.rest.wallet.WalletRestClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +18,8 @@ import org.springframework.context.annotation.Configuration;
         DecryptRest.class,
         WalletRestClient.class,
         PaymentInstrumentRestClient.class,
-        RegisterRestClient.class})
+        RegisterRestClient.class,
+        RewardBatchRestClient.class})
 public class FeignConfig {
 
 }
