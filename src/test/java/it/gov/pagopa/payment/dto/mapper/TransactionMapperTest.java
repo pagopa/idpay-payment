@@ -69,4 +69,13 @@ class TransactionMapperTest {
         assertEquals(0L, transaction.getTransactionRevision());
         assertNull(transaction.getCounterVersion());
     }
+
+    @Test
+    void transactionReturnsProductNameFromAdditionalProperties() {
+        Transaction transaction = Transaction.builder()
+                .additionalProperties(Map.of("productName", "product-name"))
+                .build();
+
+        assertEquals("product-name", transaction.getProductName());
+    }
 }
