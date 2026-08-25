@@ -216,15 +216,4 @@ class CommonPaymentControllerImplTest {
     verify(qrCodeExpirationServiceMock, times(1)).forceAuthorizationTrxExpiration(initiativeId);
   }
 
-  @Test
-  void testDeleteInvoicedTransaction() {
-    // Given
-    doNothing().when(commonCancelServiceMock).deleteInvoicedTransaction();
-
-    // When
-    commonPaymentController.deleteInvoicedTransaction();
-
-    // Then
-    verify(commonCancelServiceMock, times(1)).deleteInvoicedTransaction();
-  }
 }

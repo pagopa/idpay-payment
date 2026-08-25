@@ -233,45 +233,6 @@ public class CommonCancelServiceImpl {
         } while (!transactions.isEmpty());
     }
 
-    public void deleteInvoicedTransaction() {
-        while (true) {
-
-            List<Transaction> batch =
-                    fetchInvoicedTransaction();
-
-            if (batch.isEmpty()) {
-                log.debug("[{}] No more invoiced transactions found", INVOICED + RewardConstants.TRX_CHANNEL_QRCODE);
-                break;
-            }
-
-            processBatchInvoiced(batch);
-        }
-    }
-
-    private List<Transaction> fetchInvoicedTransaction() {
-        Pageable pageable = PageRequest.of(0, 100);
-        return transactionRepository.findByStatusOrderByTrxDateAsc(
-                SyncTrxStatus.INVOICED,
-                pageable
-        );
-    }
-
-    private void processBatchInvoiced(List<Transaction> batch) {
-        List<String> deletableIds = new ArrayList<>();
-
-        for (Transaction trx : batch) {
-            log.info("[{}] Managing expired transaction trxId={}, status={}, trxDate={}",
-                    "DELETE_INVOICED_TRANSACTION",
-                    trx.getId(),
-                    trx.getStatus(),
-                    trx.getTrxDate());
-            deletableIds.add(trx.getId());
-        }
-
-        deleteProcessedTransactions(deletableIds);
-    }
-
-
     public void deleteLapsedTransaction(String initiativeId) {
         while (true) {
 
