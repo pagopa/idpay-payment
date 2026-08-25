@@ -34,11 +34,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
                                                       OffsetDateTime threshold,
                                                       Pageable pageable);
 
-    List<Transaction> findByStatusOrderByTrxDateAsc(
-            SyncTrxStatus status,
-            Pageable pageable
-    );
-
     List<Transaction> findByInitiativeIdAndStatusAndUpdateDateBeforeAndExtendedAuthorizationIsTrueOrderByIdAsc(
             String initiativeId,
             SyncTrxStatus status,

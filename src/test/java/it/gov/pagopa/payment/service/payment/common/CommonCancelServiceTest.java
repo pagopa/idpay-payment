@@ -356,28 +356,7 @@ class CommonCancelServiceImplTest {
   }
 
   // =========================================================================
-  // 3. DELETE INVOICED TRANSACTION TESTS
-  // =========================================================================
-
-  @Test
-  @DisplayName("deleteInvoicedTransaction - Processa e cancella le transazioni fatturate a blocchi")
-  void testDeleteInvoicedTransaction() {
-    Transaction trx1 = createTransaction(SyncTrxStatus.INVOICED);
-    trx1.setId("INVOICED_1");
-    Transaction trx2 = createTransaction(SyncTrxStatus.INVOICED);
-    trx2.setId("INVOICED_2");
-
-    when(transactionRepository.findByStatusOrderByTrxDateAsc(eq(SyncTrxStatus.INVOICED), any(Pageable.class)))
-            .thenReturn(List.of(trx1, trx2))
-            .thenReturn(Collections.emptyList());
-
-    commonCancelService.deleteInvoicedTransaction();
-
-    verify(transactionRepository).bulkDeleteByIds(List.of("INVOICED_1", "INVOICED_2"));
-  }
-
-  // =========================================================================
-  // 4. DELETE LAPSED TRANSACTION TESTS
+  // 3. DELETE LAPSED TRANSACTION TESTS
   // =========================================================================
 
   @Test
