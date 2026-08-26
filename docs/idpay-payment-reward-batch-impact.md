@@ -54,50 +54,49 @@ secondary impact event for the same revision. A reversal produces only
 
 ### First-rollout wire representation
 
-The first rollout preserves the complete `RewardTransactionDTO` as the JSON
-message payload. It does not introduce a payload envelope.
+The first rollout preserves all fields of `RewardTransactionDTO` in one flat
+JSON message and adds event-only metadata while writing
+`transaction_outbox.payload`. It does not introduce a payload envelope.
 
 | Wire element | Representation |
 | --- | --- |
 | Kafka key | Transaction ID from outbox `transaction_id` |
-| Event type | Kafka header `operationType`, sourced from outbox `event_type` |
-| Event ID | Kafka header `eventId`, sourced from the immutable outbox row ID |
-| Schema version | Kafka header `schemaVersion`, initially `1` |
-| Occurrence time | Kafka header `occurredAt`, sourced from outbox `occurred_at` |
-| Transaction revision | Kafka header `transactionRevision` and required positive `RewardTransactionDTO.transactionRevision` |
+| Event type | Payload `eventType`, equal to outbox `event_type` |
+| Event ID | Payload `eventId`, sourced from the immutable outbox row ID |
+| Schema version | Payload `schemaVersion`, initially `1` |
+| Occurrence time | Payload `occurredAt`, sourced from outbox `occurred_at` |
+| Transaction revision | Required positive payload `transactionRevision`, equal to outbox `transaction_revision` |
 | Canonical outcome | `RewardTransactionDTO.status` and the remaining payment-owned snapshot fields |
 
-The exact event-type header name is `operationType`. This is the existing
-Spring Cloud Stream/Kafka event-classification convention used by deployed
-IdPay integrations.
+The two payload fields have different meanings:
 
-The header and payload fields have different meanings:
-
-- Kafka header `operationType` classifies the event and contains values such
+- payload `eventType` classifies the event and contains values such
   as `TRANSACTION_INVOICED`, `TRANSACTION_INVOICE_REPLACED`, or
   `TRANSACTION_REFUNDED`;
 - payload `RewardTransactionDTO.operationType` remains the original
   payment-domain operation code and must not be overwritten with an event
   type.
 
-Header `transactionRevision` and payload
-`RewardTransactionDTO.transactionRevision` must contain the same value.
 `occurredAt` is the committed outcome timestamp used for deterministic
 outcome-month grouping.
+
+`eventType`, `eventId`, `schemaVersion`, and `occurredAt` exist only in the
+immutable outbox payload. They are not columns or fields of the authoritative
+transaction table/entity. Consumers that classify these outcomes must
+deserialize `eventType`.
 
 For `TRANSACTION_INVOICE_REPLACED`, the payload status is `INVOICED`. For
 `TRANSACTION_REFUNDED`, the payload status is `REFUNDED`.
 
 The currently deployed PostgreSQL CDC connector does not yet satisfy this
 frozen representation: it filters a closed `event_type` allowlist, extracts
-`user_id` as the key, and then extracts only `payload`, which drops
-`event_type`. Before replacement production is enabled, the connector must:
+`user_id` as the key, and then publishes `payload`. Before replacement
+production is enabled:
 
 1. allow `TRANSACTION_INVOICE_REPLACED`;
 2. extract `transaction_id` as the Kafka key; and
-3. copy `id`, `schema_version`, `occurred_at`, `transaction_revision`, and
-   `event_type` to headers `eventId`, `schemaVersion`, `occurredAt`,
-   `transactionRevision`, and `operationType` before extracting the payload.
+3. ensure the outbox writer has already included the frozen event metadata in
+   `payload` before CDC extracts it.
 
 These connector changes are rollout prerequisites, not part of this
 documentation-only PR.
@@ -127,14 +126,14 @@ does not update them.
 ## Consumer compatibility inventory
 
 The inventory was performed against the PagoPA GitHub organization using the
-topic name `idpay-transaction`, event type `TRANSACTION_INVOICED`, and header
-name `operationType`.
+topic name `idpay-transaction`, event type `TRANSACTION_INVOICED`, and payload
+transaction models.
 
 | Repository / integration | Current behavior | Compatibility result | Required action |
 | --- | --- | --- | --- |
-| `pagopa/cstar-securehub-infra` PostgreSQL `transaction_connector.json` | Uses a closed `event_type` allowlist, keys by `user_id`, and drops outbox metadata when extracting `payload` | **Blocking** | Add the replacement type, key by `transaction_id`, and emit the frozen metadata headers |
-| `pagopa/idpay-transactions` | Deserializes the complete `RewardTransactionDTO` and persists revision-ordered snapshots, but does not classify or atomically apply replacement effects | **Blocking** | Implement `TRANSACTION_INVOICE_REPLACED` handling before production, as defined by PR 02 |
-| `pagopa/idpay-ranker` | Consumes `idpay-transaction` without checking the event-type header and deserializes payload status into a closed `SyncTrxStatus` enum that does not contain `INVOICED` | **Blocking: rejects the payload** | Ignore invoice event types before closed-enum deserialization or otherwise isolate the consumer from these events |
+| `pagopa/cstar-securehub-infra` PostgreSQL `transaction_connector.json` | Uses a closed `event_type` allowlist and keys by `user_id`; it already extracts the complete outbox `payload` | **Blocking** | Add the replacement type and key by `transaction_id` |
+| `pagopa/idpay-transactions` | Deserializes the canonical transaction fields and persists revision-ordered snapshots, but does not deserialize `eventType` or atomically apply replacement effects | **Blocking** | Deserialize payload `eventType` and implement `TRANSACTION_INVOICE_REPLACED` handling as defined by PR 02 |
+| `pagopa/idpay-ranker` | Consumes `idpay-transaction` and deserializes payload status into a closed `SyncTrxStatus` enum that does not contain `INVOICED` | **Blocking: rejects the payload** | Ignore invoice `eventType` values before closed-enum transaction processing or otherwise isolate the consumer |
 | `pagopa/idpay-reward-calculator` | Deserializes the raw transaction payload with string status; its counter-unlock mediator accepts only `AUTHORIZED`, `REWARDED`, and `REJECTED` | Compatible: safely ignores `INVOICED` | No code change required for the replacement event |
 
 Other organization search matches were producers, infrastructure references,
@@ -148,7 +147,7 @@ PR 04, which starts producing `TRANSACTION_INVOICE_REPLACED`, must not merge
 until all blocking entries in the compatibility inventory are resolved and
 deployed:
 
-- the CDC connector publishes the frozen key and `operationType` header;
+- the CDC connector publishes the frozen transaction key and payload;
 - `idpay-transactions` handles the replacement event atomically; and
 - `idpay-ranker` no longer rejects invoice payloads from this topic.
 
@@ -160,4 +159,4 @@ confirmed.
 
 | PR | Change |
 | --- | --- |
-| PR 01 | Froze the unified event matrix, one-event-per-revision invariant, `transactionId` key, `operationType` event header, compatibility inventory, and PR 04 rollout gate |
+| PR 01 | Froze the unified event matrix, one-event-per-revision invariant, `transactionId` key, payload `eventType`, compatibility inventory, and PR 04 rollout gate |
