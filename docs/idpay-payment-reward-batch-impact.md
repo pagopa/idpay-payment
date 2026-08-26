@@ -1,213 +1,163 @@
 # idpay-payment impact: reward-batch invoice lifecycle
 
-## Purpose and maintenance
+## Purpose and ownership
 
-This is the living cross-service handoff for payment-driven invoice replacement
-and invoiced reversal. Update it in the same PR that changes either service's
-transaction revision, generic transaction snapshot, eligibility query, impact
-event, ordering, idempotency, or rollout behavior.
+This document is the authoritative cross-service contract for payment-driven
+invoice publication, invoice replacement, and invoiced reversal.
 
-The payment service remains the owner of invoice/reversal commands,
-authorization, blob operations, and authoritative transaction state.
-`idpay-transactions` remains the owner of reward-batch membership and
-in-batch evaluation state. Payment must not write reward-batch data directly.
-An `INVOICED` generic snapshot updates only the local projection:
-`idpay-transactions` must not cancel or delete payment's transaction.
+`idpay-payment` owns payment state, invoice and credit-note commands, and
+invoice blobs. `idpay-transactions` owns reward-batch membership and in-batch
+evaluation state. Payment events contain only payment-owned canonical fields;
+they never carry or update reward-batch membership data.
 
-## Current integration status
+The baseline required by this contract is present on the repositories'
+`develop` branches:
 
-| Item | Status |
-| --- | --- |
-| Local SQL projection, revision storage, and transaction-local impact watermark | Implemented on the `idpay-transactions` PR 20 branch |
-| Revision in `idpay-payment` transaction storage/model | Not implemented |
-| Revision in generic transaction snapshots | Not implemented |
-| Dedicated payment-to-reward-batch-impact producer | Not implemented |
-| Read-only eligibility endpoint/client contract | Not implemented |
-| Runtime impact consumer binding in `idpay-transactions` | Not implemented |
+- `idpay-payment` persists and publishes `transactionRevision` and performs
+  the read-only reward-batch eligibility preflight;
+- `idpay-transactions` persists generic snapshots in revision order; and
+- `idpay-transactions` persists `REFUNDED` snapshots and idempotently detaches
+  current reward-batch membership.
 
-The current payment `TransactionInProgress` model has `counterVersion`, but it
-is the reward-calculator counter ETag. It is not a transaction lifecycle
-revision and must not be reused for this integration.
+`transactionRevision` is independent from reward-calculator
+`counterVersion`.
 
-The direct SQL cutover removes the legacy local invoice replacement and
-invoiced-reversal routes from `idpay-transactions`. Until the payment contract
-and runtime consumer binding are implemented, deployment must not rely on a
-local substitute for those payment-owned commands.
+## Authoritative publication matrix
 
-## Required payment changes
-
-### 1. Persist a transaction lifecycle revision
-
-Add a distinct, non-negative `transactionRevision` to payment's authoritative
-transaction record. It must:
-
-- be initialized for every transaction;
-- be incremented atomically whenever payment changes canonical transaction
-  data that it publishes;
-- be persisted in the same transaction as the invoice replacement or reversal
-  outcome;
-- be included in every generic transaction snapshot; and
-- use the same value in the dedicated impact event and its embedded
-  transaction projection.
-
-The revision is transaction-scoped and monotonically increasing. It is not an
-event sequence, a Kafka offset, an update timestamp, or `counterVersion`.
-
-`idpay-transactions` stores the revision on `reward_transactions`. Generic
-snapshots update the local canonical projection only when their revision is
-strictly newer. It separately stores the latest payment-impact revision whose
-handling committed. Generic snapshots never change that impact watermark, so
-an impact at the same revision as a generic snapshot still applies once.
-
-### 2. Extend the generic transaction snapshot
-
-Add `transactionRevision` to the payment-produced `RewardTransactionDTO`.
-This is additive at the wire level, but it is required before SQL cutover:
-missing values map to revision `0` in the current receiver and cannot advance
-an already synchronized local projection.
-
-The generic snapshot must continue to contain only payment-owned transaction
-data. It must not include or overwrite reward-batch membership/evaluation
-fields.
-
-### 3. Publish a dedicated impact event
-
-For each successful payment operation below, persist an outbox record in the
-same transaction as the authoritative payment update and publish it after
-commit. Retries must retain the exact same event identity and payload.
-
-| Payment operation | `impactType` | Required projected status |
+| Outcome | Event type | Payload status |
 | --- | --- | --- |
-| Invoice replacement | `INVOICE_REPLACED` | `INVOICED` |
-| Reversal of an invoiced transaction | `INVOICED_REVERSED` | `REFUNDED` |
+| Initial invoice | `TRANSACTION_INVOICED` | `INVOICED` |
+| Invoice replacement | `TRANSACTION_INVOICE_REPLACED` | `INVOICED` |
+| Reversal | `TRANSACTION_REFUNDED` | `REFUNDED` |
 
-Use the transaction ID as the message key. The event envelope is:
+An invoice replacement produces only
+`TRANSACTION_INVOICE_REPLACED`. It does not also produce
+`TRANSACTION_INVOICED`, `INVOICE_REPLACED`, `INVOICED_REVERSED`, or any other
+secondary impact event for the same revision. A reversal produces only
+`TRANSACTION_REFUNDED`.
 
-```text
-eventId: String, unique and stable across delivery retries
-schemaVersion: integer, initially 1
-impactType: INVOICE_REPLACED | INVOICED_REVERSED
-occurredAt: OffsetDateTime of the committed payment outcome
-transactionRevision: positive long
-transaction: canonical post-operation RewardTransactionDTO
-```
+## Unified event contract
 
-The embedded transaction must have the same positive `transactionRevision` as
-the envelope and must contain:
+### Identity, ordering, and topic
 
-- its ID;
-- exactly one initiative;
-- the authoritative merchant ID;
-- the post-operation status;
-- all payment-owned canonical fields that a generic snapshot carries; and
-- `pointOfSaleType` for `INVOICE_REPLACED`.
+- Exactly one immutable event exists for each
+  `(transactionId, transactionRevision)`.
+- `transactionRevision` is positive and monotonically increasing within one
+  transaction.
+- Retries preserve the same event identity, revision, key, event type, and
+  payload.
+- Stale or duplicate revisions must not reapply a transaction outcome.
+- All event types use the existing `idpay-transaction` topic. No second topic
+  or dedicated impact outbox is introduced.
+- The Kafka message key is `transactionId`, sourced from the outbox
+  `transaction_id` column.
 
-The event must not carry local reward-batch fields. In particular,
-`rewardBatchId`, in-batch status, in-batch rejection reason, inclusion date,
-last elaborated month, sampling key, and checks error must be absent/default.
-The receiver rejects impacts that contain them.
+### First-rollout wire representation
 
-`eventId` is retained for outbox correlation and tracing. Consumer
-idempotency is based on the transaction revision: a transaction revision can
-identify only one impact, and payment must never emit two different impacts at
-the same revision.
+The first rollout preserves the complete `RewardTransactionDTO` as the JSON
+message payload. It does not introduce a payload envelope.
 
-### 4. Call the read-only eligibility query before the payment commit
-
-Before changing invoice/reversal state, payment must obtain the current
-reward-batch facts through the narrow read-only operation:
-
-```text
-GET /idpay/transactions/{transactionId}/reward-batch/eligibility?merchantId={merchantId}
-```
-
-Payment forwards the caller's `Authorization` header to this operation and
-uses the Feign client's default timeouts. When a local membership exists, a
-`200 OK` response returns:
-
-```text
-transactionId
-initiativeId
-merchantId
-rewardBatchId
-transactionStatus
-batchStatus
-batchTransactionStatus
-```
-
-A `204 No Content` response means no local membership; payment proceeds with
-its existing command validation. When a membership exists, payment derives the
-caller policy from the `Authorization` header:
-
-- `transaction:invoicelifecycle:basic` permits only
-  `transactionStatus=INVOICED` and `batchStatus` of `CREATED`, `EVALUATING`,
-  or `APPROVED`.
-- `transaction:invoicelifecycle:full` permits `transactionStatus` of
-  `INVOICED` or `REWARDED`, `batchStatus` of `CREATED`, `EVALUATING`,
-  `APPROVED`, `PENDING_REFUND`, `REFUNDED`, or `NOT_REFUNDED`, and
-  `batchTransactionStatus` of `CONSULTABLE`, `TO_CHECK`, `SUSPENDED`, or
-  `REJECTED`.
-- If both scopes are present, the full policy takes precedence. Missing or
-  unsupported scopes reject the command.
-
-When eligibility is enabled, any inability to verify it (including timeout,
-authentication/authorization failure, `429`, any non-`204` client error, or
-server error) rejects the command before blob or transaction mutation. The
-query does not authorize the payment command, does not reserve membership, and
-does not create write coupling. Its result must not be copied into the impact
-event as a membership precondition because the membership may change before
-event delivery.
-
-## Effects applied by idpay-transactions
-
-The impact handler reads the membership that exists when it processes the
-event, validates the canonical payment projection, and applies one local SQL
-transaction.
-
-| Impact | Local reward-batch effect |
+| Wire element | Representation |
 | --- | --- |
-| `INVOICE_REPLACED` from a `CREATED` source batch | Keep the existing membership and in-batch state. |
-| `INVOICE_REPLACED` from any other source batch state | Move the current membership to the grouping `(initiative, merchant, POS type, outcome month)`, create the target batch only if absent, and set its in-batch state to `SUSPENDED`. |
-| `INVOICED_REVERSED` | Detach the current membership and clear its local in-batch assignment data. |
+| Kafka key | Transaction ID from outbox `transaction_id` |
+| Event type | Kafka header `operationType`, sourced from outbox `event_type` |
+| Event ID | Kafka header `eventId`, sourced from the immutable outbox row ID |
+| Schema version | Kafka header `schemaVersion`, initially `1` |
+| Occurrence time | Kafka header `occurredAt`, sourced from outbox `occurred_at` |
+| Transaction revision | Kafka header `transactionRevision` and required positive `RewardTransactionDTO.transactionRevision` |
+| Canonical outcome | `RewardTransactionDTO.status` and the remaining payment-owned snapshot fields |
 
-The outcome month is derived from `occurredAt` in `Europe/Rome`, making
-retries deterministic across a month boundary. Batch counts and amounts are
-derived from the committed transaction rows, so payment does not update batch
-counters.
+The exact event-type header name is `operationType`. This is the existing
+Spring Cloud Stream/Kafka event-classification convention used by deployed
+IdPay integrations.
 
-## Ordering, retries, and rollout
+The header and payload fields have different meanings:
 
-- Delivery is at least once. Payment must use a durable outbox or equivalent
-  post-commit publication mechanism.
-- Generic snapshots and the dedicated impact may arrive in either order. They
-  must carry the same revision for the same payment outcome.
-- A stale generic snapshot cannot overwrite a newer impact projection.
-- The handler compares an impact revision only with its local impact
-  watermark. An equal or lower revision is ignored; a greater revision is
-  handled once, even when a newer generic canonical snapshot has arrived.
-- Payment must publish the impact only after its authoritative transaction
-  update commits.
-- Do not enable the impact flow until both services have deployed their
-  compatible contract changes and the receiving Kafka binding has been added
-  to `idpay-transactions`.
+- Kafka header `operationType` classifies the event and contains values such
+  as `TRANSACTION_INVOICED`, `TRANSACTION_INVOICE_REPLACED`, or
+  `TRANSACTION_REFUNDED`;
+- payload `RewardTransactionDTO.operationType` remains the original
+  payment-domain operation code and must not be overwritten with an event
+  type.
 
-## PR update checklist
+Header `transactionRevision` and payload
+`RewardTransactionDTO.transactionRevision` must contain the same value.
+`occurredAt` is the committed outcome timestamp used for deterministic
+outcome-month grouping.
 
-For every related PR, update the status table and this checklist:
+For `TRANSACTION_INVOICE_REPLACED`, the payload status is `INVOICED`. For
+`TRANSACTION_REFUNDED`, the payload status is `REFUNDED`.
 
-- [ ] Payment transaction storage/model persists `transactionRevision`.
-- [ ] Payment increments it atomically for every published canonical change.
-- [ ] Generic transaction snapshots include it.
-- [ ] Payment outbox publishes the dedicated impact with stable retries.
-- [ ] Payment invokes the read-only eligibility query before the command.
-- [ ] Both repositories have contract, ordering, retry, and error-path tests.
-- [ ] `idpay-transactions` has its production consumer binding and deployment
-  configuration.
-- [ ] Deployment/cutover enablement is agreed after both sides are compatible.
+The currently deployed PostgreSQL CDC connector does not yet satisfy this
+frozen representation: it filters a closed `event_type` allowlist, extracts
+`user_id` as the key, and then extracts only `payload`, which drops
+`event_type`. Before replacement production is enabled, the connector must:
+
+1. allow `TRANSACTION_INVOICE_REPLACED`;
+2. extract `transaction_id` as the Kafka key; and
+3. copy `id`, `schema_version`, `occurred_at`, `transaction_revision`, and
+   `event_type` to headers `eventId`, `schemaVersion`, `occurredAt`,
+   `transactionRevision`, and `operationType` before extracting the payload.
+
+These connector changes are rollout prerequisites, not part of this
+documentation-only PR.
+
+## Invoice replacement policy
+
+The payment command keeps the existing eligibility check in
+`invoiceTransaction`. The eligibility response is a read-only preflight; it
+does not reserve or lock reward-batch state and must not be copied into the
+event as a membership precondition.
+
+When `idpay-transactions` handles
+`TRANSACTION_INVOICE_REPLACED`, it applies the canonical projection and the
+reward-batch effect in one local SQL transaction, using membership and batch
+state observed at handling time:
+
+| Membership observed at handling time | Effect |
+| --- | --- |
+| No membership | Persist the canonical projection; no batch movement |
+| Source batch `CREATED` | Keep current membership and in-batch state |
+| Any other supported current source state | Move to the outcome-month grouping and set target membership to `SUSPENDED` |
+
+The outcome month is derived from event occurrence time in `Europe/Rome`.
+Reward-batch counters remain derived from committed membership rows; payment
+does not update them.
+
+## Consumer compatibility inventory
+
+The inventory was performed against the PagoPA GitHub organization using the
+topic name `idpay-transaction`, event type `TRANSACTION_INVOICED`, and header
+name `operationType`.
+
+| Repository / integration | Current behavior | Compatibility result | Required action |
+| --- | --- | --- | --- |
+| `pagopa/cstar-securehub-infra` PostgreSQL `transaction_connector.json` | Uses a closed `event_type` allowlist, keys by `user_id`, and drops outbox metadata when extracting `payload` | **Blocking** | Add the replacement type, key by `transaction_id`, and emit the frozen metadata headers |
+| `pagopa/idpay-transactions` | Deserializes the complete `RewardTransactionDTO` and persists revision-ordered snapshots, but does not classify or atomically apply replacement effects | **Blocking** | Implement `TRANSACTION_INVOICE_REPLACED` handling before production, as defined by PR 02 |
+| `pagopa/idpay-ranker` | Consumes `idpay-transaction` without checking the event-type header and deserializes payload status into a closed `SyncTrxStatus` enum that does not contain `INVOICED` | **Blocking: rejects the payload** | Ignore invoice event types before closed-enum deserialization or otherwise isolate the consumer from these events |
+| `pagopa/idpay-reward-calculator` | Deserializes the raw transaction payload with string status; its counter-unlock mediator accepts only `AUTHORIZED`, `REWARDED`, and `REJECTED` | Compatible: safely ignores `INVOICED` | No code change required for the replacement event |
+
+Other organization search matches were producers, infrastructure references,
+error-topic examples, or contracts rather than consumers of payment
+transaction outcomes. No additional consumer with a closed event-type enum was
+identified.
+
+## Rollout gate
+
+PR 04, which starts producing `TRANSACTION_INVOICE_REPLACED`, must not merge
+until all blocking entries in the compatibility inventory are resolved and
+deployed:
+
+- the CDC connector publishes the frozen key and `operationType` header;
+- `idpay-transactions` handles the replacement event atomically; and
+- `idpay-ranker` no longer rejects invoice payloads from this topic.
+
+Receiver compatibility must be deployed before producer enablement. The
+replacement producer must remain disabled until the gate is explicitly
+confirmed.
 
 ## Change log
 
 | PR | Change |
 | --- | --- |
-| `idpay-transactions` PR 20 (`a3a6f73`) | Added the local SQL projection, revision-aware generic synchronization, eligibility port, and contract model. It does not add a payment producer or a runtime consumer binding. |
-| `idpay-transactions` PR 20 watermark follow-up | Consolidated the never-deployed migration into the final transaction-local impact watermark schema; no inbox table is created. |
+| PR 01 | Froze the unified event matrix, one-event-per-revision invariant, `transactionId` key, `operationType` event header, compatibility inventory, and PR 04 rollout gate |

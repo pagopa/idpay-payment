@@ -6,6 +6,8 @@ info:
     Its purpose is to notify other systems of transaction confirmation and cancellation events and any  
     errors
 tags:
+  - name: "transactionOutbox"
+    description: "Canonical payment transaction outcomes"
   - name: "confirmTransaction"
     description: "Transaction REWARDED"
   - name: "cancellationTransaction"
@@ -19,6 +21,15 @@ tags:
   - name: "handleTimeout"
     description: "Handle schedulation and delete transaction after timeout"
 channels:
+  payment-transaction-invoice-replaced:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInvoiceReplaced'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "transactionOutbox"
   payment-confirm-transaction:
     publish:
       message:
@@ -83,6 +94,68 @@ channels:
         - name: "handleTimeout"
 components:
   messages:
+    TransactionInvoiceReplaced:
+      contentType: application/json
+      description: >-
+        Complete canonical transaction snapshot emitted once for an invoice
+        replacement revision. The payload operationType remains the payment
+        operation code; the Kafka operationType header classifies the event.
+      summary: Invoice replacement transaction outcome
+      headers:
+        type: object
+        required:
+          - eventId
+          - schemaVersion
+          - occurredAt
+          - transactionRevision
+          - operationType
+        properties:
+          eventId:
+            type: string
+            description: Stable identifier of the immutable outbox event
+          schemaVersion:
+            type: integer
+            enum:
+              - 1
+            description: Event metadata schema version
+          occurredAt:
+            type: string
+            format: date-time
+            description: Timestamp of the committed invoice replacement outcome
+          transactionRevision:
+            type: integer
+            format: int64
+            minimum: 1
+            description: Must match payload transactionRevision
+          operationType:
+            type: string
+            enum:
+              - TRANSACTION_INVOICE_REPLACED
+            description: Event type copied from transaction_outbox.event_type
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: Transaction ID copied from transaction_outbox.transaction_id
+      payload:
+        allOf:
+          - $ref: "#/components/schemas/RewardTransactionDTO"
+          - type: object
+            required:
+              - id
+              - transactionRevision
+              - status
+            properties:
+              transactionRevision:
+                type: integer
+                format: int64
+                minimum: 1
+                description: Positive transaction lifecycle revision
+              status:
+                type: string
+                enum:
+                  - INVOICED
+                description: Canonical status after invoice replacement
     TransactionInProgressConfirm:
       contentType: application/json
       description: >-
@@ -486,6 +559,8 @@ components:
         status:
           type: string
           enum:
+            - INVOICED
+            - REFUNDED
             - REJECTED
             - REWARDED
             - CANCELLED
