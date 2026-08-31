@@ -1,11 +1,13 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.Test;
@@ -69,6 +71,57 @@ class CommonReversalServiceImplTest {
         verify(auditUtilitiesMock, times(1)).logReverseTransaction(any(RevertTransactionAuditDTO.class));
         verify(transactionRepositoryMock, times(1)).save(transaction);
         verify(auditUtilitiesMock, never()).logErrorReversalTransaction(any(), any());
+        verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock);
+    }
+
+    @Test
+    void testReversalTransaction_InvoicedSuccessChecksEligibility() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder()
+                .filename("invoice.pdf")
+                .docNumber("INVOICE")
+                .build());
+        String authorization = "******";
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        commonReversalService.reversalTransaction(
+                INITIATIVE_ID, TRX_ID, MERCHANT_ID, authorization, file, DOC_NUMBER);
+
+        verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
+                transaction,
+                RewardBatchEligibilityOperation.INVOICED_REVERSAL,
+                authorization);
+        verify(fileStorageClientMock).upload(any(InputStream.class), anyString(), eq(file.getContentType()));
+        verify(transactionRepositoryMock).save(transaction);
+        assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
+    }
+
+    @Test
+    void testReversalTransaction_RewardedSuccessChecksEligibility() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.REWARDED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder()
+                .filename("invoice.pdf")
+                .docNumber("INVOICE")
+                .build());
+        String authorization = "******";
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        commonReversalService.reversalTransaction(
+                INITIATIVE_ID, TRX_ID, MERCHANT_ID, authorization, file, DOC_NUMBER);
+
+        verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
+                transaction,
+                RewardBatchEligibilityOperation.INVOICED_REVERSAL,
+                authorization);
+        verify(fileStorageClientMock).upload(any(InputStream.class), anyString(), eq(file.getContentType()));
+        verify(transactionRepositoryMock).save(transaction);
+        assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
     }
 
     @Test
@@ -181,6 +234,24 @@ class CommonReversalServiceImplTest {
     }
 
     @Test
+    void testReversalTransaction_RewardedWithoutInvoiceIsInvalid() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "credit_note.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.REWARDED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        OperationNotAllowedException exception = assertThrows(
+                OperationNotAllowedException.class,
+                () -> commonReversalService.reversalTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
+
+        assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
+        verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
+        verify(transactionRepositoryMock, never()).save(any());
+    }
+
+    @Test
     void testReversalTransaction_FileUploadIOException() throws Exception {
         // Given
         MultipartFile fileMock = mock(MultipartFile.class);
@@ -204,13 +275,21 @@ class CommonReversalServiceImplTest {
     @Test
     void testReversalTransaction_EligibilityFailureDoesNotMutateBlobOrTransaction() {
         MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
-        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder()
+                .filename("invoice.pdf")
+                .docNumber("INVOICE")
+                .build());
+        transaction.setTransactionRevision(4L);
         String authorization = "Bearer token";
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
         doThrow(new RewardBatchEligibilityNotAllowedException("Not allowed"))
                 .when(rewardBatchEligibilityPreflightServiceMock)
-                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+                .verifyEligibility(
+                        transaction,
+                        RewardBatchEligibilityOperation.INVOICED_REVERSAL,
+                        authorization);
 
         assertThrows(
                 RewardBatchEligibilityNotAllowedException.class,
@@ -219,9 +298,16 @@ class CommonReversalServiceImplTest {
 
         InOrder inOrder = inOrder(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
         inOrder.verify(rewardBatchEligibilityPreflightServiceMock)
-                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+                .verifyEligibility(
+                        transaction,
+                        RewardBatchEligibilityOperation.INVOICED_REVERSAL,
+                        authorization);
         verifyNoInteractions(fileStorageClientMock);
         verify(transactionRepositoryMock, never()).save(any());
+        verify(auditUtilitiesMock, never()).logReverseTransaction(any());
+        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
+        assertNull(transaction.getCreditNoteData());
+        assertEquals(4L, transaction.getTransactionRevision());
     }
 
 

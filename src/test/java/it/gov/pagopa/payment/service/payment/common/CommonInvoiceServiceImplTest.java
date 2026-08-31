@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
@@ -71,7 +72,7 @@ class CommonInvoiceServiceImplTest {
     void testInvoiceUpdateTransaction(){
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
-        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
         transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
         transaction.setInvoiceData(InvoiceData.builder().filename("filename").docNumber("123").build());
         PointOfSaleDTO posDTO = new PointOfSaleDTO();
@@ -88,6 +89,38 @@ class CommonInvoiceServiceImplTest {
         // Then
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
         assertNotNull(transaction.getInvoiceData());
+        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
+        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
+        verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
+                transaction,
+                RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                null);
+    }
+
+    @Test
+    void testRewardedInvoiceReplacementChecksEligibilityAndRollsBackStatus() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test_invoice.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.REWARDED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder()
+                .filename("old_invoice.pdf")
+                .docNumber("OLD_DOC")
+                .build());
+        String authorization = "******";
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        commonInvoiceService.invoiceTransaction(
+                INITIATIVE_ID, TRX_ID, MERCHANT_ID, authorization, file, DOC_NUMBER);
+
+        verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
+                transaction,
+                RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                authorization);
+        verify(fileStorageClientMock).deleteFile(anyString());
+        verify(fileStorageClientMock).upload(any(InputStream.class), anyString(), eq(file.getContentType()));
+        verify(transactionRepositoryMock).save(transaction);
+        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
         assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
         assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
     }
@@ -126,6 +159,7 @@ class CommonInvoiceServiceImplTest {
         verify(auditUtilitiesMock, times(1)).logInvoiceTransaction(any(TransactionAuditDTO.class));
         verify(transactionRepositoryMock, times(1)).save(transaction);
         verify(auditUtilitiesMock, never()).logErrorInvoiceTransaction(any(), any());
+        verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock);
     }
 
     @Test
@@ -265,6 +299,24 @@ class CommonInvoiceServiceImplTest {
     }
 
     @Test
+    void testInvoiceTransaction_RewardedWithoutInvoiceIsInvalid() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.REWARDED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        OperationNotAllowedException exception = assertThrows(
+                OperationNotAllowedException.class,
+                () -> commonInvoiceService.invoiceTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
+
+        assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
+        verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
+        verify(transactionRepositoryMock, never()).save(any());
+    }
+
+    @Test
     void testInvoiceTransaction_TransactionTooRecent() {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test.pdf", "application/pdf", "content".getBytes());
@@ -309,14 +361,23 @@ class CommonInvoiceServiceImplTest {
     @Test
     void testInvoiceTransaction_EligibilityFailureDoesNotMutateBlobOrTransaction() {
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
-        Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
         transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
+        InvoiceData originalInvoiceData = InvoiceData.builder()
+                .filename("old_invoice.pdf")
+                .docNumber("OLD_DOC")
+                .build();
+        transaction.setInvoiceData(originalInvoiceData);
+        transaction.setTransactionRevision(3L);
         String authorization = "Bearer token";
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
         doThrow(new RewardBatchEligibilityNotAllowedException("Not allowed"))
                 .when(rewardBatchEligibilityPreflightServiceMock)
-                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+                .verifyEligibility(
+                        transaction,
+                        RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                        authorization);
 
         assertThrows(
                 RewardBatchEligibilityNotAllowedException.class,
@@ -325,9 +386,16 @@ class CommonInvoiceServiceImplTest {
 
         InOrder inOrder = inOrder(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
         inOrder.verify(rewardBatchEligibilityPreflightServiceMock)
-                .verifyEligibility(transaction, MERCHANT_ID, authorization);
+                .verifyEligibility(
+                        transaction,
+                        RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                        authorization);
         verifyNoInteractions(fileStorageClientMock, merchantConnectorMock);
         verify(transactionRepositoryMock, never()).save(any());
+        verify(auditUtilitiesMock, never()).logInvoiceTransaction(any());
+        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
+        assertSame(originalInvoiceData, transaction.getInvoiceData());
+        assertEquals(3L, transaction.getTransactionRevision());
     }
 
     private Transaction createDummyTransaction(SyncTrxStatus status, String merchantId, String pointOfSaleId) {

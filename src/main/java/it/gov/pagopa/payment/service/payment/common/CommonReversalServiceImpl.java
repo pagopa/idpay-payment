@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.RevertTransactionAuditDTO;
@@ -67,11 +68,22 @@ public class CommonReversalServiceImpl {
             if (!transaction.getMerchantId().equals(merchantId)) {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(), merchantId));
             }
-            if(!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus()) || (SyncTrxStatus.INVOICED.equals(transaction.getStatus()) && transaction.getInvoiceData() != null))) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot reversal transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
+            boolean isInvoicedOrRewarded = SyncTrxStatus.INVOICED.equals(transaction.getStatus())
+                    || SyncTrxStatus.REWARDED.equals(transaction.getStatus());
+            if (!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus())
+                    || (isInvoicedOrRewarded && transaction.getInvoiceData() != null))) {
+                throw new OperationNotAllowedException(
+                        ExceptionCode.TRX_STATUS_NOT_VALID,
+                        "Cannot reversal transaction with status [%s], must be CAPTURED, INVOICED or REWARDED"
+                                .formatted(transaction.getStatus()));
             }
 
-            rewardBatchEligibilityPreflightService.verifyEligibility(transaction, merchantId, authorization);
+            if (isInvoicedOrRewarded) {
+                rewardBatchEligibilityPreflightService.verifyEligibility(
+                        transaction,
+                        RewardBatchEligibilityOperation.INVOICED_REVERSAL,
+                        authorization);
+            }
 
             // Uploading invoice to storage
             String path = StoragePathUtils.buildCreditNotePath(transaction, file.getOriginalFilename());
