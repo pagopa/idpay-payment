@@ -354,8 +354,8 @@ yet changing replacement event classification.
    - remove `DO UPDATE`;
    - use insert-only conflict handling for an exact duplicate invocation.
 7. Preserve existing event classification in this PR. In particular, an
-   `INVOICED -> INVOICED` update may still be classified as
-   `TRANSACTION_INVOICED` until PR 04.
+   `INVOICED -> INVOICED` or `REWARDED -> INVOICED` update may still be
+   classified as `TRANSACTION_INVOICED` until PR 04.
 8. Prevent ordinary application and CDC roles from updating outbox records
    using the database permission or guard mechanism consistent with deployment
    ownership. If database grants are infrastructure-managed, add an explicit
@@ -416,11 +416,33 @@ post-operation snapshot.
    - `CAPTURED -> INVOICED` as `TRANSACTION_INVOICED`;
    - `INVOICED -> INVOICED` through the invoice replacement command as
      `TRANSACTION_INVOICE_REPLACED`;
+   - `REWARDED -> INVOICED` through the invoice replacement command as
+     `TRANSACTION_INVOICE_REPLACED`;
    - reversal as `TRANSACTION_REFUNDED`.
 3. Prefer explicit application intent over a trigger that infers replacement
    from arbitrary field differences. Refactor the transaction persistence seam
    so the command supplies the event type while the transaction update and
-   outbox insert remain in one PostgreSQL transaction.
+   outbox insert remain in one PostgreSQL transaction:
+   - after validating the current transaction, the invoice command selects a
+     typed event value from the pre-mutation state:
+     `TRANSACTION_INVOICED` for `CAPTURED`, or
+     `TRANSACTION_INVOICE_REPLACED` for `INVOICED` and `REWARDED`;
+   - pass that value, the expected revision, and the new invoice data to a
+     dedicated transactional persistence method;
+   - in that method, conditionally update the transaction and increment its
+     revision, obtain the resulting canonical row, and explicitly insert the
+     immutable outbox row with `event_type` set to the supplied value;
+   - build the JSON payload from that resulting row and add the same supplied
+     value as payload `eventType`;
+   - if the conditional update affects no row, report a conflict and do not
+     attempt the outbox insert;
+   - change the existing transaction trigger so it does not also emit an event
+     for invoice mutations handled by this explicit persistence method.
+
+   Do not carry the event type through `RewardTransactionDTO.operationType`, a
+   new transaction-table column, or session-local database state. The event
+   type is an argument to the transactional write operation and is persisted
+   only in the outbox row and its payload.
 4. Make the invoice database update concurrency-safe:
    - use an expected-revision conditional update or equivalent optimistic
      locking;
@@ -453,7 +475,10 @@ post-operation snapshot.
 ### Required tests
 
 - Initial invoice emits only `TRANSACTION_INVOICED`.
-- First replacement emits only `TRANSACTION_INVOICE_REPLACED`.
+- Replacement from `INVOICED` emits only
+  `TRANSACTION_INVOICE_REPLACED`.
+- Replacement from `REWARDED` changes the canonical status to `INVOICED` and
+  emits only `TRANSACTION_INVOICE_REPLACED`.
 - Consecutive replacements create consecutive revisions and distinct immutable
   rows.
 - Outbox event type does not overwrite payload `operationType`.
@@ -690,7 +715,8 @@ demonstrated across the merged PRs:
 | Scenario | Expected outcome |
 | --- | --- |
 | Initial invoice | One `TRANSACTION_INVOICED` event, status `INVOICED` |
-| First replacement | One `TRANSACTION_INVOICE_REPLACED` event, next revision |
+| Replacement from `INVOICED` | One `TRANSACTION_INVOICE_REPLACED` event, status `INVOICED`, next revision |
+| Replacement from `REWARDED` | One `TRANSACTION_INVOICE_REPLACED` event, status changed to `INVOICED`, next revision |
 | Repeated replacement | One new immutable row and revision per operation |
 | Concurrent replacement | No duplicate revision; losing operation conflicts or is serialized safely |
 | Replacement with no membership | Projection updated, no batch movement |

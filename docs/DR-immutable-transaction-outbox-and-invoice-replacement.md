@@ -201,6 +201,7 @@ insertion, it must distinguish:
 ```text
 CAPTURED -> INVOICED                         = TRANSACTION_INVOICED
 INVOICED -> INVOICED with changed invoice  = TRANSACTION_INVOICE_REPLACED
+REWARDED -> INVOICED with changed invoice  = TRANSACTION_INVOICE_REPLACED
 * -> REFUNDED                               = TRANSACTION_REFUNDED
 ```
 
