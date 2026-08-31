@@ -80,8 +80,14 @@ public class CommonInvoiceServiceImpl {
                 throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(transaction.getMerchantId(), merchantId));
             }
 
-            if(!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus()) || (SyncTrxStatus.INVOICED.equals(transaction.getStatus()) && transaction.getInvoiceData() != null))) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(transaction.getStatus()));
+            boolean isInvoicedOrRewarded = SyncTrxStatus.INVOICED.equals(transaction.getStatus())
+                    || SyncTrxStatus.REWARDED.equals(transaction.getStatus());
+            if (!(SyncTrxStatus.CAPTURED.equals(transaction.getStatus())
+                    || (isInvoicedOrRewarded && transaction.getInvoiceData() != null))) {
+                throw new OperationNotAllowedException(
+                        ExceptionCode.TRX_STATUS_NOT_VALID,
+                        "Cannot invoice transaction with status [%s], must be CAPTURED, INVOICED or REWARDED"
+                                .formatted(transaction.getStatus()));
             }
 
             // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
@@ -89,7 +95,7 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(transaction.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
-            if (SyncTrxStatus.INVOICED.equals(transaction.getStatus())) {
+            if (isInvoicedOrRewarded) {
                 rewardBatchEligibilityPreflightService.verifyEligibility(
                         transaction,
                         RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
@@ -107,7 +113,6 @@ public class CommonInvoiceServiceImpl {
             String path = StoragePathUtils.buildInvoicePath(transaction, file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
-            // updating the transaction status to invoiced
             transaction.setStatus(SyncTrxStatus.INVOICED);
             transaction.setUpdateDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
             transaction.setInvoiceData(InvoiceData.builder()

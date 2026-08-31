@@ -98,6 +98,34 @@ class CommonInvoiceServiceImplTest {
     }
 
     @Test
+    void testRewardedInvoiceReplacementChecksEligibilityAndRollsBackStatus() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test_invoice.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.REWARDED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder()
+                .filename("old_invoice.pdf")
+                .docNumber("OLD_DOC")
+                .build());
+        String authorization = "******";
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        commonInvoiceService.invoiceTransaction(
+                INITIATIVE_ID, TRX_ID, MERCHANT_ID, authorization, file, DOC_NUMBER);
+
+        verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
+                transaction,
+                RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                authorization);
+        verify(fileStorageClientMock).deleteFile(anyString());
+        verify(fileStorageClientMock).upload(any(InputStream.class), anyString(), eq(file.getContentType()));
+        verify(transactionRepositoryMock).save(transaction);
+        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
+        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
+        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
+    }
+
+    @Test
     void testInvoiceTransaction_Success_WithPosFetch(){
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
@@ -268,6 +296,24 @@ class CommonInvoiceServiceImplTest {
 
         assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
         verify(auditUtilitiesMock, times(1)).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testInvoiceTransaction_RewardedWithoutInvoiceIsInvalid() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.REWARDED, MERCHANT_ID, POS_ID);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+
+        OperationNotAllowedException exception = assertThrows(
+                OperationNotAllowedException.class,
+                () -> commonInvoiceService.invoiceTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
+
+        assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
+        verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
+        verify(transactionRepositoryMock, never()).save(any());
     }
 
     @Test
