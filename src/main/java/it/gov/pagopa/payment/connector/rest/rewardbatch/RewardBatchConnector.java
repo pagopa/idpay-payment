@@ -1,9 +1,11 @@
 package it.gov.pagopa.payment.connector.rest.rewardbatch;
 
-import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityDTO;
-
-import java.util.Optional;
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityDecision;
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
 
 public interface RewardBatchConnector {
-    Optional<RewardBatchEligibilityDTO> findEligibility(String merchantId, String transactionId, String authorization);
+    RewardBatchEligibilityDecision getEligibilityDecision(
+            String transactionId,
+            RewardBatchEligibilityOperation operation,
+            String authorization);
 }
