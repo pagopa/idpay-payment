@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.service.payment.common;
 
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
@@ -88,7 +89,12 @@ public class CommonInvoiceServiceImpl {
                 throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(transaction.getElaborationDateTime(), minDaysToInvoiceTransaction));
             }
 
-            rewardBatchEligibilityPreflightService.verifyEligibility(transaction, merchantId, authorization);
+            if (SyncTrxStatus.INVOICED.equals(transaction.getStatus())) {
+                rewardBatchEligibilityPreflightService.verifyEligibility(
+                        transaction,
+                        RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                        authorization);
+            }
 
             InvoiceData oldDocumentData = transaction.getInvoiceData();
             if(oldDocumentData!=null){
