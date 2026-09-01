@@ -137,10 +137,12 @@ class InvoiceTransactionRepositoryImplTest {
                 WHERE transaction_id = 'trx-rollback'
                 """);
 
+        InvoiceTransactionCommand command = command(
+                "trx-rollback", SyncTrxStatus.INVOICED, 2,
+                TransactionEventType.TRANSACTION_INVOICE_REPLACED, "invoice-3.pdf");
+
         assertThrows(ConstraintViolationException.class, () ->
-                invoiceTransactionRepository.updateInvoiceAndCreateEvent(command(
-                        "trx-rollback", SyncTrxStatus.INVOICED, 2,
-                        TransactionEventType.TRANSACTION_INVOICE_REPLACED, "invoice-3.pdf")));
+                invoiceTransactionRepository.updateInvoiceAndCreateEvent(command));
 
         assertEquals(2L, jdbcTemplate.queryForObject("""
                 SELECT "transactionRevision"
@@ -157,7 +159,7 @@ class InvoiceTransactionRepositoryImplTest {
                     "trx-concurrent", SyncTrxStatus.INVOICED, 5,
                     TransactionEventType.TRANSACTION_INVOICE_REPLACED, filename));
             return true;
-        } catch (TransactionConflictException e) {
+        } catch (TransactionConflictException _) {
             return false;
         }
     }
