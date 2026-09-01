@@ -320,7 +320,7 @@ no data migration.
 
 **Repository:** `pagopa/idpay-payment`  
 **Suggested branch:** `LPBD-immutable-transaction-outbox`  
-**Base:** `origin/develop`  
+**Base:** `origin/LPBD-immutable-transaction-outbox` created from `origin/develop`  
 **Prerequisites:** PR 02 merged and deployed compatibly
 
 ### Objective
