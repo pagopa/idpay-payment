@@ -12,6 +12,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Repository
 @RequiredArgsConstructor
@@ -78,7 +80,8 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
                         """)
                 .getSingleResult();
         long eventId = ((Number) eventMetadata[0]).longValue();
-        Instant occurredAt = (Instant) eventMetadata[1];
+        OffsetDateTime occurredAt =
+                ((Instant) eventMetadata[1]).atOffset(ZoneOffset.UTC);
 
         ObjectNode payload = objectMapper.valueToTree(
                 rewardTransactionMapper.transactionToRewardTransaction(updatedTransaction));

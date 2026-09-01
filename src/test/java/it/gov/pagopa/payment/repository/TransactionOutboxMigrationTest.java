@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -171,6 +172,86 @@ class TransactionOutboxMigrationTest {
     }
 
     @Test
+    void shouldSerializeOccurredAtAsUtcRegardlessOfSessionTimezone() throws SQLException {
+        try (Connection connection = connection();
+             Statement statement = connection.createStatement()) {
+            statement.execute("SET TIME ZONE 'Europe/Rome'");
+            statement.execute("""
+                    INSERT INTO %s.transaction (
+                        id, "trxCode", "operationType", status, "trxDate", "userId",
+                        "amountCents", "transactionRevision"
+                    ) VALUES (
+                        'trx-utc', 'code-utc', '00', 'CAPTURED', now(),
+                        'user-utc', 100, 0
+                    )
+                    """.formatted(SCHEMA));
+
+            try (ResultSet resultSet = statement.executeQuery("""
+                    SELECT occurred_at, payload ->> 'occurredAt' AS payload_occurred_at
+                    FROM %s.transaction_outbox
+                    WHERE transaction_id = 'trx-utc'
+                    """.formatted(SCHEMA))) {
+                assertTrue(resultSet.next());
+                OffsetDateTime persistedOccurredAt =
+                        resultSet.getObject("occurred_at", OffsetDateTime.class);
+                OffsetDateTime payloadOccurredAt =
+                        OffsetDateTime.parse(resultSet.getString("payload_occurred_at"));
+
+                assertEquals(ZoneOffset.UTC, payloadOccurredAt.getOffset());
+                assertEquals(persistedOccurredAt.toInstant(), payloadOccurredAt.toInstant());
+            }
+        }
+    }
+
+    @Test
+    void shouldUpgradeLegacyCreatedAtAndRestoreEventInstants() throws SQLException {
+        flyway("4").clean();
+        flyway("4").migrate();
+
+        execute("""
+                DROP TRIGGER trg_transaction_outbox_reject_update
+                    ON %s.transaction_outbox;
+                ALTER TABLE %s.transaction_outbox
+                    ALTER COLUMN created_at DROP DEFAULT,
+                    ALTER COLUMN created_at TYPE TIMESTAMP
+                        USING created_at AT TIME ZONE 'Europe/Rome',
+                    ALTER COLUMN created_at SET DEFAULT now();
+                INSERT INTO %s.transaction_outbox (
+                    transaction_id, user_id, event_type, payload, created_at,
+                    transaction_revision, schema_version, occurred_at
+                ) VALUES
+                    (
+                        'trx-captured-legacy', 'user-1', 'TRANSACTION_CAPTURED',
+                        '{"occurredAt":"2026-09-01T12:19:16.654+02:00"}',
+                        '2026-09-01 12:19:16.654', 10, 1,
+                        '2026-09-01T12:19:16.654+02:00'
+                    ),
+                    (
+                        'trx-invoiced-legacy', 'user-1', 'TRANSACTION_INVOICED',
+                        '{"occurredAt":"2026-09-01T10:19:17.286Z"}',
+                        '2026-09-01 10:19:17.286', 11, 1,
+                        '2026-09-01T10:19:17.286+02:00'
+                    );
+                CREATE TRIGGER trg_transaction_outbox_reject_update
+                BEFORE UPDATE ON %s.transaction_outbox
+                FOR EACH ROW
+                EXECUTE FUNCTION %s.fn_reject_transaction_outbox_update()
+                """.formatted(SCHEMA, SCHEMA, SCHEMA, SCHEMA, SCHEMA));
+
+        flyway().migrate();
+
+        assertEquals("timestamp with time zone", queryString("""
+                SELECT data_type
+                FROM information_schema.columns
+                WHERE table_schema = 'idpay-pagamenti'
+                  AND table_name = 'transaction_outbox'
+                  AND column_name = 'created_at'
+                """));
+        assertEventInstantRestored("trx-captured-legacy");
+        assertEventInstantRestored("trx-invoiced-legacy");
+    }
+
+    @Test
     void shouldRollbackOutboxInsertWithTransaction() throws SQLException {
         try (Connection connection = connection()) {
             connection.setAutoCommit(false);
@@ -237,14 +318,43 @@ class TransactionOutboxMigrationTest {
                 """.formatted(SCHEMA, transactionId, transactionId, transactionId, revision));
     }
 
+    private void assertEventInstantRestored(String transactionId) throws SQLException {
+        try (Connection connection = connection();
+             Statement statement = connection.createStatement();
+             ResultSet resultSet = statement.executeQuery("""
+                     SELECT created_at,
+                            occurred_at,
+                            (payload ->> 'occurredAt')::TIMESTAMPTZ AS payload_occurred_at
+                     FROM %s.transaction_outbox
+                     WHERE transaction_id = '%s'
+                     """.formatted(SCHEMA, transactionId))) {
+            assertTrue(resultSet.next());
+            OffsetDateTime payloadOccurredAt =
+                    resultSet.getObject("payload_occurred_at", OffsetDateTime.class);
+            assertEquals(
+                    payloadOccurredAt.toInstant(),
+                    resultSet.getObject("created_at", OffsetDateTime.class).toInstant());
+            assertEquals(
+                    payloadOccurredAt.toInstant(),
+                    resultSet.getObject("occurred_at", OffsetDateTime.class).toInstant());
+        }
+    }
+
     private Flyway flyway() {
-        return Flyway.configure()
+        return flyway(null);
+    }
+
+    private Flyway flyway(String target) {
+        var configuration = Flyway.configure()
                 .dataSource(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())
                 .locations("classpath:db/migration")
                 .defaultSchema("idpay-pagamenti")
                 .schemas("idpay-pagamenti")
-                .cleanDisabled(false)
-                .load();
+                .cleanDisabled(false);
+        if (target != null) {
+            configuration.target(target);
+        }
+        return configuration.load();
     }
 
     private Connection connection() throws SQLException {
