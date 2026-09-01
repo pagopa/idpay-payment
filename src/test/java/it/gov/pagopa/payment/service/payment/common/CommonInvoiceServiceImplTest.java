@@ -11,6 +11,8 @@ import it.gov.pagopa.payment.enums.PointOfSaleTypeEnum;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.*;
 import it.gov.pagopa.payment.model.InvoiceData;
+import it.gov.pagopa.payment.repository.InvoiceTransactionCommand;
+import it.gov.pagopa.payment.repository.InvoiceTransactionRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +47,8 @@ class CommonInvoiceServiceImplTest {
     private MerchantConnector merchantConnectorMock;
     @Mock
     private RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightServiceMock;
+    @Mock
+    private InvoiceTransactionRepository invoiceTransactionRepositoryMock;
 
     private CommonInvoiceServiceImpl commonInvoiceService;
 
@@ -64,7 +68,8 @@ class CommonInvoiceServiceImplTest {
                 fileStorageClientMock,
                 auditUtilitiesMock,
                 merchantConnectorMock,
-                rewardBatchEligibilityPreflightServiceMock
+                rewardBatchEligibilityPreflightServiceMock,
+                invoiceTransactionRepositoryMock
         );
     }
 
@@ -87,14 +92,11 @@ class CommonInvoiceServiceImplTest {
         commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
-        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
-        assertNotNull(transaction.getInvoiceData());
-        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
-        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
         verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
                 transaction,
                 RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
                 null);
+        verify(auditUtilitiesMock).logInvoiceReplacement(any(TransactionAuditDTO.class));
     }
 
     @Test
@@ -119,10 +121,15 @@ class CommonInvoiceServiceImplTest {
                 authorization);
         verify(fileStorageClientMock).deleteFile(anyString());
         verify(fileStorageClientMock).upload(any(InputStream.class), anyString(), eq(file.getContentType()));
-        verify(transactionRepositoryMock).save(transaction);
-        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
-        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
-        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
+        verify(invoiceTransactionRepositoryMock).updateInvoiceAndCreateEvent(argThat(command ->
+                command.transactionId().equals(TRX_ID)
+                        && command.expectedStatus() == SyncTrxStatus.REWARDED
+                        && command.expectedRevision() == 0
+                        && command.invoiceData().getFilename().equals("test_invoice.pdf")
+                        && command.eventType().name().equals("TRANSACTION_INVOICE_REPLACED")));
+        verify(auditUtilitiesMock).logInvoiceReplacement(any(TransactionAuditDTO.class));
+        assertEquals(SyncTrxStatus.REWARDED, transaction.getStatus());
+        assertEquals("old_invoice.pdf", transaction.getInvoiceData().getFilename());
     }
 
     @Test
@@ -145,19 +152,18 @@ class CommonInvoiceServiceImplTest {
         commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
-        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
-        assertNotNull(transaction.getInvoiceData());
-        assertEquals("test_invoice.pdf", transaction.getInvoiceData().getFilename());
-        assertEquals(DOC_NUMBER, transaction.getInvoiceData().getDocNumber());
-        assertEquals("Franchise Test", transaction.getFranchiseName());
-        assertEquals("PHYSICAL", transaction.getPointOfSaleType());
-
         // MODIFICA: il path dello storage ora usa l'initiativeId invece del nome categoria "elettrodomestici".
         String expectedPath = String.format("invoices/%s/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                 INITIATIVE_ID, MERCHANT_ID, POS_ID, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
         verify(auditUtilitiesMock, times(1)).logInvoiceTransaction(any(TransactionAuditDTO.class));
-        verify(transactionRepositoryMock, times(1)).save(transaction);
+        verify(invoiceTransactionRepositoryMock).updateInvoiceAndCreateEvent(argThat(command ->
+                command.transactionId().equals(TRX_ID)
+                        && command.expectedStatus() == SyncTrxStatus.CAPTURED
+                        && command.expectedRevision() == 0
+                        && command.franchiseName().equals("Franchise Test")
+                        && command.pointOfSaleType().equals("PHYSICAL")
+                        && command.eventType().name().equals("TRANSACTION_INVOICED")));
         verify(auditUtilitiesMock, never()).logErrorInvoiceTransaction(any(), any());
         verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock);
     }
@@ -177,9 +183,8 @@ class CommonInvoiceServiceImplTest {
         commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
-        assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
         verify(merchantConnectorMock, never()).getPointOfSale(any(), any());
-        verify(transactionRepositoryMock, times(1)).save(transaction);
+        verify(invoiceTransactionRepositoryMock).updateInvoiceAndCreateEvent(any(InvoiceTransactionCommand.class));
     }
 
     @Test
@@ -276,7 +281,7 @@ class CommonInvoiceServiceImplTest {
         String expectedPath = String.format("invoices/%s/merchant/%s/pos/%s/transaction/%s/invoice/%s",
                 INITIATIVE_ID, MERCHANT_ID, transactionPosId, TRX_ID, file.getOriginalFilename());
         verify(fileStorageClientMock, times(1)).upload(any(InputStream.class), eq(expectedPath), eq(file.getContentType()));
-        verify(transactionRepositoryMock, times(1)).save(transaction);
+        verify(invoiceTransactionRepositoryMock).updateInvoiceAndCreateEvent(any(InvoiceTransactionCommand.class));
         verify(auditUtilitiesMock, never()).logErrorInvoiceTransaction(any(), any());
     }
 
@@ -313,7 +318,7 @@ class CommonInvoiceServiceImplTest {
 
         assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
         verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
-        verify(transactionRepositoryMock, never()).save(any());
+        verifyNoInteractions(invoiceTransactionRepositoryMock);
     }
 
     @Test
@@ -391,11 +396,40 @@ class CommonInvoiceServiceImplTest {
                         RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
                         authorization);
         verifyNoInteractions(fileStorageClientMock, merchantConnectorMock);
-        verify(transactionRepositoryMock, never()).save(any());
+        verifyNoInteractions(invoiceTransactionRepositoryMock);
         verify(auditUtilitiesMock, never()).logInvoiceTransaction(any());
         assertEquals(SyncTrxStatus.INVOICED, transaction.getStatus());
         assertSame(originalInvoiceData, transaction.getInvoiceData());
         assertEquals(3L, transaction.getTransactionRevision());
+    }
+
+    @Test
+    void testInvoiceTransaction_ConcurrentChangeRaisesConflictAndDoesNotAuditSuccess() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test_invoice.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder()
+                .filename("old_invoice.pdf")
+                .docNumber("OLD_DOC")
+                .build());
+        transaction.setTransactionRevision(4L);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        doThrow(new TransactionConflictException(
+                ExceptionCode.TRANSACTION_CONFLICT,
+                "Concurrent change"))
+                .when(invoiceTransactionRepositoryMock)
+                .updateInvoiceAndCreateEvent(any(InvoiceTransactionCommand.class));
+
+        TransactionConflictException exception = assertThrows(
+                TransactionConflictException.class,
+                () -> commonInvoiceService.invoiceTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
+
+        assertEquals(ExceptionCode.TRANSACTION_CONFLICT, exception.getCode());
+        verify(auditUtilitiesMock, never()).logInvoiceTransaction(any());
+        verify(auditUtilitiesMock, never()).logInvoiceReplacement(any());
+        verify(auditUtilitiesMock).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
     }
 
     private Transaction createDummyTransaction(SyncTrxStatus status, String merchantId, String pointOfSaleId) {
@@ -408,6 +442,7 @@ class CommonInvoiceServiceImplTest {
         transaction.setPointOfSaleId(pointOfSaleId);
         transaction.setStatus(status);
         transaction.setRewardCents(200L);
+        transaction.setTransactionRevision(0L);
         return transaction;
     }
 }

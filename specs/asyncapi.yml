@@ -146,6 +146,25 @@ components:
                 enum:
                   - INVOICED
                 description: Canonical status after invoice replacement
+        example:
+          eventId: "1024"
+          schemaVersion: 1
+          eventType: TRANSACTION_INVOICE_REPLACED
+          occurredAt: "2026-09-01T09:00:00+02:00"
+          id: "01JINVREPLACED"
+          trxCode: "12345678"
+          operationType: "00"
+          status: INVOICED
+          transactionRevision: 4
+          userId: "USER_ID"
+          merchantId: "MERCHANT_ID"
+          pointOfSaleId: "POS_ID"
+          initiativeId: "INITIATIVE_ID"
+          initiatives:
+            - "INITIATIVE_ID"
+          invoiceData:
+            filename: "invoice-4.pdf"
+            docNumber: "INV-4"
     TransactionInProgressConfirm:
       contentType: application/json
       description: >-

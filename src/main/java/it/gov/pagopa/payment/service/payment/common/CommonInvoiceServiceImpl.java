@@ -8,12 +8,15 @@ import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionEventType;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.InvoiceData;
+import it.gov.pagopa.payment.repository.InvoiceTransactionCommand;
+import it.gov.pagopa.payment.repository.InvoiceTransactionRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.StoragePathUtils;
@@ -39,6 +42,7 @@ public class CommonInvoiceServiceImpl {
     private final AuditUtilities auditUtilities;
     private final MerchantConnector merchantConnector;
     private final RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService;
+    private final InvoiceTransactionRepository invoiceTransactionRepository;
 
     public CommonInvoiceServiceImpl(
             @Value("${app.common.expirations.minDaysToInvoiceTransaction:0}") long minDaysToInvoiceTransaction,
@@ -46,13 +50,15 @@ public class CommonInvoiceServiceImpl {
             FileStorageClient fileStorageClient,
             AuditUtilities auditUtilities,
             MerchantConnector merchantConnector,
-            RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService) {
+            RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService,
+            InvoiceTransactionRepository invoiceTransactionRepository) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
         this.transactionRepository = transactionRepository;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
         this.merchantConnector = merchantConnector;
         this.rewardBatchEligibilityPreflightService = rewardBatchEligibilityPreflightService;
+        this.invoiceTransactionRepository = invoiceTransactionRepository;
     }
 
     public void invoiceTransaction(
@@ -102,6 +108,14 @@ public class CommonInvoiceServiceImpl {
                         authorization);
             }
 
+            SyncTrxStatus expectedStatus = transaction.getStatus();
+            long expectedRevision = transaction.getTransactionRevision() == null
+                    ? 0L
+                    : transaction.getTransactionRevision();
+            TransactionEventType eventType = SyncTrxStatus.CAPTURED.equals(expectedStatus)
+                    ? TransactionEventType.TRANSACTION_INVOICED
+                    : TransactionEventType.TRANSACTION_INVOICE_REPLACED;
+
             InvoiceData oldDocumentData = transaction.getInvoiceData();
             if(oldDocumentData!=null){
                 String oldFilename = oldDocumentData.getFilename();
@@ -113,24 +127,37 @@ public class CommonInvoiceServiceImpl {
             String path = StoragePathUtils.buildInvoicePath(transaction, file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
-            transaction.setStatus(SyncTrxStatus.INVOICED);
-            transaction.setUpdateDate(LocalDateTime.now(ZoneId.of("Europe/Rome")));
-            transaction.setInvoiceData(InvoiceData.builder()
+            LocalDateTime updateDate = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+            InvoiceData newInvoiceData = InvoiceData.builder()
                     .filename(file.getOriginalFilename())
                     .docNumber(docNumber)
-                    .build());
+                    .build();
+            String franchiseName = transaction.getFranchiseName();
+            String pointOfSaleType = transaction.getPointOfSaleType();
+            String businessName = transaction.getBusinessName();
+            String merchantFiscalCode = transaction.getMerchantFiscalCode();
 
             if (oldDocumentData == null && (transaction.getFranchiseName() == null || transaction.getPointOfSaleType() == null)) {
                 PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, transaction.getPointOfSaleId());
 
-                transaction.setFranchiseName(pointOfSaleDTO.getFranchiseName());
-                transaction.setPointOfSaleType(pointOfSaleDTO.getType().name());
-                transaction.setBusinessName(pointOfSaleDTO.getBusinessName());
-                transaction.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
+                franchiseName = pointOfSaleDTO.getFranchiseName();
+                pointOfSaleType = pointOfSaleDTO.getType().name();
+                businessName = pointOfSaleDTO.getBusinessName();
+                merchantFiscalCode = pointOfSaleDTO.getFiscalCode();
             }
-            transaction.incrementTransactionRevision();
-
-            // logging operation
+            invoiceTransactionRepository.updateInvoiceAndCreateEvent(new InvoiceTransactionCommand(
+                    transaction.getId(),
+                    transaction.getInitiativeId(),
+                    transaction.getMerchantId(),
+                    expectedStatus,
+                    expectedRevision,
+                    newInvoiceData,
+                    updateDate,
+                    franchiseName,
+                    pointOfSaleType,
+                    businessName,
+                    merchantFiscalCode,
+                    eventType));
             TransactionAuditDTO auditDTO = new TransactionAuditDTO(
                     transaction.getInitiativeId(),
                     transaction.getId(),
@@ -142,9 +169,11 @@ public class CommonInvoiceServiceImpl {
                     merchantId,
                     transaction.getPointOfSaleId()
             );
-            auditUtilities.logInvoiceTransaction(auditDTO);
-
-            transactionRepository.save(transaction);
+            if (TransactionEventType.TRANSACTION_INVOICED.equals(eventType)) {
+                auditUtilities.logInvoiceTransaction(auditDTO);
+            } else {
+                auditUtilities.logInvoiceReplacement(auditDTO);
+            }
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);
