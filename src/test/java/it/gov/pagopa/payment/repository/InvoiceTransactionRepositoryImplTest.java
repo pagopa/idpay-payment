@@ -32,6 +32,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -88,6 +89,8 @@ class InvoiceTransactionRepositoryImplTest {
                 WHERE transaction_id = 'trx-invoice'
                   AND transaction_revision = 2
                 """, String.class));
+        assertEventTimestampsAligned("trx-invoice", 1);
+        assertEventTimestampsAligned("trx-invoice", 2);
     }
 
     @Test
@@ -220,6 +223,32 @@ class InvoiceTransactionRepositoryImplTest {
                 """, Integer.class, transactionId, revision, eventType);
     }
 
+    private void assertEventTimestampsAligned(String transactionId, long revision) {
+        OffsetDateTime createdAt = jdbcTemplate.queryForObject("""
+                SELECT created_at
+                FROM "idpay-pagamenti".transaction_outbox
+                WHERE transaction_id = ?
+                  AND transaction_revision = ?
+                """, OffsetDateTime.class, transactionId, revision);
+        OffsetDateTime occurredAt = jdbcTemplate.queryForObject("""
+                SELECT occurred_at
+                FROM "idpay-pagamenti".transaction_outbox
+                WHERE transaction_id = ?
+                  AND transaction_revision = ?
+                """, OffsetDateTime.class, transactionId, revision);
+        OffsetDateTime payloadOccurredAt = OffsetDateTime.parse(jdbcTemplate.queryForObject("""
+                SELECT payload ->> 'occurredAt'
+                FROM "idpay-pagamenti".transaction_outbox
+                WHERE transaction_id = ?
+                  AND transaction_revision = ?
+                """, String.class, transactionId, revision));
+
+        assertNotNull(createdAt);
+        assertNotNull(occurredAt);
+        assertEquals(payloadOccurredAt.toInstant(), createdAt.toInstant());
+        assertEquals(payloadOccurredAt.toInstant(), occurredAt.toInstant());
+    }
+
     @Configuration
     @EnableTransactionManagement
     @EnableJpaRepositories(basePackageClasses = TransactionRepository.class)
@@ -232,6 +261,7 @@ class InvoiceTransactionRepositoryImplTest {
             dataSource.setURL(POSTGRES.getJdbcUrl());
             dataSource.setUser(POSTGRES.getUsername());
             dataSource.setPassword(POSTGRES.getPassword());
+            dataSource.setOptions("-c TimeZone=Europe/Rome");
             return dataSource;
         }
 
