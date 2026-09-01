@@ -32,7 +32,7 @@ class TransactionOutboxMigrationTest {
     }
 
     @Test
-    void shouldCreateImmutableRowsForDifferentRevisionsAndStatuses() throws SQLException {
+    void shouldLeaveInvoiceEventsToExplicitPersistenceAndKeepOtherStatusEvents() throws SQLException {
         execute("""
                 INSERT INTO %s.transaction (
                     id, "trxCode", "operationType", status, "trxDate", "userId",
@@ -49,26 +49,28 @@ class TransactionOutboxMigrationTest {
                 """.formatted(SCHEMA));
         execute("""
                 UPDATE %s.transaction
-                SET "invoiceData" = '{"documentNumber":"invoice-2"}',
+                SET status = 'REFUNDED',
                     "transactionRevision" = 2
                 WHERE id = 'trx-1'
                 """.formatted(SCHEMA));
 
-        assertEquals(3, queryLong("""
+        assertEquals(2, queryLong("""
                 SELECT count(*)
                 FROM %s.transaction_outbox
                 WHERE transaction_id = 'trx-1'
                 """.formatted(SCHEMA)));
-        assertEquals(2, queryLong("""
+        assertEquals(0, queryLong("""
                 SELECT count(*)
                 FROM %s.transaction_outbox
                 WHERE transaction_id = 'trx-1'
                   AND event_type = 'TRANSACTION_INVOICED'
                 """.formatted(SCHEMA)));
-        assertEquals(3, queryLong("""
-                SELECT count(DISTINCT transaction_revision)
+        assertEquals(1, queryLong("""
+                SELECT count(*)
                 FROM %s.transaction_outbox
                 WHERE transaction_id = 'trx-1'
+                  AND event_type = 'TRANSACTION_REFUNDED'
+                  AND transaction_revision = 2
                 """.formatted(SCHEMA)));
     }
 
@@ -183,6 +185,7 @@ class TransactionOutboxMigrationTest {
                         )
                         """.formatted(SCHEMA));
             }
+
             connection.rollback();
         }
 

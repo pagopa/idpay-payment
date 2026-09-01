@@ -81,4 +81,16 @@ Use this file as the repository source of truth for everyday coding work. Keep c
 - Search for nearby examples in the same package and mirror local structure, imports, and naming.
 - Make precise, surgical changes; do not refactor unrelated code as part of a feature or bug fix.
 - Update documentation or contracts only when the code change directly affects them.
-- Preserve observable behavior unless the requested change explicitly alters it.
+- Preserve observable behavior unless the requested change explicitly alters it.  
+ 
+
+## Branching and pull-request workflow
+When creating a feature branch from origin/develop, always use:
+
+git switch --no-track -c <feature-branch> origin/develop
+
+Never configure a feature branch to track origin/develop or origin/main. Before pushing, verify its upstream. Push only with:
+
+git push -u origin HEAD
+
+The upstream branch name must match the local feature branch name. Never push directly to develop or main; changes must reach them exclusively through a pull request.
