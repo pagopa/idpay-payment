@@ -39,6 +39,8 @@ public class TransactionServiceImpl implements TransactionService {
             SyncTrxStatus.REFUNDED
     );
 
+    private static final ZoneId ZONE_EUROPE_ROME = ZoneId.of("Europe/Rome");
+
     private final TransactionRepository transactionRepository;
     private final PDVService pdvService;
     private final TrxCodeGenUtil trxCodeGenUtil;
@@ -191,7 +193,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
         try {
-            OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
+            OffsetDateTime now = OffsetDateTime.now(ZONE_EUROPE_ROME);
             log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", sanitizeForLog(initiativeId));
             int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
 
@@ -210,7 +212,7 @@ public class TransactionServiceImpl implements TransactionService {
         long numberOfEvents = 0L;
         try {
             while (true) {
-                OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of("Europe/Rome"))
+                OffsetDateTime threshold = OffsetDateTime.now(ZONE_EUROPE_ROME)
                         .minusMinutes(extendedTransactions.getStaleMinutesThreshold());
                 Pageable pageable = Pageable.ofSize(appConfigurationProperties.getSendExpiredSendBatchSize()).withPage(page);
 
@@ -287,7 +289,7 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.bulkUpdateStatusByIds(
                 validIds,
                 status,
-                LocalDateTime.now(ZoneId.of("Europe/Rome"))
+                LocalDateTime.now(ZONE_EUROPE_ROME)
         );
     }
 

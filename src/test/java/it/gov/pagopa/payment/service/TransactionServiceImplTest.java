@@ -455,17 +455,21 @@ class TransactionServiceImplTest {
     @Test
     @DisplayName("updateTransactionsStatus - Parametri mancanti")
     void testUpdateTransactionsStatus_MissingParameters() {
+        List<String> validList = List.of("TRX_1");
+        List<String> emptyList = List.of();
+        List<String> blankList = List.of(" ", "\t");
+
         assertThrows(TransactionMissingParametersException.class,
                 () -> transactionService.updateTransactionsStatus(null, SyncTrxStatus.REWARDED));
 
         assertThrows(TransactionMissingParametersException.class,
-                () -> transactionService.updateTransactionsStatus(List.of(), SyncTrxStatus.REWARDED));
+                () -> transactionService.updateTransactionsStatus(emptyList, SyncTrxStatus.REWARDED));
 
         assertThrows(TransactionMissingParametersException.class,
-                () -> transactionService.updateTransactionsStatus(List.of("TRX_1"), null));
+                () -> transactionService.updateTransactionsStatus(validList, null));
 
         assertThrows(TransactionMissingParametersException.class,
-                () -> transactionService.updateTransactionsStatus(List.of(" ", "\t"), SyncTrxStatus.REWARDED));
+                () -> transactionService.updateTransactionsStatus(blankList, SyncTrxStatus.REWARDED));
 
         verify(transactionRepository, never()).bulkUpdateStatusByIds(anyList(), any(), any());
     }
