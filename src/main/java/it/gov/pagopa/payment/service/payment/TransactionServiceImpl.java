@@ -260,20 +260,6 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public int updateTransactionsStatus(List<String> transactionIds, SyncTrxStatus status) {
-        List<String> missingParams = new ArrayList<>();
-        if (transactionIds == null || transactionIds.isEmpty()) {
-            missingParams.add("transactionIds");
-        }
-        if (status == null) {
-            missingParams.add("status");
-        }
-        if (!missingParams.isEmpty()) {
-            throw new TransactionMissingParametersException(
-                    TRANSACTIONS_MISSING_MANDATORY_FILTERS,
-                    buildMissingFiltersMessage(missingParams.toArray(new String[0]))
-            );
-        }
-
         List<String> validIds = transactionIds.stream()
                 .filter(StringUtils::isNotBlank)
                 .distinct()
