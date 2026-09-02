@@ -292,12 +292,12 @@ public class CommonCancelServiceImpl {
         logTransactionStart(transaction);
 
         try {
-            boolean canDelete = PerformanceLogger.execute(
+            boolean canDelete = Boolean.TRUE.equals(PerformanceLogger.execute(
                     LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
                     () -> handleExpiredTransactionBulk(transaction),
                     result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
                             .formatted(transaction.getId())
-            );
+            ));
 
             if (canDelete) {
                 deletableIds.add(transaction.getId());
