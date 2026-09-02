@@ -265,13 +265,6 @@ public class TransactionServiceImpl implements TransactionService {
                 .distinct()
                 .toList();
 
-        if (validIds.isEmpty()) {
-            throw new TransactionMissingParametersException(
-                    TRANSACTIONS_MISSING_MANDATORY_FILTERS,
-                    buildMissingFiltersMessage("transactionIds")
-            );
-        }
-
         return transactionRepository.bulkUpdateStatusByIds(
                 validIds,
                 status,
