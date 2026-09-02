@@ -32,7 +32,7 @@ public interface TransactionsController {
             @PathVariable(value = "userId") String userId
     );
 
-    @PostMapping("/status")
+    @PutMapping("/status")
     @ResponseStatus(code = HttpStatus.OK)
     int updateTransactionsStatus(@RequestBody @Valid UpdateTransactionsStatusRequest request);
 
