@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +32,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     );
 
     List<Transaction> findByStatusAndUpdateDateBefore(SyncTrxStatus status,
-                                                      OffsetDateTime threshold,
+                                                      LocalDateTime threshold,
                                                       Pageable pageable);
 
     List<Transaction> findByInitiativeIdAndStatusAndUpdateDateBeforeAndExtendedAuthorizationIsTrueOrderByIdAsc(

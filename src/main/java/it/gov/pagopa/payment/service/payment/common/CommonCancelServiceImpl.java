@@ -215,7 +215,7 @@ public class CommonCancelServiceImpl {
         List<Transaction> transactions;
         int pageSize = 100;
         do {
-            OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
+            LocalDateTime threshold = LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
             Pageable pageable = PageRequest.of(0, pageSize);
             transactions = transactionRepository.findByStatusAndUpdateDateBefore(
                     SyncTrxStatus.AUTHORIZED,
