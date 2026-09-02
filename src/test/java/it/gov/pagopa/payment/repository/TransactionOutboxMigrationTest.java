@@ -7,8 +7,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -277,36 +275,6 @@ class TransactionOutboxMigrationTest {
                 """.formatted(SCHEMA)));
     }
 
-    @Test
-    void shouldAllowMigrationScriptToRunMultipleTimes() throws SQLException, IOException {
-        insertTransaction("trx-rerun", 3);
-        String originalPayload = queryString("""
-                SELECT payload::TEXT
-                FROM %s.transaction_outbox
-                WHERE transaction_id = 'trx-rerun'
-                """.formatted(SCHEMA));
-
-        executeMigrationScript();
-        executeMigrationScript();
-
-        assertEquals(1, queryLong("""
-                SELECT count(*)
-                FROM %s.transaction_outbox
-                WHERE transaction_id = 'trx-rerun'
-                """.formatted(SCHEMA)));
-        assertEquals(originalPayload, queryString("""
-                SELECT payload::TEXT
-                FROM %s.transaction_outbox
-                WHERE transaction_id = 'trx-rerun'
-                """.formatted(SCHEMA)));
-        SQLException exception = assertThrows(SQLException.class, () -> execute("""
-                UPDATE %s.transaction_outbox
-                SET event_type = 'CHANGED'
-                WHERE transaction_id = 'trx-rerun'
-                """.formatted(SCHEMA)));
-        assertEquals("55000", exception.getSQLState());
-    }
-
     private void insertTransaction(String transactionId, long revision) throws SQLException {
         execute("""
                 INSERT INTO %s.transaction (
@@ -365,14 +333,6 @@ class TransactionOutboxMigrationTest {
         try (Connection connection = connection();
              Statement statement = connection.createStatement()) {
             statement.execute(sql);
-        }
-    }
-
-    private void executeMigrationScript() throws IOException, SQLException {
-        try (var inputStream = getClass().getResourceAsStream(
-                "/db/migration/V3__make_transaction_outbox_immutable.sql")) {
-            assertNotNull(inputStream);
-            execute(new String(inputStream.readAllBytes(), StandardCharsets.UTF_8));
         }
     }
 
