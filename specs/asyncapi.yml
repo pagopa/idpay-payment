@@ -6,6 +6,8 @@ info:
     Its purpose is to notify other systems of transaction confirmation and cancellation events and any  
     errors
 tags:
+  - name: "transactionOutbox"
+    description: "Canonical payment transaction outcomes"
   - name: "confirmTransaction"
     description: "Transaction REWARDED"
   - name: "cancellationTransaction"
@@ -19,6 +21,15 @@ tags:
   - name: "handleTimeout"
     description: "Handle schedulation and delete transaction after timeout"
 channels:
+  payment-transaction-invoice-replaced:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInvoiceReplaced'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "transactionOutbox"
   payment-confirm-transaction:
     publish:
       message:
@@ -83,6 +94,77 @@ channels:
         - name: "handleTimeout"
 components:
   messages:
+    TransactionInvoiceReplaced:
+      contentType: application/json
+      description: >-
+        Complete canonical transaction snapshot emitted once for an invoice
+        replacement revision. Event metadata is flattened into the outbox
+        payload; operationType remains the payment operation code.
+      summary: Invoice replacement transaction outcome
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: Transaction ID copied from transaction_outbox.transaction_id
+      payload:
+        allOf:
+          - $ref: "#/components/schemas/RewardTransactionDTO"
+          - type: object
+            required:
+              - eventId
+              - schemaVersion
+              - eventType
+              - occurredAt
+              - id
+              - transactionRevision
+              - status
+            properties:
+              eventId:
+                type: string
+                description: Stable identifier of the immutable outbox event
+              schemaVersion:
+                type: integer
+                enum:
+                  - 1
+                description: Event metadata schema version
+              eventType:
+                type: string
+                enum:
+                  - TRANSACTION_INVOICE_REPLACED
+                description: Must match transaction_outbox.event_type
+              occurredAt:
+                type: string
+                format: date-time
+                description: Timestamp of the committed invoice replacement outcome
+              transactionRevision:
+                type: integer
+                format: int64
+                minimum: 1
+                description: Positive transaction lifecycle revision
+              status:
+                type: string
+                enum:
+                  - INVOICED
+                description: Canonical status after invoice replacement
+        example:
+          eventId: "1024"
+          schemaVersion: 1
+          eventType: TRANSACTION_INVOICE_REPLACED
+          occurredAt: "2026-09-01T09:00:00+02:00"
+          id: "01JINVREPLACED"
+          trxCode: "12345678"
+          operationType: "00"
+          status: INVOICED
+          transactionRevision: 4
+          userId: "USER_ID"
+          merchantId: "MERCHANT_ID"
+          pointOfSaleId: "POS_ID"
+          initiativeId: "INITIATIVE_ID"
+          initiatives:
+            - "INITIATIVE_ID"
+          invoiceData:
+            filename: "invoice-4.pdf"
+            docNumber: "INV-4"
     TransactionInProgressConfirm:
       contentType: application/json
       description: >-
@@ -486,6 +568,8 @@ components:
         status:
           type: string
           enum:
+            - INVOICED
+            - REFUNDED
             - REJECTED
             - REWARDED
             - CANCELLED

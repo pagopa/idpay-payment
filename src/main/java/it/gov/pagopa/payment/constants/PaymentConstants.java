@@ -64,6 +64,7 @@ public class PaymentConstants {
     public static final String PDF_GENERIC_EXCEPTION = "PDF_GENERIC_EXCEPTION";
     public static final String INVALID_PRODUCT_CATEGORY = "INVALID_PRODUCT_CATEGORY";
     public static final String REWARD_BATCH_ELIGIBILITY_NOT_ALLOWED = "PAYMENT_REWARD_BATCH_ELIGIBILITY_NOT_ALLOWED";
+    public static final String TRANSACTION_CONFLICT = "PAYMENT_TRANSACTION_CONFLICT";
   }
 
   public static final class ExceptionMessage {
