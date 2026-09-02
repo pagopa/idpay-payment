@@ -4,6 +4,7 @@ import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
+import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RestController;
@@ -45,6 +46,15 @@ public class TransactionsControllerImpl implements TransactionsController {
     @PerformanceLog("FIND_TRANSACTIONS_BY_INITIATIVE_AND_USER")
     public List<Transaction> findByInitiativeIdAndUserId(String initiativeId, String userId) {
         return transactionService.findByInitiativeIdAndUserId(sanitize(initiativeId), sanitize(userId));
+    }
+
+    @Override
+    @PerformanceLog("UPDATE_TRANSACTIONS_STATUS")
+    public int updateTransactionsStatus(UpdateTransactionsStatusRequest request) {
+        List<String> sanitizedIds = request.transactionIds().stream()
+                .map(this::sanitize)
+                .toList();
+        return transactionService.updateTransactionsStatus(sanitizedIds, request.status());
     }
 
     private String sanitize(String value) {

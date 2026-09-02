@@ -425,4 +425,48 @@ class TransactionServiceImplTest {
 
         assertEquals("Generic DB Error", ex.getMessage());
     }
+
+    // =========================================================================
+    // 9. UPDATE TRANSACTIONS STATUS
+    // =========================================================================
+
+    @Test
+    @DisplayName("updateTransactionsStatus - Successo")
+    void testUpdateTransactionsStatus_Success() {
+        when(transactionRepository.bulkUpdateStatusByIds(
+                eq(List.of("TRX_1", "TRX_2")),
+                eq(SyncTrxStatus.REWARDED),
+                any(LocalDateTime.class)
+        )).thenReturn(2);
+
+        int updated = transactionService.updateTransactionsStatus(
+                List.of("TRX_1", "TRX_2", "TRX_1"),
+                SyncTrxStatus.REWARDED
+        );
+
+        assertEquals(2, updated);
+        verify(transactionRepository, times(1)).bulkUpdateStatusByIds(
+                eq(List.of("TRX_1", "TRX_2")),
+                eq(SyncTrxStatus.REWARDED),
+                any(LocalDateTime.class)
+        );
+    }
+
+    @Test
+    @DisplayName("updateTransactionsStatus - Parametri mancanti")
+    void testUpdateTransactionsStatus_MissingParameters() {
+        assertThrows(TransactionMissingParametersException.class,
+                () -> transactionService.updateTransactionsStatus(null, SyncTrxStatus.REWARDED));
+
+        assertThrows(TransactionMissingParametersException.class,
+                () -> transactionService.updateTransactionsStatus(List.of(), SyncTrxStatus.REWARDED));
+
+        assertThrows(TransactionMissingParametersException.class,
+                () -> transactionService.updateTransactionsStatus(List.of("TRX_1"), null));
+
+        assertThrows(TransactionMissingParametersException.class,
+                () -> transactionService.updateTransactionsStatus(List.of(" ", "\t"), SyncTrxStatus.REWARDED));
+
+        verify(transactionRepository, never()).bulkUpdateStatusByIds(anyList(), any(), any());
+    }
 }

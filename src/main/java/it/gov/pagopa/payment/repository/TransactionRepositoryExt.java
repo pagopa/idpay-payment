@@ -288,4 +288,19 @@ public interface TransactionRepositoryExt {
           @Param("initiativeId") String initiativeId,
           @Param("pageSize") int pageSize
   );
+
+  @Modifying
+  @Transactional
+  @Query("""
+        UPDATE Transaction t
+        SET t.status = :newStatus,
+            t.updateDate = :updateDate,
+            t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1
+        WHERE t.id IN :transactionIds
+      """)
+  int bulkUpdateStatusByIds(
+          @Param("transactionIds") List<String> transactionIds,
+          @Param("newStatus") SyncTrxStatus newStatus,
+          @Param("updateDate") LocalDateTime updateDate
+  );
 }

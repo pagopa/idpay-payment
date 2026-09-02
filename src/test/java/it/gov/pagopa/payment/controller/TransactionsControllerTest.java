@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.controller;
 
+import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import org.junit.jupiter.api.Test;
@@ -103,6 +105,31 @@ class TransactionsControllerImplTest {
             assertEquals(expectedTransactions, result);
 
             verify(transactionService, times(1)).findByInitiativeIdAndUserId(INITIATIVE_ID, USER_ID);
+        }
+    }
+
+    @Test
+    void updateTransactionsStatus_shouldSanitizeIdsAndDelegateToService() {
+        // Given
+        UpdateTransactionsStatusRequest request = new UpdateTransactionsStatusRequest(
+                List.of(" trx-1 ", "trx-2"),
+                SyncTrxStatus.REWARDED
+        );
+
+        when(transactionService.updateTransactionsStatus(List.of("trx-1", "trx-2"), SyncTrxStatus.REWARDED))
+                .thenReturn(2);
+
+        try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
+            utilitiesMock.when(() -> Utilities.sanitizeString(" trx-1 ")).thenReturn("trx-1");
+            utilitiesMock.when(() -> Utilities.sanitizeString("trx-2")).thenReturn("trx-2");
+
+            // When
+            int updated = transactionsController.updateTransactionsStatus(request);
+
+            // Then
+            assertEquals(2, updated);
+            verify(transactionService, times(1))
+                    .updateTransactionsStatus(List.of("trx-1", "trx-2"), SyncTrxStatus.REWARDED);
         }
     }
 }
