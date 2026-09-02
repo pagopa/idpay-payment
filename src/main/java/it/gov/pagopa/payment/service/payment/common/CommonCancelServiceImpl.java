@@ -215,7 +215,7 @@ public class CommonCancelServiceImpl {
         List<Transaction> transactions;
         int pageSize = 100;
         do {
-            OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
+            LocalDateTime threshold = LocalDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)).minusHours(24);
             Pageable pageable = PageRequest.of(0, pageSize);
             transactions = transactionRepository.findByStatusAndUpdateDateBefore(
                     SyncTrxStatus.AUTHORIZED,
@@ -292,12 +292,12 @@ public class CommonCancelServiceImpl {
         logTransactionStart(transaction);
 
         try {
-            boolean canDelete = PerformanceLogger.execute(
+            boolean canDelete = Boolean.TRUE.equals(PerformanceLogger.execute(
                     LAPSED + RewardConstants.TRX_CHANNEL_QRCODE,
                     () -> handleExpiredTransactionBulk(transaction),
                     result -> "Evaluated transaction with ID %s due to DELETE_LAPSED_TRANSACTION"
                             .formatted(transaction.getId())
-            );
+            ));
 
             if (canDelete) {
                 deletableIds.add(transaction.getId());
