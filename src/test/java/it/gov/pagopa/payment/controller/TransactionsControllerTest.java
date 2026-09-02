@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -112,11 +113,11 @@ class TransactionsControllerImplTest {
     void updateTransactionsStatus_shouldSanitizeIdsAndDelegateToService() {
         // Given
         UpdateTransactionsStatusRequest request = new UpdateTransactionsStatusRequest(
-                List.of(" trx-1 ", "trx-2"),
+                Set.of(" trx-1 ", "trx-2"),
                 SyncTrxStatus.REWARDED
         );
 
-        when(transactionService.updateTransactionsStatus(List.of("trx-1", "trx-2"), SyncTrxStatus.REWARDED))
+        when(transactionService.updateTransactionsStatus(anyList(), eq(SyncTrxStatus.REWARDED)))
                 .thenReturn(2);
 
         try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
@@ -129,7 +130,10 @@ class TransactionsControllerImplTest {
             // Then
             assertEquals(2, updated);
             verify(transactionService, times(1))
-                    .updateTransactionsStatus(List.of("trx-1", "trx-2"), SyncTrxStatus.REWARDED);
+                    .updateTransactionsStatus(
+                            argThat(ids -> ids.size() == 2 && ids.containsAll(List.of("trx-1", "trx-2"))),
+                            eq(SyncTrxStatus.REWARDED)
+                    );
         }
     }
 }
