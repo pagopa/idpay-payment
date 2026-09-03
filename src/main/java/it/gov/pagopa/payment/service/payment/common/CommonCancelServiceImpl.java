@@ -100,7 +100,7 @@ public class CommonCancelServiceImpl {
                         "Cannot cancel transaction with transactionId [%s]".formatted(trxId));
             }
 
-            log.info("[TRX_STATUS][CANCELLED] The transaction with trxId {} trxCode {}, has been cancelled", transaction.getId(), transaction.getTrxCode());
+            log.info("[TRX_STATUS][CANCELLED][INITIATIVE: {}] The transaction with trxId {} trxCode {}, has been cancelled", transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode());
             logCancelTransactionAudit(transaction, merchantId, pointOfSaleId);
 
         } catch (RuntimeException e) {
@@ -192,21 +192,21 @@ public class CommonCancelServiceImpl {
 
     private void sendCancelledTransactionNotification(Transaction transaction, boolean isReset) {
         try {
-            log.info("[{}][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: trxId {} - merchantId {} - acquirerId {}",
-                    isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
+            log.info("[{}][SEND_NOTIFICATION] Sending Cancel Authorized Payment event to Notification: initiativeId {} - trxId {} - merchantId {} - acquirerId {}",
+                    isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, transaction.getInitiativeId(), transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId());
             if (!notifierService.notify(transaction, transaction.getUserId())) {
                 throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while cancelling Authorized Payment notify");
             }
         } catch (Exception e) {
             if (!paymentErrorNotifierService.notifyCancelPayment(
                     notifierService.buildMessage(transaction, transaction.getUserId()),
-                    "[%s] An error occurred while publishing the cancellation authorized result: trxId %s - merchantId %s - acquirerId %s"
-                            .formatted(isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId()),
+                    "[%s] An error occurred while publishing the cancellation authorized result: initiativeId %s - trxId %s - merchantId %s - acquirerId %s"
+                            .formatted(isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, transaction.getInitiativeId(), transaction.getId(), transaction.getMerchantId(), transaction.getAcquirerId()),
                     true,
                     e)
             ) {
-                log.error("[{}][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {} - acquirerId {}",
-                        isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, transaction.getId(), transaction.getUserId(), transaction.getAcquirerId(), e);
+                log.error("[{}][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: initiativeId {} - trxId {} - merchantId {} - acquirerId {}",
+                        isReset ? RESET_TRANSACTION : CANCEL_TRANSACTION, transaction.getInitiativeId(), transaction.getId(), transaction.getUserId(), transaction.getAcquirerId(), e);
             }
         }
     }
