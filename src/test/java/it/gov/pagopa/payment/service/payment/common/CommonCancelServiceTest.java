@@ -22,6 +22,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -353,6 +356,55 @@ class CommonCancelServiceImplTest {
     verify(transactionRepository, times(2)).findByStatusAndUpdateDateBefore(eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class));
     verify(transactionRepository).findById("TRX_1");
     verify(transactionRepository).findById("TRX_2");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @DisplayName("rejectPendingTransactions - Mantiene il contesto di ogni iniziativa nella stessa pagina e tra pagine")
+  void testRejectPendingTransactions_MultipleInitiatives(boolean separatePages) {
+    Transaction trxA = createTransaction(SyncTrxStatus.AUTHORIZED);
+    trxA.setId("TRX_A");
+    trxA.setInitiativeId("INITIATIVE_A");
+    trxA.setExtendedAuthorization(false);
+    Transaction trxB = createTransaction(SyncTrxStatus.AUTHORIZED);
+    trxB.setId("TRX_B");
+    trxB.setInitiativeId("INITIATIVE_B");
+    trxB.setExtendedAuthorization(false);
+
+    var query = when(transactionRepository.findByStatusAndUpdateDateBefore(
+            eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class)));
+    if (separatePages) {
+      query.thenReturn(List.of(trxA), List.of(trxB), Collections.emptyList());
+    } else {
+      query.thenReturn(List.of(trxA, trxB), Collections.emptyList());
+    }
+    for (Transaction trx : List.of(trxA, trxB)) {
+      when(transactionRepository.findById(trx.getId())).thenReturn(Optional.of(trx));
+      when(rewardCalculatorConnector.cancelTransaction(trx)).thenReturn(new AuthPaymentDTO());
+      when(notifierService.notify(trx, USER_ID)).thenReturn(true);
+    }
+
+    commonCancelService.rejectPendingTransactions();
+
+    for (Transaction trx : List.of(trxA, trxB)) {
+      assertEquals(SyncTrxStatus.CANCELLED, trx.getStatus());
+      verify(transactionRepository).save(trx);
+      verify(rewardCalculatorConnector).cancelTransaction(trx);
+      verify(notifierService).notify(trx, USER_ID);
+      verify(merchantConnector).merchantDetail(MERCHANT_ID, trx.getInitiativeId());
+      verify(merchantConnector).getPointOfSale(MERCHANT_ID, POS_ID, trx.getInitiativeId());
+    }
+    ArgumentCaptor<CancelTransactionAuditDTO> auditCaptor = ArgumentCaptor.forClass(CancelTransactionAuditDTO.class);
+    verify(auditUtilities, times(2)).logCancelTransaction(auditCaptor.capture());
+    for (Transaction trx : List.of(trxA, trxB)) {
+      assertEquals(1L, auditCaptor.getAllValues().stream()
+              .filter(audit -> trx.getId().equals(audit.getTrxId())
+                      && trx.getInitiativeId().equals(audit.getInitiativeId()))
+              .count());
+    }
+    verify(auditUtilities, never()).logErrorCancelTransaction(anyString(), anyString());
+    verify(transactionRepository, times(separatePages ? 3 : 2))
+            .findByStatusAndUpdateDateBefore(eq(SyncTrxStatus.AUTHORIZED), any(), any(Pageable.class));
   }
 
   // =========================================================================
