@@ -220,7 +220,7 @@ class BarCodeAuthPaymentServiceImplTest {
         TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
 
-        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, ex.getCode());
         verify(decryptRestConnector, never()).getPiiByToken(any());
     }
 
@@ -240,7 +240,7 @@ class BarCodeAuthPaymentServiceImplTest {
         TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
 
-        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, ex.getCode());
         verify(decryptRestConnector, never()).getPiiByToken(any());
     }
 
@@ -268,7 +268,7 @@ class BarCodeAuthPaymentServiceImplTest {
         TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
 
-        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, ex.getCode());
         verify(decryptRestConnector, never()).getPiiByToken(any());
     }
 
@@ -288,7 +288,7 @@ class BarCodeAuthPaymentServiceImplTest {
         TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
 
-        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, ex.getCode());
         verify(decryptRestConnector, never()).getPiiByToken(any());
     }
 

@@ -92,7 +92,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     trxCode, preview.getRejectionReasons());
 
             throw new TransactionInvalidException(
-                    ExceptionCode.REWARD_NOT_VALID,
+                    ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
                     "Transaction preview rejected: code already used or not eligible"
             );
         }
