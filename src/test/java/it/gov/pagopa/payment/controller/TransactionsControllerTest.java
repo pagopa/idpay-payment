@@ -121,9 +121,8 @@ class TransactionsControllerImplTest {
                 .thenReturn(2);
 
         try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
-            utilitiesMock.when(() -> Utilities.sanitizeString(" trx-1 ")).thenReturn("trx-1");
+            utilitiesMock.when(() -> Utilities.sanitizeString(" trx-1 ")).thenReturn(" trx-1 ");
             utilitiesMock.when(() -> Utilities.sanitizeString("trx-2")).thenReturn("trx-2");
-
             // When
             int updated = transactionsController.updateTransactionsStatus(request);
 
