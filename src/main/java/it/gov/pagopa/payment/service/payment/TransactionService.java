@@ -2,11 +2,13 @@ package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public interface TransactionService {
 
@@ -31,5 +33,7 @@ public interface TransactionService {
     long findAndUpdateExpiredTransactionsStatus(String initiativeId);
 
     long sendEventForStaleExpiredTransactions(String initiativeId);
+
+    int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status);
 
 }

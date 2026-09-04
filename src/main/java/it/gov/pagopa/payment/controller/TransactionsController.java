@@ -1,13 +1,13 @@
 package it.gov.pagopa.payment.controller;
 
+import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
 import it.gov.pagopa.payment.entity.Transaction;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,5 +31,9 @@ public interface TransactionsController {
             @PathVariable(value = "initiativeId") String initiativeId,
             @PathVariable(value = "userId") String userId
     );
+
+    @PutMapping("/status")
+    @ResponseStatus(code = HttpStatus.OK)
+    int updateTransactionsStatus(@RequestBody @Valid UpdateTransactionsStatusRequest request);
 
 }

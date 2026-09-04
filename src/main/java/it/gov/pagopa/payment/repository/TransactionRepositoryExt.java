@@ -13,6 +13,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public interface TransactionRepositoryExt {
 
@@ -287,5 +288,20 @@ public interface TransactionRepositoryExt {
   List<Transaction> deletePaged(
           @Param("initiativeId") String initiativeId,
           @Param("pageSize") int pageSize
+  );
+
+  @Modifying
+  @Transactional
+  @Query("""
+        UPDATE Transaction t
+        SET t.status = :newStatus,
+            t.updateDate = :updateDate,
+            t.transactionRevision = COALESCE(t.transactionRevision, 0) + 1
+        WHERE t.id IN :transactionIds
+      """)
+  int bulkUpdateStatusByIds(
+          @Param("transactionIds") Set<String> transactionIds,
+          @Param("newStatus") SyncTrxStatus newStatus,
+          @Param("updateDate") LocalDateTime updateDate
   );
 }
