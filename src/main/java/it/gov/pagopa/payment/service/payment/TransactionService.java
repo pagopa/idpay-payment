@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public interface TransactionService {
 
@@ -33,6 +34,6 @@ public interface TransactionService {
 
     long sendEventForStaleExpiredTransactions(String initiativeId);
 
-    int updateTransactionsStatus(List<String> transactionIds, SyncTrxStatus status);
+    int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status);
 
 }

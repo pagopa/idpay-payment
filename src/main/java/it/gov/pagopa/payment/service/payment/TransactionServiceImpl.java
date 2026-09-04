@@ -24,6 +24,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTIONS_MISSING_MANDATORY_FILTERS;
 import static it.gov.pagopa.payment.constants.PaymentConstants.buildMissingFiltersMessage;
@@ -259,11 +261,10 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public int updateTransactionsStatus(List<String> transactionIds, SyncTrxStatus status) {
-        List<String> validIds = transactionIds.stream()
+    public int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status) {
+        Set<String> validIds = transactionIds.stream()
                 .filter(StringUtils::isNotBlank)
-                .distinct()
-                .toList();
+                .collect(Collectors.toSet());
 
         return transactionRepository.bulkUpdateStatusByIds(
                 validIds,

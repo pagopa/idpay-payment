@@ -13,6 +13,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public interface TransactionRepositoryExt {
 
@@ -299,7 +300,7 @@ public interface TransactionRepositoryExt {
         WHERE t.id IN :transactionIds
       """)
   int bulkUpdateStatusByIds(
-          @Param("transactionIds") List<String> transactionIds,
+          @Param("transactionIds") Set<String> transactionIds,
           @Param("newStatus") SyncTrxStatus newStatus,
           @Param("updateDate") LocalDateTime updateDate
   );

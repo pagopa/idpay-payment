@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @Slf4j
@@ -51,9 +53,9 @@ public class TransactionsControllerImpl implements TransactionsController {
     @Override
     @PerformanceLog("UPDATE_TRANSACTIONS_STATUS")
     public int updateTransactionsStatus(UpdateTransactionsStatusRequest request) {
-        List<String> sanitizedIds = request.transactionIds().stream()
+        Set<String> sanitizedIds = request.transactionIds().stream()
                 .map(this::sanitize)
-                .toList();
+                .collect(Collectors.toSet());
         return transactionService.updateTransactionsStatus(sanitizedIds, request.status());
     }
 

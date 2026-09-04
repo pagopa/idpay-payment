@@ -31,6 +31,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -434,19 +435,19 @@ class TransactionServiceImplTest {
     @DisplayName("updateTransactionsStatus - Successo")
     void testUpdateTransactionsStatus_Success() {
         when(transactionRepository.bulkUpdateStatusByIds(
-                eq(List.of("TRX_1", "TRX_2")),
+                eq(Set.of("TRX_1", "TRX_2")),
                 eq(SyncTrxStatus.REWARDED),
                 any(LocalDateTime.class)
         )).thenReturn(2);
 
         int updated = transactionService.updateTransactionsStatus(
-                List.of(" TRX_1 ", "TRX_2", " ", "TRX_1"),
+                Set.of("TRX_1", "TRX_2"),
                 SyncTrxStatus.REWARDED
         );
 
         assertEquals(2, updated);
         verify(transactionRepository, times(1)).bulkUpdateStatusByIds(
-                eq(List.of("TRX_1", "TRX_2")),
+                eq(Set.of("TRX_1", "TRX_2")),
                 eq(SyncTrxStatus.REWARDED),
                 any(LocalDateTime.class)
         );

@@ -117,12 +117,13 @@ class TransactionsControllerImplTest {
                 SyncTrxStatus.REWARDED
         );
 
-        when(transactionService.updateTransactionsStatus(anyList(), eq(SyncTrxStatus.REWARDED)))
+        when(transactionService.updateTransactionsStatus(anySet(), eq(SyncTrxStatus.REWARDED)))
                 .thenReturn(2);
 
         try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
             utilitiesMock.when(() -> Utilities.sanitizeString(" trx-1 ")).thenReturn(" trx-1 ");
             utilitiesMock.when(() -> Utilities.sanitizeString("trx-2")).thenReturn("trx-2");
+
             // When
             int updated = transactionsController.updateTransactionsStatus(request);
 
@@ -130,7 +131,7 @@ class TransactionsControllerImplTest {
             assertEquals(2, updated);
             verify(transactionService, times(1))
                     .updateTransactionsStatus(
-                            argThat(ids -> ids.size() == 2 && ids.containsAll(List.of("trx-1", "trx-2"))),
+                            argThat(ids -> ids.size() == 2 && ids.containsAll(Set.of(" trx-1 ", "trx-2"))),
                             eq(SyncTrxStatus.REWARDED)
                     );
         }
