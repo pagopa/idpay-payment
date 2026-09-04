@@ -440,7 +440,7 @@ class TransactionServiceImplTest {
         )).thenReturn(2);
 
         int updated = transactionService.updateTransactionsStatus(
-                List.of("TRX_1", "TRX_2", "TRX_1"),
+                List.of(" TRX_1 ", "TRX_2", " ", "TRX_1"),
                 SyncTrxStatus.REWARDED
         );
 
