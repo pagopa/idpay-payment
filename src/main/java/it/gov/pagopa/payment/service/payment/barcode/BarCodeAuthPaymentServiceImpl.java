@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -61,9 +62,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
     @Override
     public PreviewPaymentResultDTO previewPayment(String initiativeId,
-                                                   String trxCode,
-                                                   Map<String, String> additionalProperties,
-                                                   Long amountCents) {
+                                                  String trxCode,
+                                                  Map<String, String> additionalProperties,
+                                                  Long amountCents) {
 
         final Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
@@ -73,6 +74,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             throw new TransactionNotFoundOrExpiredException(
                     "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
                             trxCode.toLowerCase(), initiativeId));
+        }
+
+        if (!(SyncTrxStatus.CREATED.equals(transaction.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(transaction.getStatus()))) {
+            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(),transaction.getStatus()));
         }
 
         transaction.setAmountCents(amountCents);
