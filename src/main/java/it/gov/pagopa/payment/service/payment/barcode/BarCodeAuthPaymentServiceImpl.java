@@ -11,6 +11,7 @@ import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -75,6 +76,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                             trxCode.toLowerCase(), initiativeId));
         }
 
+        if (!(SyncTrxStatus.CREATED.equals(transaction.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(transaction.getStatus()))) {
+            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(),transaction.getStatus()));
+        }
+
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
                 transaction,
@@ -85,24 +91,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transaction, transaction.getUserId());
 
-        if (SyncTrxStatus.REJECTED.equals(preview.getStatus()) ||
-                (preview.getRejectionReasons() != null && !preview.getRejectionReasons().isEmpty())) {
-
-            log.info("[PREVIEW_TRANSACTION] Transaction rejected during preview for trxCode: {}. Rejection reasons: {}",
-                    trxCode, preview.getRejectionReasons());
-
-            throw new TransactionInvalidException(
-                    ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                    "Transaction preview rejected: code already used or not eligible"
-            );
-        }
-
-        if (preview.getRewardCents() <= 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with zero or negative reward: {}", preview.getRewardCents());
-            throw new TransactionInvalidException(
-                    ExceptionCode.REWARD_NOT_VALID,
-                    "Cannot preview transaction with zero or negative reward [%s]".formatted(preview.getRewardCents())
-            );
+        if (preview.getRewardCents() < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
         }
 
         final long residualAmountCents = amountCents - preview.getRewardCents();
