@@ -166,6 +166,22 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
+    void previewPayment_zeroReward() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setRewardCents(0L);
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
+        verify(decryptRestConnector, never()).getPiiByToken(any());
+    }
+
+    @Test
     void previewPayment_initiativeIdMismatch() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
         String differentInitiativeId = "DIFFERENT_INITIATIVE";
@@ -187,6 +203,135 @@ class BarCodeAuthPaymentServiceImplTest {
 
         assertThrows(TransactionInvalidException.class,
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 1000L));
+    }
+
+    @Test
+    void previewPayment_rejectedStatus() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
+
+        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        verify(decryptRestConnector, never()).getPiiByToken(any());
+    }
+
+    @Test
+    void previewPayment_withRejectionReasons() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+        authPaymentDTO.setRejectionReasons(List.of("INVALID_DISCOUNT_CODE"));
+
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
+
+        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        verify(decryptRestConnector, never()).getPiiByToken(any());
+    }
+
+    @Test
+    void previewPayment_trxNotFound() {
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.empty());
+
+        assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> barCodeAuthPaymentService.previewPayment("initiativeId", TRX_CODE1, Map.of(), 90000L));
+    }
+
+    @Test
+    void previewPayment_rejectedWithNullRejectionReasons() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setStatus(SyncTrxStatus.REJECTED);
+        authPaymentDTO.setRejectionReasons(null);
+
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
+
+        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        verify(decryptRestConnector, never()).getPiiByToken(any());
+    }
+
+    @Test
+    void previewPayment_rewardedWithRejectionReasons() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+        authPaymentDTO.setRejectionReasons(List.of("SOME_REASON"));
+
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
+
+        assertEquals(PaymentConstants.ExceptionCode.REWARD_NOT_VALID, ex.getCode());
+        verify(decryptRestConnector, never()).getPiiByToken(any());
+    }
+
+    @Test
+    void previewPayment_statusNotRejectedAndNullRejectionReasons_ok() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        Map<String, String> additionalProperties = Map.of("customField", "customValue", "productType", "DIGITAL");
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+        authPaymentDTO.setRejectionReasons(null);
+        authPaymentDTO.setRewardCents(100L);
+        authPaymentDTO.setTrxDate(OffsetDateTime.now());
+
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+        when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
+
+        PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 90000L);
+        assertNotNull(result);
+    }
+
+    @Test
+    void previewPayment_statusNotRejectedAndEmptyRejectionReasons_ok() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        String initiativeId = trx.getInitiativeId();
+        Map<String, String> additionalProperties = Map.of("customField", "customValue", "productType", "DIGITAL");
+        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+
+        AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
+        authPaymentDTO.setTrxCode(trx.getTrxCode());
+        authPaymentDTO.setStatus(SyncTrxStatus.REWARDED);
+        authPaymentDTO.setRejectionReasons(List.of());
+        authPaymentDTO.setRewardCents(100L);
+        authPaymentDTO.setTrxDate(OffsetDateTime.now());
+
+        when(commonAuthServiceMock.previewPayment(any(), any())).thenReturn(authPaymentDTO);
+        when(decryptRestConnector.getPiiByToken(any())).thenReturn(new DecryptCfDTO("Pii"));
+
+        PreviewPaymentResultDTO result = barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", additionalProperties, 90000L);
+        assertNotNull(result);
     }
 
     @Test

@@ -61,9 +61,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
     @Override
     public PreviewPaymentResultDTO previewPayment(String initiativeId,
-                                                   String trxCode,
-                                                   Map<String, String> additionalProperties,
-                                                   Long amountCents) {
+                                                  String trxCode,
+                                                  Map<String, String> additionalProperties,
+                                                  Long amountCents) {
 
         final Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
@@ -85,9 +85,24 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transaction, transaction.getUserId());
 
-        if (preview.getRewardCents() < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
+        if (SyncTrxStatus.REJECTED.equals(preview.getStatus()) ||
+                (preview.getRejectionReasons() != null && !preview.getRejectionReasons().isEmpty())) {
+
+            log.info("[PREVIEW_TRANSACTION] Transaction rejected during preview for trxCode: {}. Rejection reasons: {}",
+                    trxCode, preview.getRejectionReasons());
+
+            throw new TransactionInvalidException(
+                    ExceptionCode.REWARD_NOT_VALID,
+                    "Transaction preview rejected: code already used or not eligible"
+            );
+        }
+
+        if (preview.getRewardCents() <= 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with zero or negative reward: {}", preview.getRewardCents());
+            throw new TransactionInvalidException(
+                    ExceptionCode.REWARD_NOT_VALID,
+                    "Cannot preview transaction with zero or negative reward [%s]".formatted(preview.getRewardCents())
+            );
         }
 
         final long residualAmountCents = amountCents - preview.getRewardCents();
