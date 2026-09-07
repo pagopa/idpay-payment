@@ -24,6 +24,8 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode.TRANSACTIONS_MISSING_MANDATORY_FILTERS;
 import static it.gov.pagopa.payment.constants.PaymentConstants.buildMissingFiltersMessage;
@@ -38,6 +40,8 @@ public class TransactionServiceImpl implements TransactionService {
             SyncTrxStatus.INVOICED,
             SyncTrxStatus.REFUNDED
     );
+
+    private static final ZoneId ZONE_EUROPE_ROME = ZoneId.of("Europe/Rome");
 
     private final TransactionRepository transactionRepository;
     private final PDVService pdvService;
@@ -191,7 +195,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     public long findAndUpdateExpiredTransactionsStatus(String initiativeId) {
         try {
-            OffsetDateTime now = OffsetDateTime.now(ZoneId.of("Europe/Rome"));
+            OffsetDateTime now = OffsetDateTime.now(ZONE_EUROPE_ROME);
             log.info("[BATCH_EXPIRED_VOUCHER] Starting expiration update for initiative: {}", sanitizeForLog(initiativeId));
             int updatedRows = transactionRepository.updateStatusForExpiredVoucherTransactions(initiativeId, now);
 
@@ -210,7 +214,7 @@ public class TransactionServiceImpl implements TransactionService {
         long numberOfEvents = 0L;
         try {
             while (true) {
-                OffsetDateTime threshold = OffsetDateTime.now(ZoneId.of("Europe/Rome"))
+                OffsetDateTime threshold = OffsetDateTime.now(ZONE_EUROPE_ROME)
                         .minusMinutes(extendedTransactions.getStaleMinutesThreshold());
                 Pageable pageable = Pageable.ofSize(appConfigurationProperties.getSendExpiredSendBatchSize()).withPage(page);
 
@@ -254,6 +258,19 @@ public class TransactionServiceImpl implements TransactionService {
             throw new ExpirationStatusUpdateException(e.getMessage());
         }
 
+    }
+
+    @Override
+    public int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status) {
+        Set<String> validIds = transactionIds.stream()
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toSet());
+
+        return transactionRepository.bulkUpdateStatusByIds(
+                validIds,
+                status,
+                LocalDateTime.now(ZONE_EUROPE_ROME)
+        );
     }
 
     private List<Transaction> findByIdTrxIssuer(

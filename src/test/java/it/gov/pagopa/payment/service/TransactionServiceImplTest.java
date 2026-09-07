@@ -31,6 +31,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -425,4 +426,31 @@ class TransactionServiceImplTest {
 
         assertEquals("Generic DB Error", ex.getMessage());
     }
+
+    // =========================================================================
+    // 9. UPDATE TRANSACTIONS STATUS
+    // =========================================================================
+
+    @Test
+    @DisplayName("updateTransactionsStatus - Successo")
+    void testUpdateTransactionsStatus_Success() {
+        when(transactionRepository.bulkUpdateStatusByIds(
+                eq(Set.of("TRX_1", "TRX_2")),
+                eq(SyncTrxStatus.REWARDED),
+                any(LocalDateTime.class)
+        )).thenReturn(2);
+
+        int updated = transactionService.updateTransactionsStatus(
+                Set.of("TRX_1", "TRX_2"),
+                SyncTrxStatus.REWARDED
+        );
+
+        assertEquals(2, updated);
+        verify(transactionRepository, times(1)).bulkUpdateStatusByIds(
+                eq(Set.of("TRX_1", "TRX_2")),
+                eq(SyncTrxStatus.REWARDED),
+                any(LocalDateTime.class)
+        );
+    }
+
 }
