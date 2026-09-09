@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
@@ -48,6 +49,12 @@ public class TransactionsControllerImpl implements TransactionsController {
     @PerformanceLog("FIND_TRANSACTIONS_BY_INITIATIVE_AND_USER")
     public List<Transaction> findByInitiativeIdAndUserId(String initiativeId, String userId) {
         return transactionService.findByInitiativeIdAndUserId(sanitize(initiativeId), sanitize(userId));
+    }
+
+    @Override
+    @PerformanceLog("EXISTS_TRANSACTION_BY_STATUS")
+    public boolean existsTransactionByIdAndStatus(String transactionId, SyncTrxStatus status) {
+        return transactionService.existsTransactionByIdAndStatus(sanitize(transactionId), status);
     }
 
     @Override

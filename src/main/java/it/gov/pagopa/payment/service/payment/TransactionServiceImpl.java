@@ -261,6 +261,11 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public boolean existsTransactionByIdAndStatus(String transactionId, SyncTrxStatus status) {
+        return transactionRepository.existsByIdAndStatus(transactionId, status);
+    }
+
+    @Override
     public int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status) {
         Set<String> validIds = transactionIds.stream()
                 .filter(StringUtils::isNotBlank)
