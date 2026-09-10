@@ -34,6 +34,8 @@ public interface TransactionService {
 
     long sendEventForStaleExpiredTransactions(String initiativeId);
 
+    boolean existsTransactionByIdAndStatus(String transactionId, SyncTrxStatus status);
+
     int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status);
 
 }

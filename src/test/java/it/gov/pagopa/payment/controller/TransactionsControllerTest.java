@@ -136,4 +136,19 @@ class TransactionsControllerImplTest {
                     );
         }
     }
+
+    @Test
+    void existsTransactionByIdAndStatus_shouldSanitizeInputAndDelegateToService() {
+        when(transactionService.existsTransactionByIdAndStatus("trx-1", SyncTrxStatus.EXPIRED))
+                .thenReturn(true);
+
+        try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
+            utilitiesMock.when(() -> Utilities.sanitizeString(" trx-1 ")).thenReturn("trx-1");
+
+            boolean exists = transactionsController.existsTransactionByIdAndStatus(" trx-1 ", SyncTrxStatus.EXPIRED);
+
+            assertEquals(true, exists);
+            verify(transactionService).existsTransactionByIdAndStatus("trx-1", SyncTrxStatus.EXPIRED);
+        }
+    }
 }

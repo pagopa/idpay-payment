@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -30,6 +31,12 @@ public interface TransactionsController {
     List<Transaction> findByInitiativeIdAndUserId(
             @PathVariable(value = "initiativeId") String initiativeId,
             @PathVariable(value = "userId") String userId
+    );
+
+    @GetMapping("/{transactionId}/status/{status}/exists")
+    boolean existsTransactionByIdAndStatus(
+            @PathVariable("transactionId") String transactionId,
+            @PathVariable("status") SyncTrxStatus status
     );
 
     @PutMapping("/status")
