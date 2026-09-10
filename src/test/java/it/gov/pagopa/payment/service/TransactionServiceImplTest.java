@@ -432,6 +432,18 @@ class TransactionServiceImplTest {
     // =========================================================================
 
     @Test
+    @DisplayName("existsTransactionByIdAndStatus - Successo")
+    void testExistsTransactionByIdAndStatus_Success() {
+        when(transactionRepository.existsByIdAndStatus(TRX_ID, SyncTrxStatus.EXPIRED))
+                .thenReturn(true);
+
+        boolean exists = transactionService.existsTransactionByIdAndStatus(TRX_ID, SyncTrxStatus.EXPIRED);
+
+        assertTrue(exists);
+        verify(transactionRepository).existsByIdAndStatus(TRX_ID, SyncTrxStatus.EXPIRED);
+    }
+
+    @Test
     @DisplayName("updateTransactionsStatus - Successo")
     void testUpdateTransactionsStatus_Success() {
         when(transactionRepository.bulkUpdateStatusByIds(
