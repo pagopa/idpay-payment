@@ -30,6 +30,7 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
             String initiativeId,
             String fiscalCode,
             String status,
+            String pointOfSaleId,
             Pageable pageable) {
 
         String sanitizedMerchantId = sanitize(merchantId);
@@ -40,6 +41,7 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
                 sanitize(initiativeId),
                 sanitize(fiscalCode),
                 sanitize(status),
+                sanitize(pointOfSaleId),
                 pageable
         );
     }
