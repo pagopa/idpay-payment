@@ -31,6 +31,7 @@ import java.util.Map;
 public class CommonAuthServiceImpl {
 
     private static final String ZONE_EUROPE_ROME = "Europe/Rome";
+    public static final String CANNOT_OPERATE_ON_TRANSACTION_WITH_TRANSACTION_ID_AND_STATUS = "Cannot operate on transaction with transactionId [%s] in status %s";
     private final TransactionRepository transactionRepository;
     private final RewardCalculatorConnector rewardCalculatorConnector;
     private final AuditUtilities auditUtilities;
@@ -57,6 +58,8 @@ public class CommonAuthServiceImpl {
     public AuthPaymentDTO previewPayment(Transaction transaction, String userId) {
         checkWalletStatus(transaction.getInitiativeId(), ObjectUtils.firstNonNull(transaction.getUserId(), userId));
         transaction.setTrxChargeDate(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
+
+        checkNotAllowPreviewOperation(transaction);
 
         return rewardCalculatorConnector.previewTransaction(transaction);
     }
@@ -125,7 +128,7 @@ public class CommonAuthServiceImpl {
             throw new TransactionAlreadyAuthorizedException("Transaction with transactionId [%s] is already authorized".formatted(transaction.getId()));
         } else {
             throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(),transaction.getStatus()));
+                    CANNOT_OPERATE_ON_TRANSACTION_WITH_TRANSACTION_ID_AND_STATUS.formatted(transaction.getId(),transaction.getStatus()));
         }
         return authPaymentDTO;
     }
@@ -180,13 +183,21 @@ public class CommonAuthServiceImpl {
         }
         return  walletDTO;
     }
+
+    public void checkNotAllowPreviewOperation(Transaction transaction) {
+        if (SyncTrxStatus.REFUNDED.equals(transaction.getStatus())) {
+            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                    CANNOT_OPERATE_ON_TRANSACTION_WITH_TRANSACTION_ID_AND_STATUS.formatted(transaction.getId(), transaction.getStatus()));
+        }
+    }
+
     public void checkAuth(String trxCode, Transaction transaction){
         if (transaction == null) {
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));
         }
         if(transaction.getStatus().equals(SyncTrxStatus.CAPTURED)){
             throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(),transaction.getStatus()));
+                    CANNOT_OPERATE_ON_TRANSACTION_WITH_TRANSACTION_ID_AND_STATUS.formatted(transaction.getId(),transaction.getStatus()));
         }
     }
 
