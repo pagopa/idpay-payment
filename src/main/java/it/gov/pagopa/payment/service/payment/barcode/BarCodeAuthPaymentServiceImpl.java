@@ -76,10 +76,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                             trxCode.toLowerCase(), initiativeId));
         }
 
-        if (!(SyncTrxStatus.CREATED.equals(transaction.getStatus()) || SyncTrxStatus.IDENTIFIED.equals(transaction.getStatus()))) {
-            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(),transaction.getStatus()));
-        }
+        checkNotAllowPreviewOperation(transaction);
 
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -116,6 +113,13 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .additionalProperties(transaction.getAdditionalProperties())
                 .extendedAuthorization(transaction.getExtendedAuthorization())
                 .build();
+    }
+
+    private static void checkNotAllowPreviewOperation(Transaction transaction) {
+        if (SyncTrxStatus.REFUNDED.equals(transaction.getStatus())) {
+            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(), transaction.getStatus()));
+        }
     }
 
     @Override
