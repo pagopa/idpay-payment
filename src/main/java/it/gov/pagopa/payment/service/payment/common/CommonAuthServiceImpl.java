@@ -58,6 +58,8 @@ public class CommonAuthServiceImpl {
         checkWalletStatus(transaction.getInitiativeId(), ObjectUtils.firstNonNull(transaction.getUserId(), userId));
         transaction.setTrxChargeDate(OffsetDateTime.now(ZoneId.of(ZONE_EUROPE_ROME)));
 
+        checkNotAllowPreviewOperation(transaction);
+
         return rewardCalculatorConnector.previewTransaction(transaction);
     }
 
@@ -180,6 +182,14 @@ public class CommonAuthServiceImpl {
         }
         return  walletDTO;
     }
+
+    public void checkNotAllowPreviewOperation(Transaction transaction) {
+        if (SyncTrxStatus.REFUNDED.equals(transaction.getStatus())) {
+            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(), transaction.getStatus()));
+        }
+    }
+
     public void checkAuth(String trxCode, Transaction transaction){
         if (transaction == null) {
             throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s]".formatted(trxCode));

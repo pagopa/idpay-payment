@@ -180,11 +180,14 @@ class BarCodeAuthPaymentServiceImplTest {
         String initiativeId = trx.getInitiativeId();
         when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
 
+        when(commonAuthServiceMock.previewPayment(trx, trx.getUserId())).thenThrow(new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
+                "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(), trx.getStatus())));
+
         OperationNotAllowedException ex = assertThrows(OperationNotAllowedException.class,
                 () -> barCodeAuthPaymentService.previewPayment(initiativeId, "trxCode", Map.of(), 90000L));
 
         assertEquals(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED, ex.getCode());
-        verify(commonAuthServiceMock, never()).previewPayment(any(), any());
+        verify(commonAuthServiceMock).previewPayment(any(), any());
     }
 
     @Test

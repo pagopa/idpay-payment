@@ -89,6 +89,21 @@ class CommonAuthServiceImplTest {
         verify(rewardCalculatorConnector).previewTransaction(trx);
     }
 
+    @Test
+    @DisplayName("previewPayment - Stato REFUNDED (OperationNotAllowedException)")
+    void testPreviewPayment_RefundedStatus() {
+        Transaction trx = createTransaction(SyncTrxStatus.REFUNDED);
+        trx.setUserId(USER_ID);
+
+        WalletDTO walletDTO = new WalletDTO();
+        walletDTO.setStatus("REFUNDABLE");
+        when(walletConnector.getWallet(INITIATIVE_ID, USER_ID)).thenReturn(walletDTO);
+
+        assertThrows(OperationNotAllowedException.class,
+                () -> commonAuthService.previewPayment(trx, null));
+        verify(rewardCalculatorConnector, never()).previewTransaction(any());
+    }
+
     // =========================================================================
     // 2. TEST CHECK WALLET STATUS
     // =========================================================================

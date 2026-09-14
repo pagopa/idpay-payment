@@ -76,8 +76,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                             trxCode.toLowerCase(), initiativeId));
         }
 
-        checkNotAllowPreviewOperation(transaction);
-
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
                 transaction,
@@ -115,12 +113,6 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .build();
     }
 
-    private static void checkNotAllowPreviewOperation(Transaction transaction) {
-        if (SyncTrxStatus.REFUNDED.equals(transaction.getStatus())) {
-            throw new OperationNotAllowedException(ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
-                    "Cannot operate on transaction with transactionId [%s] in status %s".formatted(transaction.getId(), transaction.getStatus()));
-        }
-    }
 
     @Override
     public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
