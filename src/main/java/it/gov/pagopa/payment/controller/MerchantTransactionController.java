@@ -18,6 +18,7 @@ public interface MerchantTransactionController {
                                                         @PathVariable("initiativeId") String initiativeId,
                                                         @RequestParam(required = false) String fiscalCode,
                                                         @RequestParam(required = false) String status,
+                                                        @RequestParam(required = false) String pointOfSaleId,
                                                         @PageableDefault(sort = "updateDate", direction = Sort.Direction.DESC) Pageable pageable);
 
 

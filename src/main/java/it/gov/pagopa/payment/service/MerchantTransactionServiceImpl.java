@@ -72,12 +72,13 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String initiativeId,
             String fiscalCode,
             String status,
+            String pointOfSaleId,
             Pageable pageable) {
         String userId = StringUtils.isNotBlank(fiscalCode) ? encryptCF(fiscalCode) : null;
 
         Specification<Transaction> spec = TransactionSpecifications.withFilters(
                 merchantId,
-                null, // pointOfSaleId
+                pointOfSaleId,
                 initiativeId,
                 userId,
                 status,

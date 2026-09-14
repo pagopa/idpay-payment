@@ -11,7 +11,9 @@ public interface MerchantTransactionService {
             String merchantId,
             String initiativeId,
             String fiscalCode,
-            String status, Pageable pageable);
+            String status,
+            String pointOfSaleId,
+            Pageable pageable);
 
     MerchantTransactionsListDTO getMerchantTransactionsProcessed(
             String merchantId,
