@@ -47,7 +47,6 @@ public interface TransactionsController {
     @ResponseStatus(code = HttpStatus.NO_CONTENT)
     void cleanupTransactions(
             @RequestParam String initiativeId,
-            @RequestParam String merchantId,
             @RequestParam List<String> transactionIds
     );
 

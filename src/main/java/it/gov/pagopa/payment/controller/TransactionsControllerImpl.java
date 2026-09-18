@@ -67,11 +67,11 @@ public class TransactionsControllerImpl implements TransactionsController {
     }
 
     @Override
-    public void cleanupTransactions(String initiativeId, String merchantId, List<String> transactionIds) {
+    public void cleanupTransactions(String initiativeId, List<String> transactionIds) {
         Set<String> sanitizedIds = transactionIds.stream()
                 .map(this::sanitize)
                 .collect(Collectors.toSet());
-        transactionService.cleanupTransactions(sanitize(initiativeId), sanitize(merchantId), sanitizedIds);
+        transactionService.cleanupTransactions(sanitize(initiativeId), sanitizedIds);
     }
 
     private String sanitize(String value) {

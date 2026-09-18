@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -278,16 +279,16 @@ public class TransactionServiceImpl implements TransactionService {
         );
     }
 
+    @Transactional
     @Override
-    public void cleanupTransactions(String initiativeId, String merchantId, Set<String> transactionIds) {
-        int deletedCount = transactionRepository.deleteByInitiativeIdAndMerchantIdAndIdIn(
+    public void cleanupTransactions(String initiativeId, Set<String> transactionIds) {
+        int deletedCount = transactionRepository.deleteByInitiativeIdAndIdIn(
                 initiativeId,
-                merchantId,
                 transactionIds
         );
 
-        log.info("[CLEANUP_TRANSACTIONS] Deleted {} transactions for initiativeId: {}, merchantId: {}",
-                deletedCount, sanitizeForLog(initiativeId), sanitizeForLog(merchantId));
+        log.info("[CLEANUP_TRANSACTIONS] Deleted {} transactions for initiativeId: {}",
+                deletedCount, sanitizeForLog(initiativeId));
     }
 
     private List<Transaction> findByIdTrxIssuer(
