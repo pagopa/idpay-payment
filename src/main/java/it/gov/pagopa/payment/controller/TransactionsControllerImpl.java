@@ -66,6 +66,14 @@ public class TransactionsControllerImpl implements TransactionsController {
         return transactionService.updateTransactionsStatus(sanitizedIds, request.status());
     }
 
+    @Override
+    public void cleanupTransactions(String initiativeId, String merchantId, List<String> transactionIds) {
+        Set<String> sanitizedIds = transactionIds.stream()
+                .map(this::sanitize)
+                .collect(Collectors.toSet());
+        transactionService.cleanupTransactions(sanitize(initiativeId), sanitize(merchantId), sanitizedIds);
+    }
+
     private String sanitize(String value) {
         return Utilities.sanitizeString(value);
     }

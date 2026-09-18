@@ -43,4 +43,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             Pageable pageable
     );
 
+    int deleteByInitiativeIdAndMerchantIdAndIdIn(String initiativeId, String merchantId, Collection<String> transactionIds);
+
 }

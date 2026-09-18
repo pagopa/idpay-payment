@@ -278,6 +278,18 @@ public class TransactionServiceImpl implements TransactionService {
         );
     }
 
+    @Override
+    public void cleanupTransactions(String initiativeId, String merchantId, Set<String> transactionIds) {
+        int deletedCount = transactionRepository.deleteByInitiativeIdAndMerchantIdAndIdIn(
+                initiativeId,
+                merchantId,
+                transactionIds
+        );
+
+        log.info("[CLEANUP_TRANSACTIONS] Deleted {} transactions for initiativeId: {}, merchantId: {}",
+                deletedCount, sanitizeForLog(initiativeId), sanitizeForLog(merchantId));
+    }
+
     private List<Transaction> findByIdTrxIssuer(
             String idTrxIssuer,
             String userId,

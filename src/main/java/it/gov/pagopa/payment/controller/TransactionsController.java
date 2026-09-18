@@ -43,4 +43,12 @@ public interface TransactionsController {
     @ResponseStatus(code = HttpStatus.OK)
     int updateTransactionsStatus(@RequestBody @Valid UpdateTransactionsStatusRequest request);
 
+    @DeleteMapping("/cleanup")
+    @ResponseStatus(code = HttpStatus.NO_CONTENT)
+    void cleanupTransactions(
+            @RequestParam String initiativeId,
+            @RequestParam String merchantId,
+            @RequestParam List<String> transactionIds
+    );
+
 }
