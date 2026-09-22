@@ -94,7 +94,7 @@ class MerchantTransactionServiceImplTest {
         when(transactionMapperMock.generateTrxCodeTxtUrl(TRX_CODE)).thenReturn("http://txt.url");
 
         MerchantTransactionsListDTO result = merchantTransactionService.getMerchantTransactions(
-                MERCHANT_ID, INITIATIVE_ID, FISCAL_CODE, SyncTrxStatus.AUTHORIZED.name(), pageable
+                MERCHANT_ID, INITIATIVE_ID, FISCAL_CODE, SyncTrxStatus.AUTHORIZED.name(), null, pageable
         );
 
         assertNotNull(result);
@@ -113,7 +113,7 @@ class MerchantTransactionServiceImplTest {
 
         assertThrows(PDVInvocationException.class, () ->
                 merchantTransactionService.getMerchantTransactions(
-                        MERCHANT_ID, INITIATIVE_ID, FISCAL_CODE, SyncTrxStatus.AUTHORIZED.name(), pageable
+                        MERCHANT_ID, INITIATIVE_ID, FISCAL_CODE, SyncTrxStatus.AUTHORIZED.name(), null, pageable
                 )
         );
     }

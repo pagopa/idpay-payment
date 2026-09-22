@@ -51,7 +51,7 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        when(merchantTransactionServiceMock.getMerchantTransactions(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        when(merchantTransactionServiceMock.getMerchantTransactions(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
@@ -69,7 +69,7 @@ class MerchantTransactionControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(dto,resultResponse);
-        verify(merchantTransactionServiceMock).getMerchantTransactions(eq("MERCHANT_ID"), eq(INITIATIVE_ID), eq(FISCAL_CODE), eq(SyncTrxStatus.CREATED.toString()), any());
+        verify(merchantTransactionServiceMock).getMerchantTransactions(eq("MERCHANT_ID"), eq(INITIATIVE_ID), eq(FISCAL_CODE), eq(SyncTrxStatus.CREATED.toString()), any(), any());
     }
 
     @Test
