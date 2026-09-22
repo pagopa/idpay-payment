@@ -158,7 +158,7 @@ class TransactionsControllerImplTest {
     @Test
     void getTransactionsProjection_shouldSanitizeIdsAndDelegateToService() {
         GetTransactionsProjectionRequest request = new GetTransactionsProjectionRequest(Set.of(" trx-1 "));
-        List<TransactionProjectionDTO> expected = List.of(new TransactionProjectionDTO("trx-1", "INVOICED", new InvoiceData()));
+        List<TransactionProjectionDTO> expected = List.of(new TransactionProjectionDTO("trx-1", new InvoiceData()));
         when(transactionService.getTransactionsProjectionByIds(anySet())).thenReturn(expected);
 
         try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {

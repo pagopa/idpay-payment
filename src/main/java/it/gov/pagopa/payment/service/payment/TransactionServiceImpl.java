@@ -296,9 +296,9 @@ public class TransactionServiceImpl implements TransactionService {
 
         return transactionRepository.findAllById(validIds)
                 .stream()
+                .filter(tx -> tx.getStatus() != SyncTrxStatus.REFUNDED)
                 .map(tx -> new TransactionProjectionDTO(
                         tx.getId(),
-                        tx.getStatus() != null ? tx.getStatus().name() : null,
                         tx.getInvoiceData()
                 ))
                 .toList();

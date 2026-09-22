@@ -479,8 +479,22 @@ class TransactionServiceImplTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("TRX_1", result.getFirst().transactionId());
-        assertEquals("INVOICED", result.getFirst().status());
         assertEquals(trx.getInvoiceData(), result.getFirst().invoiceData());
+    }
+
+    @Test
+    @DisplayName("getTransactionsProjectionByIds - Exclude refunded")
+    void testGetTransactionsProjectionByIds_ExcludeRefunded() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.REFUNDED);
+        trx.setId("TRX_1");
+
+        when(transactionRepository.findAllById(Set.of("TRX_1")))
+                .thenReturn(List.of(trx));
+
+        var result = transactionService.getTransactionsProjectionByIds(Set.of("TRX_1"));
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
 }
