@@ -465,4 +465,22 @@ class TransactionServiceImplTest {
         );
     }
 
+    @Test
+    @DisplayName("getTransactionsProjectionByIds - Success")
+    void testGetTransactionsProjectionByIds_Success() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.INVOICED);
+        trx.setId("TRX_1");
+
+        when(transactionRepository.findAllById(Set.of("TRX_1")))
+                .thenReturn(List.of(trx));
+
+        var result = transactionService.getTransactionsProjectionByIds(Set.of("TRX_1"));
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("TRX_1", result.getFirst().transactionId());
+        assertEquals("INVOICED", result.getFirst().status());
+        assertEquals(trx.getInvoiceData(), result.getFirst().invoiceData());
+    }
+
 }

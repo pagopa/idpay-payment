@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.dto.GetTransactionsProjectionRequest;
+import it.gov.pagopa.payment.dto.TransactionProjectionDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.payment.TransactionService;
@@ -64,6 +66,15 @@ public class TransactionsControllerImpl implements TransactionsController {
                 .map(this::sanitize)
                 .collect(Collectors.toSet());
         return transactionService.updateTransactionsStatus(sanitizedIds, request.status());
+    }
+
+    @Override
+    @PerformanceLog("GET_TRANSACTIONS_PROJECTION")
+    public List<TransactionProjectionDTO> getTransactionsProjection(GetTransactionsProjectionRequest request) {
+        Set<String> sanitizedIds = request.transactionIds().stream()
+                .map(this::sanitize)
+                .collect(Collectors.toSet());
+        return transactionService.getTransactionsProjectionByIds(sanitizedIds);
     }
 
     private String sanitize(String value) {

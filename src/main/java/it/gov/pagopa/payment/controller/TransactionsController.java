@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
+import it.gov.pagopa.payment.dto.GetTransactionsProjectionRequest;
+import it.gov.pagopa.payment.dto.TransactionProjectionDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.validation.Valid;
@@ -42,5 +44,9 @@ public interface TransactionsController {
     @PutMapping("/status")
     @ResponseStatus(code = HttpStatus.OK)
     int updateTransactionsStatus(@RequestBody @Valid UpdateTransactionsStatusRequest request);
+
+    @PostMapping("/projection")
+    @ResponseStatus(code = HttpStatus.OK)
+    List<TransactionProjectionDTO> getTransactionsProjection(@RequestBody @Valid GetTransactionsProjectionRequest request);
 
 }

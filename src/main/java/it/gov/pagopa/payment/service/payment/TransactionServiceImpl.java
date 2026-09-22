@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.service.payment;
 import it.gov.pagopa.payment.configuration.AppConfigurationProperties;
 import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
+import it.gov.pagopa.payment.dto.TransactionProjectionDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
@@ -276,6 +277,31 @@ public class TransactionServiceImpl implements TransactionService {
                 status,
                 LocalDateTime.now(ZONE_EUROPE_ROME)
         );
+    }
+
+    @Override
+    public List<TransactionProjectionDTO> getTransactionsProjectionByIds(Set<String> transactionIds) {
+        if (transactionIds == null || transactionIds.isEmpty()) {
+            return List.of();
+        }
+
+        Set<String> validIds = transactionIds.stream()
+                .filter(StringUtils::isNotBlank)
+                .map(String::trim)
+                .collect(Collectors.toSet());
+
+        if (validIds.isEmpty()) {
+            return List.of();
+        }
+
+        return transactionRepository.findAllById(validIds)
+                .stream()
+                .map(tx -> new TransactionProjectionDTO(
+                        tx.getId(),
+                        tx.getStatus() != null ? tx.getStatus().name() : null,
+                        tx.getInvoiceData()
+                ))
+                .toList();
     }
 
     private List<Transaction> findByIdTrxIssuer(

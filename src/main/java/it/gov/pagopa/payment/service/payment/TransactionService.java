@@ -1,6 +1,7 @@
 package it.gov.pagopa.payment.service.payment;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
+import it.gov.pagopa.payment.dto.TransactionProjectionDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import org.springframework.data.domain.Page;
@@ -37,5 +38,7 @@ public interface TransactionService {
     boolean existsTransactionByIdAndStatus(String transactionId, SyncTrxStatus status);
 
     int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status);
+
+    List<TransactionProjectionDTO> getTransactionsProjectionByIds(Set<String> transactionIds);
 
 }

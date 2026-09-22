@@ -1,8 +1,11 @@
 package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.payment.dto.UpdateTransactionsStatusRequest;
+import it.gov.pagopa.payment.dto.GetTransactionsProjectionRequest;
+import it.gov.pagopa.payment.dto.TransactionProjectionDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.model.InvoiceData;
 import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import org.junit.jupiter.api.Test;
@@ -149,6 +152,23 @@ class TransactionsControllerImplTest {
 
             assertEquals(true, exists);
             verify(transactionService).existsTransactionByIdAndStatus("trx-1", SyncTrxStatus.EXPIRED);
+        }
+    }
+
+    @Test
+    void getTransactionsProjection_shouldSanitizeIdsAndDelegateToService() {
+        GetTransactionsProjectionRequest request = new GetTransactionsProjectionRequest(Set.of(" trx-1 "));
+        List<TransactionProjectionDTO> expected = List.of(new TransactionProjectionDTO("trx-1", "INVOICED", new InvoiceData()));
+        when(transactionService.getTransactionsProjectionByIds(anySet())).thenReturn(expected);
+
+        try (MockedStatic<Utilities> utilitiesMock = Mockito.mockStatic(Utilities.class)) {
+            utilitiesMock.when(() -> Utilities.sanitizeString(" trx-1 ")).thenReturn("trx-1");
+
+            List<TransactionProjectionDTO> result = transactionsController.getTransactionsProjection(request);
+
+            assertNotNull(result);
+            assertEquals(expected, result);
+            verify(transactionService).getTransactionsProjectionByIds(Set.of("trx-1"));
         }
     }
 }
