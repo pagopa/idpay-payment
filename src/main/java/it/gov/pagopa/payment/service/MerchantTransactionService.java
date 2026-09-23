@@ -21,8 +21,6 @@ public interface MerchantTransactionService {
             String initiativeId,
             String fiscalCode,
             String status,
-            String rewardBatchId,
-            String rewardBatchTrxStatus,
             String pointOfSaleId,
             String trxCode,
             Pageable pageable);

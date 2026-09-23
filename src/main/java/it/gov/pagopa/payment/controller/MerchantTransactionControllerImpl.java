@@ -54,8 +54,6 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
             String initiativeId,
             String fiscalCode,
             String status,
-            String rewardBatchId,
-            String rewardBatchTrxStatus,
             String pointOfSaleId,
             String trxCode,
             Pageable pageable) {
@@ -69,8 +67,6 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
                 sanitize(initiativeId),
                 sanitize(fiscalCode),
                 sanitize(status),
-                sanitize(rewardBatchId),
-                sanitize(rewardBatchTrxStatus),
                 sanitize(pointOfSaleId),
                 sanitize(trxCode),
                 pageable

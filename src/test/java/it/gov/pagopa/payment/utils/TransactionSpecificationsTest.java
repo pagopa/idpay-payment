@@ -2,7 +2,6 @@ package it.gov.pagopa.payment.utils;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.BeforeEach;
@@ -232,39 +231,11 @@ class TransactionSpecificationsTest {
         filters.setTrxCode("CODE123");
         filters.setMerchantId("MERCH1");
         filters.setInitiativeId("INIT1");
-        filters.setRewardBatchId("BATCH1");
-        filters.setRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
         filters.setPointOfSaleId("POS1");
         filters.setProductGtin("GTIN123");
 
         Specification<Transaction> spec = TransactionSpecifications.buildSpecification(filters, "ENCRYPTED_FC");
         assertNotNull(spec);
-    }
-
-    @Test
-    void getFilters_withIncludeToCheckWithConsultable_true() {
-        TrxFiltersDTO filters = new TrxFiltersDTO();
-        filters.setMerchantId("MERCH_1");
-        filters.setRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
-        filters.setIncludeToCheckWithConsultable(true);
-
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
-        spec.toPredicate(root, query, cb);
-
-        verify(root).get("rewardBatchStatusTrx");
-        verify(path).in(RewardBatchTrxStatus.CONSULTABLE.name(), RewardBatchTrxStatus.TO_CHECK.name());
-    }
-
-    @Test
-    void getFilters_withIncludeToCheckWithConsultable_false() {
-        TrxFiltersDTO filters = new TrxFiltersDTO();
-        filters.setRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
-        filters.setIncludeToCheckWithConsultable(false);
-
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
-        spec.toPredicate(root, query, cb);
-
-        verify(cb).equal(path, RewardBatchTrxStatus.CONSULTABLE.name());
     }
 
     @Test
@@ -397,30 +368,6 @@ class TransactionSpecificationsTest {
 
         reset(cb);
         Specification<Transaction> specEmpty = TransactionSpecifications.hasFiscalCode(null);
-        specEmpty.toPredicate(root, query, cb);
-        verify(cb).conjunction();
-    }
-
-    @Test
-    void hasRewardBatchId_validAndEmpty() {
-        Specification<Transaction> spec = TransactionSpecifications.hasRewardBatchId("B1");
-        spec.toPredicate(root, query, cb);
-        verify(cb).equal(path, "B1");
-
-        reset(cb);
-        Specification<Transaction> specEmpty = TransactionSpecifications.hasRewardBatchId("");
-        specEmpty.toPredicate(root, query, cb);
-        verify(cb).conjunction();
-    }
-
-    @Test
-    void hasRewardBatchTrxStatus_validAndEmpty() {
-        Specification<Transaction> spec = TransactionSpecifications.hasRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
-        spec.toPredicate(root, query, cb);
-        verify(cb).equal(path, "CONSULTABLE");
-
-        reset(cb);
-        Specification<Transaction> specEmpty = TransactionSpecifications.hasRewardBatchTrxStatus(null);
         specEmpty.toPredicate(root, query, cb);
         verify(cb).conjunction();
     }

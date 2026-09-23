@@ -61,7 +61,6 @@ public class TransactionFaker {
             .effectiveAmountCents(1000L)
             .amountCurrency("AMOUNTCURRENCY%d".formatted(bias))
             .mcc("MCC%d".formatted(bias))
-            .rewardBatchStatusTrx("TO_CHECK")
             .acquirerId("ACQUIRERID%d".formatted(bias))
             .idTrxAcquirer("IDTRXACQUIRER%d".formatted(bias))
             .idTrxIssuer("IDTRXISSUER%d".formatted(bias))
