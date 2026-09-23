@@ -20,6 +20,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith({MockitoExtension.class, OutputCaptureExtension.class})
 class TransactionServiceImplTest {
 
     @Mock
@@ -463,6 +465,29 @@ class TransactionServiceImplTest {
                 eq(SyncTrxStatus.REWARDED),
                 any(LocalDateTime.class)
         );
+    }
+
+    @Test
+    void cleanupTransactions_Success(CapturedOutput output) {
+        Set<String> sanitizedTransactionIds = Set.of("trx-1", "trx-2");
+
+        when(transactionRepository.deleteByInitiativeIdAndIdIn(
+                INITIATIVE_ID,
+                sanitizedTransactionIds
+        )).thenReturn(2);
+
+        transactionService.cleanupTransactions(INITIATIVE_ID, sanitizedTransactionIds);
+
+        verify(transactionRepository).deleteByInitiativeIdAndIdIn(
+                INITIATIVE_ID,
+                sanitizedTransactionIds
+        );
+
+        assertTrue(output.getOut().contains(
+                "Deleted 2 transactions for initiativeId: INITIATIVE_1"
+        ));
+
+        verifyNoMoreInteractions(transactionNotifierService);
     }
 
 }

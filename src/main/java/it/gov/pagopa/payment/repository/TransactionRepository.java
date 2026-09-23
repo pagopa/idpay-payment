@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface TransactionRepository extends JpaRepository<Transaction, String>, TransactionRepositoryExt, JpaSpecificationExecutor<Transaction> {
 
@@ -42,5 +43,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             OffsetDateTime threshold,
             Pageable pageable
     );
+
+    int deleteByInitiativeIdAndIdIn(String initiativeId, Set<String> transactionIds);
 
 }

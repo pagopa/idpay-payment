@@ -18,6 +18,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -276,6 +277,18 @@ public class TransactionServiceImpl implements TransactionService {
                 status,
                 LocalDateTime.now(ZONE_EUROPE_ROME)
         );
+    }
+
+    @Transactional
+    @Override
+    public void cleanupTransactions(String initiativeId, Set<String> transactionIds) {
+        int deletedCount = transactionRepository.deleteByInitiativeIdAndIdIn(
+                initiativeId,
+                transactionIds
+        );
+
+        log.info("[CLEANUP_TRANSACTIONS] Deleted {} transactions for initiativeId: {}",
+                deletedCount, sanitizeForLog(initiativeId));
     }
 
     private List<Transaction> findByIdTrxIssuer(
