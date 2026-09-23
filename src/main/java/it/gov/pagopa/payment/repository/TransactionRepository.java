@@ -5,7 +5,6 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Modifying;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -45,7 +44,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
             Pageable pageable
     );
 
-    @Modifying
     int deleteByInitiativeIdAndIdIn(String initiativeId, Set<String> transactionIds);
 
 }

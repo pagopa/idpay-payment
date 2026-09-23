@@ -151,4 +151,15 @@ class TransactionsControllerImplTest {
             verify(transactionService).existsTransactionByIdAndStatus("trx-1", SyncTrxStatus.EXPIRED);
         }
     }
+
+    @Test
+    void cleanupTransactions_shouldSanitizeInputAndDelegateToService() {
+        List<String> transactionIds = List.of("trx-1", "trx-2");
+        Set<String> sanitizedTransactionIds = Set.of("trx-1", "trx-2");
+        doNothing().when(transactionService).cleanupTransactions(INITIATIVE_ID, sanitizedTransactionIds);
+
+        transactionsController.cleanupTransactions(INITIATIVE_ID, transactionIds);
+
+        verifyNoMoreInteractions(transactionService);
+    }
 }
