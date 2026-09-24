@@ -26,9 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -39,7 +37,7 @@ import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.
 @Service
 public class MerchantTransactionServiceImpl implements MerchantTransactionService {
 
-    private static final String DEFAULT_PROCESSED_SORT_FIELD = "rewardBatchStatusTrx";
+    private static final String DEFAULT_PROCESSED_SORT_FIELD = "updateDate";
     private static final String TO_CHECK_STATUS = "TO_CHECK";
     private static final Set<String> EXCLUDED_OPERATORS = Set.of("operator1", "operator2", "operator3");
     private static final String MISSING_VALUE_PLACEHOLDER = "-";
@@ -104,27 +102,23 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String initiativeId,
             String fiscalCode,
             String status,
-            String rewardBatchId,
-            String rewardBatchTrxStatus,
             String pointOfSaleId,
             String trxCode,
             Pageable pageable) {
 
         String userId = StringUtils.isNotBlank(fiscalCode) ? encryptCF(fiscalCode) : null;
         Pageable sortedPageable = applyDefaultSort(pageable);
-        RewardBatchTrxStatus parsedStatus = parseRewardBatchTrxStatus(rewardBatchTrxStatus);
 
         List<String> processedStatuses = validateAndBuildProcessedStatuses(status);
 
         TrxFiltersDTO filters = buildProcessedFilters(
-                merchantId, initiativeId, userId, processedStatuses, rewardBatchId,
-                parsedStatus, pointOfSaleId, trxCode, organizationRole
+                merchantId, initiativeId, userId, processedStatuses, pointOfSaleId, trxCode
         );
 
         Page<Transaction> transactionPage = transactionService.getMerchantTransactionByFilter(filters, sortedPageable);
 
         List<MerchantTransactionDTO> merchantTransactions = transactionPage.getContent().stream()
-                .map(tx -> createMerchantTransactionDTO(filters.getInitiativeId(), tx, filters.getFiscalCode(), organizationRole))
+                .map(tx -> createMerchantTransactionDTO(filters.getInitiativeId(), tx, filters.getFiscalCode()))
                 .toList();
 
         return toMerchantTransactionsListDTO(merchantTransactions, transactionPage);
@@ -147,18 +141,6 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
         } else {
             throw new TransactionMissingParametersException(STATUS_NOT_ALLOWED,
                     STATUS_NOT_ALLOWED_MESSAGE.formatted(TrxFiltersDTO.PROCESSED_ALLOWED_STATUSES.toString()));
-        }
-    }
-
-    private RewardBatchTrxStatus parseRewardBatchTrxStatus(String rewardBatchTrxStatus) {
-        if (StringUtils.isBlank(rewardBatchTrxStatus)) {
-            return null;
-        }
-        try {
-            return RewardBatchTrxStatus.valueOf(rewardBatchTrxStatus);
-        } catch (IllegalArgumentException _) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Invalid rewardBatchTrxStatus value: " + rewardBatchTrxStatus);
         }
     }
 
@@ -214,16 +196,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     private MerchantTransactionDTO createMerchantTransactionDTO(
             String initiativeId,
             Transaction transaction,
-            String fiscalCode,
-            String organizationRole) {
-
-        RewardBatchTrxStatus original = Optional.ofNullable(transaction.getRewardBatchStatusTrx())
-                .map(RewardBatchTrxStatus::valueOf)
-                .orElse(null);
-
-        RewardBatchTrxStatus exposed = (original == RewardBatchTrxStatus.TO_CHECK && hasAccessToAllStatuses(organizationRole))
-                ? RewardBatchTrxStatus.CONSULTABLE
-                : original;
+            String fiscalCode) {
 
         long rewardAmount = Optional.ofNullable(transaction.getRewards())
                 .map(rewards -> rewards.get(initiativeId))
@@ -248,7 +221,7 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
                 .trxCode(transaction.getTrxCode())
                 .authorizedAmountCents(transaction.getAmountCents() - rewardAmount)
                 .invoiceData(Objects.requireNonNullElseGet(transaction.getInvoiceData(), InvoiceData::new))
-                .rewardBatchTrxStatus(exposed)
+                .rewardBatchTrxStatus(null)
                 .pointOfSaleId(Objects.requireNonNullElse(transaction.getPointOfSaleId(), MISSING_VALUE_PLACEHOLDER))
                 .franchiseName(Objects.requireNonNullElse(transaction.getFranchiseName(), MISSING_VALUE_PLACEHOLDER))
                 .build();
@@ -289,22 +262,16 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
             String initiativeId,
             String userId,
             List<String> statuses,
-            String rewardBatchId,
-            RewardBatchTrxStatus rewardBatchTrxStatus,
             String pointOfSaleId,
-            String trxCode,
-            String organizationRole) {
+            String trxCode) {
 
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setMerchantId(merchantId);
         filters.setInitiativeId(initiativeId);
         filters.setUserId(userId);
         filters.setStatuses(statuses);
-        filters.setRewardBatchId(rewardBatchId);
-        filters.setRewardBatchTrxStatus(rewardBatchTrxStatus);
         filters.setPointOfSaleId(pointOfSaleId);
         filters.setTrxCode(trxCode);
-        filters.setIncludeToCheckWithConsultable(hasAccessToAllStatuses(organizationRole) && rewardBatchTrxStatus == RewardBatchTrxStatus.CONSULTABLE);
         return filters;
     }
 

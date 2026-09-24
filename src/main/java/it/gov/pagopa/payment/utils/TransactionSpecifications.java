@@ -2,10 +2,8 @@ package it.gov.pagopa.payment.utils;
 
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
-import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.springframework.data.jpa.domain.Specification;
@@ -30,8 +28,6 @@ public final class TransactionSpecifications {
     private static final String FIELD_MERCHANT_ID = "merchantId";
     private static final String FIELD_POINT_OF_SALE_ID = "pointOfSaleId";
     private static final String FIELD_TRX_CODE = "trxCode";
-    private static final String FIELD_REWARD_BATCH_ID = "rewardBatchId";
-    private static final String FIELD_REWARD_BATCH_STATUS_TRX = "rewardBatchStatusTrx";
     private static final String FIELD_PRODUCT_GTIN = "productGtin";
     private static final String FIELD_AMOUNT_CENTS = "amountCents";
     private TransactionSpecifications() {
@@ -96,8 +92,6 @@ public final class TransactionSpecifications {
                 .and(hasMerchantId(filters.getMerchantId()))
                 .and(hasInitiativeId(filters.getInitiativeId()))
                 .and(hasFiscalCode(encryptedUserId))
-                .and(hasRewardBatchId(filters.getRewardBatchId()))
-                .and(hasRewardBatchTrxStatus(filters.getRewardBatchTrxStatus()))
                 .and(hasPointOfSaleId(filters.getPointOfSaleId()))
                 .and(hasProductGtin(filters.getProductGtin()));
     }
@@ -111,21 +105,8 @@ public final class TransactionSpecifications {
             addTextPredicate(predicates, root, cb, FIELD_USER_ID, userId);
             addTextPredicate(predicates, root, cb, FIELD_POINT_OF_SALE_ID, filters.getPointOfSaleId());
             addTextPredicate(predicates, root, cb, FIELD_TRX_CODE, filters.getTrxCode());
-            addTextPredicate(predicates, root, cb, FIELD_REWARD_BATCH_ID, filters.getRewardBatchId());
 
             handleStatusFilters(predicates, root, cb, filters);
-
-            if (filters.getRewardBatchTrxStatus() != null) {
-                Path<String> statusField = root.get(FIELD_REWARD_BATCH_STATUS_TRX);
-                if (filters.isIncludeToCheckWithConsultable()) {
-                    predicates.add(statusField.in(
-                            RewardBatchTrxStatus.CONSULTABLE.name(),
-                            RewardBatchTrxStatus.TO_CHECK.name()
-                    ));
-                } else {
-                    predicates.add(cb.equal(statusField, filters.getRewardBatchTrxStatus().name()));
-                }
-            }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
@@ -212,13 +193,6 @@ public final class TransactionSpecifications {
         return (root, query, cb) -> StringUtils.hasText(fiscalCode) ? cb.equal(root.get(FIELD_USER_ID), fiscalCode) : cb.conjunction();
     }
 
-    public static Specification<Transaction> hasRewardBatchId(String rewardBatchId) {
-        return (root, query, cb) -> StringUtils.hasText(rewardBatchId) ? cb.equal(root.get(FIELD_REWARD_BATCH_ID), rewardBatchId) : cb.conjunction();
-    }
-
-    public static Specification<Transaction> hasRewardBatchTrxStatus(RewardBatchTrxStatus status) {
-        return (root, query, cb) -> status != null ? cb.equal(root.get(FIELD_REWARD_BATCH_STATUS_TRX), status.name()) : cb.conjunction();
-    }
 
     public static Specification<Transaction> hasPointOfSaleId(String pointOfSaleId) {
         return (root, query, cb) -> StringUtils.hasText(pointOfSaleId) ? cb.equal(root.get(FIELD_POINT_OF_SALE_ID), pointOfSaleId) : cb.conjunction();

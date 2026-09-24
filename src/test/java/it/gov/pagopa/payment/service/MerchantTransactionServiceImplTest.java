@@ -24,7 +24,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -126,7 +125,6 @@ class MerchantTransactionServiceImplTest {
     void testGetMerchantTransactionsProcessed_SuccessWithDefaultSortAndStatusExposure() {
         Pageable pageable = PageRequest.of(0, 10);
         Transaction trx = createDummyTransaction();
-        trx.setRewardBatchStatusTrx(RewardBatchTrxStatus.TO_CHECK.name());
         Reward reward = new Reward();
         reward.setAccruedRewardCents(100L);
         trx.setRewards(Map.of(INITIATIVE_ID, reward));
@@ -140,15 +138,14 @@ class MerchantTransactionServiceImplTest {
 
         MerchantTransactionsListDTO result = merchantTransactionService.getMerchantTransactionsProcessed(
                 MERCHANT_ID, "adminRole", INITIATIVE_ID, FISCAL_CODE, "REWARDED",
-                "BATCH_1", "CONSULTABLE", "POS_1", TRX_CODE, pageable
+                "POS_1", TRX_CODE, pageable
         );
 
         assertNotNull(result);
         assertEquals(1, result.getContent().size());
         MerchantTransactionDTO dto = result.getContent().getFirst();
 
-        // TO_CHECK esposto come CONSULTABLE per ruoli autorizzati
-        assertEquals(RewardBatchTrxStatus.CONSULTABLE, dto.getRewardBatchTrxStatus());
+        assertNull(dto.getRewardBatchTrxStatus());
         assertEquals(100L, dto.getRewardAmountCents());
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
@@ -156,7 +153,7 @@ class MerchantTransactionServiceImplTest {
 
         Pageable capturedPageable = pageableCaptor.getValue();
         assertTrue(capturedPageable.getSort().isSorted());
-        assertEquals("rewardBatchStatusTrx", capturedPageable.getSort().iterator().next().getProperty());
+        assertEquals("updateDate", capturedPageable.getSort().iterator().next().getProperty());
         assertEquals(Sort.Direction.DESC, capturedPageable.getSort().iterator().next().getDirection());
     }
 
@@ -167,19 +164,7 @@ class MerchantTransactionServiceImplTest {
         assertThrows(TransactionMissingParametersException.class, () ->
                 merchantTransactionService.getMerchantTransactionsProcessed(
                         MERCHANT_ID, "adminRole", INITIATIVE_ID, null, "INVALID_STATUS",
-                        null, null, null, null, pageable
-                )
-        );
-    }
-
-    @Test
-    void testGetMerchantTransactionsProcessed_InvalidRewardBatchTrxStatus_ThrowsResponseStatusException() {
-        Pageable pageable = PageRequest.of(0, 10);
-
-        assertThrows(ResponseStatusException.class, () ->
-                merchantTransactionService.getMerchantTransactionsProcessed(
-                        MERCHANT_ID, "adminRole", INITIATIVE_ID, null, "REWARDED",
-                        null, "INVALID_ENUM", null, null, pageable
+                        null, null, pageable
                 )
         );
     }

@@ -38,4 +38,6 @@ public interface TransactionService {
 
     int updateTransactionsStatus(Set<String> transactionIds, SyncTrxStatus status);
 
+    void cleanupTransactions(String initiativeId, Set<String> transactionIds);
+
 }
