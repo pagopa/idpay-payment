@@ -53,12 +53,15 @@ class CommonReversalServiceImplTest {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "credit_note.pdf", "application/pdf", "content".getBytes());
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CAPTURED, MERCHANT_ID, POS_ID);
+        transaction.setTransactionRevision(10L);
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
         // When
-        commonReversalService.reversalTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        long transactionRevision = commonReversalService.reversalTransaction(
+                INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
+        assertEquals(11L, transactionRevision);
         assertEquals(SyncTrxStatus.REFUNDED, transaction.getStatus());
         assertNotNull(transaction.getCreditNoteData());
         assertEquals("credit_note.pdf", transaction.getCreditNoteData().getFilename());

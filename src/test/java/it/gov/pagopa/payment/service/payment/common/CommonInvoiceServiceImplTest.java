@@ -71,6 +71,13 @@ class CommonInvoiceServiceImplTest {
                 rewardBatchEligibilityPreflightServiceMock,
                 invoiceTransactionRepositoryMock
         );
+        lenient().when(invoiceTransactionRepositoryMock.updateInvoiceAndCreateEvent(any(InvoiceTransactionCommand.class)))
+                .thenAnswer(invocation -> {
+                    InvoiceTransactionCommand command = invocation.getArgument(0);
+                    Transaction updatedTransaction = new Transaction();
+                    updatedTransaction.setTransactionRevision(command.expectedRevision() + 1);
+                    return updatedTransaction;
+                });
     }
 
     @Test
@@ -78,6 +85,7 @@ class CommonInvoiceServiceImplTest {
         // Given
         MockMultipartFile file = new MockMultipartFile("file", "test_invoice.pdf", "application/pdf", "content".getBytes());
         Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
+        transaction.setTransactionRevision(10L);
         transaction.setElaborationDateTime(LocalDateTime.now(ZoneId.of("Europe/Rome")).minusDays(3));
         transaction.setInvoiceData(InvoiceData.builder().filename("filename").docNumber("123").build());
         PointOfSaleDTO posDTO = new PointOfSaleDTO();
@@ -89,9 +97,11 @@ class CommonInvoiceServiceImplTest {
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
         // When
-        commonInvoiceService.invoiceTransaction(INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
+        long transactionRevision = commonInvoiceService.invoiceTransaction(
+                INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER);
 
         // Then
+        assertEquals(11L, transactionRevision);
         verify(rewardBatchEligibilityPreflightServiceMock).verifyEligibility(
                 transaction,
                 RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,

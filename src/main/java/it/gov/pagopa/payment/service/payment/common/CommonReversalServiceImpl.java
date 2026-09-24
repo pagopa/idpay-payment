@@ -44,7 +44,7 @@ public class CommonReversalServiceImpl {
         this.rewardBatchEligibilityPreflightService = rewardBatchEligibilityPreflightService;
     }
 
-    public void reversalTransaction(
+    public long reversalTransaction(
             String initiativeId,
             String transactionId,
             String merchantId,
@@ -112,6 +112,7 @@ public class CommonReversalServiceImpl {
             auditUtilities.logReverseTransaction(auditDTO);
 
             transactionRepository.save(transaction);
+            return transaction.getTransactionRevision();
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorReversalTransaction(transactionId, merchantId);
@@ -123,8 +124,8 @@ public class CommonReversalServiceImpl {
 
     }
 
-    public void reversalTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
-        reversalTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
+    public long reversalTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+        return reversalTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
     }
 
 }

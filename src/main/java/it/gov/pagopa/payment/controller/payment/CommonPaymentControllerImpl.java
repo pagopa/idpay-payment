@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeApiRetryable;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -11,6 +12,7 @@ import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLo
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -83,7 +85,7 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(
+    public ResponseEntity<Void> reversalTransaction(
             String initiativeId,
             String transactionId,
             String merchantId,
@@ -99,12 +101,16 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
                 "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} and initiativeId {}",
                 sanitizedMerchantId, sanitizedTrxCode, sanitizedInitiativeId
         );
-        commonReversalService.reversalTransaction(initiativeId, transactionId, merchantId, authorization, file, docNumber);
+        long transactionRevision = commonReversalService.reversalTransaction(
+            initiativeId, transactionId, merchantId, authorization, file, docNumber);
+        return ResponseEntity.noContent()
+            .header(PaymentConstants.TRANSACTION_REVISION_HEADER, Long.toString(transactionRevision))
+            .build();
     }
 
     @Override
     @PerformanceLog(value = "INVOICE_TRANSACTION")
-    public void invoiceTransaction(
+    public ResponseEntity<Void> invoiceTransaction(
             String initiativeId,
             String transactionId,
             String merchantId,
@@ -120,7 +126,11 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
             "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} and initiativeId {}",
             sanitizedMerchantId, sanitizedTrxCode, sanitizedInitiativeId
         );
-        commonInvoiceService.invoiceTransaction(initiativeId, transactionId, merchantId, authorization, file, docNumber);
+        long transactionRevision = commonInvoiceService.invoiceTransaction(
+            initiativeId, transactionId, merchantId, authorization, file, docNumber);
+        return ResponseEntity.noContent()
+            .header(PaymentConstants.TRANSACTION_REVISION_HEADER, Long.toString(transactionRevision))
+            .build();
     }
 
     @Override

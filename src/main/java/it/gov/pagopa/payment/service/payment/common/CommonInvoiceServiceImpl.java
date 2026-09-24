@@ -61,7 +61,7 @@ public class CommonInvoiceServiceImpl {
         this.invoiceTransactionRepository = invoiceTransactionRepository;
     }
 
-    public void invoiceTransaction(
+    public long invoiceTransaction(
             String initiativeId,
             String transactionId,
             String merchantId,
@@ -95,7 +95,7 @@ public class CommonInvoiceServiceImpl {
                     .build();
             InvoiceMerchantData merchantData = resolveMerchantData(
                     transaction, merchantId, oldDocumentData);
-            invoiceTransactionRepository.updateInvoiceAndCreateEvent(new InvoiceTransactionCommand(
+            Transaction updatedTransaction = invoiceTransactionRepository.updateInvoiceAndCreateEvent(new InvoiceTransactionCommand(
                     transaction.getId(),
                     transaction.getInitiativeId(),
                     transaction.getMerchantId(),
@@ -109,6 +109,7 @@ public class CommonInvoiceServiceImpl {
                     merchantData.merchantFiscalCode(),
                     eventType));
             logInvoiceOperation(transaction, path, docNumber, merchantId, eventType);
+            return updatedTransaction.getTransactionRevision();
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);
@@ -260,8 +261,8 @@ public class CommonInvoiceServiceImpl {
             String merchantFiscalCode) {
     }
 
-    public void invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
-        invoiceTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
+    public long invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+        return invoiceTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
     }
 
 }
