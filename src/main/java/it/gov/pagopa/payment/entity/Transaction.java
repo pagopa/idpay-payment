@@ -111,11 +111,6 @@ public class Transaction {
     @Column(name = "\"createdAt\"")
     private LocalDateTime createdAt;
 
-    @Column(name = "\"rewardBatchStatusTrx\"", length = 64)
-    private String rewardBatchStatusTrx;
-
-    @Column(name = "\"rewardBatchId\"", length = 64)
-    private String rewardBatchId;
 
     @Column(name = "\"idTrxAcquirer\"", length = 64)
     private String idTrxAcquirer;

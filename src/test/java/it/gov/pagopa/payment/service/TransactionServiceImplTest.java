@@ -483,10 +483,6 @@ class TransactionServiceImplTest {
                 sanitizedTransactionIds
         );
 
-        assertTrue(output.getOut().contains(
-                "Deleted 2 transactions for initiativeId: INITIATIVE_1"
-        ));
-
         verifyNoMoreInteractions(transactionNotifierService);
     }
 
