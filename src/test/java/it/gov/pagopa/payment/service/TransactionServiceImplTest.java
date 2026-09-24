@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionSearchMode;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -111,18 +112,19 @@ class TransactionServiceImplTest {
     // =========================================================================
 
     @Test
-    @DisplayName("getTransactionsByFilters - Filtri null (TransactionMissingParametersException)")
+    @DisplayName("searchTransactions - Filtri null (TransactionMissingParametersException)")
     void testGetTransactionsByFilters_NullFilters() {
         Pageable pageable = PageRequest.of(0, 10);
         assertThrows(TransactionMissingParametersException.class,
-                () -> transactionService.getTransactionsByFilters(null, pageable));
+                () -> transactionService.searchTransactions(null, pageable));
     }
 
     @Test
-    @DisplayName("getTransactionsByFilters - Successo con cifratura CF")
+    @DisplayName("searchTransactions - Successo con cifratura CF")
     void testGetTransactionsByFilters_Success() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setFiscalCode(FISCAL_CODE);
+        filters.setMode(TransactionSearchMode.NOT_PROCESSED);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Transaction> page = new PageImpl<>(List.of(new Transaction()));
 
@@ -130,10 +132,10 @@ class TransactionServiceImplTest {
 
         try (MockedStatic<TransactionSpecifications> specMock = mockStatic(TransactionSpecifications.class)) {
             Specification<Transaction> spec = mock(Specification.class);
-            specMock.when(() -> TransactionSpecifications.buildSpecification(filters, ENCRYPTED_CF)).thenReturn(spec);
+            specMock.when(() -> TransactionSpecifications.buildSearchSpecification(filters, ENCRYPTED_CF)).thenReturn(spec);
             when(transactionRepository.findAll(spec, pageable)).thenReturn(page);
 
-            Page<Transaction> result = transactionService.getTransactionsByFilters(filters, pageable);
+            Page<Transaction> result = transactionService.searchTransactions(filters, pageable);
 
             assertNotNull(result);
             assertEquals(1, result.getContent().size());
@@ -291,18 +293,19 @@ class TransactionServiceImplTest {
     // =========================================================================
 
     @Test
-    @DisplayName("getMerchantTransactionByFilter - Successo con CF vuoto")
+    @DisplayName("searchTransactions - Successo con ricerca processed e CF vuoto")
     void testGetMerchantTransactionByFilter_Success_BlankFiscalCode() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setMode(TransactionSearchMode.PROCESSED);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Transaction> page = new PageImpl<>(List.of(new Transaction()));
 
         try (MockedStatic<TransactionSpecifications> specMock = mockStatic(TransactionSpecifications.class)) {
             Specification<Transaction> spec = mock(Specification.class);
-            specMock.when(() -> TransactionSpecifications.getFilters(filters, null)).thenReturn(spec);
+            specMock.when(() -> TransactionSpecifications.buildSearchSpecification(filters, null)).thenReturn(spec);
             when(transactionRepository.findAll(spec, pageable)).thenReturn(page);
 
-            Page<Transaction> result = transactionService.getMerchantTransactionByFilter(filters, pageable);
+            Page<Transaction> result = transactionService.searchTransactions(filters, pageable);
 
             assertNotNull(result);
             verify(pdvService, never()).encryptCF(any());
@@ -483,9 +486,7 @@ class TransactionServiceImplTest {
                 sanitizedTransactionIds
         );
 
-        assertTrue(output.getOut().contains(
-                "Deleted 2 transactions for initiativeId: INITIATIVE_1"
-        ));
+        assertTrue(output.getOut().contains("Deleted 2 transactions"));
 
         verifyNoMoreInteractions(transactionNotifierService);
     }

@@ -7,6 +7,7 @@ import it.gov.pagopa.payment.dto.PointOfSaleTransactionsListDTO;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.TransactionSearchMode;
 import it.gov.pagopa.payment.exception.custom.PointOfSaleNotAllowedException;
 import it.gov.pagopa.payment.service.PointOfSaleTransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
@@ -67,7 +68,8 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
                 productGtin,
                 fiscalCode,
                 processedStatuses,
-                trxCode
+                trxCode,
+                TransactionSearchMode.NOT_PROCESSED
         );
 
         return executeGetTransactions(filters, tokenPointOfSaleId, pageable);
@@ -102,7 +104,8 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
                 productGtin,
                 fiscalCode,
                 processedStatuses,
-                trxCode
+                trxCode,
+                TransactionSearchMode.PROCESSED
         );
 
         return executeGetTransactions(filters, tokenPointOfSaleId, pageable);
@@ -162,7 +165,8 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
             String productGtin,
             String fiscalCode,
             List<String> statuses,
-            String trxCode) {
+            String trxCode,
+            TransactionSearchMode mode) {
 
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setMerchantId(sanitize(merchantId));
@@ -172,6 +176,7 @@ public class PointOfSaleTransactionControllerImpl implements PointOfSaleTransact
         filters.setFiscalCode(sanitize(fiscalCode));
         filters.setStatuses(statuses);
         filters.setTrxCode(sanitize(trxCode));
+        filters.setMode(mode);
         return filters;
     }
 

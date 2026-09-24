@@ -48,7 +48,7 @@ class PointOfSaleTransactionServiceTest {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         Pageable pageable = Pageable.unpaged();
 
-        when(transactionService.getTransactionsByFilters(any(TrxFiltersDTO.class), any(Pageable.class)))
+        when(transactionService.searchTransactions(any(TrxFiltersDTO.class), any(Pageable.class)))
                 .thenReturn(expectedPage);
 
         Page<Transaction> resultPage = pointOfSaleTransactionService.getPointOfSaleTransactions(filters, pageable);
@@ -57,7 +57,7 @@ class PointOfSaleTransactionServiceTest {
         assertEquals(2, resultPage.getTotalElements());
         assertEquals(transaction1.getId(), resultPage.getContent().get(0).getId());
         assertEquals(transaction2.getId(), resultPage.getContent().get(1).getId());
-        verify(transactionService).getTransactionsByFilters(filters, pageable);
+        verify(transactionService).searchTransactions(filters, pageable);
     }
 
     @Test

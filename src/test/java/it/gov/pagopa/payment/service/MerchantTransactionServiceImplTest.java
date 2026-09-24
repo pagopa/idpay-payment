@@ -7,9 +7,9 @@ import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionSearchMode;
 import it.gov.pagopa.payment.exception.custom.PDVInvocationException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
-import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -23,7 +23,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
@@ -39,8 +38,6 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class MerchantTransactionServiceImplTest {
 
-    @Mock
-    private TransactionRepository transactionRepositoryMock;
     @Mock
     private DecryptRestConnector decryptRestConnectorMock;
     @Mock
@@ -63,7 +60,6 @@ class MerchantTransactionServiceImplTest {
     void setUp() {
         merchantTransactionService = new MerchantTransactionServiceImpl(
                 EXPIRATION_MINUTES,
-                transactionRepositoryMock,
                 decryptRestConnectorMock,
                 encryptRestConnectorMock,
                 transactionServiceMock,
@@ -88,7 +84,7 @@ class MerchantTransactionServiceImplTest {
 
         when(encryptRestConnectorMock.upsertToken(any(CFDTO.class))).thenReturn(encryptedModelDTO);
         when(decryptRestConnectorMock.getPiiByToken(USER_ID_ENCRYPTED)).thenReturn(decryptedModelDTO);
-        when(transactionRepositoryMock.findAll(any(Specification.class), eq(pageable)))
+        when(transactionServiceMock.searchTransactions(any(TrxFiltersDTO.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(trx)));
         when(transactionMapperMock.generateTrxCodeImgUrl(TRX_CODE)).thenReturn("http://img.url");
         when(transactionMapperMock.generateTrxCodeTxtUrl(TRX_CODE)).thenReturn("http://txt.url");
@@ -101,6 +97,11 @@ class MerchantTransactionServiceImplTest {
         assertEquals(1, result.getContent().size());
         MerchantTransactionDTO dto = result.getContent().getFirst();
         assertEquals(FISCAL_CODE, dto.getFiscalCode());
+
+        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
+        verify(transactionServiceMock).searchTransactions(filtersCaptor.capture(), eq(pageable));
+        assertEquals(TransactionSearchMode.NOT_PROCESSED, filtersCaptor.getValue().getMode());
+        assertEquals(List.of(SyncTrxStatus.AUTHORIZED.name()), filtersCaptor.getValue().getStatuses());
 
         verify(encryptRestConnectorMock, times(1)).upsertToken(any(CFDTO.class));
     }
@@ -135,7 +136,7 @@ class MerchantTransactionServiceImplTest {
         encryptedModelDTO.setToken(USER_ID_ENCRYPTED);
         when(encryptRestConnectorMock.upsertToken(any(CFDTO.class))).thenReturn(encryptedModelDTO);
 
-        when(transactionServiceMock.getMerchantTransactionByFilter(any(TrxFiltersDTO.class), any(Pageable.class)))
+        when(transactionServiceMock.searchTransactions(any(TrxFiltersDTO.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(trx)));
 
         MerchantTransactionsListDTO result = merchantTransactionService.getMerchantTransactionsProcessed(
@@ -152,12 +153,14 @@ class MerchantTransactionServiceImplTest {
         assertEquals(100L, dto.getRewardAmountCents());
 
         ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
-        verify(transactionServiceMock).getMerchantTransactionByFilter(any(TrxFiltersDTO.class), pageableCaptor.capture());
+        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
+        verify(transactionServiceMock).searchTransactions(filtersCaptor.capture(), pageableCaptor.capture());
 
         Pageable capturedPageable = pageableCaptor.getValue();
         assertTrue(capturedPageable.getSort().isSorted());
-        assertEquals("rewardBatchStatusTrx", capturedPageable.getSort().iterator().next().getProperty());
+        assertEquals("rewardTransaction.rewardBatchStatusTrx", capturedPageable.getSort().iterator().next().getProperty());
         assertEquals(Sort.Direction.DESC, capturedPageable.getSort().iterator().next().getDirection());
+        assertEquals(TransactionSearchMode.PROCESSED, filtersCaptor.getValue().getMode());
     }
 
     @Test

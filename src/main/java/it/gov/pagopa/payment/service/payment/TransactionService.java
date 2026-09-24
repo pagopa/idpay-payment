@@ -24,11 +24,10 @@ public interface TransactionService {
 
     List<Transaction> findByInitiativeIdAndUserId(String initiativeId, String userId);
 
-    Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters, Pageable pageable);
+    Page<Transaction> searchTransactions(TrxFiltersDTO filters, Pageable pageable);
 
     Transaction getTransactionByIdAndMerchantId(String transactionId, String merchantId);
 
-    Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters, Pageable pageable);
 
     long findAndUpdateExpiredTransactionsStatus(String initiativeId);
 

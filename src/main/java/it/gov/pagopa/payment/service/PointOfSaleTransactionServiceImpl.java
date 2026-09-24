@@ -43,7 +43,7 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
 
     @Override
     public Page<Transaction> getPointOfSaleTransactions(TrxFiltersDTO filters, Pageable pageable) {
-        return transactionService.getTransactionsByFilters(filters, pageable);
+        return transactionService.searchTransactions(filters, pageable);
     }
 
     @Override

@@ -111,11 +111,15 @@ public class Transaction {
     @Column(name = "\"createdAt\"")
     private LocalDateTime createdAt;
 
-    @Column(name = "\"rewardBatchStatusTrx\"", length = 64)
+    @Transient
     private String rewardBatchStatusTrx;
 
-    @Column(name = "\"rewardBatchId\"", length = 64)
+    @Transient
     private String rewardBatchId;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id", referencedColumnName = "transaction_id", insertable = false, updatable = false)
+    private RewardTransaction rewardTransaction;
 
     @Column(name = "\"idTrxAcquirer\"", length = 64)
     private String idTrxAcquirer;
@@ -177,6 +181,18 @@ public class Transaction {
 
     @Column(name = "\"extendedAuthorization\"")
     private Boolean extendedAuthorization;
+
+    public String getRewardBatchStatusTrx() {
+        return rewardTransaction != null && rewardTransaction.getRewardBatchStatusTrx() != null
+                ? rewardTransaction.getRewardBatchStatusTrx()
+                : rewardBatchStatusTrx;
+    }
+
+    public String getRewardBatchId() {
+        return rewardTransaction != null && rewardTransaction.getRewardBatchId() != null
+                ? rewardTransaction.getRewardBatchId()
+                : rewardBatchId;
+    }
 
     public String getProductName() {
         return additionalProperties == null ? null : additionalProperties.get("productName");

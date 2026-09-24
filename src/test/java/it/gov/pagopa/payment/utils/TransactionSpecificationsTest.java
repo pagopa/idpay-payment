@@ -4,6 +4,7 @@ import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionSearchMode;
 import jakarta.persistence.criteria.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,6 @@ import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
-import static kotlinx.coroutines.debug.internal.DebugCoroutineInfoImplKt.CREATED;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -44,11 +44,23 @@ class TransactionSpecificationsTest {
     private Path<Object> path;
 
     @Mock
+    private Join<Transaction, Object> rewardTransactionJoin;
+
+    @Mock
+    private Fetch<Transaction, Object> rewardTransactionFetch;
+
+    @Mock
     private Expression<String> mockExpression;
 
     @BeforeEach
     void setUp() {
         when(root.get(any(String.class))).thenReturn(path);
+        when(root.getJoins()).thenReturn(Collections.emptySet());
+        when(root.getFetches()).thenReturn(Collections.emptySet());
+        doReturn(rewardTransactionJoin).when(root).join("rewardTransaction", JoinType.LEFT);
+        doReturn(rewardTransactionFetch).when(root).fetch("rewardTransaction", JoinType.LEFT);
+        when(rewardTransactionJoin.get(any(String.class))).thenReturn(path);
+        when(query.getResultType()).thenReturn((Class) Transaction.class);
         when(cb.lower(any())).thenReturn(mockExpression);
         when(cb.and((Predicate) any())).thenReturn(mock(Predicate.class));
     }
@@ -68,45 +80,48 @@ class TransactionSpecificationsTest {
 
 
     @Test
-    @DisplayName("getFilters - Singolo status non valido (catch block -> disjunction)")
-    void getFilters_withSingleStatusInvalid_returnsDisjunction() {
+    @DisplayName("buildSearchSpecification - Singolo status non valido (catch block -> disjunction)")
+    void buildSearchSpecification_withSingleStatusInvalid_returnsDisjunction() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setStatuses(null);
+        filters.setMode(TransactionSearchMode.PROCESSED);
 
         Predicate disjunction = mock(Predicate.class);
         when(cb.disjunction()).thenReturn(disjunction);
 
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "USER_1");
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertNotNull(result);
     }
 
     @Test
-    void getFilters_statusesEmpty() {
+    void buildSearchSpecification_statusesEmpty() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setStatuses(Collections.emptyList());
+        filters.setMode(TransactionSearchMode.PROCESSED);
         Predicate disjunction = mock(Predicate.class);
         when(cb.disjunction()).thenReturn(disjunction);
 
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "USER_1");
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertNotNull(result);
     }
 
     @Test
-    @DisplayName("withFilters - Filtri opzionali nulli e status nullo (Ramo Default Status)")
-    void withFilters_nullParameters_defaultStatus2() {
-        Specification<Transaction> spec = TransactionSpecifications.withFilters(
-                "merchantId",
-                "pointOfSaleId",
-                "initiativeId",
-                "userId",
-                CREATED,
-                "gtin",
-                "trxCode"
-        );
+    @DisplayName("buildSearchSpecification - Filtri non processed valorizzati")
+    void buildSearchSpecification_notProcessed_withExplicitStatus() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setMerchantId("merchantId");
+        filters.setPointOfSaleId("pointOfSaleId");
+        filters.setInitiativeId("initiativeId");
+        filters.setStatuses(List.of(SyncTrxStatus.CREATED.name()));
+        filters.setProductGtin("gtin");
+        filters.setTrxCode("trxCode");
+        filters.setMode(TransactionSearchMode.NOT_PROCESSED);
+
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "userId");
 
         spec.toPredicate(root, query, cb);
         assertNotNull(spec);
@@ -114,22 +129,19 @@ class TransactionSpecificationsTest {
 
 
     @Test
-    @DisplayName("withFilters - Filtri opzionali nulli e status nullo (Ramo Default Status)")
-    void withFilters_nullParameters_defaultStatus() {
-        Specification<Transaction> spec = TransactionSpecifications.withFilters(
-                null,
-                null,
-                null,
-                null,
-                null, // Status nullo -> attiva il default IN("AUTHORIZED", "CAPTURED")
-                null,
-                null
-        );
+    @DisplayName("buildSearchSpecification - Filtri non processed con lista status default")
+    void buildSearchSpecification_notProcessed_defaultStatuses() {
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setMode(TransactionSearchMode.NOT_PROCESSED);
+        filters.setStatuses(List.of("AUTHORIZED", "CAPTURED"));
+
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, null);
 
         Predicate result = spec.toPredicate(root, query, cb);
 
         assertNotNull(result);
-        verify(path).in(List.of("AUTHORIZED", "CAPTURED"));
+        verify(root).get("status");
+        verify(path).in((java.util.Collection<?>) any(java.util.Collection.class));
         verify(cb, never()).like(any(), anyString());
     }
 
@@ -226,7 +238,7 @@ class TransactionSpecificationsTest {
     }
 
     @Test
-    void buildSpecification_combinesAllFilters() {
+    void buildSearchSpecification_combinesAllFilters() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setStatuses(List.of("REWARDED"));
         filters.setTrxCode("CODE123");
@@ -236,54 +248,63 @@ class TransactionSpecificationsTest {
         filters.setRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
         filters.setPointOfSaleId("POS1");
         filters.setProductGtin("GTIN123");
+        filters.setMode(TransactionSearchMode.PROCESSED);
 
-        Specification<Transaction> spec = TransactionSpecifications.buildSpecification(filters, "ENCRYPTED_FC");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "ENCRYPTED_FC");
         assertNotNull(spec);
     }
 
     @Test
-    void getFilters_withIncludeToCheckWithConsultable_true() {
+    void buildSearchSpecification_withIncludeToCheckWithConsultable_true() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setMerchantId("MERCH_1");
         filters.setRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
         filters.setIncludeToCheckWithConsultable(true);
+        filters.setMode(TransactionSearchMode.PROCESSED);
 
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "USER_1");
         spec.toPredicate(root, query, cb);
 
-        verify(root).get("rewardBatchStatusTrx");
+        verify(root).join("rewardTransaction", JoinType.LEFT);
+        verify(root).fetch("rewardTransaction", JoinType.LEFT);
+        verify(rewardTransactionJoin).get("rewardBatchStatusTrx");
         verify(path).in(RewardBatchTrxStatus.CONSULTABLE.name(), RewardBatchTrxStatus.TO_CHECK.name());
     }
 
     @Test
-    void getFilters_withIncludeToCheckWithConsultable_false() {
+    void buildSearchSpecification_withIncludeToCheckWithConsultable_false() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
         filters.setIncludeToCheckWithConsultable(false);
+        filters.setMode(TransactionSearchMode.PROCESSED);
 
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "USER_1");
         spec.toPredicate(root, query, cb);
 
+        verify(root).join("rewardTransaction", JoinType.LEFT);
+        verify(rewardTransactionJoin).get("rewardBatchStatusTrx");
         verify(cb).equal(path, RewardBatchTrxStatus.CONSULTABLE.name());
     }
 
     @Test
-    void getFilters_withStatusesList() {
+    void buildSearchSpecification_withStatusesList() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setStatuses(List.of("REWARDED", "INVALID_ENUM_SHOULD_BE_FILTERED"));
+        filters.setMode(TransactionSearchMode.PROCESSED);
 
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "USER_1");
         spec.toPredicate(root, query, cb);
 
         verify(root).get("status");
     }
 
     @Test
-    void getFilters_withStatusesListAllInvalid_returnsDisjunction() {
+    void buildSearchSpecification_withStatusesListAllInvalid_returnsDisjunction() {
         TrxFiltersDTO filters = new TrxFiltersDTO();
         filters.setStatuses(List.of("INVALID_STATUS_A", "INVALID_STATUS_B"));
+        filters.setMode(TransactionSearchMode.PROCESSED);
 
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, "USER_1");
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, "USER_1");
         spec.toPredicate(root, query, cb);
 
         verify(cb).disjunction();
@@ -405,6 +426,8 @@ class TransactionSpecificationsTest {
     void hasRewardBatchId_validAndEmpty() {
         Specification<Transaction> spec = TransactionSpecifications.hasRewardBatchId("B1");
         spec.toPredicate(root, query, cb);
+        verify(root).join("rewardTransaction", JoinType.LEFT);
+        verify(rewardTransactionJoin).get("rewardBatchId");
         verify(cb).equal(path, "B1");
 
         reset(cb);
@@ -417,6 +440,8 @@ class TransactionSpecificationsTest {
     void hasRewardBatchTrxStatus_validAndEmpty() {
         Specification<Transaction> spec = TransactionSpecifications.hasRewardBatchTrxStatus(RewardBatchTrxStatus.CONSULTABLE);
         spec.toPredicate(root, query, cb);
+        verify(root).join("rewardTransaction", JoinType.LEFT);
+        verify(rewardTransactionJoin).get("rewardBatchStatusTrx");
         verify(cb).equal(path, "CONSULTABLE");
 
         reset(cb);
