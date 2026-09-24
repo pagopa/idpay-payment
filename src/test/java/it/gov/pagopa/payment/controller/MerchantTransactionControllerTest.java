@@ -81,7 +81,7 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
@@ -92,8 +92,6 @@ class MerchantTransactionControllerTest {
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("status", SyncTrxStatus.CREATED.toString())
-                        .param("rewardBatchId", "BATCH-1")
-                        .param("rewardBatchTrxStatus", "CONSULTABLE")
                         .param("pointOfSaleId", "POS-1")
                         .param("trxCode", "TRX-1")
         ).andExpect(status().is2xxSuccessful()).andReturn();
