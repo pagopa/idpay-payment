@@ -40,4 +40,8 @@ public class TrxFiltersDTO {
     public String getStatus() {
         return !CollectionUtils.isEmpty(statuses) ? statuses.getFirst() : null;
     }
+
+    public boolean isRequiresRewardTransactionJoin() {
+        return TransactionSearchMode.PROCESSED.equals(this.mode);
+    }
 }

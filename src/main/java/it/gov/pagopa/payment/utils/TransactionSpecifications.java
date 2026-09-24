@@ -98,7 +98,7 @@ public final class TransactionSpecifications {
             List<Predicate> predicates = new ArrayList<>();
             Join<Transaction, RewardTransaction> rewardTransactionJoin = null;
 
-            if (isProcessedSearch(filters)) {
+            if (filters != null && filters.isRequiresRewardTransactionJoin()) {
                 rewardTransactionJoin = getOrCreateRewardTransactionJoin(root);
                 fetchRewardTransaction(root, query);
             }
@@ -265,9 +265,6 @@ public final class TransactionSpecifications {
         }
     }
 
-    private static boolean isProcessedSearch(TrxFiltersDTO filters) {
-        return filters != null && TransactionSearchMode.PROCESSED.equals(filters.getMode());
-    }
 
     private static Join<Transaction, RewardTransaction> getOrCreateRewardTransactionJoin(Root<Transaction> root) {
         return root.getJoins().stream()
