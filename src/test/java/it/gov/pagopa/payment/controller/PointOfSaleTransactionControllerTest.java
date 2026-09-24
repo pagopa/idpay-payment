@@ -10,6 +10,7 @@ import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.dto.mapper.PointOfSaleTransactionMapper;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionSearchMode;
 import it.gov.pagopa.payment.exception.custom.PosNotFoundException;
 import it.gov.pagopa.payment.service.PointOfSaleTransactionService;
 import it.gov.pagopa.payment.test.fakers.PointOfSaleTransactionDTOFaker;
@@ -110,6 +111,7 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(FISCAL_CODE, filtersCaptor.getValue().getFiscalCode());
         Assertions.assertEquals(PRODUCT_GTIN, filtersCaptor.getValue().getProductGtin());
         Assertions.assertEquals(TRX_CODE, filtersCaptor.getValue().getTrxCode());
+        Assertions.assertEquals(TransactionSearchMode.NOT_PROCESSED, filtersCaptor.getValue().getMode());
         verify(pointOfSaleTransactionMapper).toPointOfSaleTransactionDTO(trx, FISCAL_CODE);
     }
 
@@ -209,6 +211,7 @@ class PointOfSaleTransactionControllerTest {
         Assertions.assertEquals(List.of("AUTHORIZED"), filtersCaptor.getValue().getStatuses());
         Assertions.assertEquals("12345-", filtersCaptor.getValue().getProductGtin());
         Assertions.assertEquals("TRXCODE", filtersCaptor.getValue().getTrxCode());
+        Assertions.assertEquals(TransactionSearchMode.PROCESSED, filtersCaptor.getValue().getMode());
     }
 
 

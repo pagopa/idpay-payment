@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.dto;
 
+import it.gov.pagopa.payment.enums.RewardBatchTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionSearchMode;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,9 +31,17 @@ public class TrxFiltersDTO {
     private String initiativeId;
     private String fiscalCode;
     private String userId;
+    private String rewardBatchId;
+    private RewardBatchTrxStatus rewardBatchTrxStatus;
     private String pointOfSaleId;
+    private TransactionSearchMode mode;
+    private boolean includeToCheckWithConsultable;
 
     public String getStatus() {
         return !CollectionUtils.isEmpty(statuses) ? statuses.getFirst() : null;
+    }
+
+    public boolean isRequiresRewardTransactionJoin() {
+        return TransactionSearchMode.PROCESSED.equals(this.mode);
     }
 }

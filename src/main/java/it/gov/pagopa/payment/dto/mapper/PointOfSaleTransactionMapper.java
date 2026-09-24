@@ -82,7 +82,7 @@ public class PointOfSaleTransactionMapper {
                 .trxDate(trx.getTrxDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime())
                 .trxChargeDate(trx.getTrxChargeDate().atZoneSameInstant(ZoneId.of("Europe/Rome")).toLocalDateTime())
                 .status(String.valueOf(trx.getStatus()))
-                .rewardBatchTrxStatus(null)
+                .rewardBatchTrxStatus(trx.getRewardBatchStatusTrx())
                 .channel(trx.getChannel())
                 .fiscalCode(fiscalCode)
                 .additionalProperties(trx.getAdditionalProperties())

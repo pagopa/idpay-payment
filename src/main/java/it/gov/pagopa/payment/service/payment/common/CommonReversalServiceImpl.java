@@ -55,7 +55,6 @@ public class CommonReversalServiceImpl {
         try {
             Utilities.checkFileExtensionOrThrow(file);
 
-            // getting the transaction from transaction_in_progress and checking if it is valid for the reversal
             Transaction transaction = transactionRepository.findById(transactionId)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
 

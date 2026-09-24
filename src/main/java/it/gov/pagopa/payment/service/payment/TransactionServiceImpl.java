@@ -88,7 +88,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Page<Transaction> getTransactionsByFilters(TrxFiltersDTO filters, Pageable pageable) {
+    public Page<Transaction> searchTransactions(TrxFiltersDTO filters, Pageable pageable) {
         if (filters == null) {
             throw new TransactionMissingParametersException(
                     TRANSACTIONS_MISSING_MANDATORY_FILTERS,
@@ -96,7 +96,7 @@ public class TransactionServiceImpl implements TransactionService {
             );
         }
         String encryptedFiscalCode = encryptFiscalCode(filters.getFiscalCode());
-        Specification<Transaction> spec = TransactionSpecifications.buildSpecification(filters, encryptedFiscalCode);
+        Specification<Transaction> spec = TransactionSpecifications.buildSearchSpecification(filters, encryptedFiscalCode);
         return transactionRepository.findAll(spec, pageable);
     }
 
@@ -184,13 +184,6 @@ public class TransactionServiceImpl implements TransactionService {
 
         Specification<Transaction> spec = TransactionSpecifications.findByInitiativeAndUser(initiativeId, userId);
         return transactionRepository.findAll(spec);
-    }
-
-    @Override
-    public Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters, Pageable pageable) {
-        String encryptedFiscalCode = encryptFiscalCode(filters.getFiscalCode());
-        Specification<Transaction> spec = TransactionSpecifications.getFilters(filters, encryptedFiscalCode);
-        return transactionRepository.findAll(spec, pageable);
     }
 
     @Override
