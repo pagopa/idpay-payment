@@ -10,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.multipart.MultipartFile;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -107,13 +108,17 @@ class CommonPaymentControllerImplTest {
     String authorization = "Bearer token";
     String docNumber = "DOC_123";
 
-    doNothing().when(commonReversalServiceMock)
-            .reversalTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
+    when(commonReversalServiceMock.reversalTransaction(
+            initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber))
+            .thenReturn(11L);
 
     // When
-    commonPaymentController.reversalTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
+    var response = commonPaymentController.reversalTransaction(
+            initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
 
     // Then
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertEquals("11", response.getHeaders().getFirst("X-Transaction-Revision"));
     verify(commonReversalServiceMock, times(1))
             .reversalTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
   }
@@ -127,13 +132,17 @@ class CommonPaymentControllerImplTest {
     String authorization = "Bearer token";
     String docNumber = "DOC_123";
 
-    doNothing().when(commonInvoiceServiceMock)
-            .invoiceTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
+    when(commonInvoiceServiceMock.invoiceTransaction(
+            initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber))
+            .thenReturn(11L);
 
     // When
-    commonPaymentController.invoiceTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
+    var response = commonPaymentController.invoiceTransaction(
+            initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
 
     // Then
+    assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+    assertEquals("11", response.getHeaders().getFirst("X-Transaction-Revision"));
     verify(commonInvoiceServiceMock, times(1))
             .invoiceTransaction(initiativeId, transactionId, merchantId, authorization, multipartFileMock, docNumber);
   }

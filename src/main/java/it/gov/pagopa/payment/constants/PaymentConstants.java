@@ -12,6 +12,7 @@ public class PaymentConstants {
   public static final String PAYMENT_AUTHORIZATION_TIMEOUT = "PAYMENT_AUTHORIZATION_TIMEOUT";
   public static final String TIMEOUT_PAYMENT = "TIMEOUT_PAYMENT";
   public static final String MESSAGE_TOPIC = "MESSAGE_TOPIC";
+  public static final String TRANSACTION_REVISION_HEADER = "X-Transaction-Revision";
   public static final String REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED = "REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED";
   public static final String REWARD_CALCULATOR_TRX_ALREADY_CANCELLED = "REWARD_CALCULATOR_TRX_ALREADY_CANCELLED";
 

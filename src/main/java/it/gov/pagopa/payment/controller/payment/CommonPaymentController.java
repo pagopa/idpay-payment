@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,8 +43,7 @@ public interface CommonPaymentController {
     void deleteLapsedTransaction(@PathVariable("initiativeId")String initiativeId);
 
     @PostMapping("/initiatives/{initiativeId}/transactions/{transactionId}/reversal")
-    @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    void reversalTransaction(
+    ResponseEntity<Void> reversalTransaction(
         @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
@@ -53,8 +53,7 @@ public interface CommonPaymentController {
     );
 
     @PostMapping("/initiatives/{initiativeId}/transactions/{transactionId}/invoice")
-    @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    void invoiceTransaction(
+    ResponseEntity<Void> invoiceTransaction(
         @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
