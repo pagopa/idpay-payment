@@ -81,7 +81,17 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.anyString(),
+                Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
@@ -92,6 +102,8 @@ class MerchantTransactionControllerTest {
                         .param("page", String.valueOf(1))
                         .param("size", String.valueOf(10))
                         .param("status", SyncTrxStatus.CREATED.toString())
+                        .param("rewardBatchId", "BATCH-1")
+                        .param("rewardBatchTrxStatus", "CONSULTABLE")
                         .param("pointOfSaleId", "POS-1")
                         .param("trxCode", "TRX-1")
         ).andExpect(status().is2xxSuccessful()).andReturn();
@@ -102,6 +114,17 @@ class MerchantTransactionControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(dto, resultResponse);
+        verify(merchantTransactionServiceMock).getMerchantTransactionsProcessed(
+                eq("MERCHANT_ID"),
+                eq("ROLE"),
+                eq(INITIATIVE_ID),
+                eq(FISCAL_CODE),
+                eq(SyncTrxStatus.CREATED.toString()),
+                eq("BATCH-1"),
+                eq("CONSULTABLE"),
+                eq("POS-1"),
+                eq("TRX-1"),
+                any());
     }
 
     @Test
