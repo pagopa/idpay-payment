@@ -102,20 +102,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public Transaction getTransactionByIdAndMerchantId(String transactionId, String merchantId) {
-        List<String> missingParams = new ArrayList<>();
-        if (StringUtils.isBlank(transactionId)) {
-            missingParams.add("transactionId");
-        }
-        if (StringUtils.isBlank(merchantId)) {
-            missingParams.add("merchantId");
-        }
-
-        if (!missingParams.isEmpty()) {
-            throw new TransactionMissingParametersException(
-                    TRANSACTIONS_MISSING_MANDATORY_FILTERS,
-                    buildMissingFiltersMessage(missingParams.toArray(new String[0]))
-            );
-        }
+        validateMandatoryParams(transactionId, "merchantId", merchantId);
 
         return transactionRepository.findByIdAndMerchantIdAndStatusIn(
                         transactionId,
@@ -125,6 +112,37 @@ public class TransactionServiceImpl implements TransactionService {
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with transactionId [%s]".formatted(transactionId))
                 );
+    }
+
+    @Override
+    public Transaction getTransactionByIdAndPointOfSaleId(String transactionId, String pointOfSaleId) {
+        validateMandatoryParams(transactionId, "pointOfSaleId", pointOfSaleId);
+
+        return transactionRepository.findByIdAndPointOfSaleIdAndStatusIn(
+                        transactionId,
+                        pointOfSaleId,
+                        DOWNLOADABLE_INVOICE_STATUSES
+                )
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with transactionId [%s]".formatted(transactionId))
+                );
+    }
+
+    private void validateMandatoryParams(String transactionId, String ownerParamName, String ownerParamValue) {
+        List<String> missingParams = new ArrayList<>();
+        if (StringUtils.isBlank(transactionId)) {
+            missingParams.add("transactionId");
+        }
+        if (StringUtils.isBlank(ownerParamValue)) {
+            missingParams.add(ownerParamName);
+        }
+
+        if (!missingParams.isEmpty()) {
+            throw new TransactionMissingParametersException(
+                    TRANSACTIONS_MISSING_MANDATORY_FILTERS,
+                    buildMissingFiltersMessage(missingParams.toArray(new String[0]))
+            );
+        }
     }
 
     @Override

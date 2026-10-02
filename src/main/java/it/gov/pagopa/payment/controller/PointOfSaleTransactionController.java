@@ -44,7 +44,7 @@ public interface PointOfSaleTransactionController {
     @GetMapping("/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/{transactionId}/download")
     @ResponseStatus(code = HttpStatus.OK)
     DownloadInvoiceResponseDTO downloadInvoiceFile(
-            @RequestHeader("x-merchant-id") String merchantId,
+            @RequestHeader(name = "x-merchant-id", required = false) String merchantId,
             @RequestHeader(name = "x-point-of-sale-id", required = false) String tokenPointOfSaleId,
             @PathVariable("initiativeId") String initiativeId,
             @PathVariable("pointOfSaleId") String pointOfSaleId,
