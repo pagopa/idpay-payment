@@ -92,10 +92,9 @@ class PointOfSaleTransactionServiceTest {
 
     @ParameterizedTest
     @CsvSource({
-            ", POS1, TRX1",
             "MERCHANT1, , TRX1",
             "MERCHANT1, POS1, ",
-            "' ', POS1, TRX1"
+            ", ' ', TRX1"
     })
     void downloadTransactionInvoice_shouldThrowMissingParametersExceptionWhenInputsAreInvalid(
             String merchantId, String pointOfSaleId, String transactionId) {
@@ -105,6 +104,25 @@ class PointOfSaleTransactionServiceTest {
                 () -> pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", merchantId, pointOfSaleId, transactionId)
         );
         verifyNoInteractions(transactionService, fileStorageClient);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            ",",
+            "' '"
+    })
+    void downloadTransactionInvoice_shouldLookupByPointOfSaleWhenMerchantIdIsMissing(String merchantId) {
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.INVOICED);
+        transaction.setInvoiceData(new InvoiceData("invoice.pdf", "DOC001"));
+        when(transactionService.getTransactionByIdAndPointOfSaleId("TRX1", "POS1"))
+                .thenReturn(transaction);
+        when(fileStorageClient.getInvoiceFileSignedUrl("invoices/INITIATIVEID1/merchant/MERCHANTID1/pos/POINTOFSALEID1/transaction/MOCKEDTRANSACTION_qr-code_1/invoice/invoice.pdf"))
+                .thenReturn("https://signed-url/invoice");
+
+        DownloadInvoiceResponseDTO response = pointOfSaleTransactionService.downloadTransactionInvoice("INITIATIVEID1", merchantId, "POS1", "TRX1");
+
+        assertEquals("https://signed-url/invoice", response.getInvoiceUrl());
+        verify(transactionService, never()).getTransactionByIdAndMerchantId(any(), any());
     }
 
     @Test

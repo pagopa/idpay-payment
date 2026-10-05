@@ -12,6 +12,7 @@ import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PDVService;
 import it.gov.pagopa.payment.utils.TransactionSpecifications;
 import it.gov.pagopa.payment.utils.TrxCodeGenUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,7 @@ import static it.gov.pagopa.payment.utils.Utilities.sanitizeForLog;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
 
     private static final List<SyncTrxStatus> DOWNLOADABLE_INVOICE_STATUSES = List.of(
@@ -50,23 +52,6 @@ public class TransactionServiceImpl implements TransactionService {
     private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
     private final TransactionNotifierService transactionNotifierService;
     private final AppConfigurationProperties.ExtendedTransactions appConfigurationProperties;
-
-
-
-    public TransactionServiceImpl(
-            TransactionRepository transactionRepository,
-            PDVService pdvService,
-            TrxCodeGenUtil trxCodeGenUtil,
-            AppConfigurationProperties.ExtendedTransactions extendedTransactions,
-            TransactionNotifierService transactionNotifierService,
-            AppConfigurationProperties.ExtendedTransactions appConfigurationProperties) {
-        this.transactionRepository = transactionRepository;
-        this.pdvService = pdvService;
-        this.trxCodeGenUtil = trxCodeGenUtil;
-        this.extendedTransactions = extendedTransactions;
-        this.transactionNotifierService = transactionNotifierService;
-        this.appConfigurationProperties = appConfigurationProperties;
-    }
 
     @Override
     public void generateTrxCodeAndSave(Transaction transaction, String flowName) {
@@ -120,6 +105,33 @@ public class TransactionServiceImpl implements TransactionService {
         return transactionRepository.findByIdAndMerchantIdAndStatusIn(
                         transactionId,
                         merchantId,
+                        DOWNLOADABLE_INVOICE_STATUSES
+                )
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with transactionId [%s]".formatted(transactionId))
+                );
+    }
+
+    @Override
+    public Transaction getTransactionByIdAndPointOfSaleId(String transactionId, String pointOfSaleId) {
+        List<String> missingParams = new ArrayList<>();
+        if (StringUtils.isBlank(transactionId)) {
+            missingParams.add("transactionId");
+        }
+        if (StringUtils.isBlank(pointOfSaleId)) {
+            missingParams.add("pointOfSaleId");
+        }
+
+        if (!missingParams.isEmpty()) {
+            throw new TransactionMissingParametersException(
+                    TRANSACTIONS_MISSING_MANDATORY_FILTERS,
+                    buildMissingFiltersMessage(missingParams.toArray(new String[0]))
+            );
+        }
+
+        return transactionRepository.findByIdAndPointOfSaleIdAndStatusIn(
+                        transactionId,
+                        pointOfSaleId,
                         DOWNLOADABLE_INVOICE_STATUSES
                 )
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
@@ -211,7 +223,7 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public long sendEventForStaleExpiredTransactions(String initiativeId) {
-        Integer page = 0;
+        int page = 0;
         long numberOfEvents = 0L;
         try {
             while (true) {

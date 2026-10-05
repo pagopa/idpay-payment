@@ -54,16 +54,17 @@ public class PointOfSaleTransactionServiceImpl implements PointOfSaleTransaction
             String transactionId) {
 
         if (!StringUtils.hasText(initiativeId) ||
-                !StringUtils.hasText(merchantId) ||
                 !StringUtils.hasText(pointOfSaleId) ||
                 !StringUtils.hasText(transactionId)) {
             throw new TransactionMissingParametersException(
                     TRANSACTIONS_MISSING_MANDATORY_FILTERS,
-                    buildMissingFiltersMessage("initiativeId", "merchantId", "pointOfSaleId", "transactionId")
+                    buildMissingFiltersMessage("initiativeId", "pointOfSaleId", "transactionId")
             );
         }
 
-        Transaction transaction = transactionService.getTransactionByIdAndMerchantId(transactionId, merchantId);
+        Transaction transaction = StringUtils.hasText(merchantId)
+                ? transactionService.getTransactionByIdAndMerchantId(transactionId, merchantId)
+                : transactionService.getTransactionByIdAndPointOfSaleId(transactionId, pointOfSaleId);
 
         if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
             throw new InitiativeNotfoundException(
