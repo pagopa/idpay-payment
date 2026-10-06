@@ -12,15 +12,20 @@ public class PaymentConstants {
   public static final String PAYMENT_AUTHORIZATION_TIMEOUT = "PAYMENT_AUTHORIZATION_TIMEOUT";
   public static final String TIMEOUT_PAYMENT = "TIMEOUT_PAYMENT";
   public static final String MESSAGE_TOPIC = "MESSAGE_TOPIC";
+  public static final String TRANSACTION_REVISION_HEADER = "X-Transaction-Revision";
   public static final String REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED = "REWARD_CALCULATOR_TRX_ALREADY_AUTHORIZED";
   public static final String REWARD_CALCULATOR_TRX_ALREADY_CANCELLED = "REWARD_CALCULATOR_TRX_ALREADY_CANCELLED";
 
   public static final String DELETE_LAPSED_TRANSACTION = "DELETE_LAPSED_TRANSACTION";
-  public static final String DELETE_INVOICED_TRANSACTION = "DELETE_INVOICED_TRANSACTION";
   public static final String LAPSED = "LAPSED_";
-  public static final String INVOICED = "INVOICED_";
 
   public static final class ExceptionCode {
+
+    public static final String STATUS_NOT_ALLOWED = "STATUS_NOT_ALLOWED";
+    public static final String TRANSACTION_NOT_FOUND = "TRANSACTION_NOT_FOUND";
+    public static final String TRANSACTION_INVALID_REQUEST = "TRANSACTION_INVALID_REQUEST";
+    public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS = "TRANSACTIONS_MISSING_MANDATORY_FILTERS";
+
     public static final String TRX_ADDITIONAL_PROPERTIES_NOT_EXIST = "PAYMENT_ADDITIONAL_PROPERTIES_IS_NULL_OR_EMPTY";
     public static final String TRX_NOT_FOUND_OR_EXPIRED = "PAYMENT_NOT_FOUND_OR_EXPIRED";
     public static final String TRX_USER_NOT_ASSOCIATED = "PAYMENT_USER_NOT_ASSOCIATED";
@@ -58,9 +63,23 @@ public class PaymentConstants {
     public static final String PAYMENT_TRANSACTION_VERSION_PENDING = "PAYMENT_TRANSACTION_VERSION_PENDING";
     public static final String REWARD_NOT_VALID = "REWARD_NOT_VALID";
     public static final String PDF_GENERIC_EXCEPTION = "PDF_GENERIC_EXCEPTION";
-
-    private ExceptionCode() {}
+    public static final String INVALID_PRODUCT_CATEGORY = "INVALID_PRODUCT_CATEGORY";
+    public static final String REWARD_BATCH_ELIGIBILITY_NOT_ALLOWED = "PAYMENT_REWARD_BATCH_ELIGIBILITY_NOT_ALLOWED";
+    public static final String TRANSACTION_CONFLICT = "PAYMENT_TRANSACTION_CONFLICT";
   }
 
-  private PaymentConstants() {}
+  public static final class ExceptionMessage {
+    public static final String TRANSACTION_MISSING_INVOICE_MESSAGE = "Invoice missing from transaction for which download was required";
+    public static final String TRANSACTION_NOT_FOUND_MESSAGE = "Transaction not found with id: %s";
+    public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE = "Missing mandatory filters: %s";
+    public static final String STATUS_NOT_ALLOWED_MESSAGE = "Statues allowed only: %s";
+  }
+
+  public static String buildMissingFiltersMessage(String... missingFields) {
+    if (missingFields == null || missingFields.length == 0) {
+      return "Missing mandatory filters";
+    }
+    String joinedFields = String.join(", ", missingFields);
+    return ExceptionMessage.TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE.formatted(joinedFields);
+  }
 }

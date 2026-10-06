@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Service
 @Slf4j
@@ -25,7 +26,7 @@ public class AuthorizationTimeoutSchedulerServiceImpl implements AuthorizationTi
         ServiceBusMessage message = new ServiceBusMessage(body);
         message.getApplicationProperties().put(PaymentConstants.MESSAGE_TOPIC,PaymentConstants.TIMEOUT_PAYMENT);
         log.info("[SCHEDULE_MESSAGE][TIMEOUT_AUTH] Scheduled message with trxId: {}",body);
-        return messageSchedulerService.scheduleMessage(message,OffsetDateTime.now().plusSeconds(timeoutSeconds));
+        return messageSchedulerService.scheduleMessage(message,OffsetDateTime.now(ZoneId.of("Europe/Rome")).plusSeconds(timeoutSeconds));
     }
 
     @Override

@@ -9,12 +9,14 @@ import it.gov.pagopa.payment.dto.DecryptCfDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
 import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
-import java.util.HashMap;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -27,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -52,35 +55,36 @@ class PdfServiceTest {
     private Resource pariPngResource;
 
     @Mock
-    private TransactionInProgressRepository transactionInProgressRepository;
+    private TransactionRepository transactionRepository;
+
 
     private PdfServiceImpl newService() {
         return new PdfServiceImpl(
-            barCodePaymentService,        // mock
-            transactionInProgressRepository,
-            decryptRestConnector,         // mock
-            resourceLoader,               // mock
-            "DejaVuSans.ttf",             // se non presente, PdfUtils fa fallback a Helvetica
-            null,                         // logoMimit
-            null,                         // logoPari
-            null,                         // iconWasher
-            null,                         // iconHealthcard
-            null                          // iconBarcode
+                barCodePaymentService,        // mock
+                transactionRepository,
+                decryptRestConnector,         // mock
+                resourceLoader,               // mock
+                "DejaVuSans.ttf",             // se non presente, PdfUtils fa fallback a Helvetica
+                null,                         // logoMimit
+                null,                         // logoPari
+                null,                         // iconWasher
+                null,                         // iconHealthcard
+                null                          // iconBarcode
         );
     }
 
     private PdfServiceImpl newServiceWithFont(String fontPath) {
         return new PdfServiceImpl(
-            barCodePaymentService,
-            transactionInProgressRepository,
-            decryptRestConnector,
-            resourceLoader,
-            fontPath,     // simula font inesistente per testare il fallback
-            null,
-            null,
-            null,
-            null,
-            null
+                barCodePaymentService,
+                transactionRepository,
+                decryptRestConnector,
+                resourceLoader,
+                fontPath,     // simula font inesistente per testare il fallback
+                null,
+                null,
+                null,
+                null,
+                null
         );
     }
 
@@ -104,7 +108,7 @@ class PdfServiceTest {
         assertTrue(header.startsWith("%PDF-"));
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
             assertTrue(pdf.getNumberOfPages() >= 1);
         }
 
@@ -128,11 +132,11 @@ class PdfServiceTest {
         PdfServiceImpl svc = newService();
 
         ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-            "Giovanna Beltramin", "BLTGVN78A52C409X");
+                "Giovanna Beltramin", "BLTGVN78A52C409X");
         byte[] bytes = Base64.getDecoder().decode(report.getData());
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
             String page1Text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage());
             String norm = normalize(page1Text);
 
@@ -190,7 +194,7 @@ class PdfServiceTest {
         assertTrue(pdfBytes.length > 0);
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
             assertTrue(pdf.getNumberOfPages() >= 1);
             String text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage()).toUpperCase();
 
@@ -213,7 +217,7 @@ class PdfServiceTest {
 
         byte[] bytes = Base64.getDecoder().decode(report.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
             String text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage());
 
             assertTrue(text.contains("2025"));
@@ -227,12 +231,12 @@ class PdfServiceTest {
     @Test
     void create_whenBarcodeServiceThrows_shouldWrapAndRethrow() {
         when(barCodePaymentService.retriveVoucher(any(), any(), any()))
-            .thenThrow(new IllegalStateException("Backend down"));
+                .thenThrow(new IllegalStateException("Backend down"));
 
         PdfServiceImpl svc = newService();
 
         RuntimeException ex = assertThrows(RuntimeException.class, () ->
-            svc.create("INIT1", "TRX1", "USER1", "X", "Y"));
+                svc.create("INIT1", "TRX1", "USER1", "X", "Y"));
 
         assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
         verify(barCodePaymentService).retriveVoucher("INIT1", "TRX1", "USER1");
@@ -241,12 +245,12 @@ class PdfServiceTest {
     @Test
     void create_whenFontLoadingFails_shouldThrowPdfGenerationException() {
         when(barCodePaymentService.retriveVoucher(any(), any(), any()))
-            .thenThrow(new PdfException("Test font error"));
+                .thenThrow(new PdfException("Test font error"));
 
         PdfServiceImpl svc = newService();
 
         PdfGenerationException ex = assertThrows(PdfGenerationException.class,
-            () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA77A01H501Z"));
+                () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA77A01H501Z"));
 
         assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
     }
@@ -268,19 +272,19 @@ class PdfServiceTest {
         when(pariPngResource.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
 
         PdfServiceImpl svc = new PdfServiceImpl(
-            barCodePaymentService,
-            transactionInProgressRepository,
-            decryptRestConnector,
-            resourceLoader,
-            "DejaVuSans.ttf",
-            null,          // logoMimit
-            pariPath,      // logoPari (PNG)
-            null, null, null
+                barCodePaymentService,
+                transactionRepository,
+                decryptRestConnector,
+                resourceLoader,
+                "DejaVuSans.ttf",
+                null,          // logoMimit
+                pariPath,      // logoPari (PNG)
+                null, null, null
         );
 
         ReportDTO report = svc.create(
-            "INIT1", "TRX1", "USER1",
-            "Giovanna Beltramin", "BLTGVN78A52C409X"
+                "INIT1", "TRX1", "USER1",
+                "Giovanna Beltramin", "BLTGVN78A52C409X"
         );
 
         verify(resourceLoader).getResource(pariPath);
@@ -290,14 +294,14 @@ class PdfServiceTest {
         assertTrue(bytes.length > 0, "PDF vuoto");
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
 
             assertTrue(pdf.getNumberOfPages() >= 1, "PDF senza pagine");
 
             String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
 
             assertTrue(norm.contains("BONUS ELETTRODOMESTICI"),
-                () -> "Manca 'BONUS ELETTRODOMESTICI' in:\n" + norm);
+                    () -> "Manca 'BONUS ELETTRODOMESTICI' in:\n" + norm);
 
             assertTrue(norm.contains("IL BONUS ELETTRODOMESTICI E REALIZZATO TRAMITE"),
                     () -> "Manca la frase 'Il Bonus Elettrodomestici è realizzato tramite' in:\n" + norm);
@@ -305,7 +309,7 @@ class PdfServiceTest {
             boolean hasPagoPA = norm.contains("PAGOPA");
             boolean hasSpa = norm.contains(" SPA ") || norm.contains(" S P A ");
             assertTrue(hasPagoPA && hasSpa,
-                () -> "Brand PagoPA non trovato (PAGOPA + SPA/S P A). Testo:\n" + norm);
+                    () -> "Brand PagoPA non trovato (PAGOPA + SPA/S P A). Testo:\n" + norm);
         }
     }
 
@@ -325,16 +329,16 @@ class PdfServiceTest {
         PdfServiceImpl svc = newService();
 
         ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-            "Mario Rossi", "RSSMRA80A01H501Z");
+                "Mario Rossi", "RSSMRA80A01H501Z");
 
         byte[] bytes = Base64.getDecoder().decode(report.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
 
             String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
 
             assertTrue(norm.contains(" PARI "),
-                () -> "Manca la label di fallback 'PARI' quando il logo non è disponibile:\n" + norm);
+                    () -> "Manca la label di fallback 'PARI' quando il logo non è disponibile:\n" + norm);
         }
     }
 
@@ -358,22 +362,22 @@ class PdfServiceTest {
         when(mimitPngResource.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
 
         PdfServiceImpl svc = new PdfServiceImpl(
-            barCodePaymentService,
-            transactionInProgressRepository,
-            decryptRestConnector,
-            resourceLoader,
-            "DejaVuSans.ttf",
-            mimitPath,     // <- logoMimit PNG valido
-            null,          // logoPari assente
-            null, null, null
+                barCodePaymentService,
+                transactionRepository,
+                decryptRestConnector,
+                resourceLoader,
+                "DejaVuSans.ttf",
+                mimitPath,     // <- logoMimit PNG valido
+                null,          // logoPari assente
+                null, null, null
         );
 
         ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-            "Laura Bianchi", "BNCLRA80A01H501X");
+                "Laura Bianchi", "BNCLRA80A01H501X");
 
         byte[] bytes = Base64.getDecoder().decode(report.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
             assertTrue(pdf.getNumberOfPages() >= 1);
 
             String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
@@ -385,24 +389,27 @@ class PdfServiceTest {
 
     @Test
     void createPreauthPdf_happyPath_shouldGeneratePdfAndReturnDto() {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "PREAUTH_TRX_ID_001";
         String trxCode = "PREAUTHCODE001";
         String userId = "USER_ID_FOR_DECRYPT";
         String fiscalCode = "MRARSS80A01H501Z";
         String productGtin = "123456789012";
 
-        TransactionInProgress mockTrx = createMockTransactionInProgress(
-            transactionId, trxCode, userId, 3000L, 10000L, "Prodotto Test");
+        Transaction mockTrx = createMockTransactionInProgress(
+                transactionId, trxCode, userId, 3000L, 10000L, "Prodotto Test");
 
         Map<String, String> properties = new HashMap<>(mockTrx.getAdditionalProperties());
         properties.put("productGtin", productGtin);
         mockTrx.setAdditionalProperties(properties);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
 
         PdfServiceImpl svc = newService();
-        ReportDTOWithTrxCode result = svc.createPreauthPdf(transactionId);
+        ReportDTOWithTrxCode result = svc.createPreauthPdf(initiativeId, transactionId);
 
         assertNotNull(result);
         assertEquals(trxCode, result.getTrxCode());
@@ -413,27 +420,44 @@ class PdfServiceTest {
         String header = new String(pdfBytes, 0, Math.min(5, pdfBytes.length), StandardCharsets.ISO_8859_1);
         assertTrue(header.startsWith("%PDF-"));
 
-        verify(transactionInProgressRepository).findById(transactionId);
+        verify(transactionRepository).findById(transactionId);
         verify(decryptRestConnector).getPiiByToken(userId);
     }
 
     @Test
     void createPreauthPdf_whenTransactionNotFound_shouldThrowException() {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "NON_EXISTENT_TRX_ID";
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.empty());
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.empty());
 
         PdfServiceImpl svc = newService();
 
         TransactionNotFoundOrExpiredException ex = assertThrows(TransactionNotFoundOrExpiredException.class,
-            () -> svc.createPreauthPdf(transactionId));
+                () -> svc.createPreauthPdf(initiativeId, transactionId));
 
         assertEquals("Cannot find transaction with transactionId [%s]".formatted(transactionId), ex.getMessage());
-        verify(transactionInProgressRepository).findById(transactionId);
+        verify(transactionRepository).findById(transactionId);
+        verifyNoInteractions(decryptRestConnector);
+    }
+
+    @Test
+    void createPreauthPdf_whenInitiativeMismatch_shouldThrowException() {
+        String transactionId = "PREAUTH_TRX_ID_MISMATCH";
+        Transaction mockTrx = createMockTransactionInProgress(
+                transactionId, "TRXCODE", "USER_ID", 1000L, 2000L, "Prodotto Test");
+        mockTrx.setInitiativeId("OTHER_INITIATIVE");
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+
+        PdfServiceImpl svc = newService();
+
+        assertThrows(InitiativeNotfoundException.class,
+                () -> svc.createPreauthPdf("INITIATIVEID1", transactionId));
         verifyNoInteractions(decryptRestConnector);
     }
 
     @Test
     void createPreauthPdf_shouldContainExpectedTexts() throws Exception {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "PREAUTHTRXID123";
         String trxCode = "PREAUTHCODE";
         String userId = "USER_FOR_DECRYPT";
@@ -441,22 +465,24 @@ class PdfServiceTest {
         String productName = "LAVATRICE SUPER MODELLO X";
         String productGtin = "987654321198";
 
-        TransactionInProgress mockTrx = createMockTransactionInProgress(
-            transactionId, trxCode, userId, 3000L, 10000L, productName);
+        Transaction mockTrx = createMockTransactionInProgress(
+                transactionId, trxCode, userId, 3000L, 10000L, productName);
 
         Map<String, String> properties = new HashMap<>(mockTrx.getAdditionalProperties());
         properties.put("productGtin", productGtin);
         mockTrx.setAdditionalProperties(properties);
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(userId)).thenReturn(new DecryptCfDTO(fiscalCode));
 
         PdfServiceImpl svc = newService();
-        ReportDTOWithTrxCode result = svc.createPreauthPdf(transactionId);
+        ReportDTOWithTrxCode result = svc.createPreauthPdf(initiativeId, transactionId);
 
         byte[] bytes = Base64.getDecoder().decode(result.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-            PdfDocument pdf = new PdfDocument(reader)) {
+             PdfDocument pdf = new PdfDocument(reader)) {
             String page1Text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage());
             String norm = normalize(page1Text);
 
@@ -475,26 +501,30 @@ class PdfServiceTest {
 
     @Test
     void createPreauthPdf_whenPdfGenerationFails_shouldThrowPdfGenerationException() {
+        String initiativeId = "INITIATIVEID1";
         String transactionId = "TRX_ID_FAIL";
-        TransactionInProgress mockTrx = createMockTransactionInProgress(
-            transactionId, "CODE", "USER", 1L, 2L, "Prod");
+        Transaction mockTrx = createMockTransactionInProgress(
+                transactionId, "CODE", "USER", 1L, 2L, "Prod");
+        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(transactionRepository.findById(anyString())).thenReturn(Optional.of(transaction));
 
-        when(transactionInProgressRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
+        when(transactionRepository.findById(transactionId)).thenReturn(Optional.of(mockTrx));
         when(decryptRestConnector.getPiiByToken(anyString())).thenThrow(new RuntimeException("Connector down"));
 
         PdfServiceImpl svc = newService();
 
         PdfGenerationException ex = assertThrows(PdfGenerationException.class,
-            () -> svc.createPreauthPdf(transactionId));
+                () -> svc.createPreauthPdf(initiativeId, transactionId));
 
         assertEquals("Errore durante la generazione del PDF", ex.getMessage());
         assertNotNull(ex.getCause());
         assertEquals("Connector down", ex.getCause().getMessage());
     }
 
-    private TransactionInProgress createMockTransactionInProgress(String transactionId, String trxCode, String userId, long rewardCents, long effectiveAmountCents, String productName) {
-        TransactionInProgress trx = new TransactionInProgress();
+    private Transaction createMockTransactionInProgress(String transactionId, String trxCode, String userId, long rewardCents, long effectiveAmountCents, String productName) {
+        Transaction trx = new Transaction();
         trx.setId(transactionId);
+        trx.setInitiativeId("INITIATIVEID1");
         trx.setTrxCode(trxCode);
         trx.setUserId(userId);
         trx.setTrxDate(OffsetDateTime.parse("2024-07-15T10:30:00Z"));
@@ -507,10 +537,10 @@ class PdfServiceTest {
     private static String normalize(String s) {
         String up = s.toUpperCase();
         up = up.replace('’', '\'')
-            .replace('‘', '\'')
-            .replace('`', '\'');
+                .replace('‘', '\'')
+                .replace('`', '\'');
         up = java.text.Normalizer.normalize(up, java.text.Normalizer.Form.NFD)
-            .replaceAll("\\p{M}+", "");
+                .replaceAll("\\p{M}+", "");
         up = up.replaceAll("[^A-Z0-9]+", " ");
         up = up.trim().replaceAll("\\s+", " ");
         return up;

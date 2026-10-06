@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +40,8 @@ public class MongoTestUtilitiesService {
      * It will return the actual mongo URL
      */
     public String getMongoUrl() {
-        return mongoProperties.getUri().replaceFirst("(?<=//)[^@]+@", "");
+        assert mongoProperties.getUri() != null;
+        return mongoProperties.getUri().replaceFirst("^mongodb://[^@]+@", "mongodb://");
     }
 
     //region retrieve mongo operations
@@ -135,7 +137,7 @@ public class MongoTestUtilitiesService {
                         mongoCommands.add(new MongoCommand(
                                 event.getCommandName(),
                                 event.getCommand().get(event.getCommandName()).toString(),
-                                LocalTime.now(),
+                                LocalTime.now(ZoneId.of("Europe/Rome")),
                                 clone.toJson(),
                                 event.getCommand().toJson()
                         ));

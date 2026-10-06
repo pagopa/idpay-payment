@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller.payment;
 
 import it.gov.pagopa.common.mongo.retry.MongoRequestRateTooLargeApiRetryable;
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
+import it.gov.pagopa.payment.constants.PaymentConstants;
 import it.gov.pagopa.payment.dto.qrcode.SyncTrxStatusDTO;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
@@ -11,6 +12,7 @@ import it.gov.pagopa.payment.service.performancelogger.TransactionResponsePerfLo
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -69,45 +71,66 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
 
     @Override
     @PerformanceLog(value = "CANCEL_TRANSACTION")
-    public void cancelTransaction(String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
+    public void cancelTransaction(String initiativeId, String trxId, String merchantId, String acquirerId, String pointOfSaleId) {
         log.info(
-                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {} at POS {}",
+                "[CANCEL_TRANSACTION] The merchant {} through acquirer {} is cancelling the transaction {} at POS {} for initiative {}",
                 Utilities.sanitizeString(merchantId),
                 Utilities.sanitizeString(acquirerId),
                 Utilities.sanitizeString(trxId),
-                Utilities.sanitizeString(pointOfSaleId)
+                Utilities.sanitizeString(pointOfSaleId),
+                Utilities.sanitizeString(initiativeId)
         );
-        commonCancelService.cancelTransaction(trxId, merchantId, acquirerId, pointOfSaleId);
+        commonCancelService.cancelTransaction(initiativeId, trxId, merchantId, acquirerId, pointOfSaleId);
     }
 
     @Override
     @PerformanceLog(value = "REVERSAL_TRANSACTION")
-    public void reversalTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
+    public ResponseEntity<Void> reversalTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
-        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
+        final String sanitizedInitiativeId = Utilities.sanitizeString(initiativeId);
 
         log.info(
-                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} at POS {}",
-                sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
+                "[REVERSAL_TRANSACTION] The merchant {} is requesting a reversal for the transactionId {} and initiativeId {}",
+                sanitizedMerchantId, sanitizedTrxCode, sanitizedInitiativeId
         );
-        commonReversalService.reversalTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
+        long transactionRevision = commonReversalService.reversalTransaction(
+            initiativeId, transactionId, merchantId, authorization, file, docNumber);
+        return ResponseEntity.noContent()
+            .header(PaymentConstants.TRANSACTION_REVISION_HEADER, Long.toString(transactionRevision))
+            .build();
     }
 
     @Override
     @PerformanceLog(value = "INVOICE_TRANSACTION")
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
+    public ResponseEntity<Void> invoiceTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         final String sanitizedMerchantId = Utilities.sanitizeString(merchantId);
         final String sanitizedTrxCode = Utilities.sanitizeString(transactionId);
-        final String sanitizedPointOfSaleId = Utilities.sanitizeString(pointOfSaleId);
+        final String sanitizedInitiativeId = Utilities.sanitizeString(initiativeId);
 
         log.info(
-            "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} at POS {}",
-            sanitizedMerchantId, sanitizedTrxCode, sanitizedPointOfSaleId
+            "[INVOICE_TRANSACTION] The merchant {} is requesting a invoice for the transactionId {} and initiativeId {}",
+            sanitizedMerchantId, sanitizedTrxCode, sanitizedInitiativeId
         );
-        commonInvoiceService.invoiceTransaction(transactionId, merchantId, pointOfSaleId, file, docNumber);
+        long transactionRevision = commonInvoiceService.invoiceTransaction(
+            initiativeId, transactionId, merchantId, authorization, file, docNumber);
+        return ResponseEntity.noContent()
+            .header(PaymentConstants.TRANSACTION_REVISION_HEADER, Long.toString(transactionRevision))
+            .build();
     }
 
     @Override
@@ -148,10 +171,4 @@ public class CommonPaymentControllerImpl implements CommonPaymentController {
         return qrCodeExpirationService.forceAuthorizationTrxExpiration(initiativeId);
     }
 
-    @Override
-    @PerformanceLog(value = "DELETE_INVOICED_TRANSACTION")
-    public void deleteInvoicedTransaction() {
-        log.info("[DELETE_INVOICED_TRANSACTION] Request to delete invoiced transaction");
-        commonCancelService.deleteInvoicedTransaction();
-    }
 }

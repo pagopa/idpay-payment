@@ -5,6 +5,7 @@ import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,9 +25,10 @@ public interface CommonPaymentController {
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId);
 
-    @DeleteMapping("/transactions/{transactionId}")
+    @DeleteMapping("/initiatives/{initiativeId}/transactions/{transactionId}")
     @ResponseStatus(code = HttpStatus.OK)
     void cancelTransaction(
+            @PathVariable("initiativeId") String initiativeId,
             @PathVariable("transactionId") String transactionId,
             @RequestHeader("x-merchant-id") String merchantId,
             @RequestHeader("x-acquirer-id") String acquirerId,
@@ -40,22 +42,22 @@ public interface CommonPaymentController {
     @ResponseStatus(code = HttpStatus.OK)
     void deleteLapsedTransaction(@PathVariable("initiativeId")String initiativeId);
 
-    @PostMapping("/transactions/{transactionId}/reversal")
-    @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    void reversalTransaction(
+    @PostMapping("/initiatives/{initiativeId}/transactions/{transactionId}/reversal")
+    ResponseEntity<Void> reversalTransaction(
+        @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
-        @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+        @RequestHeader("Authorization") String authorization,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );
 
-    @PostMapping("/transactions/{transactionId}/invoice")
-    @ResponseStatus(code = HttpStatus.NO_CONTENT)
-    void invoiceTransaction(
+    @PostMapping("/initiatives/{initiativeId}/transactions/{transactionId}/invoice")
+    ResponseEntity<Void> invoiceTransaction(
+        @PathVariable("initiativeId") String initiativeId,
         @PathVariable("transactionId") String transactionId,
         @RequestHeader("x-merchant-id") String merchantId,
-        @RequestHeader("x-point-of-sale-id") String pointOfSaleId,
+        @RequestHeader("Authorization") String authorization,
         @RequestPart("file") MultipartFile file,
         @RequestPart(value = "docNumber", required = false) String docNumber
     );
@@ -71,7 +73,4 @@ public interface CommonPaymentController {
     @PutMapping("/force-expiration/authorization/{initiativeId}")
     Long forceAuthorizationTrxExpiration(@PathVariable("initiativeId") String initiativeId);
 
-    @DeleteMapping("/deleteInvoicedTransaction")
-    @ResponseStatus(code = HttpStatus.OK)
-    void deleteInvoicedTransaction();
 }

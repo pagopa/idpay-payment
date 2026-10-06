@@ -23,6 +23,7 @@ public class ProductDTO {
     private String model;
     private String productGroup;
     private String category;
+    private String categoryCode;
     private String brand;
     private String eprelCode;
     private String productCode;

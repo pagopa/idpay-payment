@@ -21,8 +21,8 @@ public class PaymentCheckServiceImpl implements PaymentCheckService {
     }
 
     @Override
-    public ProductDTO validateProduct(String productGtin) {
-        ProductListDTO productListDTO = registerConnector.getProductList(productGtin, ProductStatus.APPROVED);
+    public ProductDTO validateProduct(String productGtin, String initiativeId) {
+        ProductListDTO productListDTO = registerConnector.getProductList(productGtin, ProductStatus.APPROVED, initiativeId);
         if(productListDTO == null || productListDTO.getContent().isEmpty()){
             throw new ProductNotValidException(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND,
                     String.format("The product with gtin [%s] is not found or not approved", productGtin));

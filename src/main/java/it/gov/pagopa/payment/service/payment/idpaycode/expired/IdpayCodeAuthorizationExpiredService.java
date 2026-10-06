@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.payment.idpaycode.expired;
 
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 
 public interface IdpayCodeAuthorizationExpiredService {
-    TransactionInProgress findByTrxIdAndAuthorizationNotExpired(String toLowerCase);
+    Transaction findByTrxIdAndAuthorizationNotExpired(String toLowerCase);
 }

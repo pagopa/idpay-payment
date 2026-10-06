@@ -28,4 +28,5 @@ public class PaymentRequestDTO {
   private String idTrxAcquirer;
   private String channel;
   private long voucherAmountCents;
+  private String productType;
 }

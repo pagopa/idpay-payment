@@ -6,5 +6,5 @@ import it.gov.pagopa.payment.dto.ReportDTOWithTrxCode;
 
 public interface PdfService {
     ReportDTO create(String initiativeId, String trxCode, String userId, String username, String fiscalCode);
-    ReportDTOWithTrxCode createPreauthPdf(String transactionId);
+    ReportDTOWithTrxCode createPreauthPdf(String initiativeId, String transactionId);
 }

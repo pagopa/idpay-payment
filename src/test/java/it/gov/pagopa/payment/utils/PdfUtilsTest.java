@@ -138,7 +138,6 @@ class PdfUtilsTest {
                 style
         );
 
-        // Render e verifica che i testi compaiano
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try (PdfWriter writer = new PdfWriter(baos);
              PdfDocument pdf = new PdfDocument(writer);

@@ -1,21 +1,25 @@
 package it.gov.pagopa.payment.service.payment.common;
 
-import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
+import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
 import it.gov.pagopa.payment.connector.storage.FileStorageClient;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.dto.TransactionAuditDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionEventType;
+import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
-import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.InvoiceData;
-import it.gov.pagopa.payment.model.TransactionInProgress;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
-import it.gov.pagopa.payment.service.PaymentErrorNotifierService;
+import it.gov.pagopa.payment.repository.InvoiceTransactionCommand;
+import it.gov.pagopa.payment.repository.InvoiceTransactionRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.utils.AuditUtilities;
+import it.gov.pagopa.payment.utils.StoragePathUtils;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -25,98 +29,87 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Objects;
 
 @Slf4j
 @Service("commonInvoice")
 public class CommonInvoiceServiceImpl {
 
     private final long minDaysToInvoiceTransaction;
-    private final TransactionInProgressRepository repository;
-    private final TransactionNotifierService notifierService;
-    private final PaymentErrorNotifierService paymentErrorNotifierService;
+    private final TransactionRepository transactionRepository;
     private final FileStorageClient fileStorageClient;
     private final AuditUtilities auditUtilities;
     private final MerchantConnector merchantConnector;
+    private final RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService;
+    private final InvoiceTransactionRepository invoiceTransactionRepository;
 
     public CommonInvoiceServiceImpl(
             @Value("${app.common.expirations.minDaysToInvoiceTransaction:0}") long minDaysToInvoiceTransaction,
-            TransactionInProgressRepository repository,
-            TransactionNotifierService notifierService,
-            PaymentErrorNotifierService paymentErrorNotifierService,
+            TransactionRepository transactionRepository,
             FileStorageClient fileStorageClient,
-            AuditUtilities auditUtilities, MerchantConnector merchantConnector) {
+            AuditUtilities auditUtilities,
+            MerchantConnector merchantConnector,
+            RewardBatchEligibilityPreflightService rewardBatchEligibilityPreflightService,
+            InvoiceTransactionRepository invoiceTransactionRepository) {
         this.minDaysToInvoiceTransaction = minDaysToInvoiceTransaction;
-        this.repository = repository;
-        this.notifierService = notifierService;
-        this.paymentErrorNotifierService = paymentErrorNotifierService;
+        this.transactionRepository = transactionRepository;
         this.fileStorageClient = fileStorageClient;
         this.auditUtilities = auditUtilities;
-      this.merchantConnector = merchantConnector;
+        this.merchantConnector = merchantConnector;
+        this.rewardBatchEligibilityPreflightService = rewardBatchEligibilityPreflightService;
+        this.invoiceTransactionRepository = invoiceTransactionRepository;
     }
 
-    public void invoiceTransaction(String transactionId, String merchantId, String pointOfSaleId, MultipartFile file, String docNumber) {
+    public long invoiceTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId,
+            String authorization,
+            MultipartFile file,
+            String docNumber) {
 
         try {
             Utilities.checkFileExtensionOrThrow(file);
 
-            // getting the transaction from transaction_in_progress and checking if it is valid for the invoiced status
-            TransactionInProgress trx = repository.findById(transactionId)
-                    .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find transaction with transactionId [%s]".formatted(transactionId)));
-            if (!trx.getMerchantId().equals(merchantId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]".formatted(trx.getMerchantId(), merchantId));
-            }
-            if (!trx.getPointOfSaleId().equals(pointOfSaleId)) {
-                throw new TransactionInvalidException(ExceptionCode.GENERIC_ERROR, "The pointOfSaleId with id [%s] associated to the transaction is not equal to the pointOfSaleId with id [%s]".formatted(trx.getPointOfSaleId(), pointOfSaleId));
-            }
-            if (!SyncTrxStatus.CAPTURED.equals(trx.getStatus())) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_STATUS_NOT_VALID, "Cannot invoice transaction with status [%s], must be CAPTURED".formatted(trx.getStatus()));
-            }
-            // I want to invoice only transactions older than 'minDaysToInvoiceTransaction' days, minDaysToInvoiceTransaction default is 0
-            if (minDaysToInvoiceTransaction > 0 && trx.getElaborationDateTime().plusDays(minDaysToInvoiceTransaction).isAfter(LocalDateTime.now())) {
-                throw new OperationNotAllowedException(ExceptionCode.TRX_TOO_RECENT, "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days".formatted(trx.getElaborationDateTime(), minDaysToInvoiceTransaction));
-            }
+            Transaction transaction = loadAndValidateTransaction(
+                    initiativeId, transactionId, merchantId);
+            verifyReplacementEligibility(transaction, authorization);
 
-            // Uploading invoice to storage
-            String path = String.format("invoices/merchant/%s/pos/%s/transaction/%s/invoice/%s",
-                    merchantId, pointOfSaleId, trx.getId(), file.getOriginalFilename());
+            SyncTrxStatus expectedStatus = transaction.getStatus();
+            long expectedRevision = transaction.getTransactionRevision() == null
+                    ? 0L
+                    : transaction.getTransactionRevision();
+            TransactionEventType eventType = eventTypeFor(expectedStatus);
+
+            InvoiceData oldDocumentData = transaction.getInvoiceData();
+            deletePreviousInvoice(transaction, oldDocumentData);
+
+            String path = StoragePathUtils.buildInvoicePath(transaction, file.getOriginalFilename());
             fileStorageClient.upload(file.getInputStream(), path, file.getContentType());
 
-            // updating the transaction status to invoiced
-            trx.setStatus(SyncTrxStatus.INVOICED);
-            trx.setUpdateDate(LocalDateTime.now());
-            trx.setInvoiceData(InvoiceData.builder()
-                .filename(file.getOriginalFilename())
-                .docNumber(docNumber)
-                .build());
-
-            if (trx.getFranchiseName() == null || trx.getPointOfSaleType() == null) {
-                PointOfSaleDTO pointOfSaleDTO = merchantConnector.getPointOfSale(merchantId, pointOfSaleId);
-
-                trx.setFranchiseName(pointOfSaleDTO.getFranchiseName());
-                trx.setPointOfSaleType(pointOfSaleDTO.getType().name());
-                trx.setBusinessName(pointOfSaleDTO.getBusinessName());
-                trx.setMerchantFiscalCode(pointOfSaleDTO.getFiscalCode());
-            }
-
-            // sending the transaction invoice notification (to store it in transaction db collection)
-            //sendInvoiceTransactionNotification(trx);
-
-            // logging operation
-            TransactionAuditDTO auditDTO = new TransactionAuditDTO(
-                    trx.getInitiativeId(),
-                    trx.getId(),
-                    trx.getTrxCode(),
-                    trx.getUserId(),
-                    ObjectUtils.firstNonNull(trx.getRewardCents(), 0L),
-                    path,
-                    docNumber,
-                    merchantId,
-                    pointOfSaleId
-            );
-            auditUtilities.logInvoiceTransaction(auditDTO);
-
-            // removing the transaction from transaction_in_progress collection
-            repository.save(trx);
+            LocalDateTime updateDate = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+            InvoiceData newInvoiceData = InvoiceData.builder()
+                    .filename(file.getOriginalFilename())
+                    .docNumber(docNumber)
+                    .build();
+            InvoiceMerchantData merchantData = resolveMerchantData(
+                    transaction, merchantId, oldDocumentData);
+            Transaction updatedTransaction = invoiceTransactionRepository.updateInvoiceAndCreateEvent(new InvoiceTransactionCommand(
+                    transaction.getId(),
+                    transaction.getInitiativeId(),
+                    transaction.getMerchantId(),
+                    expectedStatus,
+                    expectedRevision,
+                    newInvoiceData,
+                    updateDate,
+                    merchantData.franchiseName(),
+                    merchantData.pointOfSaleType(),
+                    merchantData.businessName(),
+                    merchantData.merchantFiscalCode(),
+                    eventType));
+            logInvoiceOperation(transaction, path, docNumber, merchantId, eventType);
+            return updatedTransaction.getTransactionRevision();
 
         } catch (RuntimeException e) {
             auditUtilities.logErrorInvoiceTransaction(transactionId, merchantId);
@@ -128,21 +121,148 @@ public class CommonInvoiceServiceImpl {
 
     }
 
-    private void sendInvoiceTransactionNotification(TransactionInProgress trx) {
-        try {
-            log.info("[INVOICE_TRANSACTION][SEND_NOTIFICATION] Sending Invoice Authorized Payment event to Notification: trxId {} - merchantId {}", trx.getId(), trx.getMerchantId());
-            if (!notifierService.notify(trx, trx.getUserId())) {
-                throw new InternalServerErrorException(ExceptionCode.GENERIC_ERROR, "Something gone wrong while invoicing Authorized Payment notify");
-            }
-        } catch (Exception e) {
-            if (!paymentErrorNotifierService.notifyInvoicePayment(
-                    notifierService.buildMessage(trx, trx.getUserId()),
-                    "[INVOICE_TRANSACTION] An error occurred while publishing the invoice authorized result: trxId %s - merchantId %s".formatted(trx.getId(), trx.getMerchantId()),
-                    true,
-                    e)
-            ) {
-                log.error("[INVOICE_TRANSACTION][SEND_NOTIFICATION] An error has occurred and was not possible to notify it: trxId {} - merchantId {}", trx.getId(), trx.getUserId(), e);
-            }
+    private Transaction loadAndValidateTransaction(
+            String initiativeId,
+            String transactionId,
+            String merchantId) {
+        Transaction transaction = transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with transactionId [%s]".formatted(transactionId)));
+
+        validateInitiative(transaction, initiativeId);
+        validateMerchant(transaction, merchantId);
+        validateInvoiceStatus(transaction);
+        validateTransactionAge(transaction);
+        return transaction;
+    }
+
+    private void validateInitiative(Transaction transaction, String initiativeId) {
+        if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
+            throw new InitiativeNotfoundException(
+                    "The initiative with id [%s] associated to the transaction is not equal to the initiative with id [%s]"
+                            .formatted(transaction.getInitiativeId(), initiativeId));
         }
     }
+
+    private void validateMerchant(Transaction transaction, String merchantId) {
+        if (!transaction.getMerchantId().equals(merchantId)) {
+            throw new TransactionInvalidException(
+                    ExceptionCode.GENERIC_ERROR,
+                    "The merchant with id [%s] associated to the transaction is not equal to the merchant with id [%s]"
+                            .formatted(transaction.getMerchantId(), merchantId));
+        }
+    }
+
+    private void validateInvoiceStatus(Transaction transaction) {
+        boolean replacementStatus = isReplacement(transaction);
+        if (!SyncTrxStatus.CAPTURED.equals(transaction.getStatus())
+                && !(replacementStatus && transaction.getInvoiceData() != null)) {
+            throw new OperationNotAllowedException(
+                    ExceptionCode.TRX_STATUS_NOT_VALID,
+                    "Cannot invoice transaction with status [%s], must be CAPTURED, INVOICED or REWARDED"
+                            .formatted(transaction.getStatus()));
+        }
+    }
+
+    private void validateTransactionAge(Transaction transaction) {
+        boolean tooRecent = transaction.getInvoiceData() == null
+                && minDaysToInvoiceTransaction > 0
+                && transaction.getElaborationDateTime()
+                .plusDays(minDaysToInvoiceTransaction)
+                .isAfter(LocalDateTime.now(ZoneId.of("Europe/Rome")));
+        if (tooRecent) {
+            throw new OperationNotAllowedException(
+                    ExceptionCode.TRX_TOO_RECENT,
+                    "Cannot invoice transaction with elaboration date [%s], must be pass at least [%d] days"
+                            .formatted(
+                                    transaction.getElaborationDateTime(),
+                                    minDaysToInvoiceTransaction));
+        }
+    }
+
+    private void verifyReplacementEligibility(Transaction transaction, String authorization) {
+        if (isReplacement(transaction)) {
+            rewardBatchEligibilityPreflightService.verifyEligibility(
+                    transaction,
+                    RewardBatchEligibilityOperation.INVOICE_REPLACEMENT,
+                    authorization);
+        }
+    }
+
+    private boolean isReplacement(Transaction transaction) {
+        return SyncTrxStatus.INVOICED.equals(transaction.getStatus())
+                || SyncTrxStatus.REWARDED.equals(transaction.getStatus());
+    }
+
+    private TransactionEventType eventTypeFor(SyncTrxStatus expectedStatus) {
+        return SyncTrxStatus.CAPTURED.equals(expectedStatus)
+                ? TransactionEventType.TRANSACTION_INVOICED
+                : TransactionEventType.TRANSACTION_INVOICE_REPLACED;
+    }
+
+    private void deletePreviousInvoice(Transaction transaction, InvoiceData oldDocumentData) {
+        if (oldDocumentData != null) {
+            String oldBlobPath = StoragePathUtils.buildInvoicePath(
+                    transaction, oldDocumentData.getFilename());
+            fileStorageClient.deleteFile(oldBlobPath);
+        }
+    }
+
+    private InvoiceMerchantData resolveMerchantData(
+            Transaction transaction,
+            String merchantId,
+            InvoiceData oldDocumentData) {
+        if (oldDocumentData == null
+                && (transaction.getFranchiseName() == null
+                || transaction.getPointOfSaleType() == null)) {
+            PointOfSaleDTO pointOfSale = merchantConnector.getPointOfSale(
+                    merchantId, transaction.getPointOfSaleId());
+            return new InvoiceMerchantData(
+                    pointOfSale.getFranchiseName(),
+                    pointOfSale.getType().name(),
+                    pointOfSale.getBusinessName(),
+                    pointOfSale.getFiscalCode());
+        }
+        return new InvoiceMerchantData(
+                transaction.getFranchiseName(),
+                transaction.getPointOfSaleType(),
+                transaction.getBusinessName(),
+                transaction.getMerchantFiscalCode());
+    }
+
+    private void logInvoiceOperation(
+            Transaction transaction,
+            String path,
+            String docNumber,
+            String merchantId,
+            TransactionEventType eventType) {
+        TransactionAuditDTO auditDTO = new TransactionAuditDTO(
+                transaction.getInitiativeId(),
+                transaction.getId(),
+                transaction.getTrxCode(),
+                transaction.getUserId(),
+                ObjectUtils.firstNonNull(transaction.getRewardCents(), 0L),
+                path,
+                docNumber,
+                merchantId,
+                transaction.getPointOfSaleId()
+        );
+        if (TransactionEventType.TRANSACTION_INVOICED.equals(eventType)) {
+            auditUtilities.logInvoiceTransaction(auditDTO);
+        } else {
+            auditUtilities.logInvoiceReplacement(auditDTO);
+        }
+    }
+
+    private record InvoiceMerchantData(
+            String franchiseName,
+            String pointOfSaleType,
+            String businessName,
+            String merchantFiscalCode) {
+    }
+
+    public long invoiceTransaction(String initiativeId, String transactionId, String merchantId, MultipartFile file, String docNumber) {
+        return invoiceTransaction(initiativeId, transactionId, merchantId, null, file, docNumber);
+    }
+
 }

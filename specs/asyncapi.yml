@@ -6,6 +6,8 @@ info:
     Its purpose is to notify other systems of transaction confirmation and cancellation events and any  
     errors
 tags:
+  - name: "transactionOutbox"
+    description: "Canonical payment transaction outcomes"
   - name: "confirmTransaction"
     description: "Transaction REWARDED"
   - name: "cancellationTransaction"
@@ -19,6 +21,15 @@ tags:
   - name: "handleTimeout"
     description: "Handle schedulation and delete transaction after timeout"
 channels:
+  payment-transaction-invoice-replaced:
+    publish:
+      message:
+        $ref: '#/components/messages/TransactionInvoiceReplaced'
+      bindings:
+        kafka:
+          topic: idpay-transaction
+      tags:
+        - name: "transactionOutbox"
   payment-confirm-transaction:
     publish:
       message:
@@ -83,6 +94,77 @@ channels:
         - name: "handleTimeout"
 components:
   messages:
+    TransactionInvoiceReplaced:
+      contentType: application/json
+      description: >-
+        Complete canonical transaction snapshot emitted once for an invoice
+        replacement revision. Event metadata is flattened into the outbox
+        payload; operationType remains the payment operation code.
+      summary: Invoice replacement transaction outcome
+      bindings:
+        kafka:
+          key:
+            type: string
+            description: Transaction ID copied from transaction_outbox.transaction_id
+      payload:
+        allOf:
+          - $ref: "#/components/schemas/RewardTransactionDTO"
+          - type: object
+            required:
+              - eventId
+              - schemaVersion
+              - eventType
+              - occurredAt
+              - id
+              - transactionRevision
+              - status
+            properties:
+              eventId:
+                type: string
+                description: Stable identifier of the immutable outbox event
+              schemaVersion:
+                type: integer
+                enum:
+                  - 1
+                description: Event metadata schema version
+              eventType:
+                type: string
+                enum:
+                  - TRANSACTION_INVOICE_REPLACED
+                description: Must match transaction_outbox.event_type
+              occurredAt:
+                type: string
+                format: date-time
+                description: Timestamp of the committed invoice replacement outcome
+              transactionRevision:
+                type: integer
+                format: int64
+                minimum: 1
+                description: Positive transaction lifecycle revision
+              status:
+                type: string
+                enum:
+                  - INVOICED
+                description: Canonical status after invoice replacement
+        example:
+          eventId: "1024"
+          schemaVersion: 1
+          eventType: TRANSACTION_INVOICE_REPLACED
+          occurredAt: "2026-09-01T09:00:00+02:00"
+          id: "01JINVREPLACED"
+          trxCode: "12345678"
+          operationType: "00"
+          status: INVOICED
+          transactionRevision: 4
+          userId: "USER_ID"
+          merchantId: "MERCHANT_ID"
+          pointOfSaleId: "POS_ID"
+          initiativeId: "INITIATIVE_ID"
+          initiatives:
+            - "INITIATIVE_ID"
+          invoiceData:
+            filename: "invoice-4.pdf"
+            docNumber: "INV-4"
     TransactionInProgressConfirm:
       contentType: application/json
       description: >-
@@ -96,7 +178,7 @@ components:
             description: "merchant id"
             example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     TransactionInProgressCancelled:
       contentType: application/json
       description: >-
@@ -110,7 +192,7 @@ components:
             description: "user id"
             example: "bcf3651c-d2d3-4998-81a9-5f24302ab674"
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     TransactionInProgressConfirmError:
       contentType: application/json
       description: >-
@@ -166,7 +248,7 @@ components:
             example: "Something gone wrong while Confirm Payment notify"
 
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     TransactionInProgressCancelledError:
       contentType: application/json
       description: >-
@@ -220,7 +302,7 @@ components:
             description: Message of the error.
             example: "Something gone wrong while cancelling Authorized Payment notify"
       payload:
-        $ref: "#/components/schemas/TransactionInProgress"
+        $ref: "#/components/schemas/RewardTransactionDTO"
     DeleteInitiative:
       contentType: application/json
       description: >-
@@ -367,7 +449,7 @@ components:
           description: sequence operation number
           example: 1
 
-    TransactionInProgress:
+    RewardTransactionDTO:
       type: object
       properties:
         id:
@@ -470,6 +552,11 @@ components:
           format: int64
           description: counter version
           example: 1
+        transactionRevision:
+          type: integer
+          format: int64
+          description: Lifecycle revision of the canonical payment transaction snapshot
+          example: 1
         rejectionReasons:
           type: array
           description: array of rejection Reasons
@@ -481,6 +568,8 @@ components:
         status:
           type: string
           enum:
+            - INVOICED
+            - REFUNDED
             - REJECTED
             - REWARDED
             - CANCELLED
@@ -495,6 +584,15 @@ components:
             - BARCODE
           description: Channel from which the transaction takes place
           example: BARCODE
+        voucherAmountCents:
+          type: integer
+          format: int64
+          description: Maximum budget available for the beneficiary voucher in cents
+          example: 7000
+        productType:
+          type: string
+          description: Product type selected during discount voucher redemption
+          example: DTSC
         rewards:
           type: object
           additionalProperties: false
@@ -515,3 +613,44 @@ components:
           type: object
           description: inititative rejection reasons
           format: string
+        pointOfSaleId:
+          type: string
+          description: Point of sale identifier
+        franchiseName:
+          type: string
+          description: Merchant franchise name
+        invoiceData:
+          $ref: "#/components/schemas/InvoiceData"
+        creditNoteData:
+          $ref: "#/components/schemas/InvoiceData"
+        createdAt:
+          type: string
+          format: date-time
+          description: Transaction creation time
+        pointOfSaleType:
+          type: string
+          description: Point of sale type
+        familyId:
+          type: string
+          description: Initiative family identifier
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: string
+        trxEndDate:
+          type: string
+          format: date-time
+          description: Transaction expiration time
+        extendedAuthorization:
+          type: boolean
+          description: Whether the transaction is an extended authorization
+        productName:
+          type: string
+          description: Product name derived from additional properties
+    InvoiceData:
+      type: object
+      properties:
+        filename:
+          type: string
+        docNumber:
+          type: string

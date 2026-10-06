@@ -18,4 +18,16 @@ public class AppConfigurationProperties {
         int updateBatchSize;
     }
 
+    @Configuration
+    @ConfigurationProperties(prefix = "app.reward-batch-impact")
+    @Data
+    public static class RewardBatchImpact {
+        private Eligibility eligibility = new Eligibility();
+
+        @Data
+        public static class Eligibility {
+            private boolean enabled;
+        }
+    }
+
 }

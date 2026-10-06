@@ -35,7 +35,7 @@ class FileStorageClientTest {
 
   @BeforeEach
   void setUp() {
-    fileStorageClient = new FileStorageClient(blobContainerClient);
+    fileStorageClient = new FileStorageClient(blobContainerClient, null, 3600);
   }
 
   @Mock

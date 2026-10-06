@@ -13,6 +13,7 @@ public class ProductDTOFaker {
   public static ProductDTO.ProductDTOBuilder mockInstanceBuilder() {
     return ProductDTO.builder()
             .category("category")
+            .categoryCode("category_code")
             .gtinCode("gtin")
             .productName("productName");
   }

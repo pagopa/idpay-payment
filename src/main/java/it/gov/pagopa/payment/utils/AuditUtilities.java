@@ -211,6 +211,14 @@ public class AuditUtilities {
         );
     }
 
+    public void logInvoiceReplacement(TransactionAuditDTO dto) {
+        AuditLogger.logAuditString(
+                CEF_PATTERN_TRXID_TRXCODE_MERCHANTID,
+                "Merchant replaced the transaction invoice",
+                dto.getInitiativeId(), dto.getTrxId(), dto.getTrxCode(), dto.getMerchantId()
+        );
+    }
+
     public void logErrorCancelTransaction(String trxId, String merchantId) {
         AuditLogger.logAuditString(
                 CEF_PATTERN_TRXID_MERCHANTID,
