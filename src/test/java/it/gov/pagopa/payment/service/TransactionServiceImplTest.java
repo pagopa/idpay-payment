@@ -180,6 +180,38 @@ class TransactionServiceImplTest {
         assertEquals(TRX_ID, result.getId());
     }
 
+    @Test
+    @DisplayName("getTransactionByIdAndPointOfSaleId - Parametri mancanti")
+    void testGetTransactionByIdAndPointOfSaleId_MissingParameters() {
+        assertThrows(TransactionMissingParametersException.class,
+                () -> transactionService.getTransactionByIdAndPointOfSaleId(TRX_ID, ""));
+        assertThrows(TransactionMissingParametersException.class,
+                () -> transactionService.getTransactionByIdAndPointOfSaleId("", "POS1"));
+    }
+
+    @Test
+    @DisplayName("getTransactionByIdAndPointOfSaleId - Transazione non trovata")
+    void testGetTransactionByIdAndPointOfSaleId_NotFound() {
+        when(transactionRepository.findByIdAndPointOfSaleIdAndStatusIn(eq(TRX_ID), eq("POS1"), anyList()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(TransactionNotFoundOrExpiredException.class,
+                () -> transactionService.getTransactionByIdAndPointOfSaleId(TRX_ID, "POS1"));
+    }
+
+    @Test
+    @DisplayName("getTransactionByIdAndPointOfSaleId - Successo")
+    void testGetTransactionByIdAndPointOfSaleId_Success() {
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.INVOICED);
+        trx.setId(TRX_ID);
+        when(transactionRepository.findByIdAndPointOfSaleIdAndStatusIn(eq(TRX_ID), eq("POS1"), anyList()))
+                .thenReturn(Optional.of(trx));
+
+        Transaction result = transactionService.getTransactionByIdAndPointOfSaleId(TRX_ID, "POS1");
+
+        assertEquals(TRX_ID, result.getId());
+    }
+
     // =========================================================================
     // 4. FIND ALL (RICERCA TRANSAZIONI)
     // =========================================================================
