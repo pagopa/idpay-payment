@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import com.azure.core.http.rest.Response;
+import com.azure.storage.blob.models.BlobStorageException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
@@ -78,6 +80,9 @@ class CommonInvoiceServiceImplTest {
                     updatedTransaction.setTransactionRevision(command.expectedRevision() + 1);
                     return updatedTransaction;
                 });
+        Response<Boolean> successfulDeletion = mock(Response.class);
+        lenient().when(successfulDeletion.getValue()).thenReturn(true);
+        lenient().when(fileStorageClientMock.deleteFile(anyString())).thenReturn(successfulDeletion);
     }
 
     @Test
@@ -321,13 +326,59 @@ class CommonInvoiceServiceImplTest {
 
         when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
 
-        OperationNotAllowedException exception = assertThrows(
-                OperationNotAllowedException.class,
+        InvoiceNotFoundException exception = assertThrows(
+                InvoiceNotFoundException.class,
                 () -> commonInvoiceService.invoiceTransaction(
                         INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
 
-        assertEquals(ExceptionCode.TRX_STATUS_NOT_VALID, exception.getCode());
+        assertEquals(ExceptionCode.INVOICE_NOT_FOUND, exception.getCode());
         verifyNoInteractions(rewardBatchEligibilityPreflightServiceMock, fileStorageClientMock);
+        verifyNoInteractions(invoiceTransactionRepositoryMock);
+    }
+
+    @Test
+    void testInvoiceTransaction_PreviousInvoiceMissingFromStorage() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder().filename("missing.pdf").docNumber("123").build());
+        Response<Boolean> missingDeletion = mock(Response.class);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(fileStorageClientMock.deleteFile(anyString())).thenReturn(missingDeletion);
+        when(missingDeletion.getValue()).thenReturn(false);
+
+        InvoiceNotFoundException exception = assertThrows(
+                InvoiceNotFoundException.class,
+                () -> commonInvoiceService.invoiceTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
+
+        assertEquals(ExceptionCode.INVOICE_NOT_FOUND, exception.getCode());
+        assertEquals("Invoice document not found in storage", exception.getMessage());
+        verify(fileStorageClientMock, never()).upload(any(), anyString(), any());
+        verifyNoInteractions(invoiceTransactionRepositoryMock);
+        verify(auditUtilitiesMock).logErrorInvoiceTransaction(TRX_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testInvoiceTransaction_StorageFailureIsReportedAsInvoiceNotFound() {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "test.pdf", "application/pdf", "content".getBytes());
+        Transaction transaction = createDummyTransaction(SyncTrxStatus.INVOICED, MERCHANT_ID, POS_ID);
+        transaction.setInvoiceData(InvoiceData.builder().filename("old.pdf").docNumber("123").build());
+        BlobStorageException storageException = mock(BlobStorageException.class);
+
+        when(transactionRepositoryMock.findById(TRX_ID)).thenReturn(Optional.of(transaction));
+        when(fileStorageClientMock.deleteFile(anyString())).thenThrow(storageException);
+
+        InvoiceNotFoundException exception = assertThrows(
+                InvoiceNotFoundException.class,
+                () -> commonInvoiceService.invoiceTransaction(
+                        INITIATIVE_ID, TRX_ID, MERCHANT_ID, file, DOC_NUMBER));
+
+        assertEquals(ExceptionCode.INVOICE_NOT_FOUND, exception.getCode());
+        assertSame(storageException, exception.getCause());
+        verify(fileStorageClientMock, never()).upload(any(), anyString(), any());
         verifyNoInteractions(invoiceTransactionRepositoryMock);
     }
 
