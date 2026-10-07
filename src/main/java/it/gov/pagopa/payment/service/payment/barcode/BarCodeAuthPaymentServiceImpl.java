@@ -21,6 +21,7 @@ import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
@@ -65,18 +66,18 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                   Map<String, String> additionalProperties,
                                                   Long amountCents) {
 
-        if (amountCents == null || amountCents <= 0L) {
-            throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID,
-                    "Cannot preview transaction with invalid amount [%s]".formatted(amountCents));
-        }
+        validateMandatoryIdentifiers(initiativeId, trxCode);
+        validateAmount(amountCents, "preview");
+
+        final String normalizedTrxCode = trxCode.toLowerCase();
 
         final Transaction transaction = transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(
-                        trxCode.toLowerCase(),
+                        normalizedTrxCode,
                         initiativeId,
                         SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
-                                trxCode.toLowerCase(), initiativeId)));
+                                normalizedTrxCode, initiativeId)));
 
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -89,18 +90,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .previewPayment(transaction, transaction.getUserId());
 
         final long rewardCents = Objects.requireNonNullElse(preview.getRewardCents(), 0L);
-
-        if (rewardCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", rewardCents);
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(rewardCents));
-        }
-
         final long residualAmountCents = amountCents - rewardCents;
-
-        if (residualAmountCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, rewardCents);
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, rewardCents));
-        }
+        validateRewardAndResidual(amountCents, rewardCents, residualAmountCents);
 
         final String userCf = decryptRestConnector.getPiiByToken(transaction.getUserId()).getPii();
 
@@ -121,11 +112,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     @Override
     public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         try {
-            final Long amountCents = authBarCodePaymentDTO != null ? authBarCodePaymentDTO.getAmountCents() : null;
-            if (amountCents == null || amountCents <= 0L) {
-                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", amountCents);
-                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
-            }
+            validateMandatoryIdentifiers(initiativeId, trxCode);
+            Objects.requireNonNull(authBarCodePaymentDTO, "authBarCodePaymentDTO cannot be null");
+            final Long amountCents = authBarCodePaymentDTO.getAmountCents();
+            validateAmount(amountCents, "authorize");
 
             Transaction transaction = barCodeAuthorizationExpiredService
                     .findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNotAndInitiativeId(
@@ -161,6 +151,36 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);
             throw e;
+        }
+    }
+
+    private void validateMandatoryIdentifiers(String initiativeId, String trxCode) {
+        if (StringUtils.isBlank(initiativeId) || StringUtils.isBlank(trxCode)) {
+            throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID,
+                    "Cannot process transaction with missing identifiers");
+        }
+    }
+
+    private void validateAmount(Long amountCents, String operation) {
+        if (amountCents == null || amountCents <= 0L) {
+            log.info("[{}_TRANSACTION] Cannot process transaction with invalid amount: [{}]", operation.toUpperCase(), amountCents);
+            throw new TransactionInvalidException(
+                    ExceptionCode.AMOUNT_NOT_VALID,
+                    "Cannot %s transaction with invalid amount [%s]".formatted(operation, amountCents));
+        }
+    }
+
+    private void validateRewardAndResidual(long amountCents, long rewardCents, long residualAmountCents) {
+        if (rewardCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", rewardCents);
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID,
+                    "Cannot preview transaction with negative reward [%s]".formatted(rewardCents));
+        }
+
+        if (residualAmountCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, rewardCents);
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID,
+                    "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, rewardCents));
         }
     }
 
