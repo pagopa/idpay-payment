@@ -70,15 +70,13 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                     "Cannot preview transaction with invalid amount [%s]".formatted(amountCents));
         }
 
-        final Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
+        final Transaction transaction = transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(
+                        trxCode.toLowerCase(),
+                        initiativeId,
+                        SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
-
-        if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
-            throw new TransactionNotFoundOrExpiredException(
-                    "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
-                            trxCode.toLowerCase(), initiativeId));
-        }
+                        "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
+                                trxCode.toLowerCase(), initiativeId)));
 
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -129,11 +127,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
             }
 
-            Transaction transaction = barCodeAuthorizationExpiredService.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode.toLowerCase());
-
-            if (transaction == null || !Objects.equals(transaction.getInitiativeId(), initiativeId)) {
-                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(trxCode, initiativeId));
-            }
+            Transaction transaction = barCodeAuthorizationExpiredService
+                    .findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNotAndInitiativeId(
+                            trxCode.toLowerCase(),
+                            initiativeId);
             commonAuthService.checkAuth(trxCode, transaction);
 
             transaction.setAdditionalProperties(validateAdditionalProperties(

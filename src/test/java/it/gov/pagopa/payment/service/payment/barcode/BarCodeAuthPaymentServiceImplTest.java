@@ -103,7 +103,7 @@ class BarCodeAuthPaymentServiceImplTest {
         WalletDTO walletDTO = new WalletDTO();
         walletDTO.setFamilyId("FAMILY");
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1)).thenReturn(transaction);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNotAndInitiativeId(TRX_CODE1, initiativeId)).thenReturn(transaction);
         when(merchantConnector.getPointOfSale(MERCHANT_ID, POINTOFSALE_ID, initiativeId)).thenReturn(pointOfSaleDTO);
         when(commonAuthServiceMock.checkWalletStatusAndReturn(transaction.getInitiativeId(), USER_ID)).thenReturn(walletDTO);
         when(commonAuthServiceMock.invokeRuleEngine(transaction)).thenReturn(authPaymentDTO);
@@ -125,8 +125,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void barCodeAuthPayment_trxNotFound() {
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1))
-                .thenReturn(null);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNotAndInitiativeId(eq(TRX_CODE1), anyString()))
+                .thenThrow(new TransactionNotFoundOrExpiredException("Cannot find transaction"));
         AuthBarCodePaymentDTO dto = AuthBarCodePaymentDTO.builder().amountCents(1L).build();
 
         assertThrows(TransactionNotFoundOrExpiredException.class,
@@ -135,14 +135,13 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void barCodeAuthPayment_initiativeIdMismatch() {
-        Transaction transaction = TransactionFaker.mockInstance(1, SyncTrxStatus.AUTHORIZATION_REQUESTED);
         String differentInitiativeId = "DIFFERENT_INITIATIVE";
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
                 .amountCents(AMOUNT_CENTS)
                 .build();
 
-        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(TRX_CODE1))
-                .thenReturn(transaction);
+        when(barCodeAuthorizationExpiredServiceMock.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNotAndInitiativeId(TRX_CODE1, differentInitiativeId))
+                .thenThrow(new TransactionNotFoundOrExpiredException("Cannot find transaction"));
 
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> barCodeAuthPaymentService.authPayment(differentInitiativeId, TRX_CODE1, authBarCodePaymentDTO, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
@@ -161,7 +160,7 @@ class BarCodeAuthPaymentServiceImplTest {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         String initiativeId = trx.getInitiativeId();
         Map<String, String> additionalProperties = Map.of("customField", "customValue", "productType", "DIGITAL");
-        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(anyString(), eq(initiativeId), any())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
         authPaymentDTO.setRewardCents(100L);
@@ -178,7 +177,7 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_invalidStatus_throwsOperationNotAllowed() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.REFUNDED);
         String initiativeId = trx.getInitiativeId();
-        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(anyString(), eq(initiativeId), any())).thenReturn(Optional.of(trx));
 
         when(commonAuthServiceMock.previewPayment(trx, trx.getUserId())).thenThrow(new OperationNotAllowedException(PaymentConstants.ExceptionCode.TRX_OPERATION_NOT_ALLOWED,
                 "Cannot operate on transaction with transactionId [%s] in status %s".formatted(trx.getId(), trx.getStatus())));
@@ -194,7 +193,7 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_negativeReward() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         String initiativeId = trx.getInitiativeId();
-        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(anyString(), eq(initiativeId), any())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
         authPaymentDTO.setRewardCents(-1L);
@@ -207,9 +206,8 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void previewPayment_initiativeIdMismatch() {
-        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         String differentInitiativeId = "DIFFERENT_INITIATIVE";
-        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(anyString(), eq(differentInitiativeId), any())).thenReturn(Optional.empty());
 
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> barCodeAuthPaymentService.previewPayment(differentInitiativeId, "trxCode", Map.of(), 90000L));
@@ -219,7 +217,7 @@ class BarCodeAuthPaymentServiceImplTest {
     void previewPayment_negativeResidualAmount() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         String initiativeId = trx.getInitiativeId();
-        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.of(trx));
+        when(transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(anyString(), eq(initiativeId), any())).thenReturn(Optional.of(trx));
         AuthPaymentDTO authPaymentDTO = new AuthPaymentDTO();
         authPaymentDTO.setTrxCode(trx.getTrxCode());
         authPaymentDTO.setRewardCents(50000L); // more than amountCents
@@ -231,7 +229,7 @@ class BarCodeAuthPaymentServiceImplTest {
 
     @Test
     void previewPayment_trxNotFound() {
-        when(transactionRepository.findByTrxCodeAndStatusNot(anyString(), any())).thenReturn(Optional.empty());
+        when(transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(anyString(), anyString(), any())).thenReturn(Optional.empty());
 
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> barCodeAuthPaymentService.previewPayment("initiativeId", TRX_CODE1, Map.of(), 90000L));
