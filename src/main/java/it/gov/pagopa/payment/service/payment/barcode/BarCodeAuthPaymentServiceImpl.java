@@ -11,7 +11,6 @@ import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -66,6 +65,11 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                   Map<String, String> additionalProperties,
                                                   Long amountCents) {
 
+        if (amountCents == null || amountCents <= 0L) {
+            throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID,
+                    "Cannot preview transaction with invalid amount [%s]".formatted(amountCents));
+        }
+
         final Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
                 .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
                         "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
@@ -86,16 +90,18 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transaction, transaction.getUserId());
 
-        if (preview.getRewardCents() < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
+        final long rewardCents = Objects.requireNonNullElse(preview.getRewardCents(), 0L);
+
+        if (rewardCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", rewardCents);
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(rewardCents));
         }
 
-        final long residualAmountCents = amountCents - preview.getRewardCents();
+        final long residualAmountCents = amountCents - rewardCents;
 
         if (residualAmountCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
+            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, rewardCents);
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, rewardCents));
         }
 
         final String userCf = decryptRestConnector.getPiiByToken(transaction.getUserId()).getPii();
@@ -117,9 +123,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     @Override
     public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         try {
-            if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
-                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
-                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
+            final Long amountCents = authBarCodePaymentDTO != null ? authBarCodePaymentDTO.getAmountCents() : null;
+            if (amountCents == null || amountCents <= 0L) {
+                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", amountCents);
+                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(amountCents));
             }
 
             Transaction transaction = barCodeAuthorizationExpiredService.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode.toLowerCase());

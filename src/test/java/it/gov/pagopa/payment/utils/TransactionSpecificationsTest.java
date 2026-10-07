@@ -47,9 +47,10 @@ class TransactionSpecificationsTest {
 
     @BeforeEach
     void setUp() {
+        Predicate andPredicate = mock(Predicate.class);
         when(root.get(any(String.class))).thenReturn(path);
         when(cb.lower(any())).thenReturn(mockExpression);
-        when(cb.and((Predicate) any())).thenReturn(mock(Predicate.class));
+        when(cb.and((Predicate) any())).thenReturn(andPredicate);
     }
 
     // =========================================================================

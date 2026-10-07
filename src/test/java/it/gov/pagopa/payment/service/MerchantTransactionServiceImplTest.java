@@ -136,9 +136,15 @@ class MerchantTransactionServiceImplTest {
         when(transactionServiceMock.getMerchantTransactionByFilter(any(TrxFiltersDTO.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(trx)));
 
+        TrxFiltersDTO processedFilters = new TrxFiltersDTO();
+        processedFilters.setInitiativeId(INITIATIVE_ID);
+        processedFilters.setFiscalCode(FISCAL_CODE);
+        processedFilters.setStatuses(List.of("REWARDED"));
+        processedFilters.setPointOfSaleId("POS_1");
+        processedFilters.setTrxCode(TRX_CODE);
+
         MerchantTransactionsListDTO result = merchantTransactionService.getMerchantTransactionsProcessed(
-                MERCHANT_ID, "adminRole", INITIATIVE_ID, FISCAL_CODE, "REWARDED",
-                "POS_1", TRX_CODE, pageable
+                MERCHANT_ID, "adminRole", processedFilters, pageable
         );
 
         assertNotNull(result);
@@ -160,11 +166,13 @@ class MerchantTransactionServiceImplTest {
     @Test
     void testGetMerchantTransactionsProcessed_InvalidStatus_ThrowsException() {
         Pageable pageable = PageRequest.of(0, 10);
+        TrxFiltersDTO processedFilters = new TrxFiltersDTO();
+        processedFilters.setInitiativeId(INITIATIVE_ID);
+        processedFilters.setStatuses(List.of("INVALID_STATUS"));
 
         assertThrows(TransactionMissingParametersException.class, () ->
                 merchantTransactionService.getMerchantTransactionsProcessed(
-                        MERCHANT_ID, "adminRole", INITIATIVE_ID, null, "INVALID_STATUS",
-                        null, null, pageable
+                        MERCHANT_ID, "adminRole", processedFilters, pageable
                 )
         );
     }

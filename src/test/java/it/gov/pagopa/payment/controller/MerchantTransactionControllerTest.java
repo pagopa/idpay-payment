@@ -3,6 +3,7 @@ package it.gov.pagopa.payment.controller;
 import it.gov.pagopa.common.config.JsonConfig;
 import it.gov.pagopa.payment.configuration.PaymentErrorManagerConfig;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.MerchantTransactionService;
 import org.junit.jupiter.api.Assertions;
@@ -81,7 +82,7 @@ class MerchantTransactionControllerTest {
                 .totalElements(1)
                 .totalPages(1).build();
 
-        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.anyString(), Mockito.anyString(), Mockito.any()))
+        when(merchantTransactionServiceMock.getMerchantTransactionsProcessed(Mockito.anyString(), Mockito.anyString(), Mockito.any(TrxFiltersDTO.class), Mockito.any()))
                 .thenReturn(dto);
 
         MvcResult result = mockMvc.perform(
