@@ -243,6 +243,33 @@ class PointOfSaleTransactionControllerTest {
     }
 
     @Test
+    void downloadInvoiceFile_withoutMerchantIdHeader_shouldDelegateWithNullMerchantId() throws Exception {
+        when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(INITIATIVE_ID, null, "POS1", "TRX1"))
+                .thenReturn(DownloadInvoiceResponseDTO.builder().invoiceUrl("https://signed-url").build());
+
+        mockMvc.perform(
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/{transactionId}/download", INITIATIVE_ID, "POS1", "TRX1")
+                        .header("x-point-of-sale-id", "POS1")
+        ).andExpect(status().isOk());
+
+        verify(pointOfSaleTransactionServiceMock)
+                .downloadTransactionInvoice(INITIATIVE_ID, null, "POS1", "TRX1");
+    }
+
+    @Test
+    void downloadInvoiceFile_withoutMerchantAndPointOfSaleHeaders_shouldDelegateUsingPathParams() throws Exception {
+        when(pointOfSaleTransactionServiceMock.downloadTransactionInvoice(INITIATIVE_ID, null, "POS1", "TRX1"))
+                .thenReturn(DownloadInvoiceResponseDTO.builder().invoiceUrl("https://signed-url").build());
+
+        mockMvc.perform(
+                get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/{transactionId}/download", INITIATIVE_ID, "POS1", "TRX1")
+        ).andExpect(status().isOk());
+
+        verify(pointOfSaleTransactionServiceMock)
+                .downloadTransactionInvoice(INITIATIVE_ID, null, "POS1", "TRX1");
+    }
+
+    @Test
     void downloadInvoiceFile_unauthorizedPointOfSale_shouldReturn403() throws Exception {
         MvcResult result = mockMvc.perform(
                 get("/idpay/initiatives/{initiativeId}/point-of-sales/{pointOfSaleId}/transactions/{transactionId}/download", INITIATIVE_ID, POINT_OF_SALE_ID, TRX_CODE)

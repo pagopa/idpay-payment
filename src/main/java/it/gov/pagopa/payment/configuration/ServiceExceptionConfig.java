@@ -42,6 +42,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(IdpaycodeNotFoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(InitiativeNotfoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(TransactionNotFoundOrExpiredException.class, HttpStatus.NOT_FOUND);
+    exceptionMap.put(InvoiceNotFoundException.class, HttpStatus.NOT_FOUND);
 
     // InternalServerError
     exceptionMap.put(InternalServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR);

@@ -28,6 +28,8 @@ public interface TransactionService {
 
     Transaction getTransactionByIdAndMerchantId(String transactionId, String merchantId);
 
+    Transaction getTransactionByIdAndPointOfSaleId(String transactionId, String pointOfSaleId);
+
     Page<Transaction> getMerchantTransactionByFilter(TrxFiltersDTO filters, Pageable pageable);
 
     long findAndUpdateExpiredTransactionsStatus(String initiativeId);
