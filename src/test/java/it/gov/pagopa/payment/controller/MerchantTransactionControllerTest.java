@@ -8,6 +8,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.service.MerchantTransactionService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
@@ -21,6 +22,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collections;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -103,6 +105,21 @@ class MerchantTransactionControllerTest {
 
         Assertions.assertNotNull(resultResponse);
         Assertions.assertEquals(dto, resultResponse);
+
+        ArgumentCaptor<TrxFiltersDTO> filtersCaptor = ArgumentCaptor.forClass(TrxFiltersDTO.class);
+        verify(merchantTransactionServiceMock).getMerchantTransactionsProcessed(
+                eq("MERCHANT_ID"),
+                eq("ROLE"),
+                filtersCaptor.capture(),
+                any());
+
+        TrxFiltersDTO capturedFilters = filtersCaptor.getValue();
+        Assertions.assertNotNull(capturedFilters);
+        Assertions.assertEquals(INITIATIVE_ID, capturedFilters.getInitiativeId());
+        Assertions.assertEquals(FISCAL_CODE, capturedFilters.getFiscalCode());
+        Assertions.assertEquals(List.of(SyncTrxStatus.CREATED.toString()), capturedFilters.getStatuses());
+        Assertions.assertEquals("POS-1", capturedFilters.getPointOfSaleId());
+        Assertions.assertEquals("TRX-1", capturedFilters.getTrxCode());
     }
 
     @Test
