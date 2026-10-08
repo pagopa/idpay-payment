@@ -156,7 +156,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
 
     private void validateMandatoryIdentifiers(String initiativeId, String trxCode) {
         if (StringUtils.isBlank(initiativeId) || StringUtils.isBlank(trxCode)) {
-            throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID,
+            throw new TransactionInvalidException(ExceptionCode.PAYMENT_INVALID_REQUEST,
                     "Cannot process transaction with missing identifiers");
         }
     }

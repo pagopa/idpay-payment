@@ -156,6 +156,16 @@ class BarCodeAuthPaymentServiceImplTest {
     }
 
     @Test
+    void barCodeAuthPayment_missingIdentifiers_invalidRequest() {
+        AuthBarCodePaymentDTO dto = AuthBarCodePaymentDTO.builder().amountCents(1L).build();
+
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.authPayment(" ", TRX_CODE1, dto, MERCHANT_ID, POINTOFSALE_ID, ACQUIRER_ID));
+
+        assertEquals(PaymentConstants.ExceptionCode.PAYMENT_INVALID_REQUEST, ex.getCode());
+    }
+
+    @Test
     void previewPayment_ok() {
         Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         String initiativeId = trx.getInitiativeId();
@@ -233,5 +243,13 @@ class BarCodeAuthPaymentServiceImplTest {
 
         assertThrows(TransactionNotFoundOrExpiredException.class,
                 () -> barCodeAuthPaymentService.previewPayment("initiativeId", TRX_CODE1, Map.of(), 90000L));
+    }
+
+    @Test
+    void previewPayment_missingIdentifiers_invalidRequest() {
+        TransactionInvalidException ex = assertThrows(TransactionInvalidException.class,
+                () -> barCodeAuthPaymentService.previewPayment("initiativeId", " ", Map.of(), 90000L));
+
+        assertEquals(PaymentConstants.ExceptionCode.PAYMENT_INVALID_REQUEST, ex.getCode());
     }
 }
