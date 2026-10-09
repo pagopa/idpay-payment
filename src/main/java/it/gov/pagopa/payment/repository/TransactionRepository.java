@@ -20,7 +20,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, String
     Optional<Transaction> findByIdAndTrxDateGreaterThanEqual(String id, OffsetDateTime minTrxDate);
     Optional<Transaction> findByTrxCode(String trxCode);
     Optional<Transaction> findByTrxCodeAndStatusNot(String trxCode, SyncTrxStatus status);
+    Optional<Transaction> findByTrxCodeAndInitiativeIdAndStatusNot(String trxCode, String initiativeId, SyncTrxStatus status);
     Optional<Transaction> findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(String trxCode, OffsetDateTime now, SyncTrxStatus status);
+    Optional<Transaction> findByTrxCodeAndInitiativeIdAndTrxEndDateGreaterThanEqualAndStatusNot(String trxCode, String initiativeId, OffsetDateTime now, SyncTrxStatus status);
     Optional<Transaction> findByTrxCodeAndTrxEndDateGreaterThanEqual(String trxCode, OffsetDateTime now);
     Optional<Transaction> findByInitiativeIdAndTrxCodeAndUserId(String initiativeId, String trxCode, String userId);
     boolean existsByIdAndStatus(String id, SyncTrxStatus status);

@@ -11,7 +11,6 @@ import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.UnitValue;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
@@ -119,8 +118,8 @@ class PdfUtilsTest {
 
     @Test
     void stepCell_shouldRenderWithPlaceholder_whenIconMissing() throws Exception {
-        ResourceLoader rl = Mockito.mock(ResourceLoader.class);
-        Resource res = Mockito.mock(Resource.class);
+        ResourceLoader rl = mock(ResourceLoader.class);
+        Resource res = mock(Resource.class);
         when(rl.getResource(anyString())).thenReturn(res);
         when(res.getInputStream()).thenThrow(new RuntimeException("not found"));
 

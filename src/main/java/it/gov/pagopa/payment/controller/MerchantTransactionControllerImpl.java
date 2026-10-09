@@ -2,6 +2,7 @@ package it.gov.pagopa.payment.controller;
 
 import it.gov.pagopa.common.performancelogger.PerformanceLog;
 import it.gov.pagopa.payment.dto.MerchantTransactionsListDTO;
+import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.service.MerchantTransactionService;
 import it.gov.pagopa.payment.utils.Utilities;
 import lombok.extern.slf4j.Slf4j;
@@ -61,14 +62,17 @@ public class MerchantTransactionControllerImpl implements MerchantTransactionCon
         String sanitizedMerchantId = sanitize(merchantId);
         logRequest(LOG_GET_MERCHANT_TRANSACTIONS_PROCESSED, sanitizedMerchantId);
 
+        TrxFiltersDTO filters = new TrxFiltersDTO();
+        filters.setInitiativeId(sanitize(initiativeId));
+        filters.setFiscalCode(sanitize(fiscalCode));
+        filters.setStatuses(status != null ? List.of(sanitize(status)) : null);
+        filters.setPointOfSaleId(sanitize(pointOfSaleId));
+        filters.setTrxCode(sanitize(trxCode));
+
         return merchantTransactionService.getMerchantTransactionsProcessed(
                 sanitizedMerchantId,
                 sanitize(organizationRole),
-                sanitize(initiativeId),
-                sanitize(fiscalCode),
-                sanitize(status),
-                sanitize(pointOfSaleId),
-                sanitize(trxCode),
+                filters,
                 pageable
         );
     }
