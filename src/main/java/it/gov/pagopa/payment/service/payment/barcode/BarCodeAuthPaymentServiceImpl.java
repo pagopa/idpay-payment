@@ -11,7 +11,6 @@ import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
 import it.gov.pagopa.payment.repository.TransactionRepository;
@@ -22,6 +21,7 @@ import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
@@ -66,15 +66,18 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                                                   Map<String, String> additionalProperties,
                                                   Long amountCents) {
 
-        final Transaction transaction = transactionRepository.findByTrxCodeAndStatusNot(trxCode.toLowerCase(), SyncTrxStatus.CANCELLED)
-                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
-                        "Cannot find transaction with trxCode [%s]".formatted(trxCode.toLowerCase())));
+        validateMandatoryIdentifiers(initiativeId, trxCode);
+        validateAmount(amountCents, "preview");
 
-        if (!Objects.equals(transaction.getInitiativeId(), initiativeId)) {
-            throw new TransactionNotFoundOrExpiredException(
-                    "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
-                            trxCode.toLowerCase(), initiativeId));
-        }
+        final String normalizedTrxCode = trxCode.toLowerCase();
+
+        final Transaction transaction = transactionRepository.findByTrxCodeAndInitiativeIdAndStatusNot(
+                        normalizedTrxCode,
+                        initiativeId,
+                        SyncTrxStatus.CANCELLED)
+                .orElseThrow(() -> new TransactionNotFoundOrExpiredException(
+                        "Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(
+                                normalizedTrxCode, initiativeId)));
 
         transaction.setAmountCents(amountCents);
         transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -86,17 +89,9 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         final AuthPaymentDTO preview = commonAuthService
                 .previewPayment(transaction, transaction.getUserId());
 
-        if (preview.getRewardCents() < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Cannot preview transaction with negative reward [%s]".formatted(preview.getRewardCents()));
-        }
-
-        final long residualAmountCents = amountCents - preview.getRewardCents();
-
-        if (residualAmountCents < 0L) {
-            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, preview.getRewardCents());
-            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID, "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, preview.getRewardCents()));
-        }
+        final long rewardCents = Objects.requireNonNullElse(preview.getRewardCents(), 0L);
+        final long residualAmountCents = amountCents - rewardCents;
+        validateRewardAndResidual(amountCents, rewardCents, residualAmountCents);
 
         final String userCf = decryptRestConnector.getPiiByToken(transaction.getUserId()).getPii();
 
@@ -117,16 +112,15 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
     @Override
     public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
         try {
-            if (authBarCodePaymentDTO.getAmountCents() <= 0L) {
-                log.info("[AUTHORIZE_TRANSACTION] Cannot authorize transaction with invalid amount: [{}]", authBarCodePaymentDTO.getAmountCents());
-                throw new TransactionInvalidException(ExceptionCode.AMOUNT_NOT_VALID, "Cannot authorize transaction with invalid amount [%s]".formatted(authBarCodePaymentDTO.getAmountCents()));
-            }
+            validateMandatoryIdentifiers(initiativeId, trxCode);
+            Objects.requireNonNull(authBarCodePaymentDTO, "authBarCodePaymentDTO cannot be null");
+            final Long amountCents = authBarCodePaymentDTO.getAmountCents();
+            validateAmount(amountCents, "authorize");
 
-            Transaction transaction = barCodeAuthorizationExpiredService.findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNot(trxCode.toLowerCase());
-
-            if (transaction == null || !Objects.equals(transaction.getInitiativeId(), initiativeId)) {
-                throw new TransactionNotFoundOrExpiredException("Cannot find transaction with trxCode [%s] for initiative [%s]".formatted(trxCode, initiativeId));
-            }
+            Transaction transaction = barCodeAuthorizationExpiredService
+                    .findByTrxCodeAndTrxEndDateGreaterThanEqualAndStatusNotAndInitiativeId(
+                            trxCode.toLowerCase(),
+                            initiativeId);
             commonAuthService.checkAuth(trxCode, transaction);
 
             transaction.setAdditionalProperties(validateAdditionalProperties(
@@ -157,6 +151,36 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         } catch (RuntimeException e) {
             logErrorAuthorizedPayment(trxCode, merchantId);
             throw e;
+        }
+    }
+
+    private void validateMandatoryIdentifiers(String initiativeId, String trxCode) {
+        if (StringUtils.isBlank(initiativeId) || StringUtils.isBlank(trxCode)) {
+            throw new TransactionInvalidException(ExceptionCode.PAYMENT_INVALID_REQUEST,
+                    "Cannot process transaction with missing identifiers");
+        }
+    }
+
+    private void validateAmount(Long amountCents, String operation) {
+        if (amountCents == null || amountCents <= 0L) {
+            log.info("[{}_TRANSACTION] Cannot process transaction with invalid amount: [{}]", operation.toUpperCase(), amountCents);
+            throw new TransactionInvalidException(
+                    ExceptionCode.AMOUNT_NOT_VALID,
+                    "Cannot %s transaction with invalid amount [%s]".formatted(operation, amountCents));
+        }
+    }
+
+    private void validateRewardAndResidual(long amountCents, long rewardCents, long residualAmountCents) {
+        if (rewardCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Cannot preview transaction with negative reward: {}", rewardCents);
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID,
+                    "Cannot preview transaction with negative reward [%s]".formatted(rewardCents));
+        }
+
+        if (residualAmountCents < 0L) {
+            log.info("[PREVIEW_TRANSACTION] Residual amountCents calculated negative: original = {}, reward = {}", amountCents, rewardCents);
+            throw new TransactionInvalidException(ExceptionCode.REWARD_NOT_VALID,
+                    "Residual amountCents cannot be negative: amountCents [%s], rewardCents [%s]".formatted(amountCents, rewardCents));
         }
     }
 

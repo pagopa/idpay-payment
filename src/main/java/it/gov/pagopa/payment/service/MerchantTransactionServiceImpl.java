@@ -99,20 +99,23 @@ public class MerchantTransactionServiceImpl implements MerchantTransactionServic
     public MerchantTransactionsListDTO getMerchantTransactionsProcessed(
             String merchantId,
             String organizationRole,
-            String initiativeId,
-            String fiscalCode,
-            String status,
-            String pointOfSaleId,
-            String trxCode,
+            TrxFiltersDTO processedFilters,
             Pageable pageable) {
 
-        String userId = StringUtils.isNotBlank(fiscalCode) ? encryptCF(fiscalCode) : null;
+        String userId = StringUtils.isNotBlank(processedFilters.getFiscalCode())
+                ? encryptCF(processedFilters.getFiscalCode())
+                : null;
         Pageable sortedPageable = applyDefaultSort(pageable);
 
-        List<String> processedStatuses = validateAndBuildProcessedStatuses(status);
+        List<String> processedStatuses = validateAndBuildProcessedStatuses(processedFilters.getStatus());
 
         TrxFiltersDTO filters = buildProcessedFilters(
-                merchantId, initiativeId, userId, processedStatuses, pointOfSaleId, trxCode
+                merchantId,
+                processedFilters.getInitiativeId(),
+                userId,
+                processedStatuses,
+                processedFilters.getPointOfSaleId(),
+                processedFilters.getTrxCode()
         );
 
         Page<Transaction> transactionPage = transactionService.getMerchantTransactionByFilter(filters, sortedPageable);
