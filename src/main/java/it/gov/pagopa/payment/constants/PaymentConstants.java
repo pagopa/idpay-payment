@@ -66,10 +66,12 @@ public class PaymentConstants {
     public static final String INVALID_PRODUCT_CATEGORY = "INVALID_PRODUCT_CATEGORY";
     public static final String REWARD_BATCH_ELIGIBILITY_NOT_ALLOWED = "PAYMENT_REWARD_BATCH_ELIGIBILITY_NOT_ALLOWED";
     public static final String TRANSACTION_CONFLICT = "PAYMENT_TRANSACTION_CONFLICT";
+    public static final String INVOICE_NOT_FOUND = "PAYMENT_INVOICE_NOT_FOUND";
   }
 
   public static final class ExceptionMessage {
     public static final String TRANSACTION_MISSING_INVOICE_MESSAGE = "Invoice missing from transaction for which download was required";
+    public static final String INVOICE_NOT_FOUND_MESSAGE = "Invoice document not found in storage";
     public static final String TRANSACTION_NOT_FOUND_MESSAGE = "Transaction not found with id: %s";
     public static final String TRANSACTIONS_MISSING_MANDATORY_FILTERS_TEMPLATE = "Missing mandatory filters: %s";
     public static final String STATUS_NOT_ALLOWED_MESSAGE = "Statues allowed only: %s";

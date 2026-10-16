@@ -1,5 +1,7 @@
 package it.gov.pagopa.payment.service.payment.common;
 
+import com.azure.core.http.rest.Response;
+import com.azure.storage.blob.models.BlobStorageException;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.PointOfSaleDTO;
 import it.gov.pagopa.payment.connector.rest.rewardbatch.dto.RewardBatchEligibilityOperation;
@@ -10,6 +12,7 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.enums.TransactionEventType;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
+import it.gov.pagopa.payment.exception.custom.InvoiceNotFoundException;
 import it.gov.pagopa.payment.exception.custom.InternalServerErrorException;
 import it.gov.pagopa.payment.exception.custom.OperationNotAllowedException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
@@ -31,6 +34,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Objects;
+
+import static it.gov.pagopa.payment.constants.PaymentConstants.ExceptionMessage.INVOICE_NOT_FOUND_MESSAGE;
 
 @Slf4j
 @Service("commonInvoice")
@@ -155,8 +160,11 @@ public class CommonInvoiceServiceImpl {
 
     private void validateInvoiceStatus(Transaction transaction) {
         boolean replacementStatus = isReplacement(transaction);
+        if (replacementStatus && transaction.getInvoiceData() == null) {
+            throw new InvoiceNotFoundException(INVOICE_NOT_FOUND_MESSAGE);
+        }
         if (!SyncTrxStatus.CAPTURED.equals(transaction.getStatus())
-                && !(replacementStatus && transaction.getInvoiceData() != null)) {
+                && !replacementStatus) {
             throw new OperationNotAllowedException(
                     ExceptionCode.TRX_STATUS_NOT_VALID,
                     "Cannot invoice transaction with status [%s], must be CAPTURED, INVOICED or REWARDED"
@@ -204,7 +212,14 @@ public class CommonInvoiceServiceImpl {
         if (oldDocumentData != null) {
             String oldBlobPath = StoragePathUtils.buildInvoicePath(
                     transaction, oldDocumentData.getFilename());
-            fileStorageClient.deleteFile(oldBlobPath);
+            try {
+                Response<Boolean> deletionResponse = fileStorageClient.deleteFile(oldBlobPath);
+                if (deletionResponse == null || !Boolean.TRUE.equals(deletionResponse.getValue())) {
+                    throw new InvoiceNotFoundException(INVOICE_NOT_FOUND_MESSAGE);
+                }
+            } catch (BlobStorageException e) {
+                throw new InvoiceNotFoundException(INVOICE_NOT_FOUND_MESSAGE, e);
+            }
         }
     }
 
