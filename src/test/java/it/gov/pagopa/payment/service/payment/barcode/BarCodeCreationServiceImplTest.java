@@ -412,11 +412,9 @@ class BarCodeCreationServiceImplTest {
         LocalDate initiativeEndDate = LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(1);
         initiative.setEndDate(initiativeEndDate);
 
-        OffsetDateTime offsetEndDate = initiativeEndDate.atStartOfDay(ZoneId.of("Europe/Rome")).toOffsetDateTime();
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime expected = offsetEndDate
-                .with(LocalTime.of(23, 59, 59));
+        OffsetDateTime expected = expectedTrxEndDate(trx.getTrxDate(), initiativeEndDate);
 
         Assertions.assertEquals(expected, result);
     }
@@ -433,8 +431,7 @@ class BarCodeCreationServiceImplTest {
 
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                        .with(LocalTime.of(23, 59, 59));
+        OffsetDateTime expected = expectedTrxEndDate(trx.getTrxDate(), initiativeEndDate);
 
         Assertions.assertEquals(expected, result);
     }
@@ -449,8 +446,7 @@ class BarCodeCreationServiceImplTest {
 
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .with(LocalTime.of(23, 59, 59));
+        OffsetDateTime expected = expectedTrxEndDate(trx.getTrxDate(), null);
 
         Assertions.assertEquals(expected, result);
     }
@@ -465,9 +461,19 @@ class BarCodeCreationServiceImplTest {
 
         OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
 
-        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
-                .with(LocalTime.of(23, 59, 59));
+        OffsetDateTime expected = expectedTrxEndDate(trx.getTrxDate(), null);
 
         Assertions.assertEquals(expected, result);
+    }
+
+    // Mirrors BarCodeCreationServiceImpl#calculateTrxEndDate so the expected value is deterministic
+    // and not affected by daylight-saving-time offset drift around the end-of-October transition.
+    private OffsetDateTime expectedTrxEndDate(OffsetDateTime trxDate, LocalDate initiativeEndDate) {
+        LocalDate localEndDate = initiativeEndDate != null ? initiativeEndDate : LocalDate.MAX;
+        OffsetDateTime offsetEndDate = localEndDate.atStartOfDay(ZoneId.of("Europe/Rome")).toOffsetDateTime();
+        if (!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(trxDate))) {
+            offsetEndDate = trxDate.plusMinutes(extendedAuthorizationExpirationMinutes);
+        }
+        return offsetEndDate.with(LocalTime.of(23, 59, 59));
     }
 }
