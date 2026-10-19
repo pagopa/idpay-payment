@@ -100,9 +100,10 @@ class TransactionNotifierServiceTest {
         Transaction transaction = new Transaction();
         transaction.setInitiativeId("initiative-id");
         transaction.setInitiatives(List.of("initiative-id", "another-initiative-id"));
+        RewardTransactionMapper mapper = new RewardTransactionMapper();
 
         Assertions.assertThrows(IllegalArgumentException.class,
-                () -> new RewardTransactionMapper().transactionToRewardTransaction(transaction));
+                () -> mapper.transactionToRewardTransaction(transaction));
 
     }
 

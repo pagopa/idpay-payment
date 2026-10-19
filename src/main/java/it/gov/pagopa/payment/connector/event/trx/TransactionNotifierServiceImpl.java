@@ -8,15 +8,15 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.function.Supplier;
 
-@Component
+@Service
 public class TransactionNotifierServiceImpl implements TransactionNotifierService {
 
-    private String binder;
+    private final String binder;
 
     private final StreamBridge streamBridge;
     private final RewardTransactionMapper rewardTransactionMapper;
