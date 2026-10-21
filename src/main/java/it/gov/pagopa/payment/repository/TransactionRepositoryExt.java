@@ -304,4 +304,13 @@ public interface TransactionRepositoryExt {
           @Param("newStatus") SyncTrxStatus newStatus,
           @Param("updateDate") LocalDateTime updateDate
   );
+
+  @Transactional
+  @Query(value = """
+      UPDATE transaction
+      SET "subTrxCounter" = COALESCE("subTrxCounter", 0) + 1
+      WHERE id = :id
+      RETURNING *
+      """, nativeQuery = true)
+  Transaction incrementSubTransactionCounter(@Param("id") String id);
 }

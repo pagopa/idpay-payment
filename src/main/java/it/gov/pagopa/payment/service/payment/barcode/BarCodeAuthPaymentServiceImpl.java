@@ -20,11 +20,13 @@ import it.gov.pagopa.payment.service.payment.barcode.validation.BarCodeAdditiona
 import it.gov.pagopa.payment.service.payment.common.CommonAuthServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.CommonPaymentUtilities;
+import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -137,10 +139,10 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
             setTrxFields(merchantId, authBarCodePaymentDTO, transaction, pointOfSaleDTO, acquirerId, pointOfSaleId, walletDTO.getFamilyId());
 
 
-            if(Boolean.TRUE.equals(trx.getExtendedAuthorization())){
-                TransactionInProgress originalTrxWithIncrement = transactionInProgressRepository.incrementSubTransactionCounter(trx);
-                TransactionInProgress subTrx = createSubTransaction(trx, originalTrxWithIncrement.getSubTrxCounter());
-                transactionInProgressRepository.save(subTrx);
+            if(Boolean.TRUE.equals(transaction.getExtendedAuthorization())){
+                Transaction originalTrxWithIncrement = transactionRepository.incrementSubTransactionCounter(transaction.getId());
+                Transaction subTrx = createSubTransaction(transaction, originalTrxWithIncrement.getSubTrxCounter());
+                transactionRepository.save(subTrx);
                 commonAuthService.checkTrxStatusToInvokePreAuth(subTrx);
                 return invokeAuthRuleEngine(subTrx.getTrxCode(), authBarCodePaymentDTO, merchantId, subTrx);
             }
@@ -162,7 +164,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         }
     }
     @NotNull
-    private AuthPaymentDTO invokeAuthRuleEngine(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, TransactionInProgress trx) {
+    private AuthPaymentDTO invokeAuthRuleEngine(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, Transaction trx) {
         AuthPaymentDTO authPaymentDTO = commonAuthService.invokeRuleEngine(trx);
 
         logAuthorizedPayment(authPaymentDTO.getInitiativeId(), authPaymentDTO.getId(), trxCode, merchantId, authPaymentDTO.getRewardCents(), authPaymentDTO.getRejectionReasons());
@@ -239,8 +241,8 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
         transaction.setFamilyId(familyId);
     }
 
-    private TransactionInProgress createSubTransaction(TransactionInProgress trx, Integer trxNumber){
-        return  TransactionInProgress
+    private Transaction createSubTransaction(Transaction trx, Integer trxNumber){
+        return  Transaction
                 .builder()
                 .id(SUB_TRX_PATTERN.formatted(trx.getId(), trxNumber))
                 .trxCode(SUB_TRX_PATTERN.formatted(trx.getTrxCode(),  trxNumber))
@@ -277,7 +279,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .additionalProperties(trx.getAdditionalProperties())
                 .extendedAuthorization(Boolean.FALSE)
                 .trxEndDate(trx.getTrxEndDate())
-                .initiativeEndDate(trx.getInitiativeEndDate())
+                //.initiativeEndDate(trx.getInitiativeEndDate())
                 .voucherAmountCents(trx.getVoucherAmountCents())
                 .franchiseName(trx.getFranchiseName())
                 .pointOfSaleType(trx.getPointOfSaleType())

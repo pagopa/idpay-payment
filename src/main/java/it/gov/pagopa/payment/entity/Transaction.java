@@ -176,4 +176,6 @@ public class Transaction {
     public String getProductName() {
         return additionalProperties == null ? null : additionalProperties.get("productName");
     }
+    @Column(name = "\"subTrxCounter\"")
+    private Integer subTrxCounter;
 }
