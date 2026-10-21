@@ -1,7 +1,7 @@
 package it.gov.pagopa.payment.service.payment.expired;
 
 import it.gov.pagopa.payment.connector.rest.reward.RewardCalculatorConnector;
-import it.gov.pagopa.payment.repository.TransactionInProgressRepository;
+import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.expired.common.CommonAuthorizationExpiredServiceImpl;
 import it.gov.pagopa.payment.utils.AuditUtilities;
 import it.gov.pagopa.payment.utils.RewardConstants;
@@ -15,13 +15,12 @@ public class QRCodeAuthorizationExpiredServiceImpl extends CommonAuthorizationEx
 
     public QRCodeAuthorizationExpiredServiceImpl(
             @Value("${app.common.expirations.authorizationMinutes}") long authorizationExpirationMinutes,
-
-            TransactionInProgressRepository transactionInProgressRepository,
+            TransactionRepository transactionRepository,
             RewardCalculatorConnector rewardCalculatorConnector,
             AuditUtilities auditUtilities) {
         super(
+                transactionRepository,
                 authorizationExpirationMinutes,
-                transactionInProgressRepository,
                 rewardCalculatorConnector,
                 auditUtilities,
                 RewardConstants.TRX_CHANNEL_QRCODE);

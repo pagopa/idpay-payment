@@ -116,6 +116,25 @@ spring:
                   ms: ${KAFKA_COMMANDS_REQUEST_CONNECTION_TIMEOUT_MS:${KAFKA_CONSUMER_CONFIG_CONNECTION_TIMEOUT_MS:100000}}
               standardHeaders: ${KAFKA_COMMANDS_STANDARD_HEADERS:${KAFKA_CONSUMER_CONFIG_STANDARD_HEADERS:both}}
               startOffset: ${KAFKA_COMMANDS_REQUEST_START_OFFSET:${KAFKA_CONSUMER_CONFIG_START_OFFSET:earliest}}
+  datasource:
+    url: ${POSTGRES_URL}?currentSchema=idpay-pagamenti
+    username: ${POSTGRES_USERNAME:idpaydbadmin}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    default-schema: idpay-pagamenti
+    schemas: idpay-pagamenti
+    create-schemas: true
+    baseline-on-migrate: true
+    baseline-version: 1
+    baseline-description: Existing payment schema
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        default_schema: "idpay-pagamenti"
   mongodb:
     database: ${MONGODB_DBNAME:idpay-beneficiari}
     uri: ${MONGODB_URI:mongodb://localhost:27017}
@@ -163,6 +182,8 @@ rest-client:
     baseUrl: ${IDPAY_PAYMENT_INSTRUMENT:http://idpay-payment-instrument}
   register:
     baseUrl: ${IDPAY_REGISTER:http://idpay-register}
+  reward-batch:
+    baseUrl: ${IDPAY_TRANSACTIONS:http://idpay-transactions}
   encryptpdv:
     baseUrl: ${PDV_ENCRYPT_BASE_URL:}
     cf: ${PDV_ENCRYPT_SERVICE_CODE:pdv-ms-tokenizer-encrypt}
@@ -213,6 +234,9 @@ app:
     staleMinutesThreshold: ${STALE_MINUTES_THRESHOLD:120}
     sendExpiredSendBatchSize: ${EXPIRY_SEND_BATCH_SIZE:1000}
     updateBatchSize: ${EXPIRY_UPDATE_BATCH_SIZE:10000}
+  reward-batch-impact:
+    eligibility:
+      enabled: ${REWARD_BATCH_IMPACT_ELIGIBILITY_ENABLED:false}
 
 pdf:
   devPortalLink: ${DEV_PORTAL_LINK:https://developer.pagopa.it/pari/overview}

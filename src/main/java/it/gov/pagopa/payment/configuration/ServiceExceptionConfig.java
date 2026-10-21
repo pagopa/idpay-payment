@@ -20,6 +20,9 @@ public class ServiceExceptionConfig {
     exceptionMap.put(OperationNotAllowedException.class, HttpStatus.BAD_REQUEST);
     exceptionMap.put(TransactionInvalidException.class, HttpStatus.BAD_REQUEST);
     exceptionMap.put(ProductNotValidException.class, HttpStatus.BAD_REQUEST);
+    exceptionMap.put(TransactionMissingParametersException.class, HttpStatus.BAD_REQUEST);
+    exceptionMap.put(TransactionNotAllowedStatusException.class, HttpStatus.BAD_REQUEST);
+
 
     // Forbidden
     exceptionMap.put(BudgetExhaustedException.class, HttpStatus.FORBIDDEN);
@@ -33,11 +36,13 @@ public class ServiceExceptionConfig {
     exceptionMap.put(UserNotOnboardedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(UserSuspendedException.class, HttpStatus.FORBIDDEN);
     exceptionMap.put(PointOfSaleNotAllowedException.class, HttpStatus.FORBIDDEN);
+    exceptionMap.put(RewardBatchEligibilityNotAllowedException.class, HttpStatus.FORBIDDEN);
 
     // NotFound
     exceptionMap.put(IdpaycodeNotFoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(InitiativeNotfoundException.class, HttpStatus.NOT_FOUND);
     exceptionMap.put(TransactionNotFoundOrExpiredException.class, HttpStatus.NOT_FOUND);
+    exceptionMap.put(InvoiceNotFoundException.class, HttpStatus.NOT_FOUND);
 
     // InternalServerError
     exceptionMap.put(InternalServerErrorException.class, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -47,6 +52,7 @@ public class ServiceExceptionConfig {
     exceptionMap.put(RewardCalculatorInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
     exceptionMap.put(WalletInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
     exceptionMap.put(ProductInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
+    exceptionMap.put(RewardBatchInvocationException.class, HttpStatus.INTERNAL_SERVER_ERROR);
 
     // TooManyRequests
     exceptionMap.put(TooManyRequestsException.class, HttpStatus.TOO_MANY_REQUESTS);

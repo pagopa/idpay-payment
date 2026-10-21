@@ -3,253 +3,198 @@ package it.gov.pagopa.payment.service.payment.common;
 import it.gov.pagopa.payment.connector.rest.merchant.MerchantConnector;
 import it.gov.pagopa.payment.connector.rest.merchant.dto.MerchantDetailDTO;
 import it.gov.pagopa.payment.constants.PaymentConstants;
-import it.gov.pagopa.payment.dto.mapper.TransactionCreationRequest2TransactionInProgressMapper;
-import it.gov.pagopa.payment.dto.mapper.TransactionInProgress2TransactionResponseMapper;
+import it.gov.pagopa.payment.dto.mapper.TransactionMapper;
 import it.gov.pagopa.payment.dto.qrcode.TransactionCreationRequest;
 import it.gov.pagopa.payment.dto.qrcode.TransactionResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.InitiativeRewardType;
-import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InitiativeInvalidException;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.model.InitiativeConfig;
 import it.gov.pagopa.payment.model.RewardRule;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.repository.RewardRuleRepository;
-import it.gov.pagopa.payment.service.payment.TransactionInProgressService;
-import it.gov.pagopa.payment.test.fakers.MerchantDetailDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionCreationRequestFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionResponseFaker;
+import it.gov.pagopa.payment.service.payment.TransactionService;
 import it.gov.pagopa.payment.utils.AuditUtilities;
-import it.gov.pagopa.payment.utils.RewardConstants;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommonCreationServiceImplTest {
 
-  public static final LocalDate TODAY = LocalDate.now();
-  @Mock
-  private TransactionInProgress2TransactionResponseMapper transactionInProgress2TransactionResponseMapper;
+    @Mock
+    private RewardRuleRepository rewardRuleRepositoryMock;
+    @Mock
+    private AuditUtilities auditUtilitiesMock;
+    @Mock
+    private MerchantConnector merchantConnectorMock;
+    @Mock
+    private TransactionService transactionServiceMock;
+    @Mock
+    private TransactionMapper transactionMapperMock;
+    @InjectMocks
+    private CommonCreationServiceImpl commonCreationService;
 
-  @Mock
-  private TransactionCreationRequest2TransactionInProgressMapper
-      transactionCreationRequest2TransactionInProgressMapper;
-  @Mock private RewardRuleRepository rewardRuleRepository;
-  @Mock private AuditUtilities auditUtilitiesMock;
-  @Mock private MerchantConnector merchantConnectorMock;
-  @Mock private TransactionInProgressService transactionInProgressServiceMock;
+    private static final String INITIATIVE_ID = "INITIATIVE_ID_123";
+    private static final String MERCHANT_ID = "MERCHANT_ID_123";
+    private static final String ACQUIRER_ID = "ACQUIRER_ID_123";
+    private static final String CHANNEL = "QR_CODE";
+    private static final String ID_TRX_ISSUER = "ISSUER_123";
+    private static final String TRX_ID = "TRX_ID_123";
+    private static final String TRX_CODE = "TRX_CODE_123";
 
-  CommonCreationServiceImpl CommonCreationService;
+    @Test
+    void testCreateTransaction_Success() {
+        // Given
+        TransactionCreationRequest request = createDummyRequest(1000L);
+        InitiativeConfig initiativeConfig = createDummyInitiativeConfig(
+                InitiativeRewardType.DISCOUNT,
+                LocalDate.now().minusDays(1),
+                LocalDate.now().plusDays(1)
+        );
+        RewardRule rewardRule = new RewardRule();
+        rewardRule.setInitiativeConfig(initiativeConfig);
 
-  @BeforeEach
-  void setUp() {
-    CommonCreationService =
-        new CommonCreationServiceImpl(
-                transactionInProgress2TransactionResponseMapper,
-                transactionCreationRequest2TransactionInProgressMapper,
-                rewardRuleRepository,
-                auditUtilitiesMock,
-                merchantConnectorMock,
-                transactionInProgressServiceMock);
-  }
+        MerchantDetailDTO merchantDetail = new MerchantDetailDTO();
+        Transaction transaction = new Transaction();
+        transaction.setId(TRX_ID);
+        transaction.setInitiativeId(INITIATIVE_ID);
+        transaction.setTrxCode(TRX_CODE);
 
-  @Test
-  void createTransaction() {
+        TransactionResponse expectedResponse = new TransactionResponse();
 
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        when(rewardRuleRepositoryMock.findById(INITIATIVE_ID)).thenReturn(Optional.of(rewardRule));
+        when(merchantConnectorMock.merchantDetail(MERCHANT_ID, INITIATIVE_ID)).thenReturn(merchantDetail);
+        when(transactionMapperMock.transactionCreationRequestToTransaction(
+                request, CHANNEL, MERCHANT_ID, ACQUIRER_ID, merchantDetail, ID_TRX_ISSUER
+        )).thenReturn(transaction);
+        when(transactionMapperMock.transactionToTransactionResponse(transaction)).thenReturn(expectedResponse);
 
-    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
-    when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
-    when(transactionCreationRequest2TransactionInProgressMapper.apply(
-            any(TransactionCreationRequest.class),
-            eq(RewardConstants.TRX_CHANNEL_QRCODE),
-            anyString(),
-            anyString(),
-            any(MerchantDetailDTO.class),
-            anyString()))
-        .thenReturn(trx);
-    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
-        .thenReturn(trxCreated);
+        // When
+        TransactionResponse result = commonCreationService.createTransaction(
+                request, CHANNEL, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER
+        );
 
-    TransactionResponse result =
-        CommonCreationService.createTransaction(
-            trxCreationReq,
-            RewardConstants.TRX_CHANNEL_QRCODE,
-            "MERCHANTID1",
-            "ACQUIRERID1",
-                "IDTRXISSUER1");
+        // Then
+        assertNotNull(result);
+        assertEquals(expectedResponse, result);
 
-    Assertions.assertNotNull(result);
-    Assertions.assertEquals(trxCreated, result);
-  }
-
-  private RewardRule buildRule(String initiativeid, InitiativeRewardType initiativeRewardType) {
-    return RewardRule.builder().id(initiativeid)
-            .initiativeConfig(InitiativeConfig.builder()
-                    .initiativeId(initiativeid)
-                    .initiativeRewardType(initiativeRewardType)
-                    .startDate(TODAY.minusDays(1))
-                    .endDate(TODAY.plusDays(1))
-                    .build())
-            .build();
-  }
-
-  @Test
-  void createTransactionTrxCodeHit() {
-
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    MerchantDetailDTO merchantDetailDTO = MerchantDetailDTOFaker.mockInstance(1);
-    TransactionResponse trxCreated = TransactionResponseFaker.mockInstance(1);
-    TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
-
-    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.DISCOUNT)));
-    when(merchantConnectorMock.merchantDetail("MERCHANTID1","INITIATIVEID1")).thenReturn(merchantDetailDTO);
-    when(transactionCreationRequest2TransactionInProgressMapper.apply(
-            any(TransactionCreationRequest.class),
-            eq(RewardConstants.TRX_CHANNEL_QRCODE),
-            anyString(),
-            anyString(),
-            any(MerchantDetailDTO.class),
-            anyString()))
-        .thenReturn(trx);
-    when(transactionInProgress2TransactionResponseMapper.apply(any(TransactionInProgress.class)))
-        .thenReturn(trxCreated);
-
-    TransactionResponse result =
-            CommonCreationService.createTransaction(
-            trxCreationReq,
-            RewardConstants.TRX_CHANNEL_QRCODE,
-            "MERCHANTID1",
-            "ACQUIRERID1",
-            "IDTRXISSUER1");
-
-    Assertions.assertNotNull(result);
-    Assertions.assertEquals(trxCreated, result);
-  }
-
-  @Test
-  void createTransaction_InitiativeNotFound() {
-
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-
-    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.empty());
-
-    InitiativeNotfoundException result =
-        Assertions.assertThrows(
-            InitiativeNotfoundException.class,
-            () ->
-                    CommonCreationService.createTransaction(
-                    trxCreationReq,
-                    RewardConstants.TRX_CHANNEL_QRCODE,
-                    "MERCHANTID1",
-                    "ACQUIRERID1",
-                    "IDTRXISSUER1"));
-
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_FOUND, result.getCode());
-  }
-
-  @Test
-  void createTransaction_InitiativeNotDiscount() {
-
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-
-    when(rewardRuleRepository.findById("INITIATIVEID1")).thenReturn(Optional.of(buildRule("INITIATIVEID1", InitiativeRewardType.REFUND)));
-
-    InitiativeNotfoundException result =
-            Assertions.assertThrows(
-                InitiativeNotfoundException.class,
-                    () ->
-                            CommonCreationService.createTransaction(
-                                    trxCreationReq,
-                                    RewardConstants.TRX_CHANNEL_QRCODE,
-                                    "MERCHANTID1",
-                                    "ACQUIRERID1",
-                                    "IDTRXISSUER1"));
-
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, result.getCode());
-  }
-
-  @Test
-  void createTransaction_AmountZero() {
-
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-    trxCreationReq.setAmountCents(0L);
-
-    TransactionInvalidException result =
-        Assertions.assertThrows(
-            TransactionInvalidException.class,
-            () ->
-                    CommonCreationService.createTransaction(
-                    trxCreationReq,
-                    RewardConstants.TRX_CHANNEL_QRCODE,
-                    "MERCHANTID1",
-                    "ACQUIRERID1",
-                    "IDTRXISSUER1"));
-
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, result.getCode());
-  }
-
-  @ParameterizedTest
-  @MethodSource("dateArguments")
-  void createTransaction_InvalidDate(LocalDate invalidDate) {
-
-    TransactionCreationRequest trxCreationReq = TransactionCreationRequestFaker.mockInstance(1);
-
-    RewardRule rule = buildRuleWithInvalidDate(trxCreationReq, invalidDate);
-    when(rewardRuleRepository.findById(trxCreationReq.getInitiativeId()))
-            .thenReturn(Optional.of(rule));
-
-    InitiativeInvalidException result =
-        Assertions.assertThrows(
-            InitiativeInvalidException.class,
-            () ->
-                    CommonCreationService.createTransaction(
-                    trxCreationReq,
-                    RewardConstants.TRX_CHANNEL_QRCODE,
-                    "MERCHANTID1",
-                    "ACQUIRERID1",
-                    "IDTRXISSUER1"));
-
-    Assertions.assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_INVALID_DATE, result.getCode());
-  }
-
-  private static Stream<Arguments> dateArguments() {
-     return Stream.of(
-             Arguments.of(TODAY.plusDays(1)),
-             Arguments.of(TODAY.minusDays(1))
-     );
-  }
-
-  private RewardRule buildRuleWithInvalidDate(TransactionCreationRequest trxCreationReq, LocalDate invalidDate) {
-    RewardRule rule = buildRule(trxCreationReq.getInitiativeId(), InitiativeRewardType.DISCOUNT);
-    InitiativeConfig config = rule.getInitiativeConfig();
-
-    if (invalidDate.isAfter(TODAY)) {
-      config.setStartDate(invalidDate);
-    } else {
-      config.setEndDate(invalidDate);
+        verify(transactionServiceMock, times(1)).generateTrxCodeAndSave(transaction, "CREATE_TRANSACTION");
+        verify(auditUtilitiesMock, times(1)).logCreatedTransaction(INITIATIVE_ID, TRX_ID, TRX_CODE, MERCHANT_ID);
+        verify(auditUtilitiesMock, never()).logErrorCreatedTransaction(any(), any());
     }
-    rule.setInitiativeConfig(config);
 
-    return rule;
-  }
+    @Test
+    void testCreateTransaction_InvalidAmount() {
+        // Given
+        TransactionCreationRequest request = createDummyRequest(0L);
+
+        // When & Then
+        TransactionInvalidException exception = assertThrows(
+                TransactionInvalidException.class,
+                () -> commonCreationService.createTransaction(request, CHANNEL, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER)
+        );
+
+        assertEquals(PaymentConstants.ExceptionCode.AMOUNT_NOT_VALID, exception.getCode());
+        verify(auditUtilitiesMock, times(1)).logErrorCreatedTransaction(INITIATIVE_ID, MERCHANT_ID);
+        verifyNoInteractions(merchantConnectorMock, transactionServiceMock);
+    }
+
+    @Test
+    void testCreateTransaction_InitiativeNotFound() {
+        // Given
+        TransactionCreationRequest request = createDummyRequest(1000L);
+        when(rewardRuleRepositoryMock.findById(INITIATIVE_ID)).thenReturn(Optional.empty());
+
+        // When & Then
+        InitiativeNotfoundException exception = assertThrows(
+                InitiativeNotfoundException.class,
+                () -> commonCreationService.createTransaction(request, CHANNEL, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER)
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot find initiative with id"));
+        verify(auditUtilitiesMock, times(1)).logErrorCreatedTransaction(INITIATIVE_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testCreateTransaction_InitiativeNotDiscount() {
+        // Given
+        TransactionCreationRequest request = createDummyRequest(1000L);
+        InitiativeConfig initiativeConfig = createDummyInitiativeConfig(
+                InitiativeRewardType.REFUND,
+                LocalDate.now().minusDays(1),
+                LocalDate.now().plusDays(1)
+        );
+        RewardRule rewardRule = new RewardRule();
+        rewardRule.setInitiativeConfig(initiativeConfig);
+
+        when(rewardRuleRepositoryMock.findById(INITIATIVE_ID)).thenReturn(Optional.of(rewardRule));
+
+        // When & Then
+        InitiativeNotfoundException exception = assertThrows(
+                InitiativeNotfoundException.class,
+                () -> commonCreationService.createTransaction(request, CHANNEL, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER)
+        );
+
+        assertEquals(PaymentConstants.ExceptionCode.INITIATIVE_NOT_DISCOUNT, exception.getCode());
+        verify(auditUtilitiesMock, times(1)).logErrorCreatedTransaction(INITIATIVE_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testCreateTransaction_InitiativeExpired() {
+        // Given
+        TransactionCreationRequest request = createDummyRequest(1000L);
+        InitiativeConfig initiativeConfig = createDummyInitiativeConfig(
+                InitiativeRewardType.DISCOUNT,
+                LocalDate.now().minusDays(10),
+                LocalDate.now().minusDays(1)
+        );
+        RewardRule rewardRule = new RewardRule();
+        rewardRule.setInitiativeConfig(initiativeConfig);
+
+        when(rewardRuleRepositoryMock.findById(INITIATIVE_ID)).thenReturn(Optional.of(rewardRule));
+
+        // When & Then
+        InitiativeInvalidException exception = assertThrows(
+                InitiativeInvalidException.class,
+                () -> commonCreationService.createTransaction(request, CHANNEL, MERCHANT_ID, ACQUIRER_ID, ID_TRX_ISSUER)
+        );
+
+        assertTrue(exception.getMessage().contains("Cannot create transaction out of valid period"));
+        verify(auditUtilitiesMock, times(1)).logErrorCreatedTransaction(INITIATIVE_ID, MERCHANT_ID);
+    }
+
+    @Test
+    void testCheckInitiativeValidPeriod_ValidNullInitiative() {
+        // Given
+        LocalDate today = LocalDate.now();
+
+        // When & Then
+        assertDoesNotThrow(() -> CommonCreationServiceImpl.checkInitiativeValidPeriod(today, null, "FLOW_NAME"));
+    }
+
+    private TransactionCreationRequest createDummyRequest(Long amountCents) {
+        TransactionCreationRequest request = new TransactionCreationRequest();
+        request.setInitiativeId(INITIATIVE_ID);
+        request.setAmountCents(amountCents);
+        return request;
+    }
+
+    private InitiativeConfig createDummyInitiativeConfig(InitiativeRewardType type, LocalDate startDate, LocalDate endDate) {
+        InitiativeConfig initiativeConfig = new InitiativeConfig();
+        initiativeConfig.setInitiativeRewardType(type);
+        initiativeConfig.setStartDate(startDate);
+        initiativeConfig.setEndDate(endDate);
+        return initiativeConfig;
+    }
 }

@@ -1,9 +1,5 @@
 package it.gov.pagopa.common.utils;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
@@ -21,13 +17,6 @@ public class CommonUtilities {
   /** To convert euro into cents */
   public static Long euroToCents(BigDecimal euro){
     return euro == null? null : euro.multiply(ONE_HUNDRED).longValue();
-  }
-
-  public static Pageable getPageable(Pageable pageable) {
-    if (pageable == null) {
-      return PageRequest.of(0, 10, Sort.by("trxChargeDate").descending());
-    }
-    return pageable;
   }
 
   public static Long minutesToSeconds(Integer minutes){

@@ -35,18 +35,18 @@ class PaymentCheckServiceImplTest {
     @Test
     void validateProduct_ok(){
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
-        when(registerConnector.getProductList(any(), any())).thenReturn(productListDTO);
-        assertNotNull(paymentCheckService.validateProduct("gtin"));
+        when(registerConnector.getProductList(any(), any(), any())).thenReturn(productListDTO);
+        assertNotNull(paymentCheckService.validateProduct("gtin", "INITIATIVE_ID"));
     }
 
     @Test
     void validateProduct_ko(){
         ProductListDTO productListDTO = null;
 
-        when(registerConnector.getProductList(any(), any())).thenReturn(productListDTO);
+        when(registerConnector.getProductList(any(), any(),any())).thenReturn(productListDTO);
 
         ProductNotValidException exception = assertThrows(ProductNotValidException.class,
-                () -> paymentCheckService.validateProduct("gtin"));
+                () -> paymentCheckService.validateProduct("gtin", "INITIATIVE_ID"));
 
         assertEquals(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND, exception.getCode());
     }
@@ -56,10 +56,10 @@ class PaymentCheckServiceImplTest {
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
         productListDTO.setContent(new ArrayList<>());
 
-        when(registerConnector.getProductList(any(), any())).thenReturn(productListDTO);
+        when(registerConnector.getProductList(any(), any(), any())).thenReturn(productListDTO);
 
         ProductNotValidException exception = assertThrows(ProductNotValidException.class,
-                () -> paymentCheckService.validateProduct("gtin"));
+                () -> paymentCheckService.validateProduct("gtin", "INITIATIVE_ID"));
 
         assertEquals(PaymentConstants.ExceptionCode.PRODUCT_NOT_FOUND, exception.getCode());
     }

@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 
 public interface AzureBlobClient {
+    String getInvoiceFileSignedUrl(String blobPath);
     Response<BlockBlobItem> uploadFile(File file, String destination, String contentType);
     Response<BlockBlobItem> upload(InputStream inputStream, String destination, String contentType);
     Response<Boolean> deleteFile(String destination);

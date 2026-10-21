@@ -10,12 +10,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.function.Consumer;
 
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class CommandsConsumerTest {
+
+    private static final String OPERATION_TYPE = "TESTOPERATIONTYPE";
+    private static final String ENTITY_ID = "ENTITYID";
 
     @Mock
     private ProcessConsumerService processConsumerService;
@@ -25,23 +29,18 @@ class CommandsConsumerTest {
 
     private Consumer<QueueCommandOperationDTO> consumerCommands;
 
-    private final static String OPERATION_TYPE = "TESTOPERATIONTYPE";
-    private final static  String ENTITY_ID = "ENTITYID";
-    private final static  LocalDateTime OPERATION_TIME = LocalDateTime.now();
-
     @BeforeEach
-    public void setUp(){
+    void setUp() {
         consumerCommands = commandsConsumer.consumerCommands(processConsumerService);
     }
 
     @Test
-    void testConsumerCommands(){
-        QueueCommandOperationDTO queueCommandOperationDTO = new QueueCommandOperationDTO(OPERATION_TYPE,ENTITY_ID,OPERATION_TIME);
+    void testConsumerCommands() {
+        LocalDateTime operationTime = LocalDateTime.now(ZoneId.of("Europe/Rome"));
+        QueueCommandOperationDTO queueCommandOperationDTO = new QueueCommandOperationDTO(OPERATION_TYPE, ENTITY_ID, operationTime);
+
         consumerCommands.accept(queueCommandOperationDTO);
+
         verify(processConsumerService).processCommand(queueCommandOperationDTO);
-
     }
-
-
-
 }

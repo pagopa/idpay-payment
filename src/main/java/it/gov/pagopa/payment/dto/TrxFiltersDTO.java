@@ -3,12 +3,35 @@ package it.gov.pagopa.payment.dto;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.util.CollectionUtils;
+
+import java.util.List;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class TrxFiltersDTO {
-    private String status;
+
+    public static final List<String> PROCESSED_ALLOWED_STATUSES = List.of(
+            "REWARDED", "CANCELLED", "REFUNDED", "INVOICED"
+    );
+
+    public static final List<String> REWARDED_ALLOWED_STATUSES = List.of(
+            "AUTHORIZED", "CAPTURED"
+    );
+
+    private List<String> statuses;
     private String productGtin;
     private String trxCode;
+    private String merchantId;
+    private String initiativeId;
+    private String fiscalCode;
+    private String userId;
+    private String pointOfSaleId;
+
+    public String getStatus() {
+        return !CollectionUtils.isEmpty(statuses) ? statuses.getFirst() : null;
+    }
 }

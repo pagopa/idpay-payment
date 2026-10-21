@@ -1,6 +1,6 @@
 package it.gov.pagopa.payment.connector.event.trx;
 
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.context.annotation.Bean;
@@ -8,20 +8,24 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import java.util.function.Supplier;
 
-@Component
+@Service
 public class TransactionNotifierServiceImpl implements TransactionNotifierService {
 
-    private String binder;
+    private final String binder;
 
     private final StreamBridge streamBridge;
+    private final RewardTransactionMapper rewardTransactionMapper;
 
-    public TransactionNotifierServiceImpl(StreamBridge streamBridge,@Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.binder}") String binder ) {
+    public TransactionNotifierServiceImpl(StreamBridge streamBridge,
+                                          RewardTransactionMapper rewardTransactionMapper,
+                                          @Value("${spring.cloud.stream.bindings.transactionOutcome-out-0.binder}") String binder) {
         this.streamBridge = streamBridge;
+        this.rewardTransactionMapper = rewardTransactionMapper;
         this.binder=binder;
     }
 
@@ -34,13 +38,13 @@ public class TransactionNotifierServiceImpl implements TransactionNotifierServic
     }
 
     @Override
-    public boolean notify(TransactionInProgress trx, String key) {
-       return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, key));
+    public boolean notify(Transaction trx, String key) {
+        return streamBridge.send("transactionOutcome-out-0", binder, buildMessage(trx, key));
     }
 
     @Override
-    public Message<TransactionInProgress> buildMessage(TransactionInProgress trx, String key) {
-        return MessageBuilder.withPayload(trx)
+    public Message<RewardTransactionDTO> buildMessage(Transaction trx, String key) {
+        return MessageBuilder.withPayload(rewardTransactionMapper.transactionToRewardTransaction(trx))
                 .setHeader(KafkaHeaders.KEY, key)
                 .build();
     }

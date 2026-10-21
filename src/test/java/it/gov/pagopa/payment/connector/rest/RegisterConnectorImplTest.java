@@ -37,9 +37,9 @@ class RegisterConnectorImplTest {
     void getProductList(){
         ProductListDTO productListDTO = ProductListDTOFaker.mockInstance();
 
-        when(restClient.getProductList(any(), any())).thenReturn(productListDTO);
+        when(restClient.getProductList(any(), any(), any())).thenReturn(productListDTO);
 
-        assertNotNull(connectorImpl.getProductList("gtin", ProductStatus.APPROVED));
+        assertNotNull(connectorImpl.getProductList("gtin", ProductStatus.APPROVED, "INITIATIVEiD"));
     }
 
     @Test
@@ -48,10 +48,10 @@ class RegisterConnectorImplTest {
                 new HashMap<>(), null, new RequestTemplate());
         FeignException feignExceptionMock = new FeignException.BadRequest("", request, null, null);
 
-        when(restClient.getProductList(any(), any())).thenThrow(feignExceptionMock);
+        when(restClient.getProductList(any(), any(),any())).thenThrow(feignExceptionMock);
 
         ProductInvocationException exception = assertThrows(ProductInvocationException.class,
-                () -> connectorImpl.getProductList("gtin", ProductStatus.APPROVED));
+                () -> connectorImpl.getProductList("gtin", ProductStatus.APPROVED, "INITIATIVE_ID"));
 
         Assertions.assertNotNull(exception);
     }

@@ -5,8 +5,8 @@ import it.gov.pagopa.payment.dto.PreviewPaymentResultDTO;
 import it.gov.pagopa.payment.dto.barcode.AuthBarCodePaymentDTO;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeCreationRequest;
 import it.gov.pagopa.payment.dto.barcode.TransactionBarCodeResponse;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeAuthPaymentService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCaptureService;
 import it.gov.pagopa.payment.service.payment.barcode.BarCodeCreationService;
@@ -14,19 +14,21 @@ import it.gov.pagopa.payment.service.payment.barcode.RetrieveActiveBarcode;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeCreationRequestFaker;
 import it.gov.pagopa.payment.test.fakers.TransactionBarCodeResponseFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import it.gov.pagopa.payment.utils.RewardConstants;
-import java.time.OffsetDateTime;
-import java.util.Map;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BarCodePaymentServiceImplTest {
@@ -39,13 +41,8 @@ class BarCodePaymentServiceImplTest {
     private BarCodeAuthPaymentService barCodeAuthPaymentService;
     @Mock
     private RetrieveActiveBarcode retrieveActiveBarcode;
-
-    private BarCodePaymentService barCodePaymentService;
-
-    @BeforeEach
-    void setup() {
-        barCodePaymentService = new BarCodePaymentServiceImpl(barCodeCreationService, barCodeCaptureService, barCodeAuthPaymentService, retrieveActiveBarcode);
-    }
+    @InjectMocks
+    private BarCodePaymentServiceImpl barCodePaymentService;
 
     @Test
     void createTransaction() {
@@ -53,19 +50,20 @@ class BarCodePaymentServiceImplTest {
         String userId = "USERID";
         TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodeCreationService.createTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
+        when(barCodeCreationService.createTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
                 .thenReturn(response);
 
         TransactionBarCodeResponse result = barCodePaymentService.createTransaction(trxBRCodeCreationRequest, userId);
 
         Assertions.assertEquals(response.getId(), result.getId());
         Assertions.assertEquals(response, result);
-        Mockito.verify(barCodeCreationService, Mockito.times(1)).createTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId);
-        Mockito.verifyNoMoreInteractions(barCodeCreationService);
+        verify(barCodeCreationService, times(1)).createTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId);
+        verifyNoMoreInteractions(barCodeCreationService);
     }
 
     @Test
     void authPayment() {
+        String initiativeId = "INITIATIVE_ID";
         AuthBarCodePaymentDTO authBarCodePaymentDTO = AuthBarCodePaymentDTO.builder()
                 .amountCents(1000L)
                 .idTrxAcquirer("ID_TRX_ACQUIRER")
@@ -74,27 +72,32 @@ class BarCodePaymentServiceImplTest {
         String merchantId = "MERCHANT_ID";
         String pointOfSaleId = "POS_ID";
         String acquirerID = "ACQUIRER_ID";
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
         AuthPaymentDTO authPaymentDTO = AuthPaymentDTOFaker.mockInstance(1, trx);
 
-        Mockito.when(barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
+        when(barCodeAuthPaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID))
                 .thenReturn(authPaymentDTO);
 
-        AuthPaymentDTO result = barCodePaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
+        AuthPaymentDTO result = barCodePaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
 
         Assertions.assertEquals(authPaymentDTO.getId(), result.getId());
-        Mockito.verify(barCodeAuthPaymentService, Mockito.times(1)).authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
-        Mockito.verifyNoMoreInteractions(barCodeAuthPaymentService);
+        verify(barCodeAuthPaymentService, times(1)).authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerID);
+        verifyNoMoreInteractions(barCodeAuthPaymentService);
     }
 
     @Test
     void capturePayment_ok() {
+        String initiativeId = "initiativeId";
+        String trxCode = "trxCode";
+        String merchantId = "merchantId";
+        String pointOfSaleId = "pointOfSaleId";
+        String acquirerId = "acquirerId";
         TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodeCaptureService.capturePayment(any()))
+        when(barCodeCaptureService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId))
                 .thenReturn(response);
 
-        TransactionBarCodeResponse result = barCodePaymentService.capturePayment("trxCode");
+        TransactionBarCodeResponse result = barCodePaymentService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
 
         Assertions.assertNotNull(result);
     }
@@ -103,21 +106,21 @@ class BarCodePaymentServiceImplTest {
     void retriveVoucher_ok() {
         TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodeCaptureService.retriveVoucher("initiativeId", "trxCode", "userId"))
+        when(barCodeCaptureService.retriveVoucher("initiativeId", "trxCode", "userId"))
                 .thenReturn(response);
 
         TransactionBarCodeResponse result = barCodePaymentService.retriveVoucher("initiativeId", "trxCode", "userId");
 
         Assertions.assertEquals(response, result);
-        Mockito.verify(barCodeCaptureService).retriveVoucher("initiativeId", "trxCode", "userId");
-        Mockito.verifyNoMoreInteractions(barCodeCaptureService);
+        verify(barCodeCaptureService).retriveVoucher("initiativeId", "trxCode", "userId");
+        verifyNoMoreInteractions(barCodeCaptureService);
     }
 
     @Test
     void previewPayment_ok() {
         PreviewPaymentResultDTO previewPaymentResultDTO = PreviewPaymentResultDTO.builder()
                 .trxCode("trxCode")
-                .trxDate(OffsetDateTime.now())
+                .trxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")))
                 .status(SyncTrxStatus.AUTHORIZED)
                 .originalAmountCents(500L)
                 .rewardCents(100L)
@@ -128,13 +131,13 @@ class BarCodePaymentServiceImplTest {
                 .build();
         Map<String, String> additionalProperties = Map.of("productGtin", "gtin");
 
-        Mockito.when(barCodeAuthPaymentService.previewPayment(any(), any(), any()))
+        when(barCodeAuthPaymentService.previewPayment(any(), any(), any(), any()))
                 .thenReturn(previewPaymentResultDTO);
 
-        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("trxCode", additionalProperties, 500L);
+        PreviewPaymentResultDTO result = barCodePaymentService.previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
 
         Assertions.assertNotNull(result);
-        Mockito.verify(barCodeAuthPaymentService).previewPayment("trxCode", additionalProperties, 500L);
+        verify(barCodeAuthPaymentService).previewPayment("initiativeId", "trxCode", additionalProperties, 500L);
     }
 
     @Test
@@ -143,7 +146,7 @@ class BarCodePaymentServiceImplTest {
         String initiativeId = "INITIATIVE_ID";
 
         TransactionBarCodeResponse trx = TransactionBarCodeResponseFaker.mockInstance(1);
-        Mockito.when(retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId)).thenReturn(trx);
+        when(retrieveActiveBarcode.findOldestNotAuthorized(userId, initiativeId)).thenReturn(trx);
 
         TransactionBarCodeResponse result = barCodePaymentService.findOldestNotAuthorized(userId, initiativeId);
 
@@ -157,14 +160,14 @@ class BarCodePaymentServiceImplTest {
         String userId = "USERID";
         TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
 
-        Mockito.when(barCodeCreationService.createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
+        when(barCodeCreationService.createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId))
                 .thenReturn(response);
 
         TransactionBarCodeResponse result = barCodePaymentService.createExtendedTransaction(trxBRCodeCreationRequest, userId);
 
         Assertions.assertEquals(response.getId(), result.getId());
         Assertions.assertEquals(response, result);
-        Mockito.verify(barCodeCreationService, Mockito.times(1)).createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId);
-        Mockito.verifyNoMoreInteractions(barCodeCreationService);
+        verify(barCodeCreationService, times(1)).createExtendedTransaction(trxBRCodeCreationRequest, RewardConstants.TRX_CHANNEL_BARCODE, userId);
+        verifyNoMoreInteractions(barCodeCreationService);
     }
 }

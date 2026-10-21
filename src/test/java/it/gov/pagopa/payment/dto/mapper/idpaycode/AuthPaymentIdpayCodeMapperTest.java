@@ -3,10 +3,10 @@ package it.gov.pagopa.payment.dto.mapper.idpaycode;
 import it.gov.pagopa.common.utils.TestUtils;
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
 import it.gov.pagopa.payment.dto.idpaycode.AuthPaymentIdpayCodeDTO;
+import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
-import it.gov.pagopa.payment.model.TransactionInProgress;
 import it.gov.pagopa.payment.test.fakers.AuthPaymentDTOFaker;
-import it.gov.pagopa.payment.test.fakers.TransactionInProgressFaker;
+import it.gov.pagopa.payment.test.fakers.TransactionFaker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ class AuthPaymentIdpayCodeMapperTest {
 
     @Test
     void authPaymentMapper() {
-        TransactionInProgress trx = TransactionInProgressFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.IDENTIFIED);
         AuthPaymentDTO authPayment = AuthPaymentDTOFaker.mockInstance(1, trx);
         String secondFactor = "secondFactor";
 

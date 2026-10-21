@@ -6,16 +6,20 @@ import it.gov.pagopa.payment.exception.custom.TransactionInvalidException;
 import it.gov.pagopa.payment.service.payment.PaymentCheckService;
 import java.util.HashMap;
 import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import static it.gov.pagopa.payment.utils.Utilities.sanitizeString;
 
+@Slf4j
 @Service
 public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements BarCodeAdditionalPropertiesValidationStrategy {
 
     private static final String PRODUCT_NAME_KEY = "productName";
     private static final String PRODUCT_GTIN_KEY = "productGtin";
+    private static final String PRODUCT_TYPE_KEY = "productType";
 
     private final PaymentCheckService paymentCheckService;
 
@@ -29,16 +33,17 @@ public class ProductGtinBarCodeAdditionalPropertiesValidationStrategy implements
     }
 
     @Override
-    public Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation) {
+    public Map<String, String> validateAndEnrich(Map<String, String> additionalProperties, BarCodeAdditionalPropertiesOperation operation, String initiativeId) {
         String productGtin = sanitizeString(additionalProperties != null ? additionalProperties.get(PRODUCT_GTIN_KEY) : null);
         if (StringUtils.isBlank(productGtin)) {
             throw invalidAdditionalProperties(operation);
         }
 
-        ProductDTO productDTO = paymentCheckService.validateProduct(productGtin);
+        ProductDTO productDTO = paymentCheckService.validateProduct(productGtin, initiativeId);
         Map<String, String> enrichedAdditionalProperties = new HashMap<>();
         enrichedAdditionalProperties.put(PRODUCT_NAME_KEY, productDTO.getProductName());
         enrichedAdditionalProperties.put(PRODUCT_GTIN_KEY, productDTO.getGtinCode());
+        enrichedAdditionalProperties.put(PRODUCT_TYPE_KEY, productDTO.getCategoryCode());
         return enrichedAdditionalProperties;
     }
 

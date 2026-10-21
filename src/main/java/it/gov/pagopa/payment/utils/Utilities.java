@@ -3,11 +3,11 @@ package it.gov.pagopa.payment.utils;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.exception.custom.InvalidInvoiceFormatException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.TimeZone;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 public final class Utilities {
@@ -41,8 +41,9 @@ public final class Utilities {
 
         String filename = file.getOriginalFilename();
         if (filename == null ||
-            (!filename.toLowerCase().endsWith(".pdf") && !filename.toLowerCase().endsWith(".xml"))) {
+                (!filename.toLowerCase().endsWith(".pdf") && !filename.toLowerCase().endsWith(".xml"))) {
             throw new InvalidInvoiceFormatException(ExceptionCode.GENERIC_ERROR, "File must be a PDF or XML");
         }
     }
+
 }

@@ -41,14 +41,15 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public AuthPaymentDTO authPayment(String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
-        return barCodeAuthPaymentService.authPayment(trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
+    public AuthPaymentDTO authPayment(String initiativeId, String trxCode, AuthBarCodePaymentDTO authBarCodePaymentDTO, String merchantId, String pointOfSaleId, String acquirerId) {
+        return barCodeAuthPaymentService.authPayment(initiativeId, trxCode, authBarCodePaymentDTO, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Override
-    public PreviewPaymentResultDTO previewPayment(String trxCode, Map<String, String> additionalProperties, Long amountCents) {
-        return barCodeAuthPaymentService.previewPayment(trxCode, additionalProperties, amountCents);
+    public PreviewPaymentResultDTO previewPayment(String initiativeId, String trxCode, Map<String, String> additionalProperties, Long amountCents) {
+        return barCodeAuthPaymentService.previewPayment(initiativeId, trxCode, additionalProperties, amountCents);
     }
+
 
     @Override
     public TransactionBarCodeResponse findOldestNotAuthorized(String userId, String initiativeId) {
@@ -56,8 +57,8 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public TransactionBarCodeResponse capturePayment(String trxCode) {
-        return barCodeCaptureService.capturePayment(trxCode);
+    public TransactionBarCodeResponse capturePayment(String initiativeId, String trxCode, String merchantId, String pointOfSaleId, String acquirerId) {
+        return barCodeCaptureService.capturePayment(initiativeId, trxCode, merchantId, pointOfSaleId, acquirerId);
     }
 
     @Override

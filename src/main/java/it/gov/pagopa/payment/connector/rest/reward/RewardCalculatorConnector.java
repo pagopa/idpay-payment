@@ -1,11 +1,11 @@
 package it.gov.pagopa.payment.connector.rest.reward;
 
 import it.gov.pagopa.payment.dto.AuthPaymentDTO;
-import it.gov.pagopa.payment.model.TransactionInProgress;
+import it.gov.pagopa.payment.entity.Transaction;
 
 public interface RewardCalculatorConnector {
 
-  AuthPaymentDTO previewTransaction(TransactionInProgress transaction);
-  AuthPaymentDTO authorizePayment(TransactionInProgress transaction);
-  AuthPaymentDTO cancelTransaction(TransactionInProgress transaction);
+  AuthPaymentDTO previewTransaction(Transaction transaction);
+  AuthPaymentDTO authorizePayment(Transaction transaction);
+  AuthPaymentDTO cancelTransaction(Transaction transaction);
 }

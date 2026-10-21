@@ -37,7 +37,7 @@ class ProductGtinBarCodeAdditionalPropertiesValidationStrategyTest {
     @Test
     void validateAndEnrich_shouldThrowForMissingProductGtinDuringPreview() {
         TransactionInvalidException result = Assertions.assertThrows(TransactionInvalidException.class,
-                () -> strategy.validateAndEnrich(null, BarCodeAdditionalPropertiesOperation.PREVIEW));
+                () -> strategy.validateAndEnrich(null, BarCodeAdditionalPropertiesOperation.PREVIEW, "INITIATIVE_ID"));
 
         Assertions.assertEquals(PaymentConstants.ExceptionCode.TRX_ADDITIONAL_PROPERTIES_NOT_EXIST, result.getCode());
         Assertions.assertTrue(result.getMessage().contains("preview"));
@@ -46,14 +46,15 @@ class ProductGtinBarCodeAdditionalPropertiesValidationStrategyTest {
     @Test
     void validateAndEnrich_shouldReturnValidatedProductInformation() {
         ProductDTO productDTO = ProductDTOFaker.mockInstance();
-        when(paymentCheckService.validateProduct("123123")).thenReturn(productDTO);
+        when(paymentCheckService.validateProduct("123123", "INITIATIVE_ID")).thenReturn(productDTO);
 
         Map<String, String> result = strategy.validateAndEnrich(
                 Map.of("productGtin", "123123"),
-                BarCodeAdditionalPropertiesOperation.AUTHORIZE);
+                BarCodeAdditionalPropertiesOperation.AUTHORIZE, "INITIATIVE_ID");
 
         Assertions.assertEquals(productDTO.getProductName(), result.get("productName"));
         Assertions.assertEquals(productDTO.getGtinCode(), result.get("productGtin"));
-        verify(paymentCheckService).validateProduct("123123");
+        Assertions.assertEquals(productDTO.getCategoryCode(), result.get("productType"));
+        verify(paymentCheckService).validateProduct("123123", "INITIATIVE_ID");
     }
 }

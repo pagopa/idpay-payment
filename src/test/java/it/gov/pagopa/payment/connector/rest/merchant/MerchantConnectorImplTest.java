@@ -107,15 +107,15 @@ class MerchantConnectorImplTest {
                 .vatNumber("12345678901")
                 .build();
 
-        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID))
                 .thenReturn(pointOfSaleDTO);
 
-        PointOfSaleDTO result = merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
+        PointOfSaleDTO result = merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID);
 
         Assertions.assertNotNull(result);
         Assertions.assertEquals(pointOfSaleDTO, result);
 
-        verify(restClient, times(1)).getPointOfSale(anyString(), anyString());
+        verify(restClient, times(1)).getPointOfSale(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -124,15 +124,15 @@ class MerchantConnectorImplTest {
                 new HashMap<>(), null, new RequestTemplate());
         FeignException feignExceptionMock = new FeignException.NotFound("", request, null, null);
 
-        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID))
                 .thenThrow(feignExceptionMock);
 
-        PosNotFoundException exception = assertThrows(PosNotFoundException.class, () -> merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID));
+        PosNotFoundException exception = assertThrows(PosNotFoundException.class, () -> merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID));
 
         Assertions.assertNotNull(exception);
         assertEquals(PaymentConstants.ExceptionCode.POINT_OF_SALE_NOT_FOUND, exception.getCode());
 
-        verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
+        verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID);
     }
 
     @Test
@@ -142,16 +142,82 @@ class MerchantConnectorImplTest {
                 new HashMap<>(), null, new RequestTemplate());
         FeignException feignExceptionMock = new FeignException.InternalServerError("", request, null, null);
 
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID))
+                .thenThrow(feignExceptionMock);
+
+        MerchantInvocationException exception = assertThrows(MerchantInvocationException.class, () -> merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID));
+
+        Assertions.assertNotNull(exception);
+        assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
+
+        verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID, INITIATIVEID);
+    }
+
+    @Test
+    void getPointOfSaleLegacy(){
+        // Given
+        PointOfSaleDTO pointOfSaleDTO = PointOfSaleDTO.builder()
+                .type(PointOfSaleTypeEnum.PHYSICAL)
+                .franchiseName("Franchise Test")
+                .businessName("Business Test")
+                .fiscalCode("FISCALCODE123")
+                .vatNumber("12345678901")
+                .build();
+
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+                .thenReturn(pointOfSaleDTO);
+
+        // When
+        PointOfSaleDTO result = merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
+
+        // Then
+        Assertions.assertNotNull(result);
+        Assertions.assertEquals(pointOfSaleDTO, result);
+
+        verify(restClient, times(1)).getPointOfSale(anyString(), anyString());
+    }
+
+    @Test
+    void getPointOfSaleLegacyPosNotFoundException(){
+        // Given
+        Request request = Request.create(Request.HttpMethod.GET, "url",
+                new HashMap<>(), null, new RequestTemplate());
+        FeignException feignExceptionMock = new FeignException.NotFound("", request, null, null);
+
         when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
                 .thenThrow(feignExceptionMock);
 
-        MerchantInvocationException exception = assertThrows(MerchantInvocationException.class, () -> merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID));
+        // When
+        PosNotFoundException exception = assertThrows(PosNotFoundException.class, () ->
+                merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID)
+        );
 
+        // Then
+        Assertions.assertNotNull(exception);
+        assertEquals(PaymentConstants.ExceptionCode.POINT_OF_SALE_NOT_FOUND, exception.getCode());
+
+        verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
+    }
+
+    @Test
+    void getPointOfSaleLegacyInvocationException(){
+        // Given
+        Request request = Request.create(Request.HttpMethod.GET, "url",
+                new HashMap<>(), null, new RequestTemplate());
+        FeignException feignExceptionMock = new FeignException.InternalServerError("", request, null, null);
+
+        when(restClient.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID))
+                .thenThrow(feignExceptionMock);
+
+        // When
+        MerchantInvocationException exception = assertThrows(MerchantInvocationException.class, () ->
+                merchantConnector.getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID)
+        );
+
+        // Then
         Assertions.assertNotNull(exception);
         assertEquals(PaymentConstants.ExceptionCode.GENERIC_ERROR, exception.getCode());
 
         verify(restClient, times(1)).getPointOfSale(MERCHANT_ID, POINT_OF_SALE_ID);
     }
-
-
 }
