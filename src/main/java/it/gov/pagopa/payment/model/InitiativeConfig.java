@@ -21,5 +21,6 @@ public class InitiativeConfig {
     private LocalDate endDate;
     private InitiativeRewardType initiativeRewardType;
     private InitiativeTrxConditions trxRule;
+    private Integer voucherDurationDays;
 
 }
