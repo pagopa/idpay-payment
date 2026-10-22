@@ -3,6 +3,8 @@ package it.gov.pagopa.payment.repository;
 import it.gov.pagopa.payment.connector.event.trx.RewardTransactionMapper;
 import it.gov.pagopa.payment.constants.PaymentConstants.ExceptionCode;
 import it.gov.pagopa.payment.entity.Transaction;
+import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionEventType;
 import it.gov.pagopa.payment.exception.custom.TransactionConflictException;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -69,6 +72,44 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
         Transaction updatedTransaction = entityManager.find(Transaction.class, command.transactionId());
         entityManager.refresh(updatedTransaction);
 
+        appendOutboxEvent(updatedTransaction, command.eventType());
+
+        return updatedTransaction;
+    }
+
+    @Override
+    @Transactional
+    public Transaction updateStatusAndCreateEvent(
+            String transactionId,
+            SyncTrxStatus newStatus,
+            TransactionEventType eventType,
+            LocalDateTime updateDate) {
+        int updatedRows = entityManager.createNativeQuery("""
+                        UPDATE "idpay-pagamenti".transaction
+                        SET status = :newStatus,
+                            "updateDate" = :updateDate,
+                            "transactionRevision" = COALESCE("transactionRevision", 0) + 1
+                        WHERE id = :transactionId
+                        """)
+                .setParameter("newStatus", newStatus.name())
+                .setParameter("updateDate", updateDate)
+                .setParameter("transactionId", transactionId)
+                .executeUpdate();
+
+        if (updatedRows != 1) {
+            // Unknown id: skip silently so a single missing row does not fail the whole sync.
+            return null;
+        }
+
+        Transaction updatedTransaction = entityManager.find(Transaction.class, transactionId);
+        entityManager.refresh(updatedTransaction);
+
+        appendOutboxEvent(updatedTransaction, eventType);
+
+        return updatedTransaction;
+    }
+
+    private void appendOutboxEvent(Transaction updatedTransaction, TransactionEventType eventType) {
         Object[] eventMetadata = (Object[]) entityManager.createNativeQuery("""
                         SELECT nextval(
                                    pg_get_serial_sequence(
@@ -87,7 +128,7 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
                 rewardTransactionMapper.transactionToRewardTransaction(updatedTransaction));
         payload.put("eventId", Long.toString(eventId));
         payload.put("schemaVersion", 1);
-        payload.put("eventType", command.eventType().name());
+        payload.put("eventType", eventType.name());
         payload.put("occurredAt", occurredAt.toString());
         payload.put("transactionRevision", updatedTransaction.getTransactionRevision());
 
@@ -115,16 +156,15 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
                             1,
                             :occurredAt
                         )
+                        ON CONFLICT (transaction_id, transaction_revision) DO NOTHING
                         """)
                 .setParameter("eventId", eventId)
                 .setParameter("transactionId", updatedTransaction.getId())
                 .setParameter("userId", updatedTransaction.getUserId())
-                .setParameter("eventType", command.eventType().name())
+                .setParameter("eventType", eventType.name())
                 .setParameter("payload", objectMapper.writeValueAsString(payload))
                 .setParameter("occurredAt", occurredAt)
                 .setParameter("transactionRevision", updatedTransaction.getTransactionRevision())
                 .executeUpdate();
-
-        return updatedTransaction;
     }
 }
