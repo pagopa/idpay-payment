@@ -268,6 +268,7 @@ public class BarCodeAuthPaymentServiceImpl implements BarCodeAuthPaymentService 
                 .businessName(trx.getBusinessName())
                 .rewardCents(trx.getRewardCents())
                 .counterVersion(trx.getCounterVersion())
+                .transactionRevision(trx.getTransactionRevision() == null ? 0L : trx.getTransactionRevision())
                 .rejectionReasons((trx.getRejectionReasons()))
                 .userId(trx.getUserId())
                 .familyId((trx.getFamilyId()))
