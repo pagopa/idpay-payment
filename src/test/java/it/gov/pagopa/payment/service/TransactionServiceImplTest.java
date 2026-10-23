@@ -506,12 +506,13 @@ class TransactionServiceImplTest {
     @Test
     @DisplayName("updateTransactionsStatus - INVOICED emette evento tipizzato per id")
     void testUpdateTransactionsStatus_Invoiced_EmitsTypedEvent() {
+        Transaction updatedTransaction = mock(Transaction.class);
         when(invoiceTransactionRepository.updateStatusAndCreateEvent(
                 anyString(),
                 eq(SyncTrxStatus.INVOICED),
                 eq(TransactionEventType.TRANSACTION_INVOICE_REPLACED),
                 any(LocalDateTime.class)
-        )).thenReturn(mock(Transaction.class));
+        )).thenReturn(updatedTransaction);
 
         int updated = transactionService.updateTransactionsStatus(
                 Set.of("TRX_1", "TRX_2"),
@@ -531,12 +532,13 @@ class TransactionServiceImplTest {
     @Test
     @DisplayName("updateTransactionsStatus - INVOICED non conta gli id non trovati")
     void testUpdateTransactionsStatus_Invoiced_SkipsMissingIds() {
+        Transaction updatedTransaction = mock(Transaction.class);
         when(invoiceTransactionRepository.updateStatusAndCreateEvent(
                 eq("TRX_1"),
                 eq(SyncTrxStatus.INVOICED),
                 eq(TransactionEventType.TRANSACTION_INVOICE_REPLACED),
                 any(LocalDateTime.class)
-        )).thenReturn(mock(Transaction.class));
+        )).thenReturn(updatedTransaction);
         when(invoiceTransactionRepository.updateStatusAndCreateEvent(
                 eq("TRX_MISSING"),
                 eq(SyncTrxStatus.INVOICED),

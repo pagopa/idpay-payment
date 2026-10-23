@@ -22,6 +22,8 @@ import java.time.ZoneOffset;
 @RequiredArgsConstructor
 public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepository {
 
+    private static final String PARAM_TRANSACTION_ID = "transactionId";
+
     private final EntityManager entityManager;
     private final RewardTransactionMapper rewardTransactionMapper;
     private final ObjectMapper objectMapper;
@@ -55,7 +57,7 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
                 .setParameter("pointOfSaleType", command.pointOfSaleType())
                 .setParameter("businessName", command.businessName())
                 .setParameter("merchantFiscalCode", command.merchantFiscalCode())
-                .setParameter("transactionId", command.transactionId())
+                .setParameter(PARAM_TRANSACTION_ID, command.transactionId())
                 .setParameter("initiativeId", command.initiativeId())
                 .setParameter("merchantId", command.merchantId())
                 .setParameter("expectedStatus", command.expectedStatus().name())
@@ -93,7 +95,7 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
                         """)
                 .setParameter("newStatus", newStatus.name())
                 .setParameter("updateDate", updateDate)
-                .setParameter("transactionId", transactionId)
+                .setParameter(PARAM_TRANSACTION_ID, transactionId)
                 .executeUpdate();
 
         if (updatedRows != 1) {
@@ -159,7 +161,7 @@ public class InvoiceTransactionRepositoryImpl implements InvoiceTransactionRepos
                         ON CONFLICT (transaction_id, transaction_revision) DO NOTHING
                         """)
                 .setParameter("eventId", eventId)
-                .setParameter("transactionId", updatedTransaction.getId())
+                .setParameter(PARAM_TRANSACTION_ID, updatedTransaction.getId())
                 .setParameter("userId", updatedTransaction.getUserId())
                 .setParameter("eventType", eventType.name())
                 .setParameter("payload", objectMapper.writeValueAsString(payload))
