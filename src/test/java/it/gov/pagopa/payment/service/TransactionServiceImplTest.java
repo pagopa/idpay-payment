@@ -5,9 +5,11 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionEventType;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.repository.InvoiceTransactionRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.TransactionServiceImpl;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
@@ -52,9 +54,10 @@ class TransactionServiceImplTest {
     private AppConfigurationProperties.ExtendedTransactions extendedTransactions;
     @Mock
     private TransactionNotifierService transactionNotifierService;
+    @Mock
+    private InvoiceTransactionRepository invoiceTransactionRepository;
 
     private TransactionServiceImpl transactionService;
-
     private static final String INITIATIVE_ID = "INITIATIVE_1";
     private static final String USER_ID = "USER_1";
     private static final String TRX_ID = "TRX_1";
@@ -70,7 +73,8 @@ class TransactionServiceImplTest {
                 trxCodeGenUtil,
                 extendedTransactions,
                 transactionNotifierService,
-                extendedTransactions
+                extendedTransactions,
+                invoiceTransactionRepository
         );
     }
 
@@ -497,6 +501,56 @@ class TransactionServiceImplTest {
                 eq(SyncTrxStatus.REWARDED),
                 any(LocalDateTime.class)
         );
+    }
+
+    @Test
+    @DisplayName("updateTransactionsStatus - INVOICED emette evento tipizzato per id")
+    void testUpdateTransactionsStatus_Invoiced_EmitsTypedEvent() {
+        when(invoiceTransactionRepository.updateStatusAndCreateEvent(
+                anyString(),
+                eq(SyncTrxStatus.INVOICED),
+                eq(TransactionEventType.TRANSACTION_INVOICE_REPLACED),
+                any(LocalDateTime.class)
+        )).thenReturn(mock(Transaction.class));
+
+        int updated = transactionService.updateTransactionsStatus(
+                Set.of("TRX_1", "TRX_2"),
+                SyncTrxStatus.INVOICED
+        );
+
+        assertEquals(2, updated);
+        verify(invoiceTransactionRepository, times(2)).updateStatusAndCreateEvent(
+                anyString(),
+                eq(SyncTrxStatus.INVOICED),
+                eq(TransactionEventType.TRANSACTION_INVOICE_REPLACED),
+                any(LocalDateTime.class)
+        );
+        verify(transactionRepository, never()).bulkUpdateStatusByIds(anySet(), any(), any());
+    }
+
+    @Test
+    @DisplayName("updateTransactionsStatus - INVOICED non conta gli id non trovati")
+    void testUpdateTransactionsStatus_Invoiced_SkipsMissingIds() {
+        when(invoiceTransactionRepository.updateStatusAndCreateEvent(
+                eq("TRX_1"),
+                eq(SyncTrxStatus.INVOICED),
+                eq(TransactionEventType.TRANSACTION_INVOICE_REPLACED),
+                any(LocalDateTime.class)
+        )).thenReturn(mock(Transaction.class));
+        when(invoiceTransactionRepository.updateStatusAndCreateEvent(
+                eq("TRX_MISSING"),
+                eq(SyncTrxStatus.INVOICED),
+                eq(TransactionEventType.TRANSACTION_INVOICE_REPLACED),
+                any(LocalDateTime.class)
+        )).thenReturn(null);
+
+        int updated = transactionService.updateTransactionsStatus(
+                Set.of("TRX_1", "TRX_MISSING", "  "),
+                SyncTrxStatus.INVOICED
+        );
+
+        assertEquals(1, updated);
+        verify(transactionRepository, never()).bulkUpdateStatusByIds(anySet(), any(), any());
     }
 
     @Test
