@@ -107,6 +107,45 @@ class InvoiceTransactionRepositoryImplTest {
     }
 
     @Test
+    void shouldUpdateStatusOnlyAndCreateTypedEvent() {
+        insertTransaction("trx-status-sync", SyncTrxStatus.REWARDED, 0, "user-1");
+
+        Transaction updated = invoiceTransactionRepository.updateStatusAndCreateEvent(
+                "trx-status-sync",
+                SyncTrxStatus.INVOICED,
+                TransactionEventType.TRANSACTION_INVOICE_REPLACED,
+                LocalDateTime.now());
+
+        assertNotNull(updated);
+        assertEquals(SyncTrxStatus.INVOICED, updated.getStatus());
+        assertEquals(1L, updated.getTransactionRevision());
+        assertEquals(1, eventCount("trx-status-sync", 1, "TRANSACTION_INVOICE_REPLACED"));
+        // Status-only path must not touch the invoice payload of the transaction.
+        assertEquals("old.pdf", jdbcTemplate.queryForObject("""
+                SELECT "invoiceData" ->> 'filename'
+                FROM "idpay-pagamenti".transaction
+                WHERE id = 'trx-status-sync'
+                """, String.class));
+        assertEventTimestampsAligned("trx-status-sync", 1);
+    }
+
+    @Test
+    void shouldReturnNullAndEmitNoEventWhenIdMissing() {
+        Transaction updated = invoiceTransactionRepository.updateStatusAndCreateEvent(
+                "trx-unknown",
+                SyncTrxStatus.INVOICED,
+                TransactionEventType.TRANSACTION_INVOICE_REPLACED,
+                LocalDateTime.now());
+
+        assertNull(updated);
+        assertEquals(0, jdbcTemplate.queryForObject("""
+                SELECT count(*)
+                FROM "idpay-pagamenti".transaction_outbox
+                WHERE transaction_id = 'trx-unknown'
+                """, Integer.class));
+    }
+
+    @Test
     void shouldRejectStaleAndConcurrentRevisions() throws Exception {
         insertTransaction("trx-concurrent", SyncTrxStatus.INVOICED, 5, "user-1");
         CountDownLatch start = new CountDownLatch(1);

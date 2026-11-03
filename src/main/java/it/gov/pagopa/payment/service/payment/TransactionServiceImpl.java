@@ -5,9 +5,11 @@ import it.gov.pagopa.payment.connector.event.trx.TransactionNotifierService;
 import it.gov.pagopa.payment.dto.TrxFiltersDTO;
 import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.enums.SyncTrxStatus;
+import it.gov.pagopa.payment.enums.TransactionEventType;
 import it.gov.pagopa.payment.exception.custom.ExpirationStatusUpdateException;
 import it.gov.pagopa.payment.exception.custom.TransactionMissingParametersException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.repository.InvoiceTransactionRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.PDVService;
 import it.gov.pagopa.payment.utils.TransactionSpecifications;
@@ -52,6 +54,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final AppConfigurationProperties.ExtendedTransactions extendedTransactions;
     private final TransactionNotifierService transactionNotifierService;
     private final AppConfigurationProperties.ExtendedTransactions appConfigurationProperties;
+    private final InvoiceTransactionRepository invoiceTransactionRepository;
 
     @Override
     public void generateTrxCodeAndSave(Transaction transaction, String flowName) {
@@ -283,6 +286,27 @@ public class TransactionServiceImpl implements TransactionService {
         Set<String> validIds = transactionIds.stream()
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.toSet());
+
+        if (status == SyncTrxStatus.INVOICED) {
+            // [DECISION][BND-2132] An INVOICED transition must emit a typed outbox event
+            // (TRANSACTION_INVOICE_REPLACED) so the state change is recorded in the event history
+            // and propagated via CDC, consistently with the canonical invoice flow. The bulk UPDATE
+            // path stays for every other status (handled by the generic outbox trigger).
+            LocalDateTime updateDate = LocalDateTime.now(ZONE_EUROPE_ROME);
+            int updated = 0;
+            for (String id : validIds) {
+                Transaction result = invoiceTransactionRepository.updateStatusAndCreateEvent(
+                        id,
+                        status,
+                        TransactionEventType.TRANSACTION_INVOICE_REPLACED,
+                        updateDate
+                );
+                if (result != null) {
+                    updated++;
+                }
+            }
+            return updated;
+        }
 
         return transactionRepository.bulkUpdateStatusByIds(
                 validIds,

@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -147,11 +148,20 @@ public class BarCodeCreationServiceImpl implements BarCodeCreationService {
         if (initiative != null && initiative.getEndDate() != null){
             localEndDate = initiative.getEndDate();
         }
+        Duration extendedAuthorizationDuration = resolveExtendedAuthorizationDuration(initiative);
         OffsetDateTime offsetEndDate = localEndDate.atStartOfDay(ZoneId.of(ZONE_EUROPE_ROME)).toOffsetDateTime();
-        if (!(offsetEndDate.minusMinutes(extendedAuthorizationExpirationMinutes).isBefore(transaction.getTrxDate()))) {
-            offsetEndDate = transaction.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes);
+        if (!(offsetEndDate.minus(extendedAuthorizationDuration).isBefore(transaction.getTrxDate()))) {
+            offsetEndDate = transaction.getTrxDate().plus(extendedAuthorizationDuration);
         }
         return offsetEndDate.with(LocalTime.of(23, 59, 59));
+    }
+
+    private Duration resolveExtendedAuthorizationDuration(InitiativeConfig initiative) {
+        Integer voucherDurationDays = initiative != null ? initiative.getVoucherDurationDays() : null;
+        if (voucherDurationDays != null && voucherDurationDays > 0) {
+            return Duration.ofDays(voucherDurationDays);
+        }
+        return Duration.ofMinutes(extendedAuthorizationExpirationMinutes);
     }
 
 

@@ -476,4 +476,127 @@ class BarCodeCreationServiceImplTest {
         }
         return offsetEndDate.with(LocalTime.of(23, 59, 59));
     }
+
+    @Test
+    void shouldReturnTrxDatePlusVoucherDurationDaysWhenExtendedAndVoucherDurationDaysConfigured() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(true);
+
+        InitiativeConfig initiative = new InitiativeConfig();
+        initiative.setEndDate(LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(60));
+        initiative.setVoucherDurationDays(30);
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = trx.getTrxDate().plusDays(30)
+                .with(LocalTime.of(23, 59, 59));
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void shouldReturnTrxDatePlusVoucherDurationDaysWhenExtendedAndInitiativeEndDateNull() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(true);
+
+        InitiativeConfig initiative = InitiativeConfig.builder().voucherDurationDays(30).build();
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = trx.getTrxDate().plusDays(30)
+                .with(LocalTime.of(23, 59, 59));
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void shouldUseInitiativeEndDateWhenExtendedAndVoucherDurationDaysExceedsInitiativeEndDate() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(true);
+
+        LocalDate initiativeEndDate = LocalDate.now(ZoneId.of("Europe/Rome")).plusDays(20);
+        InitiativeConfig initiative = InitiativeConfig.builder()
+                .endDate(initiativeEndDate)
+                .voucherDurationDays(30)
+                .build();
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = initiativeEndDate.atStartOfDay(ZoneId.of("Europe/Rome")).toOffsetDateTime()
+                .with(LocalTime.of(23, 59, 59));
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, -1})
+    void shouldFallbackToExtendedAuthorizationMinutesWhenVoucherDurationDaysNotPositive(int voucherDurationDays) {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(true);
+
+        InitiativeConfig initiative = InitiativeConfig.builder().voucherDurationDays(voucherDurationDays).build();
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(extendedAuthorizationExpirationMinutes)
+                .with(LocalTime.of(23, 59, 59));
+
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void shouldIgnoreVoucherDurationDaysWhenNotExtended() {
+        Transaction trx = new Transaction();
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setExtendedAuthorization(false);
+
+        InitiativeConfig initiative = InitiativeConfig.builder().voucherDurationDays(30).build();
+
+        OffsetDateTime result = barCodeCreationService.calculateTrxEndDate(trx, initiative);
+
+        OffsetDateTime expected = trx.getTrxDate().plusMinutes(authorizationExpirationMinutes);
+        Assertions.assertEquals(expected, result);
+    }
+
+    @Test
+    void createExtendedTransaction_withVoucherDurationDays_setsTrxEndDate() {
+        TransactionBarCodeCreationRequest trxCreationReq = TransactionBarCodeCreationRequest.builder()
+                .initiativeId("INITIATIVEID")
+                .voucherAmountCents(1000L)
+                .build();
+
+        Transaction trx = TransactionFaker.mockInstance(1, SyncTrxStatus.CREATED);
+        trx.setExtendedAuthorization(true);
+        trx.setTrxDate(OffsetDateTime.now(ZoneId.of("Europe/Rome")));
+        trx.setTrxEndDate(null);
+
+        RewardRule rule = buildRule("INITIATIVEID", InitiativeRewardType.DISCOUNT);
+        rule.getInitiativeConfig().setEndDate(TODAY.plusDays(60));
+        rule.getInitiativeConfig().setVoucherDurationDays(30);
+
+        when(rewardRuleRepository.findById("INITIATIVEID")).thenReturn(Optional.of(rule));
+        when(transactionMapper.transactionBarCodeCreationRequestToTransaction(
+                any(TransactionBarCodeCreationRequest.class),
+                eq(RewardConstants.TRX_CHANNEL_BARCODE),
+                anyString(),
+                anyString(),
+                anyMap(),
+                eq(true),
+                isNull()))
+                .thenReturn(trx);
+        when(transactionMapper.transactionToTransactionBarCodeResponse(any(Transaction.class)))
+                .thenReturn(TransactionBarCodeResponseFaker.mockInstance(1));
+
+        barCodeCreationService.createExtendedTransaction(
+                trxCreationReq,
+                RewardConstants.TRX_CHANNEL_BARCODE,
+                "USERID");
+
+        OffsetDateTime expected = trx.getTrxDate().plusDays(30).with(LocalTime.of(23, 59, 59));
+        Assertions.assertEquals(expected, trx.getTrxEndDate());
+    }
 }
