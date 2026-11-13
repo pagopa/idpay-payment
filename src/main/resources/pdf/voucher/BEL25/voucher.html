@@ -8,10 +8,10 @@
 
         /* =========================
            PAGE
-           iText margins: 36 36 48 36
            ========================= */
 
         @page {
+            size: A4 portrait;
             margin: 36pt 36pt 48pt 36pt;
         }
 
@@ -56,9 +56,10 @@
         }
 
         .header-title {
-            margin: 0 0 2pt 0;
+            margin: 0 0 5pt 0;
             padding: 0;
             font-size: 12pt;
+            line-height: 14pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
@@ -67,6 +68,7 @@
             margin: 0;
             padding: 0;
             font-size: 10pt;
+            line-height: 12pt;
             font-weight: normal;
             color: rgb(33, 37, 41);
         }
@@ -77,9 +79,10 @@
            ========================= */
 
         .separator-before-owner {
-            border: 0;
-            border-top: 0.8pt solid rgb(217, 217, 217);
-            margin: 6pt 0 18pt 0;
+            width: 100%;
+            height: 0.8pt;
+            background-color: rgb(217, 217, 217);
+            margin: 10pt 0 12pt 0;
             padding: 0;
         }
 
@@ -91,13 +94,13 @@
         .owner-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 6pt;
+            margin: 0;
         }
 
         .owner-table td {
             width: 50%;
             border: none;
-            padding: 0;
+            padding: 10pt 0 10pt 0;
             vertical-align: top;
         }
 
@@ -106,9 +109,10 @@
         }
 
         .owner-label {
-            margin: 0 0 2pt 0;
+            margin: 0 0 8pt 0;
             padding: 0;
             font-size: 9pt;
+            line-height: 11pt;
             font-weight: normal;
             color: rgb(89, 89, 89);
             text-transform: uppercase;
@@ -118,6 +122,7 @@
             margin: 0;
             padding: 0;
             font-size: 12pt;
+            line-height: 14pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
@@ -128,9 +133,10 @@
            ========================= */
 
         .separator-after-owner {
-            border: 0;
-            border-top: 0.8pt solid rgb(217, 217, 217);
-            margin: 12pt 0 18pt 0;
+            width: 100%;
+            height: 0.8pt;
+            background-color: rgb(217, 217, 217);
+            margin: 12pt 0 20pt 0;
             padding: 0;
         }
 
@@ -148,21 +154,24 @@
         .details-table td {
             width: 50%;
             border: none;
+            padding: 0;
             vertical-align: top;
         }
 
         .details-title {
-            margin: 0 0 10pt 0;
+            margin: 0 0 12pt 0;
             padding: 0;
             font-size: 11pt;
+            line-height: 13pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
 
         .details-label {
-            margin: 0 0 2pt 0;
+            margin: 0 0 10pt 0;
             padding: 0;
             font-size: 9pt;
+            line-height: 11pt;
             font-weight: normal;
             color: rgb(89, 89, 89);
             text-transform: uppercase;
@@ -172,18 +181,20 @@
             margin: 0;
             padding: 0;
             font-size: 12pt;
+            line-height: 14pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
 
         .details-date-issued {
-            margin-bottom: 10pt;
+            margin-bottom: 14pt;
         }
 
         .amount {
-            margin: 0 0 6pt 0;
+            margin: 4pt 0 12pt 0;
             padding: 0;
             font-size: 26pt;
+            line-height: 30pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
@@ -192,6 +203,7 @@
             margin: 2pt 0 12pt 0;
             padding: 0;
             font-size: 10pt;
+            line-height: 15pt;
             font-weight: normal;
             color: rgb(33, 37, 41);
         }
@@ -213,21 +225,18 @@
         .barcode-table td {
             width: 50%;
             border: none;
+            padding: 0;
             vertical-align: top;
         }
 
         .barcode-label {
-            margin: 10pt 0 6pt 0;
+            margin: 18pt 0 6pt 0;
             padding: 0;
             font-size: 12pt;
+            line-height: 14pt;
             font-weight: normal;
             color: rgb(89, 89, 89);
             text-align: left;
-        }
-
-        .barcode-image {
-            display: block;
-            margin-top: 2pt;
         }
 
         .barcode-wrapper {
@@ -236,14 +245,20 @@
             margin-top: 2pt;
         }
 
+        .barcode-img {
+            display: block;
+            width: 190pt;
+            height: 42pt;
+        }
+
         .barcode-code {
-            font-size: 13pt;
-            font-weight: normal;
-            color: #212529;
-            letter-spacing: 1.5pt;
             margin-top: 5pt;
+            font-size: 13pt;
+            line-height: 15pt;
+            font-weight: normal;
+            color: rgb(33, 37, 41);
+            letter-spacing: 1.5pt;
             text-align: center;
-            line-height: 1.2;
         }
 
 
@@ -276,6 +291,7 @@
             padding: 0;
             text-align: center;
             font-size: 11pt;
+            line-height: 13pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
@@ -303,7 +319,7 @@
             display: block;
             max-width: 24pt;
             max-height: 24pt;
-            margin: 0 auto 6pt auto;
+            margin: 0 auto 12pt auto;
         }
 
         .how-to-step-title {
@@ -311,6 +327,7 @@
             padding: 0;
             text-align: center;
             font-size: 10pt;
+            line-height: 14pt;
             font-weight: bold;
             color: rgb(33, 37, 41);
         }
@@ -320,6 +337,7 @@
             padding: 0;
             text-align: center;
             font-size: 9pt;
+            line-height: 13pt;
             font-weight: normal;
             color: rgb(89, 89, 89);
         }
@@ -349,9 +367,15 @@
 
         .powered-by-text {
             text-align: right;
-            padding-right: 8pt !important;
+            white-space: nowrap;
             font-size: 10pt;
+            line-height: 12pt;
             font-weight: normal;
+        }
+
+        .powered-by-space {
+            width: 12pt;
+            min-width: 12pt;
         }
 
         .powered-by-logo {
@@ -370,10 +394,12 @@
            ========================= */
 
         .footer {
+            width: 92%;
             margin: 24pt 0 0 0;
             padding: 0;
             font-family: Helvetica, Arial, sans-serif;
             font-size: 9pt;
+            line-height: 11pt;
             font-weight: normal;
             color: rgb(89, 89, 89);
             text-align: center;
@@ -385,11 +411,13 @@
 
     </style>
 </head>
+
 <body>
 
 
 <!-- HEADER -->
-<table class="header">
+
+<table class="header" role="presentation">
     <tr>
 
         <#if initiative.logoImage?? && initiative.logoImage?has_content>
@@ -416,11 +444,15 @@
     </tr>
 </table>
 
+
 <!-- FIRST SEPARATOR -->
-<hr class="separator-before-owner"/>
+
+<div class="separator-before-owner"></div>
+
 
 <!-- BENEFICIARIO -->
-<table class="owner-table">
+
+<table class="owner-table" role="presentation">
     <tr>
 
         <td>
@@ -436,6 +468,7 @@
         </td>
 
         <td class="owner-right">
+
             <div class="owner-label">
                 Codice Fiscale del titolare
             </div>
@@ -449,13 +482,18 @@
     </tr>
 </table>
 
-<!-- SECOND SEPARATOR -->
-<hr class="separator-after-owner"/>
 
-<table class="details-table">
+<!-- SECOND SEPARATOR -->
+
+<div class="separator-after-owner"></div>
+
+
+<!-- DETAILS AND AMOUNT -->
+
+<table class="details-table" role="presentation">
     <tr>
 
-        <!-- COLONNA SINISTRA -->
+        <!-- LEFT COLUMN -->
 
         <td>
 
@@ -467,7 +505,7 @@
                 BONUS EMESSO IL
             </div>
 
-            <div class="details-date">
+            <div class="details-date details-date-issued">
                 ${transaction.createdDate}
             </div>
 
@@ -482,7 +520,7 @@
         </td>
 
 
-        <!-- COLONNA DESTRA -->
+        <!-- RIGHT COLUMN -->
 
         <td>
 
@@ -498,8 +536,7 @@
                 Puoi usare il bonus per ottenere uno sconto
                 <strong>
                     fino al 30% sul prezzo d’acquisto di un solo
-                    elettrodomestico
-                </strong>,
+                    elettrodomestico</strong>,
                 nuovo e ad alta efficienza.
             </div>
 
@@ -508,15 +545,20 @@
     </tr>
 </table>
 
+
 <!-- BARCODE -->
-<table class="barcode-table">
+
+<table class="barcode-table" role="presentation">
     <tr>
 
-        <!-- LEFT COLUMN EMPTY-->
+        <!-- LEFT COLUMN EMPTY -->
+
         <td>
         </td>
 
-        <!-- RIGHT COLUMN-->
+
+        <!-- RIGHT COLUMN -->
+
         <td>
 
             <div class="barcode-label">
@@ -546,22 +588,28 @@
     </tr>
 </table>
 
-<!-- PACER 10pt -->
+
+<!-- SPACER 10pt -->
+
 <div class="spacer-10"></div>
 
+
 <!-- COME USARE IL BONUS -->
+
 <div class="how-to-box">
 
     <div class="how-to-title">
         COME USARE IL BONUS
     </div>
 
-    <table class="how-to-grid">
+    <table class="how-to-grid" role="presentation">
         <tr>
 
             <!-- STEP 1 -->
+
             <td>
                 <div class="how-to-step">
+
                     <img
                             class="how-to-icon"
                             src="icons/icon_washer.png"
@@ -585,6 +633,7 @@
 
             <td>
                 <div class="how-to-step">
+
                     <img
                             class="how-to-icon"
                             src="icons/icon_healthcard.png"
@@ -599,6 +648,7 @@
                         Mostrala, se richiesta, per eventuali controlli
                         presso il punto vendita.
                     </div>
+
                 </div>
             </td>
 
@@ -607,6 +657,7 @@
 
             <td>
                 <div class="how-to-step">
+
                     <img
                             class="how-to-icon"
                             src="icons/icon_barcode.png"
@@ -621,42 +672,50 @@
                         Stampa questo buono o mostralo direttamente
                         dal tuo dispositivo.
                     </div>
+
                 </div>
             </td>
 
         </tr>
     </table>
+
 </div>
 
-<!-- SPACER 2pt  -->
+
+<!-- SPACER 2pt -->
+
 <div class="spacer-2"></div>
 
-<!-- POWERED BY -->
 
+<!-- POWERED BY PARI -->
 <div class="powered-by-pari">
 
-    <table class="powered-by-table">
+    <table class="powered-by-table" role="presentation">
         <tr>
 
             <td class="powered-by-text">
                 Il Bonus Elettrodomestici è realizzato tramite
             </td>
 
-            <td class="powered-by-logo">
+            <td class="powered-by-space">
+            </td>
 
+            <td class="powered-by-logo">
                 <img
                         src="../../pari/icons/logo_pari.png"
                         alt="PARI"
                 />
-
             </td>
 
         </tr>
     </table>
 
 </div>
+
+
 <!-- FOOTER -->
 <#include "../../pari/footer.html"/>
+
 
 </body>
 </html>
