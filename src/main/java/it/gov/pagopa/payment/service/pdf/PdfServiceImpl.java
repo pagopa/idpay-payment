@@ -1,6 +1,8 @@
 package it.gov.pagopa.payment.service.pdf;
 
 import com.itextpdf.barcodes.Barcode128;
+import com.itextpdf.html2pdf.ConverterProperties;
+import com.itextpdf.html2pdf.HtmlConverter;
 import com.itextpdf.kernel.colors.Color;
 import com.itextpdf.kernel.colors.DeviceGray;
 import com.itextpdf.kernel.colors.DeviceRgb;
@@ -13,6 +15,10 @@ import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
 import com.itextpdf.layout.properties.*;
+import freemarker.cache.ClassTemplateLoader;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateException;
 import it.gov.pagopa.common.utils.CommonUtilities;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.ReportDTO;
@@ -22,23 +28,28 @@ import it.gov.pagopa.payment.entity.Transaction;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.model.InitiativeConfig;
+import it.gov.pagopa.payment.model.RewardRule;
+import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.utils.PdfUtils;
 import it.gov.pagopa.payment.utils.Utilities;
+import lombok.Builder;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Base64;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -46,8 +57,10 @@ public class PdfServiceImpl implements PdfService {
 
     private final BarCodePaymentService barCodePaymentService;
     private final TransactionRepository transactionRepository;
+    private final RewardRuleRepository rewardRuleRepository;
     private final DecryptRestConnector decryptRestConnector;
     private final ResourceLoader resourceLoader;
+    private final Configuration freemarkerConfiguration;
 
 
     private final String font;
@@ -56,13 +69,17 @@ public class PdfServiceImpl implements PdfService {
     private final String iconWasher;
     private final String iconHealthcard;
     private final String iconBarcode;
+
+
     private static final String LABEL_BARCODE = "Codice a barre";
+    private static final String VOUCHER_TEMPLATE_BASE_PATH = "classpath:pdf/voucher/%s/";
+    private static final String VOUCHER_TEMPLATE_FILE = "voucher.html";
 
     public PdfServiceImpl(
             BarCodePaymentService barCodePaymentService,
-            TransactionRepository transactionRepository,
+            TransactionRepository transactionRepository, RewardRuleRepository rewardRuleRepository,
             DecryptRestConnector decryptRestConnector,
-            ResourceLoader resourceLoader,
+            ResourceLoader resourceLoader, Configuration freemarkerConfiguration,
             @Value("${pdf.font}") String font,
             @Value("${pdf.logoMimit}") String logoMimit,
             @Value("${pdf.logoPari}") String logoPari,
@@ -72,8 +89,15 @@ public class PdfServiceImpl implements PdfService {
     ) {
         this.barCodePaymentService = barCodePaymentService;
         this.transactionRepository = transactionRepository;
+        this.rewardRuleRepository = rewardRuleRepository;
         this.decryptRestConnector = decryptRestConnector;
         this.resourceLoader = resourceLoader;
+        if (freemarkerConfiguration != null) {
+            this.freemarkerConfiguration = (Configuration) freemarkerConfiguration.clone();
+            this.freemarkerConfiguration.setTemplateLoader(new ClassTemplateLoader(PdfServiceImpl.class, "/pdf"));
+        } else {
+            this.freemarkerConfiguration = null;
+        }
         this.font = font;
         this.logoMimit = logoMimit;
         this.logoPari = logoPari;
@@ -93,61 +117,108 @@ public class PdfServiceImpl implements PdfService {
      * @param fiscalCode   codice fiscale intestatario
      * @return ReportDTO con il PDF codificato Base64
      */
+
     @Override
     public ReportDTO create(String initiativeId, String trxCode, String userId, String username, String fiscalCode) {
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (PdfWriter writer = new PdfWriter(baos);
-             PdfDocument pdf = new PdfDocument(writer);
-             Document doc = new Document(pdf, PageSize.A4)) {
 
-            // Margini
-            doc.setMargins(36, 36, 48, 36);
+        try {
+            // retrieve transaction data
+            PdfTransactionData transactionData = getPdfTransactionData(initiativeId, trxCode, userId, username, fiscalCode);
 
-            // Font (con fallback gestito in PdfUtils)
-            PdfFont regular = PdfUtils.loadPdfFont(font, false, resourceLoader);
-            PdfFont bold = PdfUtils.loadPdfFont(font, true, resourceLoader);
+            // retrieve template
+            InitiativeData initiativeData = getInitiativeData(initiativeId);
+            String voucherTemplateName = initiativeData.getVoucherTemplateName();
 
-            // Palette
-            Color textPrimary   = new DeviceRgb(33, 37, 41);
-            Color textSecondary = new DeviceGray(0.35f);
-            Color brandBlue     = new DeviceRgb(0, 92, 230);
+            String templatePath = String.format(VOUCHER_TEMPLATE_BASE_PATH, voucherTemplateName) + VOUCHER_TEMPLATE_FILE;
+            Resource templateResource = resourceLoader.getResource(templatePath);
+            if (!templateResource.exists()) {
+                log.error("Voucher template voucher.html not found at path {} for initiativeId={}, trxCode={}, userId={}",
+                        templatePath,
+                        Utilities.sanitizeString(initiativeId),
+                        Utilities.sanitizeString(trxCode),
+                        Utilities.sanitizeString(userId));
 
-            // Header + separatore
-            doc.add(buildHeader(regular, bold, textPrimary));
-            doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
-                    .setMarginTop(6).setMarginBottom(18));
+                throw new PdfGenerationException("Voucher template voucher.html not found at path %s"
+                        .formatted(templatePath), true, null);
+            }
 
-            // Dati transazione
-            TransactionBarCodeResponse trxBarcode = barCodePaymentService.retriveVoucher(initiativeId, trxCode, userId);
-            LocalDate createdDate = Utilities.getLocalDate(trxBarcode.getTrxDate());
-            LocalDate validUntil  = Utilities.getLocalDate(trxBarcode.getTrxEndDate());
-            BigDecimal amount     = CommonUtilities.centsToEuro(trxBarcode.getVoucherAmountCents());
-            String barcodeTrxCode = trxBarcode.getTrxCode();
-            String cf = getCf(userId, fiscalCode);
+            Map<String, Object> model = new HashMap<>();
+            model.put("transaction", transactionData);
+            model.put("initiative", initiativeData);
 
-            // Sezioni principali
-            doc.add(buildOwnerRow(username, cf, regular, bold, textPrimary, textSecondary));
-            doc.add(PdfUtils.newSolidSeparator(0.8f, new DeviceGray(0.85f))
-                    .setMarginTop(12).setMarginBottom(18));
+            // 6. Rendering template HTML
+            Template template = freemarkerConfiguration.getTemplate(String.format("voucher/%s/" + VOUCHER_TEMPLATE_FILE, voucherTemplateName));
+            StringWriter htmlWriter = new StringWriter();
 
-            doc.add(buildDetailsAndAmount(createdDate, validUntil, amount, regular, bold, textPrimary, textSecondary));
-            doc.add(buildBarcodeBlock(pdf, barcodeTrxCode, regular, textSecondary));
-            doc.add(new Paragraph().setHeight(10));
-            doc.add(buildHowToBox(regular, bold, textPrimary, textSecondary));
-            doc.add(new Paragraph().setHeight(2));
-            doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
-            doc.add(buildFooter(bold, regular, textSecondary));
+            template.process(model, htmlWriter);
+            String html = htmlWriter.toString();
 
-        } catch (IOException | RuntimeException e) {
-            log.error("Errore durante la generazione del PDF (initiativeId={}, trxCode={}, userId={})",
+            // 7. Base URI per risorse template
+            String baseUri = resourceLoader
+                            .getResource(String.format(VOUCHER_TEMPLATE_BASE_PATH, voucherTemplateName))
+                            .getURL()
+                            .toExternalForm();
+
+            ConverterProperties converterProperties = new ConverterProperties();
+            converterProperties.setBaseUri(baseUri);
+
+            // 8. HTML -> PDF
+            HtmlConverter.convertToPdf(html, baos, converterProperties);
+
+        } catch (IOException |
+                 TemplateException |
+                 RuntimeException e) {
+
+            log.error("Errore durante la generazione HTML del PDF (initiativeId={}, trxCode={}, userId={})",
                     Utilities.sanitizeString(initiativeId),
                     Utilities.sanitizeString(trxCode),
-                    Utilities.sanitizeString(userId), e);
-            throw new PdfGenerationException("Errore durante la generazione del PDF",true, e);
+                    Utilities.sanitizeString(userId),
+                    e
+            );
+
+            throw new PdfGenerationException("Errore durante la generazione HTML del PDF", true, e);
         }
 
         return ReportDTO.builder()
                 .data(Base64.getEncoder().encodeToString(baos.toByteArray()))
+                .build();
+
+    }
+
+    private PdfTransactionData getPdfTransactionData(String initiativeId, String trxCode, String userId, String username, String fiscalCode) {
+        TransactionBarCodeResponse trx = barCodePaymentService.retriveVoucher(initiativeId, trxCode, userId);
+        LocalDate createdDate = Utilities.getLocalDate(trx.getTrxDate());
+        LocalDate validUntil  = Utilities.getLocalDate(trx.getTrxEndDate());
+        BigDecimal amount     = CommonUtilities.centsToEuro(trx.getVoucherAmountCents());
+        String cf = getCf(userId, fiscalCode);
+        String codeImage = PdfUtils.generateBarcode128Base64(trx.getTrxCode());
+
+        return PdfTransactionData.builder()
+                .beneficiary(username)
+                .fiscalCode(cf)
+                .createdDate(PdfUtils.formatDateIt(createdDate))
+                .validUntil(PdfUtils.formatDateIt(validUntil))
+                .amount(PdfUtils.formatCurrencyIt(amount))
+                .barcodeTrxCode(trx.getTrxCode())
+                .trxCode(trx.getTrxCode())
+                .codeImage(codeImage)
+                .initiativeName(trx.getInitiativeName())
+                .build();
+    }
+
+    private InitiativeData getInitiativeData(String initiativeId){
+        InitiativeConfig initiativeConfig = rewardRuleRepository.findById(initiativeId).map(RewardRule::getInitiativeConfig).orElse(null);
+
+        if(initiativeConfig == null) {
+            throw new InitiativeNotfoundException("The initiative with id [%s] is not found".formatted(initiativeId));
+        }
+
+        String initiativeLogo = initiativeConfig.getLogoURL() != null ? PdfUtils.loadAndEncodeBase64(initiativeConfig.getLogoURL(), resourceLoader) : null;
+        return InitiativeData.builder()
+                .voucherTemplateName(initiativeConfig.getPdfVoucherTemplate() != null ? initiativeConfig.getPdfVoucherTemplate() : "DEFAULT")
+                .logoImage(initiativeLogo)
                 .build();
     }
 
@@ -626,5 +697,28 @@ public class PdfServiceImpl implements PdfService {
                 .setFontColor(textSecondary)
                 .setTextAlignment(TextAlignment.CENTER)
                 .setMarginTop(24);
+    }
+
+
+    @Data
+    @Builder
+    public static class PdfTransactionData {
+        private String beneficiary;
+        private String fiscalCode;
+        private String createdDate;
+        private String validUntil;
+        private String amount;
+        private String barcodeTrxCode;
+        private String trxCode;
+        private String codeImage;
+        private String initiativeName;
+    }
+
+    @Data
+    @Builder
+    public static class InitiativeData {
+        private String voucherTemplateName;
+        private String logoImage;
+
     }
 }

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8"/>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 36px 36px 48px 36px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Titillium Web", Arial, sans-serif;
+            color: #212529;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            vertical-align: top;
+        }
+
+        .separator, hr.separator {
+            height: 1px;
+            background-color: #d9d9d9;
+            border: none;
+            margin: 14px 0 18px 0;
+            width: 100%;
+            display: block;
+        }
+
+        /* HEADER */
+
+        .header-logo {
+            width: 55px;
+            vertical-align: middle;
+        }
+
+        .header-logo img {
+            width: 45px;
+            height: auto;
+        }
+
+        .header-text {
+            vertical-align: middle;
+            padding-left: 6px;
+        }
+
+        .initiative-title {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 0 0 2px 0;
+        }
+
+        .organization {
+            font-size: 10px;
+            margin: 0;
+        }
+
+        /* OWNER */
+
+        .label {
+            font-size: 9px;
+            color: #595959;
+            margin-bottom: 4px;
+        }
+
+        .value {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        /* DETAILS */
+
+        .details-title {
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .detail-value {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .amount {
+            font-size: 26px;
+            font-weight: bold;
+            margin: 0 0 6px 0;
+        }
+
+        .amount-description {
+            font-size: 10px;
+            line-height: 1.35;
+            margin: 0 0 14px 0;
+        }
+
+        /* BARCODE */
+
+        .barcode-label {
+            font-size: 10px;
+            color: #595959;
+            margin-bottom: 6px;
+        }
+
+        .barcode img {
+            max-width: 260px;
+            height: 65px;
+        }
+
+        .barcode-code {
+            max-width: 260px;
+            margin-top: 4px;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        /* HOW TO */
+
+        .how-to {
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .how-to-title {
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            margin: 0 0 16px 0;
+        }
+
+        .how-to-table {
+            table-layout: fixed;
+        }
+
+        .how-to-table td {
+            width: 33.33%;
+            padding: 0 12px;
+            text-align: center;
+        }
+
+        .instruction-icon {
+            height: 60px;
+            width: auto;
+            margin-bottom: 8px;
+        }
+
+        .instruction-title {
+            font-size: 10px;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 6px;
+        }
+
+        .instruction-description {
+            font-size: 9px;
+            color: #595959;
+            line-height: 1.3;
+        }
+
+        /* PARI */
+
+        .powered-by {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 10px;
+        }
+
+        .powered-by img {
+            width: 80px;
+            height: auto;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+
+        /* FOOTER */
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #595959;
+            font-size: 9px;
+            line-height: 1.35;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+
+<table>
+    <tr>
+        <td class="header-logo">
+            <img
+                    src="https://assets.cdn.io.pagopa.it/logos/organizations/97532760580.png"
+                    alt="Ministero delle Imprese e del Made in Italy"
+            />
+        </td>
+
+        <td class="header-text">
+            <div class="initiative-title">
+                BONUS DECODER
+            </div>
+
+            <div class="organization">
+                Ministero delle Imprese e del Made in Italy
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="separator"></div>
+
+
+<!-- BENEFICIARIO -->
+
+<table>
+    <tr>
+        <td style="width: 50%;">
+            <div class="label">
+                Bonus intestato a
+            </div>
+
+            <div class="value">
+                ${transaction.beneficiary}
+            </div>
+        </td>
+
+        <td style="width: 50%;" class="text-right">
+            <div class="label">
+                Codice Fiscale del titolare
+            </div>
+
+            <div class="value">
+                ${transaction.fiscalCode}
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div class="separator"></div>
+
+
+<!-- DETTAGLI / IMPORTO -->
+
+<table>
+    <tr>
+
+        <!-- COLONNA SINISTRA -->
+
+        <td style="width: 50%; padding-right: 20px;">
+
+            <div class="details-title">
+                DETTAGLI DEL BONUS
+            </div>
+
+            <div class="label">
+                Bonus emesso il
+            </div>
+
+            <div class="detail-value">
+                ${transaction.createdDate}
+            </div>
+
+            <div class="label">
+                Valido fino al
+            </div>
+
+            <div class="detail-value">
+                ${transaction.validUntil}
+            </div>
+
+        </td>
+
+
+        <!-- COLONNA DESTRA -->
+
+        <td style="width: 50%; padding-left: 20px;">
+
+            <div class="label">
+                Importo massimo disponibile
+            </div>
+
+            <div class="amount">
+                ${transaction.amount}
+            </div>
+
+
+            <div class="amount-description">
+                Puoi usare il bonus per ottenere uno sconto
+                <strong>
+                    fino al 70% sul prezzo d'acquisto di un solo
+                    decoder in base alla tipologia.
+                </strong>,
+            </div>
+
+            <div class="barcode-label">
+                Codice a barre
+            </div>
+
+            <#if transaction.codeImage?? and transaction.codeImage?has_content>
+            <div class="barcode">
+                <img
+                        src="${transaction.codeImage}"
+                        alt="Codice a barre"
+                />
+            </div>
+        </#if>
+
+        <div class="barcode-code">
+            ${transaction.trxCode}
+        </div>
+
+        </td>
+
+    </tr>
+</table>
+
+
+<!-- COME USARE IL BONUS - STATICO BEL25 -->
+
+<div class="how-to">
+
+    <div class="how-to-title">
+        COME USARE IL BONUS
+    </div>
+
+    <table class="how-to-table">
+        <tr>
+
+            <!-- STEP 1 -->
+
+            <td>
+                <img
+                        class="instruction-icon"
+                        src="icons/icon_decoder.png"
+                        alt=""
+                />
+
+                <div class="instruction-title">
+                    Scegli il decoder da acquistare
+                </div>
+
+                <div class="instruction-description">
+                    Scegli quale decoder vuoi acquistare.
+                </div>
+            </td>
+
+
+            <!-- STEP 2 -->
+
+            <td>
+                <img
+                        class="instruction-icon"
+                        src="icons/icon_healthcard.png"
+                        alt=""
+                />
+
+                <div class="instruction-title">
+                    Porta con te la Tessera Sanitaria
+                </div>
+
+                <div class="instruction-description">
+                    Mostrala, se richiesta, per eventuali controlli
+                    presso il punto vendita.
+                </div>
+            </td>
+
+
+            <!-- STEP 3 -->
+
+            <td>
+                <img
+                        class="instruction-icon"
+                        src="icons/icon_barcode.png"
+                        alt=""
+                />
+
+                <div class="instruction-title">
+                    Mostra il codice a barre
+                </div>
+
+                <div class="instruction-description">
+                    Stampa questo buono o mostralo direttamente
+                    dal tuo dispositivo.
+                </div>
+            </td>
+
+        </tr>
+    </table>
+
+</div>
+
+
+<!-- POWERED BY - RISORSA COMUNE -->
+
+<div class="powered-by">
+    Il Bonus Decoder è realizzato tramite
+
+    <img
+            src="../../pari/icons/logo_pari.png"
+            alt="PARI"
+    />
+</div>
+
+<!-- FOOTER -->
+<#include "../../pari/footer.html"/>
+
+</body>
+</html>
