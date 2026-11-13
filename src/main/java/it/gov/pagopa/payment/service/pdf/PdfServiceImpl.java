@@ -77,9 +77,11 @@ public class PdfServiceImpl implements PdfService {
 
     public PdfServiceImpl(
             BarCodePaymentService barCodePaymentService,
-            TransactionRepository transactionRepository, RewardRuleRepository rewardRuleRepository,
+            TransactionRepository transactionRepository,
+            RewardRuleRepository rewardRuleRepository,
             DecryptRestConnector decryptRestConnector,
-            ResourceLoader resourceLoader, Configuration freemarkerConfiguration,
+            ResourceLoader resourceLoader,
+            Configuration freemarkerConfiguration,
             @Value("${pdf.font}") String font,
             @Value("${pdf.logoMimit}") String logoMimit,
             @Value("${pdf.logoPari}") String logoPari,
