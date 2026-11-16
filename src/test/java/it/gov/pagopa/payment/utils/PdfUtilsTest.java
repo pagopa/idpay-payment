@@ -17,6 +17,8 @@ import org.springframework.core.io.ResourceLoader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Base64;
 
@@ -204,7 +206,7 @@ class PdfUtilsTest {
 
     @Test
     void loadAndEncodeBase64_shouldLoadPngFromResourceLoader_andEncodeBase64() throws Exception {
-        byte[] samplePng = new byte[]{1, 2, 3, 4, 5};
+        byte[] samplePng = {1, 2, 3, 4, 5};
         String expectedB64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(samplePng);
 
         ResourceLoader rl = mock(ResourceLoader.class);
@@ -248,14 +250,14 @@ class PdfUtilsTest {
 
     @Test
     void loadAndEncodeBase64_shouldLoadFromFileSystem_whenFileExists() throws Exception {
-        java.io.File tempFile = java.io.File.createTempFile("test-logo-", ".png");
-        tempFile.deleteOnExit();
-        byte[] content = new byte[]{10, 20, 30, 40};
-        java.nio.file.Files.write(tempFile.toPath(), content);
+        Path tempFile = Files.createTempFile("test-logo-", ".png");
+        tempFile.toFile().deleteOnExit();
+        byte[] content = {10, 20, 30, 40};
+        Files.write(tempFile, content);
 
         String expectedB64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(content);
 
-        String result = PdfUtils.loadAndEncodeBase64(tempFile.getAbsolutePath(), null);
+        String result = PdfUtils.loadAndEncodeBase64(tempFile.toAbsolutePath().toString(), null);
 
         assertEquals(expectedB64, result);
     }
