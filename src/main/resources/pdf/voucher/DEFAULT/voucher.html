@@ -2,246 +2,451 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8"/>
+    <title>Voucher</title>
 
     <style>
-        @page {
-            size: A4;
-            margin: 36px 36px 48px 36px;
-        }
 
-        * {
-            box-sizing: border-box;
+        /* PAGE */
+        @page {
+            size: A4 portrait;
+            margin: 36pt 36pt 48pt 36pt;
         }
 
         body {
             margin: 0;
-            font-family: "Titillium Web", Arial, sans-serif;
-            color: #212529;
-            font-size: 12px;
+            padding: 0;
+            font-family: Helvetica, Arial, sans-serif;
+            color: rgb(33, 37, 41);
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        td {
-            vertical-align: top;
-        }
-
-        .separator, hr.separator {
-            height: 1px;
-            background-color: #d9d9d9;
-            border: none;
-            margin: 14px 0 18px 0;
-            width: 100%;
-            display: block;
-        }
 
         /* HEADER */
+        .header {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6pt;
+        }
+
+        .header td {
+            border: none;
+            padding: 0;
+        }
 
         .header-text {
             vertical-align: middle;
         }
 
-        .initiative-title {
-            font-size: 12px;
+        .header-title {
+            margin: 0 0 5pt 0;
+            padding: 0;
+            font-size: 12pt;
+            line-height: 14pt;
             font-weight: bold;
-            margin: 0 0 2px 0;
+            color: rgb(33, 37, 41);
         }
 
-        .initiative-subtitle {
-            font-size: 10px;
-            color: #595959;
+        .header-subtitle {
+            margin: 0;
+            padding: 0;
+            font-size: 10pt;
+            line-height: 12pt;
+            font-weight: normal;
+            color: rgb(33, 37, 41);
+        }
+
+
+        /* FIRST SEPARATOR */
+        .separator-before-owner {
+            width: 100%;
+            height: 0.8pt;
+            background-color: rgb(217, 217, 217);
+            margin: 10pt 0 12pt 0;
+            padding: 0;
+        }
+
+
+        /* OWNER */
+        .owner-table {
+            width: 100%;
+            border-collapse: collapse;
             margin: 0;
         }
 
-        /* OWNER */
-
-        .label {
-            font-size: 9px;
-            color: #595959;
-            margin-bottom: 4px;
+        .owner-table td {
+            width: 50%;
+            border: none;
+            padding: 10pt 0 10pt 0;
+            vertical-align: top;
         }
 
-        .value {
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .text-right {
+        .owner-right {
             text-align: right;
         }
 
-        /* DETAILS */
-
-        .details-title {
-            font-size: 11px;
-            font-weight: bold;
-            margin-bottom: 12px;
+        .owner-label {
+            margin: 0 0 8pt 0;
+            padding: 0;
+            font-size: 9pt;
+            line-height: 11pt;
+            font-weight: normal;
+            color: rgb(89, 89, 89);
+            text-transform: uppercase;
         }
 
-        .detail-value {
-            font-size: 12px;
+        .owner-value {
+            margin: 0;
+            padding: 0;
+            font-size: 12pt;
+            line-height: 14pt;
             font-weight: bold;
-            margin-bottom: 12px;
+            color: rgb(33, 37, 41);
+        }
+
+
+        /* SECOND SEPARATOR */
+        .separator-after-owner {
+            width: 100%;
+            height: 0.8pt;
+            background-color: rgb(217, 217, 217);
+            margin: 12pt 0 20pt 0;
+            padding: 0;
+        }
+
+
+        /* DETAILS AND AMOUNT */
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6pt;
+        }
+
+        .details-table td {
+            width: 50%;
+            border: none;
+            padding: 0;
+            vertical-align: top;
+        }
+
+        .details-left {
+            padding-right: 20pt;
+        }
+
+        .details-right {
+            padding-left: 20pt;
+        }
+
+        .details-title {
+            margin: 0 0 12pt 0;
+            padding: 0;
+            font-size: 11pt;
+            line-height: 13pt;
+            font-weight: bold;
+            color: rgb(33, 37, 41);
+        }
+
+        .details-label {
+            margin: 0 0 10pt 0;
+            padding: 0;
+            font-size: 9pt;
+            line-height: 11pt;
+            font-weight: normal;
+            color: rgb(89, 89, 89);
+            text-transform: uppercase;
+        }
+
+        .details-date {
+            margin: 0;
+            padding: 0;
+            font-size: 12pt;
+            line-height: 14pt;
+            font-weight: bold;
+            color: rgb(33, 37, 41);
+        }
+
+        .details-date-issued {
+            margin-bottom: 14pt;
         }
 
         .amount {
-            font-size: 26px;
+            margin: 4pt 0 12pt 0;
+            padding: 0;
+            font-size: 26pt;
+            line-height: 30pt;
             font-weight: bold;
-            margin: 0 0 14px 0;
+            color: rgb(33, 37, 41);
         }
+
 
         /* BARCODE */
-
         .barcode-label {
-            font-size: 10px;
-            color: #595959;
-            margin-bottom: 6px;
+            margin: 18pt 0 6pt 0;
+            padding: 0;
+            font-size: 12pt;
+            line-height: 14pt;
+            font-weight: normal;
+            color: rgb(89, 89, 89);
+            text-align: left;
         }
 
-        .barcode img {
-            max-width: 260px;
-            height: 65px;
+        .barcode-wrapper {
+            display: inline-block;
+            text-align: center;
+            margin-top: 2pt;
+        }
+
+        .barcode-img {
+            display: block;
+            width: 190pt;
+            height: 42pt;
         }
 
         .barcode-code {
-            max-width: 260px;
-            margin-top: 4px;
+            margin-top: 5pt;
+            font-size: 13pt;
+            line-height: 15pt;
+            font-weight: normal;
+            color: rgb(33, 37, 41);
+            letter-spacing: 1.5pt;
             text-align: center;
-            font-size: 11px;
         }
 
-        /* HOW TO */
 
-        .how-to {
-            border: 1px solid #d9d9d9;
-            border-radius: 8px;
-            padding: 16px;
-            margin-top: 24px;
-            text-align: center;
+        /* HOW TO USE BOX */
+        .how-to-box {
+            padding: 16pt;
+            border: 1pt solid rgb(217, 217, 217);
+            border-radius: 8pt;
+            margin: 12pt 0 30pt 0;
         }
 
         .how-to-title {
-            font-size: 11px;
-            font-weight: bold;
-            margin: 0 0 8px 0;
-        }
-
-        .how-to-description {
-            font-size: 10px;
-            color: #595959;
-            line-height: 1.4;
-        }
-
-        /* PARI */
-
-        .powered-by {
+            margin: 0 0 10pt 0;
+            padding: 0;
             text-align: center;
-            margin-top: 30px;
-            font-size: 10px;
+            font-size: 11pt;
+            line-height: 13pt;
+            font-weight: bold;
+            color: rgb(33, 37, 41);
         }
 
-        .powered-by img {
-            width: 80px;
-            height: auto;
-            vertical-align: middle;
-            margin-left: 8px;
+        .how-to-grid {
+            width: 100%;
+            border-collapse: collapse;
+            border: none;
         }
+
+        .how-to-grid td {
+            width: 33.333%;
+            border: none;
+            padding: 8pt;
+            vertical-align: top;
+            text-align: center;
+        }
+
+        .how-to-step {
+            width: 100%;
+            text-align: center;
+        }
+
+        .how-to-icon {
+            display: block;
+            max-width: 24pt;
+            max-height: 24pt;
+            margin: 0 auto 12pt auto;
+        }
+
+        .how-to-step-title {
+            margin: 0 0 4pt 0;
+            padding: 0;
+            text-align: center;
+            font-size: 10pt;
+            line-height: 14pt;
+            font-weight: bold;
+            color: rgb(33, 37, 41);
+        }
+
+        .how-to-step-description {
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            font-size: 9pt;
+            line-height: 13pt;
+            font-weight: normal;
+            color: rgb(89, 89, 89);
+        }
+
+
+        /* POWERED BY PARI */
+        .powered-by-pari {
+            text-align: center;
+            margin-top: 20pt;
+        }
+
+        .powered-by-table {
+            margin-left: auto;
+            margin-right: auto;
+            border-collapse: collapse;
+            border: none;
+        }
+
+        .powered-by-table td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .powered-by-text {
+            text-align: right;
+            white-space: nowrap;
+            font-size: 10pt;
+            line-height: 12pt;
+            font-weight: normal;
+        }
+
+        .powered-by-space {
+            width: 12pt;
+            min-width: 12pt;
+        }
+
+        .powered-by-logo {
+            text-align: left;
+        }
+
+        .powered-by-logo img {
+            display: block;
+            max-width: 80pt;
+            max-height: 20pt;
+        }
+
+        /* SPACERS  */
+
+        .spacer-10 {
+            height: 10pt;
+        }
+
+        .spacer-2 {
+            height: 2pt;
+        }
+
 
         /* FOOTER */
-
         .footer {
-            margin-top: 24px;
+            width: 92%;
+            margin: 24pt 0 0 0;
+            padding: 0;
+            font-family: Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            line-height: 11pt;
+            font-weight: normal;
+            color: rgb(89, 89, 89);
             text-align: center;
-            color: #595959;
-            font-size: 9px;
-            line-height: 1.35;
         }
+
+        .footer strong {
+            font-weight: bold;
+        }
+
+
     </style>
 </head>
 
 <body>
 
+
 <!-- HEADER -->
-<table>
+<table class="header" role="presentation">
     <tr>
+
         <td class="header-text">
-            <div class="initiative-title">
+
+            <div class="header-title">
                 ${transaction.initiativeName?upper_case}
             </div>
 
-            <div class="initiative-subtitle">
+            <div class="header-subtitle">
                 Voucher digitale
             </div>
+
         </td>
+
     </tr>
 </table>
 
-<div class="separator"></div>
+
+<!-- FIRST SEPARATOR -->
+<div class="separator-before-owner"></div>
 
 
 <!-- BENEFICIARIO -->
-<table>
+<table class="owner-table" role="presentation">
     <tr>
-        <td style="width: 50%;">
-            <div class="label">
+
+        <td>
+
+            <div class="owner-label">
                 Bonus intestato a
             </div>
 
-            <div class="value">
+            <div class="owner-value">
                 ${transaction.beneficiary}
             </div>
+
         </td>
 
-        <td style="width: 50%;" class="text-right">
-            <div class="label">
+        <td class="owner-right">
+
+            <div class="owner-label">
                 Codice Fiscale del titolare
             </div>
 
-            <div class="value">
+            <div class="owner-value">
                 ${transaction.fiscalCode}
             </div>
+
         </td>
+
     </tr>
 </table>
 
-<div class="separator"></div>
+
+<!-- SECOND SEPARATOR -->
+<div class="separator-after-owner"></div>
 
 
-<!-- DETTAGLI -->
-
-<table>
+<!-- DETAILS AND AMOUNT -->
+<table class="details-table" role="presentation">
     <tr>
 
-        <td style="width: 50%; padding-right: 20px;">
+        <!-- LEFT COLUMN -->
+        <td class="details-left">
 
             <div class="details-title">
                 DETTAGLI DEL BONUS
             </div>
 
-            <div class="label">
+            <div class="details-label">
                 Bonus emesso il
             </div>
 
-            <div class="detail-value">
+            <div class="details-date details-date-issued">
                 ${transaction.createdDate}
             </div>
 
-            <div class="label">
+            <div class="details-label">
                 Valido fino al
             </div>
 
-            <div class="detail-value">
+            <div class="details-date">
                 ${transaction.validUntil}
             </div>
 
         </td>
 
-        <td style="width: 50%; padding-left: 20px;">
 
-            <div class="label">
+        <!-- RIGHT COLUMN -->
+        <td class="details-right">
+
+            <div class="details-label">
                 Importo massimo disponibile
             </div>
 
@@ -249,57 +454,125 @@
                 ${transaction.amount}
             </div>
 
+
             <div class="barcode-label">
                 Codice a barre
             </div>
 
             <#if transaction.codeImage?? && transaction.codeImage?has_content>
-            <div class="barcode">
+
+            <div class="barcode-wrapper">
+
                 <img
+                        class="barcode-img"
                         src="${transaction.codeImage}"
                         alt="Codice a barre"
                 />
-            </div>
-            </#if>
 
-            <div class="barcode-code">
-                ${transaction.trxCode}
+                <div class="barcode-code">
+                    ${transaction.trxCode}
+                </div>
+
             </div>
+
+        </#if>
+
         </td>
 
     </tr>
 </table>
 
+<!-- SPACER 10pt -->
+<div class="spacer-10"></div>
 
-<!-- ISTRUZIONI GENERICHE -->
 
-<div class="how-to">
+<!-- GENERIC HOW TO -->
+<div class="how-to-box">
 
     <div class="how-to-title">
         COME USARE IL BONUS
     </div>
 
-    <div class="how-to-description">
-        Mostra il codice a barre presso un esercente aderente
-        all'iniziativa per utilizzare il bonus.
-    </div>
+    <table class="how-to-grid" role="presentation">
+        <tr>
+            <td>
+                <div class="how-to-step">
+
+                    <img
+                            class="how-to-icon"
+                            src="../../pari/icons/icon_healthcard.png"
+                            alt=""
+                    />
+
+                    <div class="how-to-step-title">
+                        Porta con te la Tessera Sanitaria
+                    </div>
+
+                    <div class="how-to-step-description">
+                        Mostrala, se richiesta, per eventuali controlli
+                        presso il punto vendita.
+                    </div>
+
+                </div>
+            </td>
+            <td>
+                <div class="how-to-step">
+
+                    <img
+                            class="how-to-icon"
+                            src="../../pari/icons/icon_barcode.png"
+                            alt=""
+                    />
+
+                    <div class="how-to-step-title">
+                        Mostra il codice a barre
+                    </div>
+
+                    <div class="how-to-step-description">
+                        Stampa questo buono o mostralo direttamente
+                        dal tuo dispositivo.
+                    </div>
+
+                </div>
+            </td>
+
+        </tr>
+    </table>
+
+</div>
+
+<!-- SPACER 2pt -->
+<div class="spacer-2"></div>
+
+<!-- POWERED BY PARI -->
+<div class="powered-by-pari">
+
+    <table class="powered-by-table" role="presentation">
+        <tr>
+
+            <td class="powered-by-text">
+                Il ${transaction.initiativeName?capitalize} è realizzato tramite
+            </td>
+
+            <td class="powered-by-space">
+            </td>
+
+            <td class="powered-by-logo">
+                <img
+                        src="../../pari/icons/logo_pari.png"
+                        alt="PARI"
+                />
+            </td>
+
+        </tr>
+    </table>
 
 </div>
 
 
-<!-- POWERED BY -->
+<!-- FOOTER  -->
+<#include "../../pari/footer.html"/>
 
-<div class="powered-by">
-   Il ${transaction.initiativeName?capitalize} è realizzato tramite
-
-    <img
-            src="../../pari/icons/logo_pari.png"
-            alt="PARI"
-    />
-</div>
-
-<!-- FOOTER COMUNE -->
-<#include "../../pari/footer.html">
 
 </body>
 </html>
