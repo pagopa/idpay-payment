@@ -12,9 +12,11 @@ import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
-import com.itextpdf.layout.borders.SolidBorder;
 import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.properties.*;
+import com.itextpdf.layout.properties.HorizontalAlignment;
+import com.itextpdf.layout.properties.TextAlignment;
+import com.itextpdf.layout.properties.UnitValue;
+import com.itextpdf.layout.properties.VerticalAlignment;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
@@ -50,6 +52,7 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -66,9 +69,15 @@ public class PdfServiceImpl implements PdfService {
     private final String font;
     private final String logoMimit;
     private final String logoPari;
-    private final String iconWasher;
-    private final String iconHealthcard;
-    private final String iconBarcode;
+    private final long logoCacheTtlMinutes;
+
+    private final Map<String, CachedLogo> logoCache = new ConcurrentHashMap<>();
+
+    private record CachedLogo(String base64Image, long expireAtMillis) {
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireAtMillis;
+        }
+    }
 
 
     private static final String LABEL_BARCODE = "Codice a barre";
@@ -85,9 +94,7 @@ public class PdfServiceImpl implements PdfService {
             @Value("${pdf.font}") String font,
             @Value("${pdf.logoMimit}") String logoMimit,
             @Value("${pdf.logoPari}") String logoPari,
-            @Value("${pdf.iconWasher}") String iconWasher,
-            @Value("${pdf.iconHealthcard}") String iconHealthcard,
-            @Value("${pdf.iconBarcode}") String iconBarcode
+            @Value("${pdf.logoCacheTtlMinutes}") long logoCacheTtlMinutes
     ) {
         this.barCodePaymentService = barCodePaymentService;
         this.transactionRepository = transactionRepository;
@@ -103,9 +110,7 @@ public class PdfServiceImpl implements PdfService {
         this.font = font;
         this.logoMimit = logoMimit;
         this.logoPari = logoPari;
-        this.iconWasher = iconWasher;
-        this.iconHealthcard = iconHealthcard;
-        this.iconBarcode = iconBarcode;
+        this.logoCacheTtlMinutes = logoCacheTtlMinutes;
     }
 
     /**
@@ -173,14 +178,14 @@ public class PdfServiceImpl implements PdfService {
                  TemplateException |
                  RuntimeException e) {
 
-            log.error("Errore durante la generazione HTML del PDF (initiativeId={}, trxCode={}, userId={})",
+            log.error("Error while generating PDF HTML (initiativeId={}, trxCode={}, userId={})",
                     Utilities.sanitizeString(initiativeId),
                     Utilities.sanitizeString(trxCode),
                     Utilities.sanitizeString(userId),
                     e
             );
 
-            throw new PdfGenerationException("Errore durante la generazione HTML del PDF", true, e);
+            throw new PdfGenerationException("Error while generating PDF HTML", true, e);
         }
 
         return ReportDTO.builder()
@@ -217,11 +222,29 @@ public class PdfServiceImpl implements PdfService {
             throw new InitiativeNotfoundException("The initiative with id [%s] is not found".formatted(initiativeId));
         }
 
-        String initiativeLogo = initiativeConfig.getLogoURL() != null ? PdfUtils.loadAndEncodeBase64(initiativeConfig.getLogoURL(), resourceLoader) : null;
+        String initiativeLogo = getCachedLogo(initiativeConfig.getLogoURL());
         return InitiativeData.builder()
                 .voucherTemplateName(initiativeConfig.getPdfVoucherTemplate() != null ? initiativeConfig.getPdfVoucherTemplate() : "DEFAULT")
                 .logoImage(initiativeLogo)
                 .build();
+    }
+
+    private String getCachedLogo(String logoUrl) {
+        if (logoUrl == null || logoUrl.isBlank()) {
+            return null;
+        }
+
+        CachedLogo cached = logoCache.get(logoUrl);
+        if (cached != null && !cached.isExpired()) {
+            return cached.base64Image();
+        }
+
+        String base64 = PdfUtils.loadAndEncodeBase64(logoUrl, resourceLoader);
+        if (base64 != null) {
+            long expireAt = System.currentTimeMillis() + (logoCacheTtlMinutes * 60 * 1000L);
+            logoCache.put(logoUrl, new CachedLogo(base64, expireAt));
+        }
+        return base64;
     }
 
     @Override
@@ -308,7 +331,7 @@ public class PdfServiceImpl implements PdfService {
             doc.add(buildNotes(transaction.getId(), regular, textNote));
 
             doc.add(new Paragraph().setHeight(40));
-            doc.add(buildPoweredByPari(regular, brandBlue, "Il Bonus Elettrodomestici è realizzato tramite"));
+            doc.add(buildPoweredByPari(regular, brandBlue));
             doc.add(buildFooter(bold, regular, textSecondary));
 
         } catch (IOException | RuntimeException e) {
@@ -369,26 +392,6 @@ public class PdfServiceImpl implements PdfService {
         return t.setMarginBottom(6);
     }
 
-    /**
-     * Crea la riga con intestatario e codice fiscale.
-     */
-    private BlockElement<?> buildOwnerRow(String intestatario, String cf,
-                                          PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
-        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
-
-        Div left = new Div();
-        left.add(PdfUtils.smallLabel("Bonus intestato a", regular, textSecondary));
-        left.add(new Paragraph(intestatario).setFont(bold).setFontSize(12).setFontColor(textPrimary));
-
-        Div right = new Div().setTextAlignment(TextAlignment.RIGHT);
-        right.add(PdfUtils.smallLabel("Codice Fiscale del titolare", regular, textSecondary));
-        right.add(new Paragraph(cf).setFont(bold).setFontSize(12).setFontColor(textPrimary));
-
-        t.addCell(PdfUtils.noBorderCell(left));
-        t.addCell(PdfUtils.noBorderCell(right));
-        return t.setMarginBottom(6);
-    }
-
     private BlockElement<?> buildNotes(String transactionId, PdfFont regular, Color textSecondary) {
 
         Table t = new Table(UnitValue.createPercentArray(new float[]{0.75f, 0.25f})).useAllAvailableWidth();
@@ -440,35 +443,6 @@ public class PdfServiceImpl implements PdfService {
         return t.setMarginBottom(6);
     }
 
-
-    /**
-     * Crea il blocco con i dettagli del bonus (date) e l'importo massimo.
-     */
-    private BlockElement<?> buildDetailsAndAmount(LocalDate emessoIl, LocalDate validoFinoAl, BigDecimal importo,
-                                                  PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
-        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1})).useAllAvailableWidth();
-
-        Div left = new Div();
-        left.add(new Paragraph("DETTAGLI DEL BONUS").setFont(bold).setFontSize(11).setFontColor(textPrimary).setMarginBottom(10));
-        left.add(PdfUtils.smallLabel("Bonus emesso il", regular, textSecondary));
-        left.add(new Paragraph(PdfUtils.formatDateIt(emessoIl)).setFont(bold).setFontSize(12).setMarginBottom(10));
-        left.add(PdfUtils.smallLabel("Valido fino al", regular, textSecondary));
-        left.add(new Paragraph(PdfUtils.formatDateIt(validoFinoAl)).setFont(bold).setFontSize(12));
-
-        Div right = new Div();
-        right.add(PdfUtils.smallLabel("Importo massimo disponibile", regular, textSecondary));
-        right.add(new Paragraph(PdfUtils.formatCurrencyIt(importo)).setFont(bold).setFontSize(26).setFontColor(textPrimary).setMarginBottom(6));
-        right.add(new Paragraph()
-                .add("Puoi usare il bonus per ottenere uno sconto ")
-                .add(new Text("fino al 30% sul prezzo d’acquisto di un solo elettrodomestico").setFont(bold))
-                .add(", nuovo e ad alta efficienza.")
-                .setFont(regular).setFontSize(10).setFontColor(textPrimary)
-                .setMarginTop(2).setMarginBottom(12));
-
-        t.addCell(PdfUtils.noBorderCell(left));
-        t.addCell(PdfUtils.noBorderCell(right));
-        return t.setMarginBottom(6);
-    }
 
     /**
      * Costruisce la cella sinistra del dettaglio prodotto
@@ -536,42 +510,6 @@ public class PdfServiceImpl implements PdfService {
         div.add(barcodeImg.setMarginTop(2));
     }
 
-    /**
-     * Crea il blocco del codice a barre (2 colonne: sinistra vuota, destra contenuto).
-     */
-    private BlockElement<?> buildBarcodeBlock(PdfDocument pdf, String code, PdfFont regular, Color textSecondary) {
-        Table t = new Table(UnitValue.createPercentArray(new float[]{1, 1}))
-                .useAllAvailableWidth();
-
-        t.addCell(PdfUtils.noBorderCell(new Div()));
-
-        Div right = new Div();
-
-        right.add(new Paragraph(LABEL_BARCODE)
-                .setFont(regular)
-                .setFontSize(12)
-                .setFontColor(textSecondary)
-                .setTextAlignment(TextAlignment.LEFT)
-                .setMarginTop(10)
-                .setMarginBottom(6));
-
-        Barcode128 barcode = new Barcode128(pdf);
-        barcode.setCodeType(Barcode128.CODE128);
-        barcode.setCode(code);
-        barcode.setFont(regular);
-        barcode.setSize(14);
-        barcode.setBaseline(18);
-        barcode.setBarHeight(42);
-        barcode.setX(1.55f);
-
-        Image barcodeImg = new Image(barcode.createFormXObject(pdf));
-        barcodeImg.setAutoScale(false);
-        barcodeImg.setHorizontalAlignment(HorizontalAlignment.LEFT);
-        right.add(barcodeImg.setMarginTop(2));
-
-        t.addCell(PdfUtils.noBorderCell(right));
-        return t;
-    }
 
     /**
      * Crea una cella codice a barre
@@ -600,50 +538,11 @@ public class PdfServiceImpl implements PdfService {
         return PdfUtils.noBorderCell(div);
     }
 
-    /**
-     * Crea il box con le tre istruzioni su come usare il bonus.
-     */
-    private BlockElement<?> buildHowToBox(PdfFont regular, PdfFont bold, Color textPrimary, Color textSecondary) {
-        Div card = new Div()
-                .setPadding(16)
-                .setBorder(new SolidBorder(new DeviceGray(0.85f), 1f))
-                .setBorderRadius(new BorderRadius(8))
-                .setMarginTop(12)
-                .setMarginBottom(30);
-
-        card.add(new Paragraph("COME USARE IL BONUS")
-                .setTextAlignment(TextAlignment.CENTER)
-                .setFont(bold)
-                .setFontSize(11)
-                .setFontColor(textPrimary)
-                .setMarginBottom(10));
-
-        Table grid = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1}))
-                .useAllAvailableWidth()
-                .setBorder(Border.NO_BORDER);
-
-        var stepStyle = new PdfUtils.StepStyle(regular, bold, textPrimary, textSecondary, resourceLoader);
-
-        grid.addCell(PdfUtils.stepCell(iconWasher, "Scegli l’elettrodomestico da sostituire",
-                "Scegli quale elettrodomestico vuoi smaltire perché ormai vecchio o consuma troppa energia.",
-                stepStyle));
-
-        grid.addCell(PdfUtils.stepCell(iconHealthcard, "Porta con te la Tessera Sanitaria",
-                "Mostrala, se richiesta, per eventuali controlli presso il punto vendita.",
-                stepStyle));
-
-        grid.addCell(PdfUtils.stepCell(iconBarcode, "Mostra il codice a barre",
-                "Stampa questo buono o mostralo direttamente dal tuo dispositivo.",
-                stepStyle));
-
-        card.add(grid);
-        return card;
-    }
 
     /**
      * Crea la riga centrata "Powered by" con logo PARI.
      */
-    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue, String text) {
+    private BlockElement<?> buildPoweredByPari(PdfFont regular, Color brandBlue) {
         Div box = new Div().setTextAlignment(TextAlignment.CENTER).setMarginTop(20);
 
         Image pari = PdfUtils.loadImageOrNull(logoPari, 0, resourceLoader);
@@ -662,7 +561,7 @@ public class PdfServiceImpl implements PdfService {
                 .setTextAlignment(TextAlignment.LEFT)
                 .setPadding(0);
 
-        left.add(new Paragraph(text).setFont(regular).setFontSize(10).setMargin(0));
+        left.add(new Paragraph("Il Bonus Elettrodomestici è realizzato tramite").setFont(regular).setFontSize(10).setMargin(0));
 
         if (pari != null) {
             pari.setAutoScale(false).scaleToFit(80, 20);

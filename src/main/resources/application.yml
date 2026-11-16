@@ -246,6 +246,7 @@ pdf:
   iconWasher: ${ICON_WASHER:classpath:static/icons/icon_washer.png}
   iconHealthcard: ${ICON_HEALTCARD:classpath:static/icons/icon_healthcard.png}
   iconBarcode: ${ICON_BARCODE:classpath:static/icons/icon_barcode.png}
+  logoCacheTtlMinutes: ${PDF_LOGO_CACHE_TTL_MINUTES:60}
 
 
 management:
