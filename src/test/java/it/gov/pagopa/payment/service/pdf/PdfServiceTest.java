@@ -97,7 +97,7 @@ class PdfServiceTest {
                 .initiativeId(initiativeId)
                 .initiativeName("Bonus Elettrodomestici")
                 .pdfVoucherTemplate(templateName)
-                .logoURL(logoUrl)
+                .pdfLogoURL(logoUrl)
                 .build();
         it.gov.pagopa.payment.model.RewardRule rewardRule = it.gov.pagopa.payment.model.RewardRule.builder()
                 .id(initiativeId)
