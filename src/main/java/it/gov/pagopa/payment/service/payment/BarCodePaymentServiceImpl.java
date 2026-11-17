@@ -62,7 +62,7 @@ public class BarCodePaymentServiceImpl implements BarCodePaymentService {
     }
 
     @Override
-    public TransactionBarCodeResponse retriveVoucher(String intiativeId, String trxCode, String userId) {
+    public TransactionBarCodeResponse retriveActiveVoucher(String intiativeId, String trxCode, String userId) {
         return barCodeCaptureService.retriveVoucher(intiativeId, trxCode, userId);
     }
 

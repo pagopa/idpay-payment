@@ -103,13 +103,13 @@ class BarCodePaymentServiceImplTest {
     }
 
     @Test
-    void retriveVoucher_ok() {
+    void retriveActiveVoucher_ok() {
         TransactionBarCodeResponse response = TransactionBarCodeResponseFaker.mockInstance(1);
 
         when(barCodeCaptureService.retriveVoucher("initiativeId", "trxCode", "userId"))
                 .thenReturn(response);
 
-        TransactionBarCodeResponse result = barCodePaymentService.retriveVoucher("initiativeId", "trxCode", "userId");
+        TransactionBarCodeResponse result = barCodePaymentService.retriveActiveVoucher("initiativeId", "trxCode", "userId");
 
         Assertions.assertEquals(response, result);
         verify(barCodeCaptureService).retriveVoucher("initiativeId", "trxCode", "userId");

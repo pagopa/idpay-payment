@@ -113,7 +113,7 @@ class PdfServiceTest {
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
         when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
-        when(barCodePaymentService.retriveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
+        when(barCodePaymentService.retriveActiveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
 
         mockRewardRule("INIT1", "BEL25", null);
         mockTemplateResources("BEL25");
@@ -137,7 +137,7 @@ class PdfServiceTest {
         var initCap = ArgumentCaptor.forClass(String.class);
         var trxCap  = ArgumentCaptor.forClass(String.class);
         var usrCap  = ArgumentCaptor.forClass(String.class);
-        verify(barCodePaymentService).retriveVoucher(initCap.capture(), trxCap.capture(), usrCap.capture());
+        verify(barCodePaymentService).retriveActiveVoucher(initCap.capture(), trxCap.capture(), usrCap.capture());
         assertEquals("INIT1", initCap.getValue());
         assertEquals("TRX1",  trxCap.getValue());
         assertEquals("USER1", usrCap.getValue());
@@ -150,7 +150,7 @@ class PdfServiceTest {
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(70_00L); // 70,00 €
         when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any())).thenReturn(trxResp);
 
         mockRewardRule("INIT1", "BEL25", null);
         mockTemplateResources("BEL25");
@@ -193,7 +193,7 @@ class PdfServiceTest {
         when(trxResp.getTrxCode()).thenReturn("DEF12345");
         when(trxResp.getVoucherAmountCents()).thenReturn(50_00L);
         when(trxResp.getInitiativeName()).thenReturn("Iniziativa Default");
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any())).thenReturn(trxResp);
 
         mockRewardRule("INIT_DEF", null, null); // pdfVoucherTemplate = null -> fallback a DEFAULT
         mockTemplateResources("DEFAULT");
@@ -223,7 +223,7 @@ class PdfServiceTest {
         when(trxResp.getTrxCode()).thenReturn("TRXCODE8");
         when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
         when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
-        when(barCodePaymentService.retriveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
+        when(barCodePaymentService.retriveActiveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
 
         mockRewardRule("INIT1", "BEL25", null);
         mockTemplateResources("BEL25");
@@ -263,7 +263,7 @@ class PdfServiceTest {
                 .trxEndDate(OffsetDateTime.parse("2026-12-16T23:59:59+01:00"))
                 .voucherAmountCents(7000L)
                 .build();
-        when(barCodePaymentService.retriveVoucher(initiativeId, trxCode, userId)).thenReturn(trx);
+        when(barCodePaymentService.retriveActiveVoucher(initiativeId, trxCode, userId)).thenReturn(trx);
         when(rewardRuleRepository.findById(initiativeId)).thenReturn(Optional.empty());
 
         PdfServiceImpl svc = newService();
@@ -294,7 +294,7 @@ class PdfServiceTest {
                 .trxEndDate(OffsetDateTime.parse("2026-12-16T23:59:59+01:00"))
                 .voucherAmountCents(7000L)
                 .build();
-        when(barCodePaymentService.retriveVoucher(initiativeId, trxCode, userId)).thenReturn(trx);
+        when(barCodePaymentService.retriveActiveVoucher(initiativeId, trxCode, userId)).thenReturn(trx);
         mockRewardRule(initiativeId, "BEL25", null);
 
         String templatePath = "classpath:pdf/voucher/BEL25/voucher.html";
@@ -314,7 +314,7 @@ class PdfServiceTest {
 
     @Test
     void create_whenBarcodeServiceThrows_shouldWrapInPdfGenerationException() {
-        when(barCodePaymentService.retriveVoucher(any(), any(), any()))
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any()))
                 .thenThrow(new IllegalStateException("Barcode service unavailable"));
 
         PdfServiceImpl svc = newService();
@@ -334,7 +334,7 @@ class PdfServiceTest {
         when(trxResp.getTrxCode()).thenReturn("TRXCODE8");
         when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
         when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any())).thenReturn(trxResp);
 
         String logoClasspath = "classpath:static/icons/test_logo.png";
         mockRewardRule("INIT1", "BEL25", logoClasspath);
