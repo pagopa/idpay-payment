@@ -237,6 +237,8 @@ app:
   reward-batch-impact:
     eligibility:
       enabled: ${REWARD_BATCH_IMPACT_ELIGIBILITY_ENABLED:false}
+  test-support:
+    enabled: ${TEST_SUPPORT_ENABLED:false}
 
 pdf:
   devPortalLink: ${DEV_PORTAL_LINK:https://developer.pagopa.it/pari/overview}
