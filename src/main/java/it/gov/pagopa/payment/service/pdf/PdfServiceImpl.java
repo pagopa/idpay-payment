@@ -195,7 +195,7 @@ public class PdfServiceImpl implements PdfService {
     }
 
     private PdfTransactionData getPdfTransactionData(String initiativeId, String trxCode, String userId, String username, String fiscalCode) {
-        TransactionBarCodeResponse trx = barCodePaymentService.retriveVoucher(initiativeId, trxCode, userId);
+        TransactionBarCodeResponse trx = barCodePaymentService.retriveActiveVoucher(initiativeId, trxCode, userId);
         LocalDate createdDate = Utilities.getLocalDate(trx.getTrxDate());
         LocalDate validUntil  = Utilities.getLocalDate(trx.getTrxEndDate());
         BigDecimal amount     = CommonUtilities.centsToEuro(trx.getVoucherAmountCents());

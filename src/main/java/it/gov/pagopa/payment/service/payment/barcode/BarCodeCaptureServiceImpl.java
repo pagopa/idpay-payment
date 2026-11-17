@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import static it.gov.pagopa.payment.enums.SyncTrxStatus.CREATED;
+
 @Slf4j
 @Service
 public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
@@ -120,7 +122,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
     public TransactionBarCodeResponse retriveVoucher(String intiativeId, String trxCode, String userId) {
         try {
 
-            Transaction transaction = transactionRepository.findByInitiativeIdAndTrxCodeAndUserId(intiativeId, trxCode, userId)
+            Transaction transaction = transactionRepository.findByInitiativeIdAndTrxCodeAndUserIdAndStatus(intiativeId, trxCode, userId, CREATED)
                     .orElseThrow(() -> new TransactionNotFoundOrExpiredException("Cannot find voucher with transactionCode [%s]".formatted(trxCode)));
 
             auditUtilities.logRetriveVoucher(transaction.getInitiativeId(), transaction.getId(), transaction.getTrxCode(), transaction.getUserId(), transaction.getRewardCents(), transaction.getRejectionReasons());
@@ -137,7 +139,7 @@ public class BarCodeCaptureServiceImpl implements BarCodeCaptureService {
                 .findByUserIdAndInitiativeIdAndStatusAndExtendedAuthorizationNot(
                         trx.getUserId(),
                         trx.getInitiativeId(),
-                        SyncTrxStatus.CREATED,
+                        CREATED,
                         trx.getExtendedAuthorization()
                 );
 
