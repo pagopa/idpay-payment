@@ -222,7 +222,7 @@ public class PdfServiceImpl implements PdfService {
             throw new InitiativeNotfoundException("The initiative with id [%s] is not found".formatted(initiativeId));
         }
 
-        String initiativeLogo = getCachedLogo(initiativeConfig.getLogoURL());
+        String initiativeLogo = getCachedLogo(initiativeConfig.getPdfLogoURL());
         return InitiativeData.builder()
                 .voucherTemplateName(initiativeConfig.getPdfVoucherTemplate() != null ? initiativeConfig.getPdfVoucherTemplate() : "DEFAULT")
                 .logoImage(initiativeLogo)

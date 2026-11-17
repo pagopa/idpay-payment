@@ -23,6 +23,6 @@ public class InitiativeConfig {
     private InitiativeTrxConditions trxRule;
     private Integer voucherDurationDays;
     private String pdfVoucherTemplate;
-    private String logoURL;
+    private String pdfLogoURL;
 
 }
