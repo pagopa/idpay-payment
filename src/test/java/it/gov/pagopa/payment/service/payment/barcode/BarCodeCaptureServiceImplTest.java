@@ -151,7 +151,7 @@ class BarCodeCaptureServiceImplTest {
         Transaction transaction = createDummyTransaction(SyncTrxStatus.CREATED);
         TransactionBarCodeResponse expectedResponse = new TransactionBarCodeResponse();
 
-        when(transactionRepositoryMock.findByInitiativeIdAndTrxCodeAndUserId(INITIATIVE_ID, TRX_CODE, USER_ID))
+        when(transactionRepositoryMock.findByInitiativeIdAndTrxCodeAndUserIdAndStatus(INITIATIVE_ID, TRX_CODE, USER_ID, SyncTrxStatus.CREATED))
                 .thenReturn(Optional.of(transaction));
         when(transactionMapperMock.transactionBarCodeToTransactionResponse(transaction))
                 .thenReturn(expectedResponse);
@@ -171,7 +171,7 @@ class BarCodeCaptureServiceImplTest {
     @Test
     void testRetriveVoucher_NotFound() {
         // Given
-        when(transactionRepositoryMock.findByInitiativeIdAndTrxCodeAndUserId(INITIATIVE_ID, TRX_CODE, USER_ID))
+        when(transactionRepositoryMock.findByInitiativeIdAndTrxCodeAndUserIdAndStatus(INITIATIVE_ID, TRX_CODE, USER_ID, SyncTrxStatus.CREATED))
                 .thenReturn(Optional.empty());
 
         // When & Then

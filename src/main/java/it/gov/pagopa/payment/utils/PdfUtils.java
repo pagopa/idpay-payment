@@ -1,5 +1,6 @@
 package it.gov.pagopa.payment.utils;
 
+import com.itextpdf.barcodes.Barcode128;
 import com.itextpdf.io.font.constants.StandardFonts;
 import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.Color;
@@ -18,6 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
+import javax.imageio.ImageIO;
+import javax.swing.ImageIcon;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,6 +31,7 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 import java.util.Locale;
 
 /**
@@ -283,5 +290,99 @@ public final class PdfUtils {
 
         c.add(d);
         return c;
+    }
+
+
+    public static String generateBarcode128Base64(String code) {
+        if (code == null || code.isBlank()) {
+            return null;
+        }
+
+        try (ByteArrayOutputStream dummyBaos = new ByteArrayOutputStream();
+             com.itextpdf.kernel.pdf.PdfWriter writer = new com.itextpdf.kernel.pdf.PdfWriter(dummyBaos);
+             com.itextpdf.kernel.pdf.PdfDocument dummyPdf = new com.itextpdf.kernel.pdf.PdfDocument(writer)) {
+            Barcode128 barcode = new Barcode128(dummyPdf);
+            barcode.setCodeType(Barcode128.CODE128);
+            barcode.setCode(code);
+            barcode.setFont(null);
+            barcode.setSize(0f);
+            barcode.setBaseline(0f);
+            barcode.setBarHeight(42f);
+            barcode.setX(1.55f);
+
+            java.awt.Image awtImage = barcode.createAwtImage(java.awt.Color.BLACK, java.awt.Color.WHITE);
+            ImageIcon icon = new ImageIcon(awtImage);
+            int width = icon.getIconWidth();
+            int height = icon.getIconHeight();
+
+            BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D g2d = bufferedImage.createGraphics();
+            try {
+                icon.paintIcon(null, g2d, 0, 0);
+            } finally {
+                g2d.dispose();
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage, "png", baos);
+            return "data:image/png;base64," + Base64.getEncoder().encodeToString(baos.toByteArray());
+        } catch (Exception e) {
+            log.error("[PdfUtils] Errore durante la generazione dell'immagine del codice a barre", e);
+            return null;
+        }
+    }
+
+    /**
+     * Carica un'immagine da classpath, file locale o URL remoto HTTP/HTTPS e la restituisce
+     * come stringa Data URI Base64 (data:image/png;base64,...).
+     *
+     * @param path           percorso (es. "classpath:...", "https://...", "/path/to/img.png")
+     * @param resourceLoader ResourceLoader di Spring
+     * @return stringa data URI Base64 oppure null se non caricabile
+     */
+    public static String loadAndEncodeBase64(String path, ResourceLoader resourceLoader) {
+        if (path == null || path.isBlank()) {
+            return null;
+        }
+
+        try {
+            String p = path.trim();
+            byte[] data = null;
+
+            if (p.startsWith("http://") || p.startsWith("https://")) {
+                java.net.URLConnection conn = java.net.URI.create(p).toURL().openConnection();
+                conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+                conn.setConnectTimeout(5000);
+                conn.setReadTimeout(5000);
+                try (InputStream is = conn.getInputStream()) {
+                    data = is.readAllBytes();
+                }
+            } else if (resourceLoader != null) {
+                Resource resource = resourceLoader.getResource(p);
+                if (resource.exists()) {
+                    try (InputStream is = resource.getInputStream()) {
+                        data = is.readAllBytes();
+                    }
+                }
+            }
+
+            if (data == null) {
+                File file = new File(p);
+                if (file.exists()) {
+                    try (InputStream is = new java.io.FileInputStream(file)) {
+                        data = is.readAllBytes();
+                    }
+                }
+            }
+
+            if (data != null && data.length > 0) {
+                String mimeType = p.toLowerCase().endsWith(".svg") ? "image/svg+xml" : "image/png";
+                return "data:" + mimeType + ";base64," + Base64.getEncoder().encodeToString(data);
+            }
+        } catch (Exception e) {
+            log.warn("[PdfUtils] Impossibile caricare o codificare in Base64 l'immagine dal percorso '{}': {}", path, e.getMessage());
+        }
+
+        return null;
     }
 }

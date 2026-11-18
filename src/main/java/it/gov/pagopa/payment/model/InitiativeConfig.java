@@ -22,5 +22,7 @@ public class InitiativeConfig {
     private InitiativeRewardType initiativeRewardType;
     private InitiativeTrxConditions trxRule;
     private Integer voucherDurationDays;
+    private String pdfVoucherTemplate;
+    private String pdfLogoURL;
 
 }

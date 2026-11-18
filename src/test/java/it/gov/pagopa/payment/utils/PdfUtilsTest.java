@@ -17,6 +17,8 @@ import org.springframework.core.io.ResourceLoader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Base64;
 
@@ -192,5 +194,110 @@ class PdfUtilsTest {
             assertTrue(text.contains("Titolo"));
             assertTrue(text.contains("Descrizione"));
         }
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldReturnNull_whenPathNullOrBlank() {
+        ResourceLoader rl = mock(ResourceLoader.class);
+        assertNull(PdfUtils.loadAndEncodeBase64(null, rl));
+        assertNull(PdfUtils.loadAndEncodeBase64("", rl));
+        assertNull(PdfUtils.loadAndEncodeBase64("   ", rl));
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldLoadPngFromResourceLoader_andEncodeBase64() throws Exception {
+        byte[] samplePng = {1, 2, 3, 4, 5};
+        String expectedB64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(samplePng);
+
+        ResourceLoader rl = mock(ResourceLoader.class);
+        Resource res = mock(Resource.class);
+        when(rl.getResource("classpath:static/icons/logo.png")).thenReturn(res);
+        when(res.exists()).thenReturn(true);
+        when(res.getInputStream()).thenReturn(new ByteArrayInputStream(samplePng));
+
+        String result = PdfUtils.loadAndEncodeBase64("classpath:static/icons/logo.png", rl);
+
+        assertEquals(expectedB64, result);
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldLoadSvgFromResourceLoader_andEncodeWithSvgMimeType() throws Exception {
+        byte[] sampleSvg = "<svg></svg>".getBytes();
+        String expectedB64 = "data:image/svg+xml;base64," + Base64.getEncoder().encodeToString(sampleSvg);
+
+        ResourceLoader rl = mock(ResourceLoader.class);
+        Resource res = mock(Resource.class);
+        when(rl.getResource("classpath:static/icons/logo.svg")).thenReturn(res);
+        when(res.exists()).thenReturn(true);
+        when(res.getInputStream()).thenReturn(new ByteArrayInputStream(sampleSvg));
+
+        String result = PdfUtils.loadAndEncodeBase64("classpath:static/icons/logo.svg", rl);
+
+        assertEquals(expectedB64, result);
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldReturnNull_whenResourceDoesNotExistAndFileDoesNotExist() {
+        ResourceLoader rl = mock(ResourceLoader.class);
+        Resource res = mock(Resource.class);
+        when(rl.getResource("classpath:missing.png")).thenReturn(res);
+        when(res.exists()).thenReturn(false);
+
+        String result = PdfUtils.loadAndEncodeBase64("classpath:missing.png", rl);
+
+        assertNull(result);
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldLoadFromFileSystem_whenFileExists() throws Exception {
+        Path tempFile = Files.createTempFile("test-logo-", ".png");
+        tempFile.toFile().deleteOnExit();
+        byte[] content = {10, 20, 30, 40};
+        Files.write(tempFile, content);
+
+        String expectedB64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(content);
+
+        String result = PdfUtils.loadAndEncodeBase64(tempFile.toAbsolutePath().toString(), null);
+
+        assertEquals(expectedB64, result);
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldReturnNull_whenHttpConnectionFails() {
+        ResourceLoader rl = mock(ResourceLoader.class);
+        String invalidUrl = "https://invalid-host-that-does-not-exist.pagopa.it/logo.png";
+
+        String result = PdfUtils.loadAndEncodeBase64(invalidUrl, rl);
+
+        assertNull(result);
+    }
+
+    @Test
+    void loadAndEncodeBase64_shouldReturnNull_whenInputStreamThrowsException() throws Exception {
+        ResourceLoader rl = mock(ResourceLoader.class);
+        Resource res = mock(Resource.class);
+        when(rl.getResource("classpath:error.png")).thenReturn(res);
+        when(res.exists()).thenReturn(true);
+        when(res.getInputStream()).thenThrow(new java.io.IOException("Stream error"));
+
+        String result = PdfUtils.loadAndEncodeBase64("classpath:error.png", rl);
+
+        assertNull(result);
+    }
+
+    @Test
+    void generateBarcode128Base64_shouldReturnDataUri_whenValidCode() {
+        String result = PdfUtils.generateBarcode128Base64("12345678");
+
+        assertNotNull(result);
+        assertTrue(result.startsWith("data:image/png;base64,"));
+        assertTrue(result.length() > "data:image/png;base64,".length());
+    }
+
+    @Test
+    void generateBarcode128Base64_shouldReturnNull_whenCodeNullOrBlank() {
+        assertNull(PdfUtils.generateBarcode128Base64(null));
+        assertNull(PdfUtils.generateBarcode128Base64(""));
+        assertNull(PdfUtils.generateBarcode128Base64("   "));
     }
 }
