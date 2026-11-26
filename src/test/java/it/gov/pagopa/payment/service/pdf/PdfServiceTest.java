@@ -1,9 +1,9 @@
 package it.gov.pagopa.payment.service.pdf;
 
-import com.itextpdf.kernel.exceptions.PdfException;
 import com.itextpdf.kernel.pdf.PdfDocument;
 import com.itextpdf.kernel.pdf.PdfReader;
 import com.itextpdf.kernel.pdf.canvas.parser.PdfTextExtractor;
+import freemarker.template.Configuration;
 import it.gov.pagopa.payment.connector.decrypt.DecryptRestConnector;
 import it.gov.pagopa.payment.dto.DecryptCfDTO;
 import it.gov.pagopa.payment.dto.ReportDTO;
@@ -14,6 +14,7 @@ import it.gov.pagopa.payment.enums.SyncTrxStatus;
 import it.gov.pagopa.payment.exception.custom.InitiativeNotfoundException;
 import it.gov.pagopa.payment.exception.custom.PdfGenerationException;
 import it.gov.pagopa.payment.exception.custom.TransactionNotFoundOrExpiredException;
+import it.gov.pagopa.payment.repository.RewardRuleRepository;
 import it.gov.pagopa.payment.repository.TransactionRepository;
 import it.gov.pagopa.payment.service.payment.BarCodePaymentService;
 import it.gov.pagopa.payment.test.fakers.TransactionFaker;
@@ -52,49 +53,70 @@ class PdfServiceTest {
     private TransactionBarCodeResponse trxResp;
 
     @Mock
-    private Resource pariPngResource;
+    private TransactionRepository transactionRepository;
 
     @Mock
-    private TransactionRepository transactionRepository;
+    private RewardRuleRepository rewardRuleRepository;
+
+    private final Configuration freemarkerConfiguration = new Configuration(Configuration.VERSION_2_3_32);
 
 
     private PdfServiceImpl newService() {
         return new PdfServiceImpl(
-                barCodePaymentService,        // mock
+                barCodePaymentService,
                 transactionRepository,
-                decryptRestConnector,         // mock
-                resourceLoader,               // mock
-                "DejaVuSans.ttf",             // se non presente, PdfUtils fa fallback a Helvetica
-                null,                         // logoMimit
-                null,                         // logoPari
-                null,                         // iconWasher
-                null,                         // iconHealthcard
-                null                          // iconBarcode
+                rewardRuleRepository,
+                decryptRestConnector,
+                resourceLoader,
+                freemarkerConfiguration,
+                "DejaVuSans.ttf",
+                null,
+                null,
+                60L
         );
     }
 
-    private PdfServiceImpl newServiceWithFont(String fontPath) {
-        return new PdfServiceImpl(
-                barCodePaymentService,
-                transactionRepository,
-                decryptRestConnector,
-                resourceLoader,
-                fontPath,     // simula font inesistente per testare il fallback
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+    private void mockTemplateResources(String templateName) throws Exception {
+        String templatePath = "classpath:pdf/voucher/%s/voucher.html".formatted(templateName);
+        Resource templateRes = mock(Resource.class);
+        when(templateRes.exists()).thenReturn(true);
+        when(resourceLoader.getResource(templatePath)).thenReturn(templateRes);
+
+        String basePath = "classpath:pdf/voucher/%s/".formatted(templateName);
+        Resource baseRes = mock(Resource.class);
+        java.net.URL dummyUrl = getClass().getResource("/pdf/voucher/%s/".formatted(templateName));
+        if (dummyUrl == null) {
+            dummyUrl = java.net.URI.create("file:///dummy/path/").toURL();
+        }
+        when(baseRes.getURL()).thenReturn(dummyUrl);
+        when(resourceLoader.getResource(basePath)).thenReturn(baseRes);
+    }
+
+    private void mockRewardRule(String initiativeId, String templateName, String logoUrl) {
+        it.gov.pagopa.payment.model.InitiativeConfig config = it.gov.pagopa.payment.model.InitiativeConfig.builder()
+                .initiativeId(initiativeId)
+                .initiativeName("Bonus Elettrodomestici")
+                .pdfVoucherTemplate(templateName)
+                .pdfLogoURL(logoUrl)
+                .build();
+        it.gov.pagopa.payment.model.RewardRule rewardRule = it.gov.pagopa.payment.model.RewardRule.builder()
+                .id(initiativeId)
+                .initiativeConfig(config)
+                .build();
+        when(rewardRuleRepository.findById(initiativeId)).thenReturn(Optional.of(rewardRule));
     }
 
     @Test
-    void create_shouldReturnValidPdfBase64_andCallBarcodeService() throws Exception {
+    void create_shouldReturnValidPdfBase64_withBel25Template() throws Exception {
         when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
         when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
         when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
-        when(barCodePaymentService.retriveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
+        when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
+        when(barCodePaymentService.retriveActiveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
+
+        mockRewardRule("INIT1", "BEL25", null);
+        mockTemplateResources("BEL25");
 
         PdfServiceImpl svc = newService();
 
@@ -115,24 +137,27 @@ class PdfServiceTest {
         var initCap = ArgumentCaptor.forClass(String.class);
         var trxCap  = ArgumentCaptor.forClass(String.class);
         var usrCap  = ArgumentCaptor.forClass(String.class);
-        verify(barCodePaymentService).retriveVoucher(initCap.capture(), trxCap.capture(), usrCap.capture());
+        verify(barCodePaymentService).retriveActiveVoucher(initCap.capture(), trxCap.capture(), usrCap.capture());
         assertEquals("INIT1", initCap.getValue());
         assertEquals("TRX1",  trxCap.getValue());
         assertEquals("USER1", usrCap.getValue());
     }
 
     @Test
-    void create_shouldContainExpectedTexts() throws Exception {
+    void create_shouldContainExpectedTextsAndValues() throws Exception {
         when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
         when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
         when(trxResp.getTrxCode()).thenReturn("12345678");
-        when(trxResp.getVoucherAmountCents()).thenReturn(25_00L); // €25.00
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        when(trxResp.getVoucherAmountCents()).thenReturn(70_00L); // 70,00 €
+        when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any())).thenReturn(trxResp);
+
+        mockRewardRule("INIT1", "BEL25", null);
+        mockTemplateResources("BEL25");
 
         PdfServiceImpl svc = newService();
 
-        ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-                "Giovanna Beltramin", "BLTGVN78A52C409X");
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1", "Giovanna Beltramin", "BLTGVN78A52C409X");
         byte[] bytes = Base64.getDecoder().decode(report.getData());
 
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
@@ -140,251 +165,198 @@ class PdfServiceTest {
             String page1Text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage());
             String norm = normalize(page1Text);
 
-            // Header + titolo
-            assertTrue(norm.contains("BONUS ELETTRODOMESTICI"),
-                    () -> "Missing 'BONUS ELETTRODOMESTICI' in:\n" + norm);
-            // Ministero: verifichiamo per parole chiave per evitare problemi di spazi/punteggiatura
+            assertTrue(norm.contains("BONUS ELETTRODOMESTICI"), () -> "Missing 'BONUS ELETTRODOMESTICI' in:\n" + norm);
             assertTrue(norm.contains("MINISTERO") && norm.contains("IMPRESE") && norm.contains("MADE") && norm.contains("ITALY"),
                     () -> "Missing ministero line keywords in:\n" + norm);
 
-            // Intestatario/CF
-            assertTrue(norm.contains("GIOVANNA") && norm.contains("BELTRAMIN"),
-                    () -> "Missing name in:\n" + norm);
-            assertTrue(norm.contains("BLTGVN78A52C409X"),
-                    () -> "Missing CF in:\n" + norm);
-            assertTrue(norm.contains("DETTAGLI DEL BONUS".replaceAll("[^A-Z0-9]+", " ")),
-                    () -> "Missing 'DETTAGLI DEL BONUS' in:\n" + norm);
+            assertTrue(norm.contains("GIOVANNA") && norm.contains("BELTRAMIN"), () -> "Missing name in:\n" + norm);
+            assertTrue(norm.contains("BLTGVN78A52C409X"), () -> "Missing CF in:\n" + norm);
+            assertTrue(norm.contains("DETTAGLI DEL BONUS".replaceAll("[^A-Z0-9]+", " ")), () -> "Missing 'DETTAGLI DEL BONUS' in:\n" + norm);
 
-            // Sezione barcode
-            assertTrue(norm.contains("CODICE A BARRE".replaceAll("[^A-Z0-9]+", " ")),
-                    () -> "Missing 'CODICE A BARRE' in:\n" + norm);
+            assertTrue(norm.contains("70 00") || norm.contains("70"), () -> "Missing amount in:\n" + norm);
+            assertTrue(norm.contains("12345678"), () -> "Missing barcode code in:\n" + norm);
 
-            // Box "Come usare il bonus" + step (controllo per parole chiave)
-            assertTrue(norm.contains("COME USARE IL BONUS".replaceAll("[^A-Z0-9]+", " ")),
-                    () -> "Missing 'COME USARE IL BONUS' in:\n" + norm);
-            assertTrue(norm.contains("SCEGLI") && norm.contains("ELETTRODOMESTICO") && norm.contains("SOSTITUIRE"),
-                    () -> "Missing step 1 keywords in:\n" + norm);
-            assertTrue(norm.contains("PORTA") && norm.contains("TESSERA") && norm.contains("SANITARIA"),
-                    () -> "Missing step 2 keywords in:\n" + norm);
-            assertTrue(norm.contains("MOSTRA") && norm.contains("CODICE") && norm.contains("BARRE"),
-                    () -> "Missing step 3 keywords in:\n" + norm);
+            assertTrue(norm.contains("COME USARE IL BONUS".replaceAll("[^A-Z0-9]+", " ")), () -> "Missing 'COME USARE IL BONUS' in:\n" + norm);
+            assertTrue(norm.contains("SCEGLI") && norm.contains("ELETTRODOMESTICO"), () -> "Missing step 1 in:\n" + norm);
+            assertTrue(norm.contains("PORTA") && norm.contains("TESSERA") && norm.contains("SANITARIA"), () -> "Missing step 2 in:\n" + norm);
+            assertTrue(norm.contains("MOSTRA") && norm.contains("CODICE") && norm.contains("BARRE"), () -> "Missing step 3 in:\n" + norm);
 
-            // Powered by + Pari/PagoPA (gestiamo S.P.A. che spesso esce come 'S P A')
-            boolean hasFooterPhrase = norm.contains("IL BONUS ELETTRODOMESTICI E REALIZZATO TRAMITE");
-            boolean hasPari = norm.contains("PARI");
-            boolean hasPagoPA = norm.contains("PAGOPA") && norm.contains("SPA");
-            assertTrue(hasFooterPhrase && (hasPari || hasPagoPA),
-                    () -> "Missing footer phrase or brand in:\n" + norm);
+            assertTrue(norm.contains("PARI"), () -> "Missing 'PARI' in:\n" + norm);
+            assertTrue(norm.contains("PAGOPA") && (norm.contains("SPA") || norm.contains("S P A")), () -> "Missing 'PagoPA S.p.A.' in:\n" + norm);
         }
     }
 
     @Test
-    void create_withMissingFont_shouldFallbackAndGeneratePdf() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
-        when(trxResp.getTrxCode()).thenReturn("87654321");
-        when(trxResp.getVoucherAmountCents()).thenReturn(45_50L);
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
-
-        PdfServiceImpl svc = newServiceWithFont("FONT-CHE-NON-ESISTE.ttf");
-
-        ReportDTO report = svc.create("I", "T", "U", "Mario Rossi", "RSSMRA80A01H501Z");
-
-        byte[] pdfBytes = Base64.getDecoder().decode(report.getData());
-        assertTrue(pdfBytes.length > 0);
-
-        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(pdfBytes));
-             PdfDocument pdf = new PdfDocument(reader)) {
-            assertTrue(pdf.getNumberOfPages() >= 1);
-            String text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage()).toUpperCase();
-
-            assertTrue(text.contains("MARIO ROSSI"));
-            assertTrue(text.contains("RSSMRA80A01H501Z"));
-        }
-    }
-
-    @Test
-    void create_shouldRenderDatesAndAmountReasonably() throws Exception {
+    void create_whenVoucherTemplateIsDefault_shouldGeneratePdfWithDefaultTemplate() throws Exception {
         when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-01-02T08:00:00Z"));
         when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-31T23:59:59Z"));
-        when(trxResp.getTrxCode()).thenReturn("ABCDEF12");
-        when(trxResp.getVoucherAmountCents()).thenReturn(123_45L); // 123,45 €
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        when(trxResp.getTrxCode()).thenReturn("DEF12345");
+        when(trxResp.getVoucherAmountCents()).thenReturn(50_00L);
+        when(trxResp.getInitiativeName()).thenReturn("Iniziativa Default");
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any())).thenReturn(trxResp);
+
+        mockRewardRule("INIT_DEF", null, null); // pdfVoucherTemplate = null -> fallback a DEFAULT
+        mockTemplateResources("DEFAULT");
 
         PdfServiceImpl svc = newService();
 
-        ReportDTO report = svc.create("INITZ", "TRXZ", "USERZ", "Laura Bianchi", "BNCLRA80A01H501X");
+        ReportDTO report = svc.create("INIT_DEF", "TRX_DEF", "USER_DEF", "Mario Rossi", "RSSMRA80A01H501Z");
+
+        assertNotNull(report);
+        byte[] bytes = Base64.getDecoder().decode(report.getData());
+        assertTrue(bytes.length > 0);
+
+        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
+             PdfDocument pdf = new PdfDocument(reader)) {
+            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
+            assertTrue(norm.contains("INIZIATIVA DEFAULT"));
+            assertTrue(norm.contains("MARIO") && norm.contains("ROSSI"));
+            assertTrue(norm.contains("RSSMRA80A01H501Z"));
+            assertTrue(norm.contains("DEF12345"));
+        }
+    }
+
+    @Test
+    void create_whenFiscalCodeNull_shouldRetrievePiiFromDecryptRestConnector() throws Exception {
+        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
+        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
+        when(trxResp.getTrxCode()).thenReturn("TRXCODE8");
+        when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
+        when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
+        when(barCodePaymentService.retriveActiveVoucher("INIT1", "TRX1", "USER1")).thenReturn(trxResp);
+
+        mockRewardRule("INIT1", "BEL25", null);
+        mockTemplateResources("BEL25");
+
+        when(decryptRestConnector.getPiiByToken("USER1")).thenReturn(new DecryptCfDTO("DECRYPTEDCF99A01H"));
+
+        PdfServiceImpl svc = newService();
+
+        ReportDTO report = svc.create("INIT1", "TRX1", "USER1", "Laura Bianchi", null);
+
+        assertNotNull(report);
+        verify(decryptRestConnector).getPiiByToken("USER1");
 
         byte[] bytes = Base64.getDecoder().decode(report.getData());
         try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
              PdfDocument pdf = new PdfDocument(reader)) {
-            String text = PdfTextExtractor.getTextFromPage(pdf.getFirstPage());
-
-            assertTrue(text.contains("2025"));
-
-            String upper = text.toUpperCase();
-            boolean hasCurrency = upper.contains("€") || upper.contains(" EUR") || upper.contains("EURO");
-            assertTrue(hasCurrency, "Importo non riconosciuto in pagina (manca simbolo €/EUR/EURO)");
+            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
+            assertTrue(norm.contains("DECRYPTEDCF99A01H"));
         }
     }
 
     @Test
-    void create_whenBarcodeServiceThrows_shouldWrapAndRethrow() {
-        when(barCodePaymentService.retriveVoucher(any(), any(), any()))
-                .thenThrow(new IllegalStateException("Backend down"));
+    void create_whenInitiativeNotFound_shouldThrowPdfGenerationExceptionWrappingInitiativeNotFoundException() {
+        String initiativeId = "INIT_NOT_FOUND";
+        String trxCode = "TRX_CODE";
+        String userId = "USER_ID";
 
-        PdfServiceImpl svc = newService();
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                svc.create("INIT1", "TRX1", "USER1", "X", "Y"));
-
-        assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
-        verify(barCodePaymentService).retriveVoucher("INIT1", "TRX1", "USER1");
-    }
-
-    @Test
-    void create_whenFontLoadingFails_shouldThrowPdfGenerationException() {
-        when(barCodePaymentService.retriveVoucher(any(), any(), any()))
-                .thenThrow(new PdfException("Test font error"));
+        TransactionBarCodeResponse trx = TransactionBarCodeResponse.builder()
+                .id("transaction-id-123")
+                .trxCode(trxCode)
+                .initiativeId(initiativeId)
+                .initiativeName("Bonus Elettrodomestici")
+                .trxDate(OffsetDateTime.parse("2026-11-16T10:30:00+01:00"))
+                .status(SyncTrxStatus.CREATED)
+                .trxExpirationSeconds(3600L)
+                .residualBudgetCents(5000L)
+                .trxEndDate(OffsetDateTime.parse("2026-12-16T23:59:59+01:00"))
+                .voucherAmountCents(7000L)
+                .build();
+        when(barCodePaymentService.retriveActiveVoucher(initiativeId, trxCode, userId)).thenReturn(trx);
+        when(rewardRuleRepository.findById(initiativeId)).thenReturn(Optional.empty());
 
         PdfServiceImpl svc = newService();
 
         PdfGenerationException ex = assertThrows(PdfGenerationException.class,
-                () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA77A01H501Z"));
+                () -> svc.create(initiativeId, trxCode, userId, "Mario Rossi", "RSSMRA80A01H501Z"));
 
-        assertTrue(ex.getMessage().toUpperCase().contains("ERRORE DURANTE LA GENERAZIONE DEL PDF"));
+        assertEquals("Error while generating PDF HTML", ex.getMessage());
+        assertInstanceOf(InitiativeNotfoundException.class, ex.getCause());
+        assertTrue(ex.getCause().getMessage().contains("INIT_NOT_FOUND"));
     }
 
-    /**
-     * Quando forniamo un logo PARI valido (PNG) via ResourceLoader,
-     * l’immagine viene usata e la label di fallback "PARI" NON deve essere presente.
-     */
     @Test
-    void create_whenPariPngProvided_shouldUseImageAndNotShowFallbackText() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
-        when(trxResp.getTrxCode()).thenReturn("11223344");
-        when(trxResp.getVoucherAmountCents()).thenReturn(1500L);
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+    void create_whenTemplateFileDoesNotExist_shouldThrowPdfGenerationException() {
+        String initiativeId = "INIT1";
+        String trxCode = "TRX_CODE";
+        String userId = "USER_ID";
 
-        String pariPath = "classpath:static/icons/icon_pari.png";
-        when(resourceLoader.getResource(pariPath)).thenReturn(pariPngResource);
-        when(pariPngResource.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
+        TransactionBarCodeResponse trx = TransactionBarCodeResponse.builder()
+                .id("transaction-id-123")
+                .trxCode(trxCode)
+                .initiativeId(initiativeId)
+                .initiativeName("Bonus Elettrodomestici")
+                .trxDate(OffsetDateTime.parse("2026-11-16T10:30:00+01:00"))
+                .status(SyncTrxStatus.CREATED)
+                .trxExpirationSeconds(3600L)
+                .residualBudgetCents(5000L)
+                .trxEndDate(OffsetDateTime.parse("2026-12-16T23:59:59+01:00"))
+                .voucherAmountCents(7000L)
+                .build();
+        when(barCodePaymentService.retriveActiveVoucher(initiativeId, trxCode, userId)).thenReturn(trx);
+        mockRewardRule(initiativeId, "BEL25", null);
 
-        PdfServiceImpl svc = new PdfServiceImpl(
-                barCodePaymentService,
-                transactionRepository,
-                decryptRestConnector,
-                resourceLoader,
-                "DejaVuSans.ttf",
-                null,          // logoMimit
-                pariPath,      // logoPari (PNG)
-                null, null, null
-        );
-
-        ReportDTO report = svc.create(
-                "INIT1", "TRX1", "USER1",
-                "Giovanna Beltramin", "BLTGVN78A52C409X"
-        );
-
-        verify(resourceLoader).getResource(pariPath);
-        verify(pariPngResource).getInputStream();
-
-        byte[] bytes = Base64.getDecoder().decode(report.getData());
-        assertTrue(bytes.length > 0, "PDF vuoto");
-
-        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-             PdfDocument pdf = new PdfDocument(reader)) {
-
-            assertTrue(pdf.getNumberOfPages() >= 1, "PDF senza pagine");
-
-            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
-
-            assertTrue(norm.contains("BONUS ELETTRODOMESTICI"),
-                    () -> "Manca 'BONUS ELETTRODOMESTICI' in:\n" + norm);
-
-            assertTrue(norm.contains("IL BONUS ELETTRODOMESTICI E REALIZZATO TRAMITE"),
-                    () -> "Manca la frase 'Il Bonus Elettrodomestici è realizzato tramite' in:\n" + norm);
-
-            boolean hasPagoPA = norm.contains("PAGOPA");
-            boolean hasSpa = norm.contains(" SPA ") || norm.contains(" S P A ");
-            assertTrue(hasPagoPA && hasSpa,
-                    () -> "Brand PagoPA non trovato (PAGOPA + SPA/S P A). Testo:\n" + norm);
-        }
-    }
-
-
-    /**
-     * Quando non forniamo alcun logo (o non è caricabile), deve comparire il fallback testuale "PARI".
-     * Questo test rende esplicita la copertura del ramo else { new Paragraph("PARI") ... }.
-     */
-    @Test
-    void create_whenPariLogoMissing_shouldShowFallbackTextLabel() throws Exception {
-        when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
-        when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
-        when(trxResp.getTrxCode()).thenReturn("55667788");
-        when(trxResp.getVoucherAmountCents()).thenReturn(2500L);
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        String templatePath = "classpath:pdf/voucher/BEL25/voucher.html";
+        Resource templateRes = mock(Resource.class);
+        when(templateRes.exists()).thenReturn(false);
+        when(resourceLoader.getResource(templatePath)).thenReturn(templateRes);
 
         PdfServiceImpl svc = newService();
 
-        ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-                "Mario Rossi", "RSSMRA80A01H501Z");
+        PdfGenerationException ex = assertThrows(PdfGenerationException.class,
+                () -> svc.create(initiativeId, trxCode, userId, "Mario Rossi", "RSSMRA80A01H501Z"));
 
-        byte[] bytes = Base64.getDecoder().decode(report.getData());
-        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-             PdfDocument pdf = new PdfDocument(reader)) {
-
-            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
-
-            assertTrue(norm.contains(" PARI "),
-                    () -> "Manca la label di fallback 'PARI' quando il logo non è disponibile:\n" + norm);
-        }
+        assertEquals("Error while generating PDF HTML", ex.getMessage());
+        assertInstanceOf(PdfGenerationException.class, ex.getCause());
+        assertTrue(ex.getCause().getMessage().contains("Voucher template voucher.html not found"));
     }
 
-    /**
-     * (opzionale ma utile) Se forniamo anche un logoMimit PNG, verifichiamo che la generazione rimanga corretta
-     * e NON compaiano artefatti testuali inattesi (il test copre il ramo con .scaleToFit(45,45) sul logo header).
-     */
-    @Mock
-    private Resource mimitPngResource;
+    @Test
+    void create_whenBarcodeServiceThrows_shouldWrapInPdfGenerationException() {
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any()))
+                .thenThrow(new IllegalStateException("Barcode service unavailable"));
+
+        PdfServiceImpl svc = newService();
+
+        PdfGenerationException ex = assertThrows(PdfGenerationException.class,
+                () -> svc.create("INIT1", "TRX1", "USER1", "Mario Rossi", "RSSMRA80A01H501Z"));
+
+        assertEquals("Error while generating PDF HTML", ex.getMessage());
+        assertInstanceOf(IllegalStateException.class, ex.getCause());
+        assertEquals("Barcode service unavailable", ex.getCause().getMessage());
+    }
 
     @Test
-    void create_whenMimitLogoPngProvided_shouldGeneratePdfNormally() throws Exception {
+    void create_whenLogoUrlProvided_shouldCacheLogoInSubsequentCalls() throws Exception {
         when(trxResp.getTrxDate()).thenReturn(OffsetDateTime.parse("2025-11-23T10:00:00Z"));
         when(trxResp.getTrxEndDate()).thenReturn(OffsetDateTime.parse("2025-12-03T23:59:59Z"));
-        when(trxResp.getTrxCode()).thenReturn("99887766");
-        when(trxResp.getVoucherAmountCents()).thenReturn(3500L);
-        when(barCodePaymentService.retriveVoucher(any(), any(), any())).thenReturn(trxResp);
+        when(trxResp.getTrxCode()).thenReturn("TRXCODE8");
+        when(trxResp.getVoucherAmountCents()).thenReturn(10_00L);
+        when(trxResp.getInitiativeName()).thenReturn("Bonus Elettrodomestici");
+        when(barCodePaymentService.retriveActiveVoucher(any(), any(), any())).thenReturn(trxResp);
 
-        String mimitPath = "classpath:static/icons/mimit.png";
-        when(resourceLoader.getResource(mimitPath)).thenReturn(mimitPngResource);
-        when(mimitPngResource.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
+        String logoClasspath = "classpath:static/icons/test_logo.png";
+        mockRewardRule("INIT1", "BEL25", logoClasspath);
+        mockTemplateResources("BEL25");
 
-        PdfServiceImpl svc = new PdfServiceImpl(
-                barCodePaymentService,
-                transactionRepository,
-                decryptRestConnector,
-                resourceLoader,
-                "DejaVuSans.ttf",
-                mimitPath,     // <- logoMimit PNG valido
-                null,          // logoPari assente
-                null, null, null
-        );
+        Resource logoRes = mock(Resource.class);
+        when(logoRes.exists()).thenReturn(true);
+        when(logoRes.getInputStream()).thenReturn(new ByteArrayInputStream(tinyPng()));
+        when(resourceLoader.getResource(logoClasspath)).thenReturn(logoRes);
 
-        ReportDTO report = svc.create("INIT1", "TRX1", "USER1",
-                "Laura Bianchi", "BNCLRA80A01H501X");
+        PdfServiceImpl svc = newService();
 
-        byte[] bytes = Base64.getDecoder().decode(report.getData());
-        try (PdfReader reader = new PdfReader(new ByteArrayInputStream(bytes));
-             PdfDocument pdf = new PdfDocument(reader)) {
-            assertTrue(pdf.getNumberOfPages() >= 1);
+        // Prima chiamata: legge il logo da resourceLoader e lo mette in cache
+        ReportDTO report1 = svc.create("INIT1", "TRX1", "USER1", "Laura Bianchi", "BNCLRA80A01H501X");
+        assertNotNull(report1);
 
-            String norm = normalize(PdfTextExtractor.getTextFromPage(pdf.getFirstPage()));
-            // contenuti essenziali presenti
-            assertTrue(norm.contains("BONUS ELETTRODOMESTICI"));
-            assertTrue(norm.contains("LAURA") && norm.contains("BIANCHI"));
-        }
+        // Seconda chiamata: deve usare la cache in memoria, senza invocare di nuovo getInputStream() sulla risorsa logo
+        ReportDTO report2 = svc.create("INIT1", "TRX1", "USER1", "Laura Bianchi", "BNCLRA80A01H501X");
+        assertNotNull(report2);
+
+        // Verifica che il logo sia stato letto una sola volta dalla risorsa
+        verify(logoRes, times(1)).getInputStream();
     }
 
     @Test
